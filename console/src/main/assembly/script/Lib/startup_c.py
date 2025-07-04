@@ -50,7 +50,8 @@ from java.awt import Font
 
 from java.lang import Boolean, Integer, Float, Double, Short, Byte, Long, String
 
-from ch.psi.pshell import core as _core
+from ch.psi.pshell.framework import Setup
+from ch.psi.pshell.framework import Context
 from ch.psi.pshell.scripting import ScriptUtils
 from ch.psi.pshell.scripting import ScriptType
 from ch.psi.pshell.scripting import JepUtils
@@ -58,6 +59,38 @@ from ch.psi.pshell.utils import Convert
 from ch.psi.pshell.utils import Arr
 
 __THREAD_EXEC_RESULT__=None
+
+###################################################################################################
+#Access functions
+###################################################################################################
+
+def get_app():
+    return Context.getApp()
+
+def get_view():
+    return Context.getView()
+
+def get_interpreter():
+    return Context.getInterpreter()
+
+def get_data_manager():
+    return Context.getDataManager()
+
+def get_versioning_manager():
+    return Context.getVersioningManager()
+
+def get_device_pool():
+    return Context.getDevicePool()
+
+def get_session_manager():
+    return Context.getSessionManager()
+
+def get_plugin_manager():
+    return Context.getPluginManager()
+
+def get_state():
+    return Context.getState()
+
 
 ###################################################################################################
 #Default empty callbacks
@@ -210,13 +243,6 @@ def is_main_thread():
 
 
 ###################################################################################################
-#Access to context singleton
-###################################################################################################
-def get_context():
-    //!!! TEST
-    return _core.Context
-
-###################################################################################################
 #Builtin classes
 ###################################################################################################
 
@@ -236,27 +262,28 @@ from ch.psi.pshell.utils import ArrayProperties as ArrayProperties
 from ch.psi.pshell.utils import Audio as Audio
 from ch.psi.pshell.utils import BitMask as BitMask
 from ch.psi.pshell.utils import Config as Config
-from ch.psi.pshell.utils import Inventory as Inventory
-from ch.psi.pshell.utils import DataAPI as DataAPI
-from ch.psi.pshell.utils import DispatcherAPI as DispatcherAPI
-from ch.psi.pshell.utils import EpicsBootInfoAPI as EpicsBootInfoAPI
-from ch.psi.pshell.utils import Daqbuf as Daqbuf
 from ch.psi.pshell.utils import Mail as Mail
 from ch.psi.pshell.utils import Posix as Posix
 from ch.psi.pshell.utils import ProcessFactory as ProcessFactory
 from ch.psi.pshell.utils import Range as Range
 from ch.psi.pshell.utils import Reflection as Reflection
 from ch.psi.pshell.utils import Serializer as Serializer
+from ch.psi.pshell.utils import TimestampedValue as TimestampedValue
 from ch.psi.pshell.utils import Windows as Windows
 from ch.psi.pshell.utils import NumberComparator as NumberComparator
 from java.util import Iterator as Iterator
 from java.util import NoSuchElementException as NoSuchElementException
 
+from ch.psi.pshell.archiver import Inventory as Inventory
+from ch.psi.pshell.archiver import DataAPI as DataAPI
+from ch.psi.pshell.archiver import DispatcherAPI as DispatcherAPI
+from ch.psi.pshell.archiver import EpicsBootInfoAPI as EpicsBootInfoAPI
+from ch.psi.pshell.archiver import IocInfoAPI as IocInfoAPI
+from ch.psi.pshell.archiver import Daqbuf as Daqbuf
 
-from ch.psi.pshell.core import CommandSource as CommandSource
-from ch.psi.pshell.core import ContextAdapter as ContextListener
-from ch.psi.pshell.core import Context
-from ch.psi.pshell.core import InlineDevice as InlineDevice
+from ch.psi.pshell.sequencer import CommandSource as CommandSource
+from ch.psi.pshell.sequencer import InterpreterListener as InterpreterListener
+from ch.psi.pshell.sequencer import ChannelAccessServer as ChannelAccessServer
 
 from ch.psi.pshell.data import DataSlice as DataSlice
 from ch.psi.pshell.data import PlotDescriptor as PlotDescriptor
@@ -298,7 +325,7 @@ from ch.psi.pshell.device import ReadonlyRegisterBase as ReadonlyRegisterBase
 from ch.psi.pshell.device import ReadonlyAsyncRegisterBase as ReadonlyAsyncRegisterBase
 from ch.psi.pshell.device import Register as Register
 from ch.psi.pshell.device import Record as Record
-from ch.psi.pshell.device import TimestampedValue as TimestampedValue
+from ch.psi.pshell.devices import InlineDevice as InlineDevice
 
 RegisterArray = Register.RegisterArray
 RegisterNumber = Register.RegisterNumber
@@ -325,15 +352,14 @@ from ch.psi.pshell.device import Stoppable as Stoppable
 from ch.psi.pshell.device import Averager as Averager
 from ch.psi.pshell.device import ArrayAverager as ArrayAverager
 from ch.psi.pshell.device import Delta as Delta
-from ch.psi.pshell.device import DeviceAdapter as DeviceListener
-from ch.psi.pshell.device import ReadbackDeviceAdapter as ReadbackDeviceListener
-from ch.psi.pshell.device import MotorAdapter as MotorListener
+from ch.psi.pshell.device import DeviceListener as DeviceListener
+from ch.psi.pshell.device import ReadbackDeviceListener as ReadbackDeviceListener
+from ch.psi.pshell.device import MotorListener as MotorListener
 from ch.psi.pshell.device import MoveMode as MoveMode
 from ch.psi.pshell.device import SettlingCondition as SettlingCondition
 from ch.psi.pshell.device import HistogramGenerator as HistogramGenerator
 
 from ch.psi.pshell.epics import Epics as Epics
-from ch.psi.pshell.epics import EpicsScan as EpicsScan
 from ch.psi.pshell.epics import ChannelSettlingCondition as ChannelSettlingCondition
 from ch.psi.pshell.epics import AreaDetector as AreaDetector
 from ch.psi.pshell.epics import BinaryPositioner as BinaryPositioner
@@ -449,7 +475,6 @@ from ch.psi.pshell.scan import ScanCallbacks
 from ch.psi.pshell.crlogic import CrlogicPositioner as CrlogicPositioner
 from ch.psi.pshell.crlogic import CrlogicSensor as CrlogicSensor
 
-from ch.psi.pshell.bs import BsScan
 from ch.psi.pshell.bs import Stream as Stream
 from ch.psi.pshell.bs import StreamMerger as StreamMerger
 from ch.psi.pshell.bs import Provider as Provider
@@ -459,8 +484,6 @@ from ch.psi.pshell.bs import StreamChannel as StreamChannel
 from ch.psi.pshell.bs import Waveform as Waveform
 from ch.psi.pshell.bs import Matrix as Matrix
 from ch.psi.pshell.bs import StreamCamera as StreamCamera
-from ch.psi.pshell.bs import CameraServer as CameraServer
-from ch.psi.pshell.bs import PipelineServer as PipelineServer
 from ch.psi.pshell.bs import ProviderConfig as ProviderConfig
 from ch.psi.pshell.bs import StreamConfig as StreamConfig
 from ch.psi.pshell.bs import StreamChannelConfig as StreamChannelConfig
@@ -476,10 +499,14 @@ from ch.psi.pshell.camserver import PipelineSource as PipelineSource
 from ch.psi.pshell.camserver import PipelineStream as PipelineStream
 from ch.psi.pshell.camserver import CamServerService as CamServerService
 
+from redis.clients.jedis import Jedis as Redis
+from ch.psi.pshell.utils import RedisX as RedisX
+
 from ch.psi.pshell.detector import DetectorConfig as DetectorConfig
 from ch.psi.pshell.detector import Array10 as Array10
 
 from org.zeromq import ZMQ as ZMQ
+from org.zeromq import SocketType as ZMQ_SocketType #Not to collide with bsread.SocketType
 
 from ch.psi.pshell.framework import App as App
 
@@ -501,10 +528,10 @@ def string_to_obj(o):
         o=str(o)
         if "://" in o:
             return InlineDevice(o)
-        ret =  get_context().getInterpreterVariable(o)
+        ret =  get_interpreter().getInterpreterVariable(o)
         if ret is None:
             try:
-                ret = get_context().getScriptManager().evalBackground(o).result
+                ret = get_interpreter().getScriptManager().evalBackground(o).result
             except:                        
                 return None
         o=ret
@@ -722,7 +749,8 @@ VectorScan=scans.VectorScan
 ContinuousScan=scans.ContinuousScan
 TimeScan=scans.TimeScan
 MonitorScan=scans.MonitorScan
-BsScan=BsScan
+BsScan=scans.BsScan
+EpicsScan=scans.EpicsScan
 #ManualScan=scans.ManualScan
 BinarySearch=scans.BinarySearch
 HillClimbingSearcharySearch=scans.HillClimbingSearch
@@ -831,7 +859,7 @@ def processScanPars(scan, pars):
     scan.setSnaps(to_list(string_to_obj(pars.pop("snaps",None))))
     scan.setDiags(to_list(string_to_obj(pars.pop("diags",None))))
     scan.setMeta(pars.pop("meta",None))
-    get_context().setCommandPars(scan, pars)
+    get_interpreter().setCommandPars(scan, pars)
 
 
 
@@ -918,7 +946,7 @@ def inject():
     else:
         g=_get_caller().f_globals
      
-    i = get_context().getScriptManager().getInjections()
+    i = get_interpreter().getScriptManager().getInjections()
     for k in i.keySet():
         g[k]=i[k]
 
@@ -937,9 +965,9 @@ def run(script_name, args = None, locals = None):
     Returns:
         The script return value (if set with set_return)
     """
-    script = get_context().getScriptManager().getLibrary().resolveFile(script_name)
+    script = get_interpreter().getScriptManager().getLibrary().resolveFile(script_name)
     if script is not None and os.path.isfile(script):
-        info = get_context().startScriptExecution(script_name, args)
+        info = get_interpreter().startScriptExecution(script_name, args)
         try:
             set_return(None)
             if args is not None:
@@ -954,10 +982,10 @@ def run(script_name, args = None, locals = None):
             else:
                 exec(open(script).read(), globals(), locals)
             ret = get_return()
-            get_context().finishScriptExecution(info, ret)
+            get_interpreter().finishScriptExecution(info, ret)
             return ret
         except Exception as ex:
-            get_context().finishScriptExecution(info, ex)
+            get_interpreter().finishScriptExecution(info, ex)
             raise ex
     raise IOError("Invalid script: " + str(script_name))
 
@@ -970,7 +998,7 @@ def abort():
     Returns:
         None
     """
-    get_context().abort()
+    Context.abort()
     raise KeyboardInterrupt()
 
 def set_return(value):
@@ -1539,10 +1567,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
     if isinstance(data, Table):
         if is_list(xdata):
             xdata = np_to_java(to_array(xdata, 'd'), 'd')
-        return get_context().plot(data,xdata,name,title)
+        return get_interpreter().plot(data,xdata,name,title)
 
     if isinstance(data, ScanResult):
-        return get_context().plot(data,title)
+        return get_interpreter().plot(data,title)
 
     if (name is not None) and is_list(name):
         if len(name)==0:
@@ -1562,10 +1590,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
             if is_list(y) and len(y)>0 and (is_list(y[i]) or isinstance(y[i] , List) or is_array(y[i])):
                 y = y[i]
             plots[i] =  PlotDescriptor(plotName , np_to_java(to_array(data[i], 'd'), 'd'), np_to_java(to_array(x, 'd'), 'd'), np_to_java(to_array(y, 'd'), 'd'))
-        return get_context().plot(plots,title)
+        return get_interpreter().plot(plots,title)
     else:
         plot = PlotDescriptor(name, np_to_java(to_array(data, 'd'), 'd'), np_to_java(to_array(xdata, 'd'), 'd'), np_to_java(to_array(ydata, 'd'), 'd'))
-        return get_context().plot(plot,title)
+        return get_interpreter().plot(plot,title)
 
 def get_plots(title=None):
     """Return all current plots in the plotting window given by 'title'.
@@ -1576,7 +1604,7 @@ def get_plots(title=None):
     Returns:
         List of Plot.
     """
-    return get_context().getPlots(title)
+    return get_interpreter().getPlots(title)
 
 def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path = None):
     """Returns list with file names of plots snapshots from a plotting context.
@@ -1629,7 +1657,7 @@ def load_data(path, index=0, shape=None, root=None):
     Returns:
         Data array
     """
-    dm=get_context().getDataManager()
+    dm=get_data_manager()
     if index is not None and is_list(index):
         slice = dm.getData(path, index, shape) if (root==None) else dm.getData(root, path, index, shape)
     else:
@@ -1647,9 +1675,10 @@ def get_attributes(path, root=None):
     Returns:
         Dictionary
     """
+    dm=get_data_manager()
     if (root is None):
-        return get_context().getDataManager().getAttributes(path)
-    return get_context().getDataManager().getAttributes(root, path)
+        return dm.getAttributes(path)
+    return dm.getAttributes(root, path)
 
 def get_data_info(path, root=None):
     """Get information about the group or dataset.
@@ -1662,9 +1691,10 @@ def get_data_info(path, root=None):
     Returns:
         Dictionary
     """
+    dm=get_data_manager()
     if (root is None):
-        return get_context().getDataManager().getInfo(path)
-    return get_context().getDataManager().getInfo(root, path)
+        return dm.getInfo(path)
+    return dm.getInfo(root, path)
 
 def save_dataset(path, data, type='d', unsigned=False, features=None):
     """Save data into a dataset within the current persistence context.
@@ -1680,8 +1710,9 @@ def save_dataset(path, data, type='d', unsigned=False, features=None):
     Returns:
         Dictionary
     """
+    dm=get_data_manager()
     data = np_to_java(to_array(data, type), type)
-    get_context().getDataManager().setDataset(path, data, unsigned, features)
+    dm.setDataset(path, data, unsigned, features)
 
 def create_group(path):
     """Create an empty dataset within the current persistence context.
@@ -1691,7 +1722,8 @@ def create_group(path):
     Returns:
         None
     """
-    get_context().getDataManager().createGroup(path)
+    dm=get_data_manager()
+    dm.createGroup(path)
 
 def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
     """Create an empty dataset within the current persistence context.
@@ -1711,10 +1743,11 @@ def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
     Returns:
         None
     """
+    dm=get_data_manager()
     if "read" in (dir(type)): #If is Readable
-        get_context().getDataManager().createDataset(path, type,dimensions, features)
+        dm.createDataset(path, type,dimensions, features)
     else:
-        get_context().getDataManager().createDataset(path, ScriptUtils.getType(type), unsigned, dimensions, features)
+        dm.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions, features)
 
 def create_table(path, names, types=None, lengths=None, features=None):
     """Create an empty table (dataset of compound type) within the current persistence context.
@@ -1730,11 +1763,12 @@ def create_table(path, names, types=None, lengths=None, features=None):
     Returns:
         None
     """
+    dm=get_data_manager()
     type_classes = []
     if (types is not None):
         for i in range (len(types)):
             type_classes.append(ScriptUtils.getType(types[i]))
-    get_context().getDataManager().createTable(path, names, type_classes, lengths, features)
+    dm.createTable(path, names, type_classes, lengths, features)
 
 def append_dataset(path, data, index=None, type='d', shape=None):
     """Append data to dataset.
@@ -1753,16 +1787,17 @@ def append_dataset(path, data, index=None, type='d', shape=None):
     Returns:
         None
     """
+    dm=get_data_manager()
     data = np_to_java(to_array(data, type))
     if index is None:
-        get_context().getDataManager().appendItem(path, data)
+        dm.appendItem(path, data)
     else:
         if is_list(index):
             if shape is None:
                 shape = [len(index)]
-            get_context().getDataManager().setItem(path, data, index, shape)
+            dm.setItem(path, data, index, shape)
         else:
-            get_context().getDataManager().setItem(path, data, index)
+            dm.setItem(path, data, index)
 
 def append_table(path, data):
     """Append data to a table (dataset of compound type)
@@ -1773,6 +1808,7 @@ def append_table(path, data):
     Returns:
         None
     """
+    dm=get_data_manager()
     if is_list(data):
         arr = reflect.Array.newInstance(Class.forName("java.lang.Object"),len(data))
         for i in range (len(data)):
@@ -1781,7 +1817,7 @@ def append_table(path, data):
             else:
                 arr[i] = np_to_java(data[i])
         data=arr
-    get_context().getDataManager().appendItem(path, data)
+    dm.appendItem(path, data)
 
 def flush_data():
     """Flush all data files immediately.
@@ -1791,7 +1827,8 @@ def flush_data():
     Returns:
         None
     """
-    get_context().getDataManager().flush()
+    dm=get_data_manager()
+    dm.flush()
 
 def set_attribute(path, name, value, unsigned = False):
     """Set an attribute to a group or dataset.
@@ -1804,11 +1841,12 @@ def set_attribute(path, name, value, unsigned = False):
     Returns:
         None
     """
+    dm=get_data_manager()
     if is_list(value):
         value = Convert.toStringArray(to_array(value))
     elif type(value) == numpy.ndarray:
         value = np_to_java(value)
-    get_context().getDataManager().setAttribute(path, name, value, unsigned)
+    dm.setAttribute(path, name, value, unsigned)
 
 def log(log, data_file=None):
     """Writes a log to the system log and data context - if there is an ongoing scan or script execution.
@@ -1821,12 +1859,12 @@ def log(log, data_file=None):
     Returns:
         None
     """
-    get_context().scriptingLog(str(log))
+    get_interpreter().scriptingLog(str(log))
     if data_file is None:
         data_file = get_exec_pars().isOpen()
     if data_file:
         try:
-            get_context().getDataManager().appendLog(str(log))
+            get_data_manager().appendLog(str(log))
         except:
             #Do not generate exception if cannot write to data file
             pass
@@ -1882,7 +1920,7 @@ def set_exec_pars(**args):
         domain_axis(str): Set the domain axis source: "Time", "Index", or a readable name. Default: first positioner.
         status(str): set application status
     """
-    get_context().setExecutionPars(args)
+    get_interpreter().setExecutionPars(args)
 
 def get_exec_pars():
     """ Returns script execution parameters.
@@ -1908,7 +1946,7 @@ def get_exec_pars():
             simulation (bool): global simulation flag.
             aborted (bool): True if execution has been aborted
     """
-    return get_context().getExecutionPars()
+    return get_interpreter().getExecutionPars()
 
 
 ###################################################################################################
@@ -2061,7 +2099,7 @@ def create_channel_device(channel_name, type=None, size=None, device_name=None, 
         None
     """
     dev = Epics.newChannelDevice(channel_name if (device_name is None) else device_name , channel_name, Epics.getChannelType(type))
-    if get_context().isSimulation():
+    if Context.isSimulation():
         dev.setSimulated()
     dev.initialize()
     if (size is not None):
@@ -2156,7 +2194,7 @@ def commit(message, force = False):
     Returns:
         None
     """
-    get_context().commit(message, force)
+    get_versioning_manager().commit(message, force)
 
 def diff():
     """Return list of changes in the repository
@@ -2167,7 +2205,7 @@ def diff():
     Returns:
         None
     """
-    return get_context().diff()
+    return get_versioning_manager().diff()
 
 def checkout_tag(tag):
     """Checkout a tag name.
@@ -2178,7 +2216,7 @@ def checkout_tag(tag):
     Returns:
         None
     """
-    get_context().checkoutTag(tag)
+    get_versioning_manager().checkoutTag(tag)
 
 def checkout_branch(tag):
     """Checkout a local branch name.
@@ -2189,13 +2227,13 @@ def checkout_branch(tag):
     Returns:
         None
     """
-    get_context().checkoutLocalBranch(tag)
+    get_versioning_manager().checkoutLocalBranch(tag)
 
 def pull_repository():
     """Pull from remote repository.
 
     """
-    get_context().pullFromUpstream()
+    get_versioning_manager().pullFromUpstream()
 
 def push_repository(all_branches=True, force=False, push_tags=False):
     """Push to remote repository.
@@ -2208,7 +2246,7 @@ def push_repository(all_branches=True, force=False, push_tags=False):
     Returns:
         None
     """
-    get_context().pushToUpstream(all_branches, force, push_tags)
+    get_versioning_manager().pushToUpstream(all_branches, force, push_tags)
 
 def cleanup_repository():
     """Performs a repository cleanup.
@@ -2219,7 +2257,7 @@ def cleanup_repository():
     Returns:
         None
     """
-    get_context().cleanupRepository()
+    get_versioning_manager().cleanupRepository()
 
 ###################################################################################################
 #Device Pool
@@ -2234,7 +2272,7 @@ def get_device(device_name):
     Returns:
         device
     """
-    return get_context().getDevicePool().getByName(device_name)
+    return get_device_pool().getByName(device_name)
 
 def add_device(device, force = False):
     """Add  a device (or imaging source) to the device pool.
@@ -2250,7 +2288,7 @@ def add_device(device, force = False):
     proxy_method = getattr(device, "get_proxy", None)
     if callable(proxy_method):
         device=device.get_proxy()
-    return get_context().getDevicePool().addDevice(device, force, True)
+    return get_device_pool().addDevice(device, force, True)
 
 def remove_device(device):
     """Remove a device (or imaging source) from the device pool.
@@ -2262,7 +2300,7 @@ def remove_device(device):
         bool: true if device was removed.
     """
     device=string_to_obj(device)
-    return get_context().getDevicePool().removeDevice(device)
+    return get_device_pool().removeDevice(device)
 
 def set_device_alias(device, alias):
     """Deprecated, use "dev.set_alias" instead. Set a device alias to be used in scans (datasets and plots).
@@ -2286,7 +2324,7 @@ def stop():
     Returns:
         None
     """
-    get_context().stopAll()
+    get_interpreter().stopAll()
 
 def update():
     """Update all devices.
@@ -2297,7 +2335,7 @@ def update():
     Returns:
         None
     """
-    get_context().updateAll()
+    get_interpreter().updateAll()
 
 def reinit(dev = None):
     """Re-initialize devices.
@@ -2310,8 +2348,8 @@ def reinit(dev = None):
     """
     if dev is not None:
         dev=string_to_obj(dev)
-        return get_context().reinit(dev)
-    return to_list(get_context().reinit())
+        return get_interpreter().reinit(dev)
+    return to_list(get_interpreter().reinit())
 
 def create_device(url, parent=None):
     """Create a device form a definition string(see InlineDevice)
@@ -2363,7 +2401,7 @@ def tweak(dev, step, is2d=False):
     if (get_exec_pars().isBackground()): return
     dev,step = to_list(string_to_obj(dev)),to_list(step)
     while (not (get_exec_pars().getAborted())):
-        key=get_context().waitKey(0)
+        key=get_interpreter().waitKey(0)
         for i in range(len(dev)):
             if not is2d or i==0:
                 if key == 0x25: dev[i].moveRel(-step[i]) #Left
@@ -2613,7 +2651,7 @@ def get_setting(name=None):
         String with setting value or None if setting is undefined.
         If name is None then returns map with all settings.
     """
-    return get_context().getSettings() if (name is None) else get_context().getSetting(name)
+    return Context.getSettings() if (name is None) else Context.getSetting(name)
 
 def set_setting(name, value):
     """Set a persisted script setting value.
@@ -2624,7 +2662,7 @@ def set_setting(name, value):
     Returns:
         None.
     """
-    get_context().setSetting(name, value)
+    Context.setSetting(name, value)
 
 def exec_cmd(cmd, stderr_raise_ex = True):
     """Executes a shell command. If errors happens raises an exception.
@@ -2713,7 +2751,7 @@ def notify(subject, text, attachments = None, to=None):
     Returns:
         None
     """
-    get_context().notify(subject, text, to_list(attachments), to_list(to))
+    Context.notify(subject, text, to_list(attachments), to_list(to))
 
 def expand_path(path, timestamp=-1):
     """Expand path  containing tokens.
@@ -2782,7 +2820,7 @@ def set_preference(preference, value):
         None
     """
     value = to_array(value, 'o') #If list then convert to Object array
-    get_context().setPreference(preference, value)
+    get_interpreter().setPreference(preference, value)
 
 def get_string(msg, default = None, alternatives = None, password = False):
     """
@@ -2797,8 +2835,8 @@ def get_string(msg, default = None, alternatives = None, password = False):
         String entered of null if canceled
     """
     if password :
-        return get_context().getPassword(msg, None)
-    return get_context().getString(msg, str(default) if (default is not None) else None, alternatives)
+        return get_interpreter().getPassword(msg, None)
+    return get_interpreter().getString(msg, str(default) if (default is not None) else None, alternatives)
 
 def get_option(msg, type = "YesNoCancel"):
     """
@@ -2810,7 +2848,7 @@ def get_option(msg, type = "YesNoCancel"):
     Returns:
         'Yes', 'No', 'Cancel'
     """
-    return get_context().getOption(msg, type)
+    return get_interpreter().getOption(msg, type)
 
 def show_message(msg, title=None, blocking = True):
     """
@@ -2820,7 +2858,7 @@ def show_message(msg, title=None, blocking = True):
         msg(str): display message.
         title(str, optional): dialog title
     """
-    get_context().showMessage(msg, title, blocking)
+    get_interpreter().showMessage(msg, title, blocking)
 
 def show_panel(device, title=None):
     """
@@ -2835,7 +2873,7 @@ def show_panel(device, title=None):
         device.initialize()
     if is_string(device):
         device = get_device(device)
-    return get_context().showPanel(device)
+    return get_interpreter().showPanel(device)
 
     
 ###################################################################################################
@@ -2886,7 +2924,7 @@ if __name__ == "__main__":
     def ctlm_cmd_task(port,parent_thread, rc):
         try:
             global ctrl_cmd_socket
-            get_context().scriptingLog("Starting control command task")
+            get_interpreter().scriptingLog("Starting control command task")
             quit=False
             with socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM) as ctrl_cmd_socket:
                 ctrl_cmd_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -2908,7 +2946,7 @@ if __name__ == "__main__":
                         on_ctrl_cmd(cmd)
                     ctrl_cmd_socket.sendto("ack".encode('UTF-8'), add)
         finally:
-            get_context().scriptingLog("Quitting control command task")
+            get_interpreter().scriptingLog("Quitting control command task")
 
     ctrl_cmd_task_thread = threading.Thread(target=functools.partial(ctlm_cmd_task, CTRL_CMD_PORT, threading.current_thread(), run_count))
     ctrl_cmd_task_thread.daemon = True
