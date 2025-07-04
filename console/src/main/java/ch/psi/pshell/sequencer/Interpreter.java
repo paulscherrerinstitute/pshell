@@ -2874,7 +2874,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             File startupScript = new File(getDefaultStartupScript());
 
             boolean defaultLibPathConfig = (startupScript != null)
-                    && //(IO.isSubPath(setup.getScriptPath(), setup.getHomePath())) &&
+                    && //(IO.isSubPath(Setup.getScriptsPath(), setup.getHomePath())) &&
                     (IO.isSubPath(startupScript.getParent(), Setup.getScriptsPath()));
             //Only extracts binary files if startup script is inside script path
             if (defaultLibPathConfig) {

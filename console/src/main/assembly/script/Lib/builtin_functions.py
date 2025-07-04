@@ -318,15 +318,15 @@ def oscan(writable, readables, start, end, steps, integration_time, additional_b
     cfg = Context.getCrlogicConfig()
     if cfg is not None:
         if ioc is None:
-            ioc = get_context().config.xscanCrlogicIoc
+            ioc = cfg.getIoc()
         if prefix is None:
-            prefix = get_context().config.xscanCrlogicPrefix
+            prefix = cfg.getPrefix()
         if channel is None:
-            channel = get_context().config.xscanCrlogicChannel
+            channel = cfg.getChannel()
         if simulation is None:
-            simulation = get_context().config.xscanCrlogicSimulated
+            simulation = cfg.isSimulated()
     config = {}
-    config["class"] = "ch.psi.pshell.crlogic.CrlogicScan"
+    config["class"] = "ch.psi.pshell.scan.CrlogicScan"
     if not channel:
         config["ioc"] = ioc
     else:

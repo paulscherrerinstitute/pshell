@@ -37,8 +37,8 @@
 
     - With:
         ```
-        get_context().localMode
-        get_context().serverEnabled
+        Setup.local
+        get_interpreter().serverEnabled
         ```
 
  * How to define script setup / cleanup callbacks? This can simplify script flow, so that try/finally

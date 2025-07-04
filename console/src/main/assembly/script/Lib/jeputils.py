@@ -66,7 +66,7 @@ def init_jep():
     #sys.argv is not present in JEP and may be needed for certain modules (as Tkinter)
     j.eval("sys.argv = ['PShell']");
     #Add standard script path to python path
-    j.eval("sys.path.append('" + get_setup().getScriptPath() + "')")
+    j.eval("sys.path.append('" + Setup.getScriptsPath() + "')")
     
     #Redirect stdout
     j.eval("class JepStdout:\n" + 

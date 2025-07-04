@@ -58,6 +58,9 @@ public class CrlogicConfig extends ch.psi.pshell.utils.Config{
     }
 
     public static boolean isSimulated() {
+        if (Setup.isSimulation()){
+            return true;
+        }
         if (App.hasAditionalArgumentValue("crlogic.simulated")){
             return App.getBoolAditionalArgumentValue("crlogic.simulated");
         }
