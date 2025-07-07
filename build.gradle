@@ -1,6 +1,7 @@
 plugins {
     id("com.gradleup.shadow") version "8.3.5"
     id("com.netflix.nebula.rpm") version "11.6.0"
+    id("maven-publish")
 }
 
 allprojects {
@@ -39,6 +40,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'com.gradleup.shadow'
     apply plugin: 'com.netflix.nebula.rpm'
+    apply plugin: 'maven-publish'
 
     configurations {
         provided
@@ -63,6 +65,16 @@ subprojects {
         ext.arguments = runArgs.split (" ")
     } 
     
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        archiveClassifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        archiveClassifier = 'javadoc'
+        from javadoc.destinationDir
+    }    
+        
     ext.createDefaultTasks = { Project project ->
         ['run', 'debug'].each { taskName ->
             project.tasks.register(taskName, JavaExec) {
@@ -77,7 +89,7 @@ subprojects {
                 jvmArgs = project.run_jvargs
             }
         }           
-
+        
         tasks.named('jar') {
             archiveBaseName.set(project.name)
 
@@ -90,7 +102,7 @@ subprojects {
                 }
             }
         }           
-        
+                
         def app_name = project.name
         def app_version = project.version.toString()
         def app_release = project.ext.release.toString()
@@ -107,7 +119,7 @@ subprojects {
         def sys_lib ='/usr/local/lib/'
         def bin_file_name =  package_prefix ? "${package_prefix}-${app_name}-${app_version}" : "${app_name}-${app_version}"
         def bin_file_name_no_ver =  package_prefix ? "${package_prefix}-${app_name}" : "${app_name}"        
-        
+                
 
         project.tasks.register("rpm", Rpm) {
             requires 'java-' + app_jdk + '-openjdk'
@@ -171,6 +183,42 @@ subprojects {
 
             link(sys_bin + bin_file_name, app_path + '/bin/' + bin_file_name)   
             link(sys_bin + bin_file_name_no_ver, sys_bin + bin_file_name) 
+        }
+        
+        project.afterEvaluate {
+            project.publishing {
+                publications {
+                    MyPublication(MavenPublication) {
+                    from project.components.java
+                        if (project.tasks.findByName('sourcesJar')) {
+                            //artifact project.tasks.sourcesJar
+                        }
+                        if (project.tasks.findByName('javadocJar')) {
+                            //artifact project.tasks.javadocJar
+                        }
+                        //Don't add shadowJar explicitly, it is automatically wired
+                        //if (project.tasks.findByName('shadowJar')) {
+                        //    artifact project.tasks.shadowJar
+                        //}                        
+                        if (project.tasks.findByName('rpm')) {
+                            //artifact project.tasks.rpm
+                        }                            
+                        groupId = project.group
+                        artifactId = project.name
+                        version = project.version
+                    }
+                }
+
+                repositories {
+                    maven {
+                        credentials {
+                            username artifactoryUser 
+                            password artifactoryPwd
+                        }
+                        url = artifactoryUrlRel
+                    }
+                }
+            }        
         }
     }    
     

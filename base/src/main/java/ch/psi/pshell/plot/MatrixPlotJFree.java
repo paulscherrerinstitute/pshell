@@ -70,12 +70,6 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     double[] yvalues = new double[0];
     double[] zvalues = new double[0];
 
-    /**
-     * Constructor
-     *
-     * @param title
-     * @param data
-     */
     XYPlot plot;
     NumberAxis xAxis, yAxis;
     XYBlockRenderer renderer;
