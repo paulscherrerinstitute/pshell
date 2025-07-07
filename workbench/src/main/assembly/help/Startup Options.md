@@ -89,3 +89,30 @@
 | -dual, --stdio                | PSHELL_STDIO                  | GUI with command line interface (not allowed if running in the background)|
 | -pref,--preferences <path>    | PSHELL_PREFERENCES            | Override the view preferences file|
 | -cfg,--config                 | PSHELL_CONFIG                 | Set config file (default is {config}/config.properties)|
+
+
+<p>
+
+The startup scripts of application RPMs use the aditional environmet variables:
+
+<br>
+
+| Environment Variable               | Description |
+| :--------------------------------- | :---------- |
+| PSHELL_JVM_OPTIONS                 | JVM options used for all PShell applications|
+| APP_<APP_NAME>_JVM_OPTIONS         | JVM options for the application <APP_NAME>|
+| PSHELL_ARGS                        | Startup options used for all PShell applications|
+| APP_<APP_NAME>_ARGS                | Startup options used for the application <APP_NAME>|
+
+
+<p>
+
+The priority when resolving startup options is the following, from lower to higher:
+- PSHELL_ARGS environment variable.
+- APP_<APP_NAME>_ARGS environment variable.
+- PSHELL_<OPTION_NAME> environment variables.
+- Command-line option.
+    - If given multiple times - as when chaining startup scripts - the last value of a command-line option has higher proiprity.
+
+
+
