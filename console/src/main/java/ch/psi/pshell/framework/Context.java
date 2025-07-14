@@ -492,8 +492,17 @@ public class Context {
     
     public static FilePermissions getLogFilePermissions() {
         return logFilePermissions;
-    }    
-   
+    }            
+    
+    static boolean serverCommandsHidden;   
+    
+    public static boolean isServerCommandsHidden() {        
+        return serverCommandsHidden;        
+    }
+
+    public static void setServerCommandsHidden(boolean value) {        
+        serverCommandsHidden = value;        
+    }      
     
     //UI   
     public static UserInterface getUI() {
@@ -569,11 +578,7 @@ public class Context {
         return getInterpreter().getExecutionPars();
     }    
     
-    public static boolean hideServerCommands() {
-        //!!! TODO
-        return true;        
-    }
-        
+            
     public static Map getSessionMetadata(){
         //Map<String, Object> metadata = getSessionManager().getMetadata(true);
         return null;

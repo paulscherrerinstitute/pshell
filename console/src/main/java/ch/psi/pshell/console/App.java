@@ -83,6 +83,8 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             }
         }
         Context.setConfig(config);               
+        
+        Context.setServerCommandsHidden(config.serverCommandsHidden);
                               
         Context.setConfigFilePermissions(config.filePermissionsConfig);
         Context.setDataFilePermissions(config.filePermissionsData);

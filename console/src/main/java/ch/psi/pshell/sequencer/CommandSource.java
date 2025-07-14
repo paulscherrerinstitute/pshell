@@ -1,6 +1,7 @@
 package ch.psi.pshell.sequencer;
 
 import ch.psi.pshell.framework.Context;
+import java.util.logging.Level;
 
 /**
  * This enumeration represents the origin of a command (script execution, evaluation...) to the
@@ -33,12 +34,26 @@ public enum CommandSource {
             return false;
         }
         if (this == server){
-            return !Context.hideServerCommands();
+            return !Context.isServerCommandsHidden();
         }
         return true;
     }
     
     public boolean isSavable(){
-        return isLocal() || (this == terminal) || ((this == server) && !Context.hideServerCommands());
+        return isLocal() || (this == terminal) || ((this == server) && !Context.isServerCommandsHidden());
     }    
+
+    static boolean isBackgroundEval(String command){
+        return command.endsWith(ControlCommand.BACKGROUND_COMMAND_PREFIX.toString());
+    }
+    
+    public Level getLogLevel(String command){
+        if ((this == server) && Context.isServerCommandsHidden()){
+            if (isBackgroundEval(command)){
+                return Level.FINER;
+            }
+        }
+        return Level.INFO;
+    }    
+
 }

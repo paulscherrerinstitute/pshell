@@ -41,5 +41,5 @@ public enum ControlCommand {
 
     boolean isScripControl() {
         return (this == abort) ||  (this == pause) || (this == resume) ||(this == run);
-    }
+    }    
 }

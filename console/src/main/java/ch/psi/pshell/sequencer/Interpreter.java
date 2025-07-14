@@ -845,9 +845,11 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 }
             }
         }
+        Level level = source.getLogLevel(sb.toString());                
         sb.append(" ");
         source.putLogTag(sb);
-        logger.info(sb.toString());
+        String cmd = sb.toString();
+        logger.log(level, cmd);
         //TODO: Could add security check here?
     }
 

@@ -188,14 +188,14 @@ public class Console implements AutoCloseable{
     final InterpreterListener contextListener = new InterpreterListener() {
         @Override
         public void onShellCommand(CommandSource source, String command) {
-            if (source.isRemote() && !Context.hideServerCommands()) {
+            if (source.isRemote() && !Context.isServerCommandsHidden()) {
                 System.out.println(command);
             }
         }
 
         @Override
         public void onShellResult(CommandSource source, Object result) {
-            if (source.isRemote() && !Context.hideServerCommands()) {
+            if (source.isRemote() && !Context.isServerCommandsHidden()) {
                 if (result != null) {                    
                     System.out.println(Context.getInterpreter().interpreterVariableToString(result));
                 }

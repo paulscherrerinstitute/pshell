@@ -46,8 +46,7 @@ public class Configuration extends Config {
     public FilePermissions filePermissionsScripts = FilePermissions.Default;
     public FilePermissions filePermissionsConfig = FilePermissions.Default;
     public SessionHandling sessionHandling = SessionHandling.Off;
-    public String hostName  = "";
-    public boolean hideServerMessages = false;
+    public String hostName  = "";    
     public String logPath = Setup.TOKEN_LOGS + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME;
     public int logDaysToLive = -1;
     public LogLevel logLevel = LogLevel.Info;
@@ -62,6 +61,7 @@ public class Configuration extends Config {
     public int scanStreamerPort = -1;
     public int dataServerPort = -1;
     public boolean serverEnabled;
+    public boolean serverCommandsHidden = false;
     public int serverPort = 8080;
     public boolean terminalEnabled;
     public int terminalPort = 3579;
