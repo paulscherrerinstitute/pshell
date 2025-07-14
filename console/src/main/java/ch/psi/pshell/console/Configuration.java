@@ -19,7 +19,7 @@ import java.util.logging.Level;
  * An entity class holding the system configuration.
  */
 public class Configuration extends Config {
-    public boolean autoSaveScanData = true;
+    
     public boolean saveConsoleSessionFiles;
 
     public String dataPath = Setup.TOKEN_DATA + "/" + Setup.TOKEN_YEAR + "_" + Setup.TOKEN_MONTH + "/" + 
@@ -28,7 +28,8 @@ public class Configuration extends Config {
     public String dataFormat = "h5";
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
-    public int depthDimension = 0;    
+    public int dataDepthDimension = 0;    
+    public boolean dataScanAutoSave = true;
     public boolean dataScanFlushRecords = false;
     public boolean dataScanReleaseRecords = false;
     public boolean dataScanPreserveTypes = false;
@@ -37,31 +38,31 @@ public class Configuration extends Config {
     public boolean dataScanSaveSetpoints = false;
     public boolean dataScanSaveTimestamps = false;
     public boolean dataScanLazyTableCreation = false;
+    public int dataScanStreamerPort = -1;
+    public boolean dataScanSaveLogs = true;
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
     public String dataTransferPath = "";
     public String dataTransferUser = "";
-    public boolean disableDataFileLogs = false;
     public FilePermissions filePermissionsData = FilePermissions.Default;
     public FilePermissions filePermissionsLogs = FilePermissions.Default;
     public FilePermissions filePermissionsScripts = FilePermissions.Default;
     public FilePermissions filePermissionsConfig = FilePermissions.Default;
-    public SessionHandling sessionHandling = SessionHandling.Off;
-    public String hostName  = "";    
+    public SessionHandling sessionHandling = SessionHandling.Off;    
     public String logPath = Setup.TOKEN_LOGS + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME;
     public int logDaysToLive = -1;
     public LogLevel logLevel = LogLevel.Info;
     public NotificationLevel notificationLevel = NotificationLevel.Off;
-    public String notifiedTasks = "";
-    public boolean noBytecodeFiles = false;
+    public String notificationTasks = "";
+    public boolean pythonNoBytecodeFiles = false;
     public String pythonHome= "";
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
     public String versionTrackingRemote = "";
-    public String versionTrackingLogin = "";
-    public int scanStreamerPort = -1;
+    public String versionTrackingLogin = "";    
     public int dataServerPort = -1;
-    public boolean serverEnabled;
+    public boolean serverEnabled;    
     public boolean serverCommandsHidden = false;
+    public String serverHostName  = "";        
     public int serverPort = 8080;
     public boolean terminalEnabled;
     public int terminalPort = 3579;
@@ -104,8 +105,8 @@ public class Configuration extends Config {
         if (sessionHandling==null){
             sessionHandling = SessionHandling.Off;
         }         
-        if (notifiedTasks==null){
-            notifiedTasks = "";
+        if (notificationTasks==null){
+            notificationTasks = "";
         }             
         if (pythonHome==null){
             pythonHome= "";
@@ -134,7 +135,7 @@ public class Configuration extends Config {
     
     public List<String> getNotifiedTasks() {
         List<String> ret = new ArrayList<>();
-        String[] tokens = Str.split(notifiedTasks, new String[]{"|", ";", ","});
+        String[] tokens = Str.split(notificationTasks, new String[]{"|", ";", ","});
         for (String str : tokens) {
             str = str.trim();
             if (!str.isEmpty()) {
@@ -145,7 +146,7 @@ public class Configuration extends Config {
     }
 
     public boolean getNoBytecodeFiles(){
-        boolean ret = noBytecodeFiles;
+        boolean ret = pythonNoBytecodeFiles;
         String prop = System.getProperty(Options.NO_BYTECODE.toProperty());
         if ((prop != null) && (prop.length() > 0)) {
             ret =  Boolean.valueOf(prop);
@@ -154,7 +155,7 @@ public class Configuration extends Config {
     }
 
     public int getDepthDim() {
-        return (((depthDimension < 0) || (depthDimension > 2)) ? 0 : depthDimension);
+        return (((dataDepthDimension < 0) || (dataDepthDimension > 2)) ? 0 : dataDepthDimension);
     }
     
     public String getPythonHome(){
@@ -170,7 +171,8 @@ public class Configuration extends Config {
     
     private ScanConfig scanConfig;
     private void updateScanConfig(){
-        scanConfig = new ScanConfig(autoSaveScanData,
+        scanConfig = new ScanConfig(
+            dataScanAutoSave,
             dataScanFlushRecords,
             dataScanReleaseRecords,
             dataScanPreserveTypes,
@@ -178,7 +180,7 @@ public class Configuration extends Config {
             dataScanSaveScript,
             dataScanSaveSetpoints,
             dataScanSaveTimestamps,
-            !disableDataFileLogs,
+            dataScanSaveLogs,
             dataScanLazyTableCreation);        
     }
     
@@ -201,7 +203,7 @@ public class Configuration extends Config {
     }
 
     public boolean isScanStreamerEnabled() {
-        return /*(serverMode || config.serverEnabled) && */ (scanStreamerPort > 0) && !Setup.isLocal();
+        return /*(serverMode || config.serverEnabled) && */ (dataScanStreamerPort > 0) && !Setup.isLocal();
     }
 
     public boolean isDataStreamerEnabled() {

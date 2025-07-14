@@ -99,8 +99,6 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             System.out.println("\n[" + contextName + "]\n");
         }
 
-        if ((config.hostName != null) && (!config.hostName.trim().isEmpty()) && (!config.hostName.equalsIgnoreCase("null"))) 
-
         config.backup();
 
         if (System.getProperty(ScriptManager.PROPERTY_PYTHON_HOME) == null) {
@@ -117,7 +115,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                 
         dataManager = new DataManager();        
         pluginManager = new PluginManager();
-        interpreter = new Interpreter(config.hostName);
+        interpreter = new Interpreter(config.serverHostName);
         usersManager = new UsersManager(null);
         devicePool = new DevicePool();
         sessionManager = new SessionManager();
@@ -131,7 +129,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     
     void initializeData() throws Exception{
         Context.setDataFilePattern(config.dataPath); 
-        dataManager.setDefaultDepthDimension(config.depthDimension);
+        dataManager.setDefaultDepthDimension(config.dataDepthDimension);
         dataManager.initialize(config.getDataFormat(), config.getDataLayout());                                
     }
         
@@ -194,7 +192,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         try {
             if (!Setup.isLocal()) {
                 if (config.isScanStreamerEnabled()) {
-                    scanStreamer = new ScanStreamer(config.scanStreamerPort);
+                    scanStreamer = new ScanStreamer(config.dataScanStreamerPort);
                 }
                 if (config.isDataStreamerEnabled()) {
                     dataStreamer = new DataServer(config.dataServerPort);

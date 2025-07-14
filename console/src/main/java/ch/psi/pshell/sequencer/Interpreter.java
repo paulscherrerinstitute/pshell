@@ -104,8 +104,6 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     int runCount;
     
-    String hostName;
-
     public int getRunCount() {
         return runCount;
     }

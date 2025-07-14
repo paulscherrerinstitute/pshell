@@ -144,18 +144,18 @@ public class DataFileDialog extends StandardDialog {
     }    
   
     boolean changedDataLogs() {
-        return  (checkDataLogs.isSelected() == config.disableDataFileLogs) ;
+        return  (checkDataLogs.isSelected() != config.dataScanSaveLogs) ;
     }    
 
     boolean changedFormat() {
         return (changedProvider() || changedLayout() || changedDataLogs() 
-                || (checkDataLogs.isSelected() == config.disableDataFileLogs) 
-                || !spinnerDepthDim.getValue().equals(config.depthDimension));
+                || (checkDataLogs.isSelected() != config.dataScanSaveLogs) 
+                || !spinnerDepthDim.getValue().equals(config.dataDepthDimension));
 
     }
 
     boolean changedScans() {
-        return (ckAutoSave.isSelected() != config.autoSaveScanData)
+        return (ckAutoSave.isSelected() != config.dataScanAutoSave)
                 || (ckFlush.isSelected() != config.dataScanFlushRecords)
                 || (ckKeep.isSelected() == config.dataScanReleaseRecords)
                 || (ckSaveConsole.isSelected() != config.dataScanSaveOutput)
@@ -175,7 +175,7 @@ public class DataFileDialog extends StandardDialog {
 
     boolean changedNotify() {
         return (config.notificationLevel != comboNotification.getSelectedItem())
-                || !textTasks.getText().trim().equals(config.notifiedTasks);
+                || !textTasks.getText().trim().equals(config.notificationTasks);
     }
     
 
@@ -243,7 +243,7 @@ public class DataFileDialog extends StandardDialog {
         ckSaveSetpoints.setSelected(config.saveSetpoints());
         ckSaveTimestamps.setSelected(config.saveTimestamps());
         checkDataLogs.setSelected(config.saveLogs());
-        int depthDimension = this.config.depthDimension;
+        int depthDimension = this.config.dataDepthDimension;
         spinnerDepthDim.setValue((depthDimension > 2) ? 0 : Math.max(depthDimension, 0));
         
     }
@@ -269,7 +269,7 @@ public class DataFileDialog extends StandardDialog {
 
     void updateNotify() {
         comboNotification.setSelectedItem(App.getInstance().getConfig().notificationLevel);
-        textTasks.setText(App.getInstance().getConfig().notifiedTasks);
+        textTasks.setText(App.getInstance().getConfig().notificationTasks);
         try {
             textRecipients.setText(Context.getNotificationManager().getConfig().to);
         } catch (Exception ex) {            
@@ -996,7 +996,7 @@ public class DataFileDialog extends StandardDialog {
                 config.dataFormat = String.valueOf(comboFormat.getSelectedItem()).trim();
                 config.dataLayout = String.valueOf(comboLayout.getSelectedItem()).trim();
                 config.filePermissionsData= (FilePermissions)comboPermissions.getSelectedItem();
-                config.autoSaveScanData = ckAutoSave.isSelected();
+                config.dataScanAutoSave = ckAutoSave.isSelected();
                 config.dataScanPreserveTypes = !ckConvert.isSelected();
                 config.dataScanFlushRecords = ckFlush.isSelected();
                 config.dataScanReleaseRecords = !ckKeep.isSelected();
@@ -1005,16 +1005,16 @@ public class DataFileDialog extends StandardDialog {
                 config.dataScanSaveScript = ckSaveScript.isSelected();
                 config.dataScanSaveSetpoints = ckSaveSetpoints.isSelected();
                 config.dataScanSaveTimestamps = ckSaveTimestamps.isSelected();
-                config.depthDimension = (Integer) spinnerDepthDim.getValue();
-                config.disableDataFileLogs = !checkDataLogs.isSelected();
+                config.dataDepthDimension = (Integer) spinnerDepthDim.getValue();
+                config.dataScanSaveLogs = checkDataLogs.isSelected();
                 config.dataTransferMode = (DataTransferMode) comboTransferMode.getSelectedItem();
                 config.dataTransferPath = textTransferPath.getText().trim();
                 config.dataTransferUser = textTransferUser.getText().trim();
                 config.notificationLevel = (NotificationLevel) comboNotification.getSelectedItem();
-                config.notifiedTasks = textTasks.getText().trim();               
+                config.notificationTasks = textTasks.getText().trim();               
                 config.save();
                 
-                Context.getDataManager().setDefaultDepthDimension(config.depthDimension);
+                Context.getDataManager().setDefaultDepthDimension(config.dataDepthDimension);
                 Context.setDataFilePattern(config.dataPath);                 
                 if (changedFormat) {
                     Context.getDataManager().initialize(config.getDataFormat(), config.getDataLayout());
