@@ -5,10 +5,6 @@ ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.csm.App'
 dependencies {
     implementation project(':base')
     implementation project(':devices')
-    implementation 'ch.psi:bsread:4.5.0'
-    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
-    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'    
-    implementation 'com.fifesoft:rsyntaxtextarea:3.4.0'    
 }
 
 createDefaultTasks(project)

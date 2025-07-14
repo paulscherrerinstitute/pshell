@@ -1,19 +1,29 @@
 description = 'base' 
 
-dependencies {
+dependencies {        
     implementation 'net.java.dev.jna:jna:5.14.0'  
     implementation 'javax.mail:javax.mail-api:1.6.2'
-    implementation 'com.sun.mail:javax.mail:1.6.2'
-    implementation 'com.fifesoft:rsyntaxtextarea:3.4.0'
+    implementation 'com.sun.mail:javax.mail:1.6.2'    
     implementation 'org.jetbrains.pty4j:pty4j:0.12.13' // Not updated because use of Gradle Kotlin build file adds Kotlin libraries to jar file
     implementation 'com.github.JetBrains:jediterm:ba1165965cac86a2c4fc18efa340822cc61830e7'
     implementation 'redis.clients:jedis:5.1.5'
-    implementation 'org.jfree:jfreechart:1.5.4'
     implementation 'com.formdev:flatlaf:3.4.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.17.1'    
     implementation 'cisd:jhdf5:19.04.1'
     implementation 'org.jzy3d:jzy3d-native-jogl-awt:2.2.1'      
-    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
-    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'    
-    implementation "commons-cli:commons-cli:1.9.0"
+    implementation "commons-cli:commons-cli:1.9.0"   
+    compileOnly 'org.codehaus.groovy:groovy-all:2.4.8'   
+    //api 'commons-io:commons-io:2.18.0'
+    api 'org.apache.commons:commons-lang3:3.13.0'        
+    api 'org.apache.commons:commons-math3:3.6.1'                               
+    api 'black.ninia:jep:4.2.0'
+    api 'net.imagej:ij:1.54i'
+    api 'org.jfree:jfreechart:1.5.4'
+    api 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
+    api 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'    
+    api 'com.fifesoft:rsyntaxtextarea:3.4.0'
+    api 'org.zeromq:jeromq:0.6.0'       
+    api 'org.glassfish.jersey.media:jersey-media-json-jackson:3.1.7'
+    api 'org.glassfish.jersey.core:jersey-client:3.1.7'                    
 }

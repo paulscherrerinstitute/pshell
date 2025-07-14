@@ -38,6 +38,7 @@ allprojects {
 
 subprojects { 
     apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: 'com.gradleup.shadow'
     apply plugin: 'com.netflix.nebula.rpm'
     apply plugin: 'maven-publish'
@@ -364,18 +365,6 @@ subprojects {
     }    
     
     dependencies {
-        implementation 'commons-io:commons-io:2.18.0'
-        implementation 'org.apache.commons:commons-lang3:3.13.0'    
-        implementation 'org.apache.commons:commons-math3:3.6.1'               
-        implementation 'black.ninia:jep:4.2.0'
-        implementation 'net.imagej:ij:1.54i'
-        implementation 'org.zeromq:jeromq:0.6.0'   
-        implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:3.1.7'
-        implementation 'org.glassfish.jersey.core:jersey-client:3.1.7'
-        implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.17.1'
-        implementation 'ch.psi:jcae:3.0.0'
-        
-        compileOnly 'org.codehaus.groovy:groovy-all:2.4.8'
         testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     }                 
 }

@@ -7,7 +7,6 @@ dependencies {
     implementation project(':devices')    
     implementation project(':console')    
     implementation project(':dataviewer')   
-    implementation 'org.jfree:jfreechart:1.5.4'
 }
 
 createDefaultTasks(project)
