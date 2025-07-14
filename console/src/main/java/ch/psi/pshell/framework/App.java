@@ -993,11 +993,11 @@ public class App extends ch.psi.pshell.devices.App {
     }     
     
     public static boolean isScanPlottingActive() {
-        return !Setup.isServerMode() && !Setup.isScanPlottingDisabled();
+        return  !Setup.isScanPlottingDisabled();
     }
     
     public static boolean isScanPrintingActive() {
-        return !Setup.isServerMode() && !Setup.isScanPrintingDisabled() && !Setup.isPlotOnly();
+        return  !Setup.isScanPrintingDisabled() && !Setup.isPlotOnly();
     }
 
     public static void setupScanPrinting() {

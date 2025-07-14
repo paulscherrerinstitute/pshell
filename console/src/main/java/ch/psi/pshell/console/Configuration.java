@@ -218,7 +218,7 @@ public class Configuration extends Config {
     }
 
     public boolean isVersioningManual() {
-        if (Setup.isLocal() && (Boolean.TRUE.equals(Setup.getForceVersioning()))) {
+        if (Setup.isLocal()) {
             return true;
         }
         return versionTrackingManual;

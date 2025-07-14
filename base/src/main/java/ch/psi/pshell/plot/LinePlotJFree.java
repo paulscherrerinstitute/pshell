@@ -883,7 +883,7 @@ public class LinePlotJFree extends LinePlotBase {
         dataY1 = new XYSeriesCollection();
         // Create chart
         chart = newChart();
-
+        chart.setBackgroundPaint(new Color(0,0,0,0));                  
         // Customize legend
         chart.getLegend().setVisible(false);
         chart.getLegend().setBackgroundPaint(null);

@@ -13,7 +13,7 @@ dependencies {
     implementation project(':screenpanel') 
     implementation project(':archiverviewer') 
     implementation project(':dataviewer') 
-    implementation 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'
+    implementation 'org.commonmark:commonmark-ext-gfm-tables:0.25.0'
 }
 
 createDefaultTasks(project)

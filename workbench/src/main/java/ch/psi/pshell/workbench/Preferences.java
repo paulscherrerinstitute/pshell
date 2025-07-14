@@ -286,10 +286,10 @@ public class Preferences {
 
     @Transient
     public Color getPlotOutlineColor() {
-        if (gridColor == null) {
+        if (outlineColor == null) {
             return null;
         }
-       return new Color(gridColor);
+       return new Color(outlineColor);
     }    
     
     @Transient

@@ -239,7 +239,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                     Setup.getHomePath(), 
                     config.versionTrackingRemote, 
                     config.versionTrackingLogin, 
-                    !config.versionTrackingManual,
+                    !config.isVersioningManual(),
                     new String[] {Setup.getDevicesPath(), Setup.getScriptsPath(), Setup.getConfigPath(), Setup.getPluginsPath()});
                 versioningManager = new VersioningManager(versioningConfig);
                 versioningManager.setUserInterface(Context.getUserInterface());
@@ -289,7 +289,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         }
         Epics.destroy();
         if (versioningManager != null) {
-            if (!getConfig().versionTrackingManual) {
+            if (!getConfig().isVersioningManual()) {
                 versioningManager.startPushUpstream(true, false);  //In different process
             }
         }

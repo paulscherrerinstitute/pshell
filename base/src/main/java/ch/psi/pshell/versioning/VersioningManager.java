@@ -33,6 +33,7 @@ import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.TagCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
@@ -451,19 +452,20 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
 
     public List<DiffEntry> diff() {
         try {
-            //#This eventually fails returning empty
-            //List<DiffEntry> diffs = git.diff().call();
-
-            //AbstractTreeIterator parser1 = prepareTreeParser( Constants.HEAD );            
-            //List<DiffEntry> diffs = git.diff().setOldTree(parser1).setNewTree(parser2).call();
-            //Faster
-            DiffFormatter formatter = new DiffFormatter(new ByteArrayOutputStream());
-            formatter.setRepository(localRepo);
-            AbstractTreeIterator commitTreeIterator = prepareTreeParser(Constants.HEAD);
-            FileTreeIterator workTreeIterator = new FileTreeIterator(localRepo);
-            List<DiffEntry> diffs = formatter.scan(commitTreeIterator, workTreeIterator);
-            return diffs;
+            //List of unstaged changes, eventually fails returning empty
+            return git.diff().call();
         } catch (Exception ex) {
+            try {
+                //Compare HEAD vs working tree
+                DiffFormatter formatter = new DiffFormatter(new ByteArrayOutputStream());
+                formatter.setRepository(localRepo);
+                AbstractTreeIterator commitTreeIterator = prepareTreeParser(Constants.HEAD);
+                FileTreeIterator workTreeIterator = new FileTreeIterator(localRepo);
+                List<DiffEntry> diffs = formatter.scan(commitTreeIterator, workTreeIterator);
+                return diffs;
+                
+            } catch (Exception ex1) {                
+            }
             logException(ex);
             return new ArrayList<>();
         }

@@ -114,7 +114,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         }
 
         // Remove background paint/color
-        plot.setBackgroundPaint(null /*getPlotBackground()*/); //Always transparent
+        plot.setBackgroundPaint(getPlotBackground()); //Always transparent
         plot.setDomainGridlinePaint(getGridColor());
         plot.setRangeGridlinePaint(getGridColor());
         plot.setOutlinePaint(getOutlineColor());
@@ -509,6 +509,15 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     }
     
     @Override
+    public void setBackground(Color c) {
+        super.setBackground(c);
+        if (chartPanel != null) {
+            chartPanel.setBackground(c);
+            chart.setBackgroundPaint(c);
+        }
+    }    
+    
+    @Override
     public void setPlotOutlineColor(Color c) {
         chart.getXYPlot().setOutlinePaint((c==null) ? getOutlineColor() : c);        
     }   
@@ -644,11 +653,15 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         final Range initRangeY = xAxis.getRange();
         // Configure block renderer to have the blocks rendered in the correct size
         renderer = new XYBlockRenderer();
+        setBackground(getBackground());
         plot = new XYPlot(null, xAxis, yAxis, renderer);
 
         // Remove background paint/color
-        plot.setBackgroundPaint(null);
-
+        plot.setBackgroundPaint(getPlotBackground());        
+        plot.setDomainGridlinePaint(getGridColor());
+        plot.setRangeGridlinePaint(getGridColor());        
+        plot.setOutlinePaint(getOutlineColor());
+                
         // Set the maximum zoom out to the initial zoom rate This also 
         // provides a workaround for dynamic plots because there zoom out does not work correctly (zoom out to infinity) 
         plot.getRangeAxis().addChangeListener((AxisChangeEvent event) -> {
@@ -680,7 +693,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         chart.removeLegend();
         //AntiAliasing is used to speed up rendering
 //			chart.setAntiAlias(false);
-
+        
         //Anti-aliasing
         setQuality(quality);
 
@@ -710,7 +723,9 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         if (chart.getTitle() != null) {
             chart.getTitle().setPaint(getAxisTextColor());
         }
-
+        //chart.setBackgroundPaint(chartPanel.getBackground());          
+        chart.setBackgroundPaint(new Color(0,0,0,0));          
+        
         setLayout(new BorderLayout());
         add(chartPanel);
     }

@@ -321,8 +321,8 @@ public class Setup extends ch.psi.pshell.devices.Setup {
         return Options.GENERIC.getBool(false);
     }
 
-    static public boolean getForceVersioning() {
-        return Options.VERSIONING.getBool(false);
+    static public Boolean getForceVersioning() {
+        return Options.VERSIONING.getBool(null);
     }
     
     static public boolean isBare() {
