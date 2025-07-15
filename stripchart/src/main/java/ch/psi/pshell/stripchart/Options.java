@@ -2,6 +2,7 @@
 package ch.psi.pshell.stripchart;
 
 import ch.psi.pshell.app.Option;
+import ch.psi.pshell.app.Setup;
 
 /**
  *
@@ -18,6 +19,9 @@ public enum Options implements Option {
     
     public static void add(){           
         ch.psi.pshell.app.Options.addBasic();
+        ch.psi.pshell.app.Options.HOME_PATH.add("home" ,"Set home folder (default is " + ch.psi.pshell.app.Options.HOME_PATH.toEnvVar() + " or else " + Setup.DEFAULT_HOME_FOLDER +")", "path");
+        ch.psi.pshell.app.Options.DATA_PATH.add("data", "Set data folder (default is " + ch.psi.pshell.app.Options.DATA_PATH.toEnvVar() + " or else {home}/data)", "path");
+        ch.psi.pshell.app.Options.DEVICES_PATH.add("devp", "Set devices config folder (default is " + ch.psi.pshell.app.Options.DEVICES_PATH.toEnvVar() + " or else {home}/devices)", "path");
         ch.psi.pshell.devices.Options.addEpics();
         ch.psi.pshell.devices.Options.addCamServer();
         ch.psi.pshell.devices.Options.PARALLEL.add("u", "Parallel initialization of devices (values: true or false)");                                

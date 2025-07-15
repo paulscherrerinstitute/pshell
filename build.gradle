@@ -1,6 +1,6 @@
 plugins {
     id("com.gradleup.shadow") version "8.3.5"
-    id("com.netflix.nebula.rpm") version "11.6.0"
+    id("com.netflix.nebula.rpm") version "11.11.2"
     id("maven-publish")
 }
 
@@ -36,12 +36,12 @@ allprojects {
     }
 }
 
-subprojects { 
-    apply plugin: 'java'
-    apply plugin: 'java-library'
-    apply plugin: 'com.gradleup.shadow'
-    apply plugin: 'com.netflix.nebula.rpm'
-    apply plugin: 'maven-publish'
+subprojects {
+    plugins.apply('java')
+    plugins.apply('java-library')
+    plugins.apply('com.gradleup.shadow')
+    plugins.apply('com.netflix.nebula.rpm')
+    plugins.apply('maven-publish')
 
     configurations {
         provided
@@ -123,14 +123,23 @@ subprojects {
                 
 
         project.tasks.register("rpm", Rpm) {
+            doFirst {
+                def rpmFile = archiveFile.get().asFile
+                if (rpmFile.exists()) {
+                    //Workaround to nebula plugin bug: must first remove old RPMs otherwise the payload digest is corrupted.
+                    rpmFile.delete()
+                }
+            }            
+            
             requires 'java-' + app_jdk + '-openjdk'
             dependsOn 'shadowJar'                        
                                     
             release = app_release
             version = app_version
             arch 'noarch'
-            os LINUX
-
+            os LINUX            
+            reproducibleFileOrder = true
+            
             // Metadata for "rpm -qi"
             def propsFile = file("src/main/resources/ch/psi/pshell/ui/App.properties")
             def appProps = new Properties()            
@@ -161,7 +170,7 @@ subprojects {
             into app_path  
 
             from ('build/libs') {
-                print(jar_file_name )
+                //print(jar_file_name )
                 include jar_file_name                 
                 into 'lib'
                 fileMode 0644
@@ -321,6 +330,9 @@ subprojects {
         
         jarTask.archiveClassifier.set(jar_suffix)
         jarTask.mergeServiceFiles()        // important for things like logging, META-INF/services        
+        
+        //jarTask.reproducibleFileOrder = true
+        //jarTask.preserveFileTimestamps = false        
     }        
 
     java {
@@ -374,6 +386,8 @@ def jarsTask = tasks.register('jars') {
     group = 'build'
 }
 
+//Can check the RPMs after build with:  find . -name '*.rpm' -exec rpm -Kv {} \;    
+//Can scp the RPMs after build with:  find . -name '*.rpm' -exec scp {} <USER>@<HOST>:<DEST>/ \;
 def rpmsTask = tasks.register('rpms') {
     description = 'Generates all RPMs for app subprojects'
     group = 'rpm'

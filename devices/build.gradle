@@ -1,6 +1,6 @@
 description = 'devices'
 
-ext.mainClass = hasProperty('mainCcommonmarklass') ? mainClass : 'ch.psi.pshell.devices.App'
+ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.devices.App'
 
 dependencies {
     implementation project(':base')
