@@ -562,33 +562,36 @@ public class View extends MainFrame{
         if (Context.getRunCount() > 0) {
             dataPanel.initialize(preferences.getDataPanelAdditionalExtensions(), preferences.getDataPanelAdditionalFiles());
         }
-        Context.getInterpreter().setPlotListener(new PlotListener() {            
-            @Override
-            public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {    
-                return (List<Plot>) SwingUtils.invokeAndWait(() -> {
-                    return View.this.plotData(title, plots);
-                });
-            }
-
-            @Override
-            public List<Plot> getPlots(String title) {
-                PlotPanel plotPanel = getPlotPanel(title, false);
-                if (plotPanel != null) {
-                    return plotPanel.getPlots();
+        
+        if (Setup.getPlotServer() == null ){
+            Context.getInterpreter().setPlotListener(new PlotListener() {            
+                @Override
+                public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {    
+                    return (List<Plot>) SwingUtils.invokeAndWait(() -> {
+                        return View.this.plotData(title, plots);
+                    });
                 }
-                return new ArrayList<Plot>();
-            }
-            
-            @Override
-            public List<String> getTitles(){
-                return getPlotTitles();
-            }       
-            
-            @Override
-            public void onTitleClosed(String title){
-                //Do nothing... only close titles graphically
-            }            
-        });
+
+                @Override
+                public List<Plot> getPlots(String title) {
+                    PlotPanel plotPanel = getPlotPanel(title, false);
+                    if (plotPanel != null) {
+                        return plotPanel.getPlots();
+                    }
+                    return new ArrayList<Plot>();
+                }
+
+                @Override
+                public List<String> getTitles(){
+                    return getPlotTitles();
+                }       
+
+                @Override
+                public void onTitleClosed(String title){
+                    //Do nothing... only close titles graphically
+                }            
+            });
+        }
     }
 
     /**

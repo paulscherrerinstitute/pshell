@@ -114,12 +114,13 @@ public class Epics {
                                 
         File file = new File(configFile);
         if (!file.exists()){
-            if (configString!=null){
-                try {
-                    Files.writeString(file.toPath(), configString);
-                } catch (IOException ex) {
-                    Logger.getLogger(Epics.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            if (configString==null){
+                setDefaultJcaeProperties(); 
+            }
+            try {
+                Files.writeString(file.toPath(), configString);
+            } catch (IOException ex) {
+                Logger.getLogger(Epics.class.getName()).log(Level.SEVERE, null, ex);
             }
         }        
         System.setProperty(PROPERTY_JCAE_CONFIG_FILE, configFile);

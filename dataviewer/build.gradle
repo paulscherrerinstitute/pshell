@@ -14,7 +14,8 @@ tasks {
     shadowJar {
         shadowJarSetup(delegate)
         minimize{
-             shadowJarMinimizeKeepFlatLaf(delegate)
+            shadowJarMinimizeKeepTiff(delegate)
+            shadowJarMinimizeKeepFlatLaf(delegate)
         }                           
         shadowJarExcludeFrameworkFiles(delegate)
         shadowJarExcludeJzy3dFiles(delegate)

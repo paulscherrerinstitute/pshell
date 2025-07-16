@@ -16,6 +16,7 @@ tasks {
         shadowJarSetup(delegate)
         //minimize()
         minimize{
+             shadowJarMinimizeKeepTiff(delegate)
              shadowJarMinimizeKeepJersey(delegate)
              shadowJarMinimizeKeepFlatLaf(delegate)
         }                   

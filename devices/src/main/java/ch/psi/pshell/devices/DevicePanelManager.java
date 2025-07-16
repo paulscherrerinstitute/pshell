@@ -207,7 +207,7 @@ public class DevicePanelManager {
             if ((view!=null) && (parent==view)){
                 view.addPersistedWindow(dlg);
             }            
-            Path persistFile = Paths.get(Setup.getContextPath(), "Renderer_" + source.getName() + ".bin");
+            Path persistFile = Paths.get(Setup.getContextPath(), "renderer_" + source.getName() + ".bin");
             renderer.setPersistenceFile(persistFile);
         }
         return renderer;

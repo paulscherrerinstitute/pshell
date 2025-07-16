@@ -93,7 +93,7 @@ public enum Options implements Option {
         DETACHED_PLOTS.add("dplt", "Create plots for detached windows");  
         HIDE_COMPONENT.add("hcmp", "Hide component in GUI given its name");      
         PERSIST.add("pers", "Persist state of frames");                
-        PLOT_SERVER.add("psrv", "URL of a plot server (plots are externalized adding '-dspt -hide=tabPlots')", "url");     
+        PLOT_SERVER.add("psrv", "URL of a plot server (plots are externalized adding '-dspr -hcmp tabPlots')", "url");     
         DISABLE_SESSIONS.add("diss", "Disable session management");        
     }
     

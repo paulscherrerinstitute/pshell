@@ -1,5 +1,5 @@
 plugins {
-    id("com.gradleup.shadow") version "8.3.5"
+    id("com.gradleup.shadow") version "8.3.8"
     id("com.netflix.nebula.rpm") version "11.11.2"
     id("maven-publish")
 }
@@ -76,7 +76,16 @@ subprojects {
         from javadoc.destinationDir
     }    
         
-    ext.createDefaultTasks = { Project project ->
+    ext.includeAssemblyDir = { Jar jarTask ->
+        def assemblyDir = jarTask.project.file('src/main/assembly')
+        if (assemblyDir.exists()) {
+            jarTask.from(assemblyDir) {
+                include '**/*'
+                exclude '**/script/**/*.class'
+            }
+        }
+    }    
+    ext.createDefaultTasks = { Project project ->        
         ['run', 'debug'].each { taskName ->
             project.tasks.register(taskName, JavaExec) {
                 dependsOn 'classes'
@@ -93,15 +102,7 @@ subprojects {
         
         tasks.named('jar') {
             archiveBaseName.set(project.name)
-
-            // Only include 'src/main/assembly' if it exists
-            def assemblyDir = file('src/main/assembly')
-            if (assemblyDir.exists()) {
-                from(assemblyDir) {
-                    include '**/*'
-                    exclude '**/script/**/*.class'
-                }
-            }
+            project.includeAssemblyDir(delegate)
         }           
                 
         def app_name = project.name
@@ -252,6 +253,10 @@ subprojects {
         d.exclude(d.dependency("ch.psi:bitshuffle-lz4:.*"))   
         d.exclude(d.dependency("ch.psi:jcae:.*"))      
     }
+    
+    ext.shadowJarMinimizeKeepTiff = { d ->
+        d.exclude(d.dependency("com.twelvemonkeys.imageio:.*:.*"))        
+    }
 
     ext.shadowJarExcludeJzy3d = { d ->
         d.exclude(d.dependency("org.jzy3d:.*:.*"))                
@@ -332,7 +337,8 @@ subprojects {
         jarTask.mergeServiceFiles()        // important for things like logging, META-INF/services        
         
         //jarTask.reproducibleFileOrder = true
-        //jarTask.preserveFileTimestamps = false        
+        //jarTask.preserveFileTimestamps = false       
+        project.includeAssemblyDir(jarTask)
     }        
 
     java {

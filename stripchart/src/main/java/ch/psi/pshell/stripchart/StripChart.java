@@ -858,7 +858,7 @@ public class StripChart extends StandardDialog {
     File file;
 
     void updateTitle() {
-        if ((title!=null) & (!title.isBlank())){
+        if ((title!=null) && (!title.isBlank())){
             setTitle(title);
         } else {
             String title = "Strip Chart";

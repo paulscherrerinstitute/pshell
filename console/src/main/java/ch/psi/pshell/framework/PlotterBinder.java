@@ -1,21 +1,26 @@
 package ch.psi.pshell.framework;
 
+import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.DescStatsDouble;
 import ch.psi.pshell.imaging.Colormap;
+import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.LinePlot.Style;
 import ch.psi.pshell.plot.MatrixPlot;
+import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Plotter;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.sequencer.InterpreterListener;
+import ch.psi.pshell.sequencer.PlotListener;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.State;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +30,7 @@ import java.util.logging.Logger;
 public class PlotterBinder implements AutoCloseable {
 
     final ScanListener scanListener;
+    final PlotListener plotListener;
     final InterpreterListener interpreterListener;
     final Plotter pm;
 
@@ -32,8 +38,10 @@ public class PlotterBinder implements AutoCloseable {
         this.pm = pm;
         this.scanListener = new BinderScanListener();
         this.interpreterListener = new BinderContextListener();
+        this.plotListener = new BinderPlotListener();
         Context.getInterpreter().addScanListener(scanListener);
         Context.getInterpreter().addListener(interpreterListener);
+        Context.getInterpreter().setPlotListener(plotListener);
     }
 
     class BinderScanListener implements ScanListener {
@@ -125,6 +133,72 @@ public class PlotterBinder implements AutoCloseable {
         }
 
     };
+    
+    class BinderPlotListener implements PlotListener {
+        @Override
+        public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
+            title = (title == null) ? "0" : title;
+            pm.clearPlots(title);            
+            if ((plots != null) && (plots.length > 0)) {
+                for (PlotDescriptor plot : plots) {
+                    try {
+                        if (plot != null) {
+                           switch(plot.rank){
+                               case 1: {
+                                   String plotName = pm.addLinePlot(title, plot.name, (plot.error==null) ? LinePlot.Style.Normal : LinePlot.Style.ErrorY);
+                                   String seriesName = pm.addLineSeries(plotName, plot.name, null, null, null, null, null);
+                                   pm.setLineSeriesData(seriesName, plot.x, (double[])Convert.toDouble(plot.data), null, plot.error);
+                                   break;
+                                }
+                               case 2: {
+                                   String plotName = pm.addMatrixPlot(title, plot.name, MatrixPlot.Style.Normal, null);                                   
+                                   double[][] data = (double[][]) Convert.toDouble(plot.data);
+                                   double minX = (plot.x==null) ? 0 : plot.x[0];
+                                   double maxX = (plot.x==null) ? data[0].length-1 : plot.x[plot.x.length-1];
+                                   int nX = (plot.x==null) ? data[0].length : plot.x.length;
+                                   double minY = (plot.y==null) ? 0 : plot.y[0];
+                                   double maxY = (plot.y==null) ? data.length-1 : plot.y[plot.y.length-1];
+                                   int nY =  (plot.y==null) ? data.length : plot.y.length;
+                                   double stepX = (nX > 1) ? (maxX-minX) / (nX - 1) : 0;
+                                   double stepY = (nY > 1) ? (maxY-minY) / (nY - 1) : 0;
+                                   String seriesName = pm.addMatrixSeries(plotName, plot.name, minX, maxX, nX, minY, maxY, nY);
+                                   for (int i = 0; i < data.length; i++) {
+                                        for (int j = 0; j < data[0].length; j++) {                                            
+                                            pm.appendMatrixSeriesData(seriesName, minX + j*stepX, minY + i*stepY , data[i][j]);
+                                        }
+                                    }  
+                                   break;
+                               }
+                               default:
+                                   throw new Exception ("Unsupported rank: " + plot.rank);
+                           }
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(PlotterBinder.class.getName()).warning("Error creating plot: " + String.valueOf((plot != null) ? plot.name : null));
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public List<Plot> getPlots(String title) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public void onTitleClosed(String title) {
+            title = (title == null) ? "0" : title;
+            pm.clearPlots(title);
+        }
+
+        @Override
+        public List<String> getTitles() {
+            return Arrays.asList(pm.getContexts());
+        }
+    };
+    
+    
 
     @Override
     public void close() throws Exception {

@@ -555,7 +555,11 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     
     
     public static  String getPlotServer() {
-        return Options.PLOT_SERVER.getString(null);
+        String ret = Options.PLOT_SERVER.getString(null);
+        if ((ret!=null) && ret.isBlank()){
+            return null;
+        }
+        return ret;
     }        
     
     public static String getJarFile() {

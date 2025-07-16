@@ -21,5 +21,12 @@ createDefaultTasks(project)
 tasks {
     shadowJar {
         shadowJarSetup(delegate)
+
+        //Only include JZY3D in pshell-fat.jar - workbench alone is more portable
+        shadowJarExcludeJzy3dFiles(delegate)
+        dependencies {
+            shadowJarExcludeJzy3d(delegate)    
+        }             
+        
     }   
 }

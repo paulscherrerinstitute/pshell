@@ -29,7 +29,7 @@ public class PlotPane extends javax.swing.JPanel {
     public PlotPane() {
         initComponents();
         try {
-            preferences.load(Sys.getUserHome() + "/.PlotServer.properties");
+            preferences.load(Sys.getUserHome() + "/.plot_server.properties");
         } catch (Exception ex) {
         }
         applyPreferences();

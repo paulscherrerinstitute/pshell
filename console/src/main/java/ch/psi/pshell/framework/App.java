@@ -987,6 +987,9 @@ public class App extends ch.psi.pshell.devices.App {
         pmb = new PlotterBinder(pm);
     }
     
+    public Plotter getPloter(){
+        return (pmb==null) ? null : pmb.pm;
+    }    
     
     public boolean hasStatusBarMenu(){
         return Setup.isDetachedAppendStatusBar() || Setup.isPlotOnly();

@@ -139,7 +139,9 @@ public class DesktopPlotter implements Plotter {
     public String addLinePlot(String context, String title, LinePlot.Style style) {
         PlotPanel panel = getContext(context);
         int index = panel.getPlots().size();
-        panel.addLinePlot(title, style);
+        LinePlotBase plot = panel.addLinePlot(title, style);
+        plot.getAxis(Plot.AxisId.X).setLabel(null);
+        plot.getAxis(Plot.AxisId.Y).setLabel(null);
         return context + "/" + index;
     }
 

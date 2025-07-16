@@ -5,9 +5,11 @@ import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.swing.SwingUtils;
+import ch.psi.pshell.utils.Sys;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -50,10 +52,12 @@ public class App extends ch.psi.pshell.devices.App{
                 viewer.setCameraServerUrl(Setup.getCameraServer());
                 viewer.setPipelineServerUrl(Setup.getPipelineServer());
                 viewer.setShared(Options.SHARED.getBool(false));
-                if (Setup.getContextPath()!=null) {
-                    viewer.setPersistenceFile(Paths.get(Setup.getContextPath(), "CamServer_Viewer.bin"));
-                    viewer.getRenderer().clear();
-                }                
+                if ((Setup.getContextPath()!=null) && new File(Setup.getContextPath()).isDirectory()) {
+                    viewer.setPersistenceFile(Paths.get(Setup.getContextPath(), "camserver_viewer.bin"));                    
+                } else {
+                    viewer.setPersistenceFile(Paths.get(Sys.getUserHome(), ".camserver_viewer.bin"));                    
+                }              
+                viewer.getRenderer().clear();
                 if (Options.STREAM.hasValue()) {
                     viewer.setStartupStream(Options.STREAM.getString(null));
                 }

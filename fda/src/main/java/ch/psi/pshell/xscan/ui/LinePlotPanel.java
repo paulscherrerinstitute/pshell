@@ -61,7 +61,6 @@ public class LinePlotPanel extends EditablePanel<LinePlot> {
     ItemListener itemListenerY = new ItemListener() {
         @Override
         public void itemStateChanged(ItemEvent ie) {
-            System.out.println(ie.getStateChange());
             JComboBox box = (JComboBox) ie.getItemSelectable();
             if (((String) box.getSelectedItem()).equals("<remove>")) {
                 // Remove combobox
