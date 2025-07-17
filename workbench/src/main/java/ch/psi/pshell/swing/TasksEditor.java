@@ -3,6 +3,8 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.Task;
 import ch.psi.pshell.sequencer.TaskManager;
+import ch.psi.pshell.swing.Document;
+import ch.psi.pshell.swing.Editor;
 import ch.psi.pshell.utils.IO;
 import java.awt.event.ActionEvent;
 import java.io.IOException;

@@ -1,12 +1,9 @@
-package ch.psi.pshell.workbench;
+package ch.psi.pshell.swing;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.session.SciCat;
 import ch.psi.pshell.session.SessionManager;
 import ch.psi.pshell.session.SessionManager.MetadataType;
-import ch.psi.pshell.swing.Document;
-import ch.psi.pshell.swing.Editor;
-import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.OrderedProperties;
 import java.awt.BorderLayout;

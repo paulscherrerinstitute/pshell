@@ -7,6 +7,8 @@ import ch.psi.pshell.session.SciCat;
 import ch.psi.pshell.session.SessionManager;
 import ch.psi.pshell.session.SessionManager.MetadataType;
 import ch.psi.pshell.session.SessionManager.SessionManagerListener;
+import ch.psi.pshell.swing.StandardDialog;
+import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.SwingUtils.OptionResult;
 import ch.psi.pshell.swing.SwingUtils.OptionType;
 import ch.psi.pshell.utils.Chrono;

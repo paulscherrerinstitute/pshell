@@ -1,12 +1,9 @@
-package ch.psi.pshell.workbench;
+package ch.psi.pshell.swing;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.session.SessionManager;
 import ch.psi.pshell.session.SessionManager.MetadataType;
 import ch.psi.pshell.session.SessionManager.SessionManagerListener;
-import ch.psi.pshell.swing.MonitoredPanel;
-import ch.psi.pshell.swing.SessionsDialog;
-import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Str;
 import java.awt.Color;
 import java.awt.Component;

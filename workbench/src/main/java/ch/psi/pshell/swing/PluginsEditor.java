@@ -4,6 +4,8 @@ import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.plugin.Plugin;
 import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.swing.Document;
+import ch.psi.pshell.swing.Editor;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.IO;
 import java.io.File;

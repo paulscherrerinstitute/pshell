@@ -1,4 +1,4 @@
-package ch.psi.pshell.workbench;
+package ch.psi.pshell.swing;
 
 import ch.psi.pshell.console.Configuration;
 import ch.psi.pshell.data.DataManager;
@@ -11,11 +11,10 @@ import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.notification.NotificationManager.NotificationLevel;
 import ch.psi.pshell.scan.ScanConfig;
 import ch.psi.pshell.sequencer.InterpreterListener;
-import ch.psi.pshell.swing.StandardDialog;
-import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.SwingUtils.OptionType;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.State;
+import ch.psi.pshell.workbench.App;
 import java.awt.Dimension;
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -119,6 +119,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         usersManager = new UsersManager(null);
         devicePool = new DevicePool();
         sessionManager = new SessionManager();
+        sessionManager.setMode(config.sessionHandling);
         var packages =  getPackageArgs();
         if ((packages != null) && (packages.size()>0)) {            
             packageManager = new PackageManager(packages.toArray(new File[0]));

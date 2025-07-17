@@ -226,6 +226,5 @@ public class Configuration extends Config {
     
     public boolean isVersioningTrackingRemote() {
         return isVersioningEnabled() && versionTrackingRemote!=null && !versionTrackingRemote.isBlank();
-    }           
-        
+    }               
 }
