@@ -9,8 +9,8 @@ import ch.psi.pshell.archiver.Daqbuf.QueryListener;
 import ch.psi.pshell.archiver.Daqbuf.QueryRecordListener;
 import ch.psi.pshell.data.FormatCSV;
 import ch.psi.pshell.data.FormatText;
-import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.framework.Context;
+import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.LinePlotBase;
@@ -31,7 +31,6 @@ import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
 import ch.psi.pshell.swing.ChannelSelector;
-import ch.psi.pshell.swing.PatternFileChooserAuxiliary;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.StandardDialog;
 import ch.psi.pshell.swing.SwingUtils;
@@ -2399,7 +2398,7 @@ public class ArchiverPanel extends StandardDialog {
             } else {
                 if (SwingUtils.showOption(this, "Save", "Success saving data to " + finalFilename + ".\nDo you want to open the file?", OptionType.YesNo) == OptionResult.Yes) {
                     //DataPanel.createDialog(this, finalFilename, null, null);
-                    ch.psi.pshell.dataviewer.App.create(this, null, false, new File(finalFilename), null);
+                    ch.psi.pshell.dataviewer.App.create(this, null, false, new File(finalFilename), null, "h5");
                 }
             }
             dumping = false;
@@ -2416,16 +2415,14 @@ public class ArchiverPanel extends StandardDialog {
             chooser.setFileFilter(filter);
             chooser.setAcceptAllFileFilterUsed(true);
             chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            chooser.setDialogTitle("Dump Data");
-            
-            PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "Daqbuf", false);
-            chooser.setAccessory(auxiliary);          
+            chooser.setDialogTitle("Dump Data");            
+            chooser.setCurrentDirectory(new File(Context.hasDataManager() ? Setup.expandPath("{data}") : Sys.getUserHome()));
 
             int rVal = chooser.showSaveDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
-                String fileName = auxiliary.getSelectedFile();
-                if ((fileName!=null) && !fileName.isBlank()){
-                    saveQuery(fileName);
+                File file = chooser.getSelectedFile();
+                if (file!=null) {
+                    saveQuery(file.getAbsolutePath());
                 }
             }
         } catch (Exception ex) {

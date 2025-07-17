@@ -1811,6 +1811,7 @@ public class StripChart extends StandardDialog {
                 chooser.setAcceptAllFileFilterUsed(false);
                 chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                 chooser.setDialogTitle("Save Data");
+                chooser.setCurrentDirectory(new File(Context.hasDataManager() ? Setup.expandPath("{data}") : Sys.getUserHome()));
 
                 PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "StripChart", true);
                 auxiliary.addFormat(new String[]{"h5", "txt", "csv"});
@@ -1822,8 +1823,8 @@ public class StripChart extends StandardDialog {
                     String fileName = auxiliary.getSelectedFile();
                     if ((fileName!=null) && (!fileName.isBlank())){
 
-                        String format = auxiliary.getFormat();
-                        String layout = auxiliary.getlayout();
+                        String format = auxiliary.getSelectedFormat();
+                        String layout = auxiliary.getSelectedLayout();
                         if (IO.getExtension(fileName).isEmpty() && format.equals("h5")) {
                             fileName += ".h5";
                         }        
@@ -1885,7 +1886,7 @@ public class StripChart extends StandardDialog {
                         }
                         if (showOption( "Save", "Success saving data to " + fileName + ".\nDo you want to open the file?", SwingUtils.OptionType.YesNo) == SwingUtils.OptionResult.Yes) {
                             //DataPanel.createDialog(this, fileName, format, null);
-                            ch.psi.pshell.dataviewer.App.create(this, null, false, new File(fileName), null);
+                            ch.psi.pshell.dataviewer.App.create(this, null, false, new File(fileName), null, format, layout, true);
                         }
 
                     }

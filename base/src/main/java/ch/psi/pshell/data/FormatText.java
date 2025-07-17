@@ -273,7 +273,7 @@ public class FormatText implements Format {
                 of = openFiles.get(path);
                 if (of == null) {                    
                     Logger.getLogger(FormatText.class.getName()).info("Reopening log file: " + path);
-                    Path filePath = getFilePath(path);                    
+                    Path filePath = getFilePath(path);    
                     PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
                     of = new OutputFile(out);                    
                     openFiles.put(path, of);
@@ -766,7 +766,7 @@ public class FormatText implements Format {
             types[i] = types[i].trim();
         }    
     }    
-    
+        
 
     @Override
     public boolean isDataset(String root, String path) throws IOException {
@@ -780,7 +780,8 @@ public class FormatText implements Format {
 
     @Override
     public void createGroup(String path) throws IOException {
-        Paths.get(root, path).toFile().mkdirs();
+        Path filePath = getFilePath(root, path, false);
+        filePath.toFile().mkdirs();
     }
 
     final Object attributesLock = new Object();

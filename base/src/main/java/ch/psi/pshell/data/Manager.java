@@ -35,6 +35,10 @@ public class Manager implements AutoCloseable {
     public Manager(){        
     }
     
+    public static String[] getLayoutIds(){
+         return  new String[] {"default", "table"};
+    }
+    
     public static String[] getFormatIds(){
          return  new String[] {"h5", "txt", "txtd","csv", "tiff"};
     }

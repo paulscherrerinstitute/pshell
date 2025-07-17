@@ -1,15 +1,12 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.data.DataManager;
-import ch.psi.pshell.framework.Context;
-import ch.psi.pshell.framework.Setup;
+import ch.psi.pshell.app.Setup;
+import ch.psi.pshell.data.Manager;
 import ch.psi.pshell.utils.IO;
-import ch.psi.pshell.utils.Sys;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
@@ -39,9 +36,6 @@ public class PatternFileChooserAuxiliary extends JPanel {
     public PatternFileChooserAuxiliary(JFileChooser chooser, String tokenName, boolean usePatternSelected) {
         this.chooser = chooser;
         this.tokenName = tokenName;
-        String root = "{data}";
-        String path = Context.hasDataManager() ? Setup.expandPath(root) : Sys.getUserHome();
-        chooser.setCurrentDirectory(new File(path));
 
         this.setLayout(new GridBagLayout());
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -50,14 +44,15 @@ public class PatternFileChooserAuxiliary extends JPanel {
         gbc.weightx = 1.0;
         gbc.ipady = 10;        
 
-        if (Context.hasDataManager()) {
+        try{
             selectedPath = Setup.getDataPath();
             checkStdPath = new JCheckBox("Use name pattern");
             ActionListener listener =(e) -> {
                 boolean stdPath = checkStdPath.isSelected();
                 if (stdPath) {
                     if (textFile == null) {
-                        for (JTextField textFile : SwingUtils.getComponentsByType(chooser, JTextField.class)) {
+                        for (JTextField child : SwingUtils.getComponentsByType(chooser, JTextField.class)) {
+                            textFile = (JTextField) child;
                             textFile.addKeyListener(new java.awt.event.KeyAdapter() {
                                 public void keyReleased(java.awt.event.KeyEvent evt) {
                                     selectedPath = textFile.getText();
@@ -67,13 +62,12 @@ public class PatternFileChooserAuxiliary extends JPanel {
                         }
                     }
                     if (textFile != null) {
-                        textFile.setText(Setup.getDataPath());
+                        textFile.setText(Setup.TOKEN_DATA);
                     }
                 } else {
                     if (textFile != null) {
                         textFile.setText("");
                     }
-                    chooser.setCurrentDirectory(new File(path));
                 }
                 for (JList child : SwingUtils.getComponentsByType(chooser, JList.class)) {
                     child.setEnabled(!stdPath);
@@ -88,6 +82,8 @@ public class PatternFileChooserAuxiliary extends JPanel {
                 checkStdPath.setSelected(true);
                 listener.actionPerformed(null);
             }
+        } catch (Exception ex){
+            Logger.getLogger(PatternFileChooserAuxiliary.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -104,7 +100,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
             labelFormat.setHorizontalAlignment(SwingConstants.CENTER);
             comboFormat = new JComboBox();
             if (formats==null){
-                formats = DataManager.getFormatIds();
+                formats = Manager.getFormatIds();
             }
             comboFormat.setModel(new DefaultComboBoxModel(formats));
             addComponent(labelFormat);
@@ -120,7 +116,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
             JLabel labelLayout = new JLabel("Layout:");
             labelLayout.setHorizontalAlignment(SwingConstants.CENTER);
             if (layouts==null){
-                layouts = DataManager.getLayoutIds();
+                layouts = Manager.getLayoutIds();
             }
             comboLayout = new JComboBox();
             comboLayout.setModel(new DefaultComboBoxModel(layouts));
@@ -151,11 +147,11 @@ public class PatternFileChooserAuxiliary extends JPanel {
         return null;
     }
     
-     public String getFormat() {
+     public String getSelectedFormat() {
          return (comboFormat==null) ? null : String.valueOf(comboFormat.getSelectedItem());
      }
      
-     public String getlayout() {
+     public String getSelectedLayout() {
          return  (comboLayout==null) ? null : String.valueOf(comboLayout.getSelectedItem());
      }
                
