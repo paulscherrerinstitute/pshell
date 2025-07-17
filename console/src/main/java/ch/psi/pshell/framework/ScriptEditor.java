@@ -1,4 +1,4 @@
-package ch.psi.pshell.swing;
+package ch.psi.pshell.framework;
 
 import ch.psi.pshell.app.MainFrame;
 import ch.psi.pshell.device.GenericDevice;
@@ -11,6 +11,12 @@ import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.InterpreterUtils;
+import ch.psi.pshell.swing.CodeEditor;
+import ch.psi.pshell.swing.Document;
+import ch.psi.pshell.swing.DocumentListener;
+import ch.psi.pshell.swing.MonitoredPanel;
+import ch.psi.pshell.swing.ScrollPopupMenu;
+import ch.psi.pshell.swing.TextEditor;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Nameable;
 import ch.psi.pshell.utils.State;

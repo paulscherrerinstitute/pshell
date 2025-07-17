@@ -55,7 +55,7 @@ import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.PluginsEditor;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.ScanPanel;
-import ch.psi.pshell.swing.ScriptEditor;
+import ch.psi.pshell.framework.ScriptEditor;
 import ch.psi.pshell.swing.SearchPanel;
 import ch.psi.pshell.swing.SessionReopenDialog;
 import ch.psi.pshell.swing.SessionsDialog;

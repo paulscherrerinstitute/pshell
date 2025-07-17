@@ -1,7 +1,7 @@
 package ch.psi.pshell.xscan.ui;
 
 import ch.psi.pshell.swing.CodeEditor;
-import ch.psi.pshell.swing.ScriptEditor;
+import ch.psi.pshell.framework.ScriptEditor;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.xscan.ProcessorXScan;

@@ -28,7 +28,6 @@ import ch.psi.pshell.swing.DocumentListener;
 import ch.psi.pshell.swing.Editor;
 import ch.psi.pshell.swing.OutputPanel;
 import ch.psi.pshell.swing.PropertiesDialog;
-import ch.psi.pshell.swing.ScriptEditor;
 import ch.psi.pshell.swing.ScriptsPanel;
 import ch.psi.pshell.swing.SearchPanel;
 import ch.psi.pshell.swing.Shell;
