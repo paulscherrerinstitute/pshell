@@ -2,13 +2,18 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.app.MainFrame;
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.pshell.devices.DevicePool;
+import ch.psi.pshell.devices.DevicePoolListener;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Executor;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.scripting.Statement;
+import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.InterpreterUtils;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Nameable;
+import ch.psi.pshell.utils.State;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.KeyboardFocusManager;
@@ -32,11 +37,17 @@ import javax.swing.text.JTextComponent;
 import javax.swing.text.PlainDocument;
 import javax.swing.text.Utilities;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
+import org.fife.ui.rsyntaxtextarea.TokenMap;
+import org.fife.ui.rsyntaxtextarea.TokenTypes;
 
 /**
  *
  */
 public class ScriptEditor extends MonitoredPanel implements Executor {
+    
+    static {
+        setCodeEditorExtraTokens();
+    }
 
     Color satementHighlight;
     Color satementHighlightMac;
@@ -98,6 +109,97 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
             });
         }
     }
+    
+    static String[] functionNames;
+
+    static public void setCodeEditorExtraTokens() {
+        CodeEditor.setExtraTokens(new TokenMap());
+        new Thread(() -> {
+            while ((Context.getState() == State.Invalid) || (Context.getState() == State.Initializing)) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    return;
+                }
+            }
+            if ((Context.getState() == State.Closing) || (!Context.hasScriptManager())) {
+                return;
+            }
+            update();                
+            if (Interpreter.hasInstance()){
+                Interpreter.getInstance().addListener(interpreterListener);
+            }
+            DevicePool.addStaticListener(devicePoolListener);
+        }).start();            
+    }
+
+    static final DevicePoolListener devicePoolListener = new DevicePoolListener() {
+        @Override
+        public void onDeviceAdded(GenericDevice dev) {
+            requestUpdate();
+        }
+
+        @Override
+        public void onDeviceRemoved(GenericDevice dev) {
+            requestUpdate();
+        }
+    };
+    
+    static final InterpreterListener interpreterListener = new InterpreterListener(){
+        public void onInitialized(int runCount) {
+            functionNames = null;
+            requestUpdate();
+        }
+    };
+
+    static volatile boolean requsting;
+
+    static void requestUpdate() {
+        if (!requsting) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    update();
+                }
+            }).start();
+        }
+    }
+
+    static void update() {
+        requsting = false;
+        try {
+            TokenMap map = new TokenMap();
+            if (Context.hasDevicePool()){
+                for (GenericDevice dev : Context.getDevicePool().getAllDevices()) {
+                    try {
+                        map.put(dev.getName(), TokenTypes.VARIABLE);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ScriptEditor.class.getName()).log(Level.INFO, null, ex);
+                    }
+                }
+            }
+            if (Interpreter.hasInstance()){
+                if ((functionNames==null) && (Interpreter.getInstance().getState().isInitialized())){
+                    try{
+                        functionNames = Interpreter.getInstance().getBuiltinFunctionsNames();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ScriptEditor.class.getName()).log(Level.INFO, null, ex);
+                        functionNames = null;
+                    }
+                }
+                if (functionNames != null) {
+                    for (String function : functionNames) {
+                        map.put(function, TokenTypes.FUNCTION);
+                    }
+                }
+            }
+            
+            CodeEditor.setExtraTokens(map);
+        } catch (Exception ex) {
+            Logger.getLogger(ScriptEditor.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
+    
     
     public boolean hasSyntaxHighlight(){
         return syntaxHighlight;

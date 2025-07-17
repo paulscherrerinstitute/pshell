@@ -1,7 +1,7 @@
-package ch.psi.pshell.swing;
+package ch.psi.pshell.framework;
 
 import ch.psi.pshell.framework.App.ExecutionStage;
-import ch.psi.pshell.framework.Context;
+import ch.psi.pshell.swing.MonitoredPanel;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;

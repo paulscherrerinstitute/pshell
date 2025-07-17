@@ -1,11 +1,11 @@
-package ch.psi.pshell.swing;
+package ch.psi.pshell.framework;
 
 import ch.psi.pshell.devices.InlineDevice;
-import ch.psi.pshell.framework.Context;
-import ch.psi.pshell.framework.Processor;
-import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.swing.MonitoredPanel;
+import ch.psi.pshell.swing.Shell;
+import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.EncoderJson;
 import ch.psi.pshell.utils.IO;
@@ -33,13 +33,11 @@ import javax.swing.table.DefaultTableModel;
  */
 public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
+    public static final String EXTENSION = "scan";
+    
     static final int COLUMN_TYPE = 0;
     static final int COLUMN_PLOT = 4;
     
-    static final String EXTENSION = "scan";
-    
-
-
     boolean changed;
     volatile boolean running;
     volatile Object result;

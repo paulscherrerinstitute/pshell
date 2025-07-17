@@ -1,7 +1,7 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.app.App;
 import ch.psi.pshell.app.MainFrame;
-import ch.psi.pshell.framework.App;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Sys;
 import java.awt.Color;
@@ -24,6 +24,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.TokenMap;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 /**
@@ -35,6 +36,18 @@ public class CodeEditor extends TextEditor {
     final RTextScrollPane scrollPane;
     final RSyntaxTextArea editorPane;
     
+    static volatile TokenMap extraTokens;
+    
+    public static TokenMap getExtraTokens(){
+        if (extraTokens==null){
+            extraTokens = new TokenMap();
+        }
+        return extraTokens;
+    }
+    
+    public static void setExtraTokens(TokenMap extraTokens){        
+        CodeEditor.extraTokens =  extraTokens;
+    }
     
     public static Color getForegroundColor(){
         return TextEditor.getForegroundColor();

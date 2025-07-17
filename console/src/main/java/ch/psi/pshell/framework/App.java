@@ -21,7 +21,6 @@ import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.OutputPanel;
 import ch.psi.pshell.swing.PlotPanel;
-import ch.psi.pshell.swing.ScanEditorPanel;
 import ch.psi.pshell.swing.Shell;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.TextEditor;

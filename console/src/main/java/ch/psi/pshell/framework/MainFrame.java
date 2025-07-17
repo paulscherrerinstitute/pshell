@@ -26,7 +26,6 @@ import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.Document;
 import ch.psi.pshell.swing.DocumentListener;
 import ch.psi.pshell.swing.Editor;
-import ch.psi.pshell.swing.NextStagesPanel;
 import ch.psi.pshell.swing.OutputPanel;
 import ch.psi.pshell.swing.PropertiesDialog;
 import ch.psi.pshell.swing.ScriptEditor;

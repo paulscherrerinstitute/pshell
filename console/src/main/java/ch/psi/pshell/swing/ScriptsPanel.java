@@ -1,6 +1,7 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.framework.Context;
+import ch.psi.pshell.framework.ScanEditorPanel;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Chrono;
