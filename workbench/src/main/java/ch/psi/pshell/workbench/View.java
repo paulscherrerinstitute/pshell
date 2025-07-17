@@ -16,6 +16,7 @@ import ch.psi.pshell.framework.Options;
 import ch.psi.pshell.framework.Panel;
 import ch.psi.pshell.framework.Processor;
 import ch.psi.pshell.framework.QueueProcessor;
+import ch.psi.pshell.framework.ScriptEditor;
 import ch.psi.pshell.framework.ScriptProcessor;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.framework.StatusBar;
@@ -55,7 +56,6 @@ import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.PluginsEditor;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.ScanPanel;
-import ch.psi.pshell.framework.ScriptEditor;
 import ch.psi.pshell.swing.SearchPanel;
 import ch.psi.pshell.swing.SessionReopenDialog;
 import ch.psi.pshell.swing.SessionsDialog;
@@ -751,22 +751,26 @@ public class View extends MainFrame{
         getScanPanel().startScan(scan, title);
     }
 
+    @Override
     public ScanPanel getScanPanel(){
         return scanPanel;
     }
 
-    public ch.psi.pshell.swing.PlotPanel getScanPlot(){
+    public PlotPanel getScanPlot(){
         return scanPlot;
     }
     
+    @Override
     public OutputPanel getOutputPanel() {
         return outputPanel;
     }
     
+    @Override
     public JMenu getMenuFileNew() {
          return menuFileNew;
      }
     
+    @Override
      public DataPanel getDataPanel() {
          return dataPanel;
      }

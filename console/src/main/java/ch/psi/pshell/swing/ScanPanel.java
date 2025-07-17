@@ -2,12 +2,12 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
-import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.logging.LogManager;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.utils.Chrono;
 import java.util.ArrayList;
 import javax.swing.table.DefaultTableModel;
@@ -30,15 +30,15 @@ public class ScanPanel extends MonitoredPanel {
 
     public void setActive(boolean value) {
         if (value) {
-            Context.getInterpreter().addScanListener(scanListener);
+            Interpreter.getInstance().addScanListener(scanListener);
         } else {
-            Context.getInterpreter().removeScanListener(scanListener);
+            Interpreter.getInstance().removeScanListener(scanListener);
             clear();
         }
     }
 
     public boolean isActive() {
-        return Context.getInterpreter().getScanListeners().contains(scanListener);
+        return Interpreter.getInstance().getScanListeners().contains(scanListener);
     }
 
     public void clear() {
@@ -46,7 +46,7 @@ public class ScanPanel extends MonitoredPanel {
     }
     
     public void startScan(Scan scan, String plotTitle){
-        if (!Context.getInterpreter().getExecutionPars().isScanDisplayed(scan)){
+        if (!Interpreter.getInstance().getExecutionPars().isScanDisplayed(scan)){
             return;
         }
 

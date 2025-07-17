@@ -417,18 +417,8 @@ public class Context {
     }    
 
     public static boolean isHandlingSessions(){
-        if (Context.hasSessionManager()){
-            SessionManager sm = getSessionManager();
-            if (sm!=null){
-                switch (sm.getMode()) {
-                    case On, Files -> {
-                        return true;
-                    }
-                    case Exclusive -> {
-                        return !Setup.isLocal();
-                    }
-                }
-            }
+        if (hasSessionManager()){
+            return SessionManager.isHandlingSessions();
         }
         return false;        
     }

@@ -8,7 +8,6 @@ import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableCalibratedArray;
 import ch.psi.pshell.device.Readable.ReadableCalibratedMatrix;
 import ch.psi.pshell.device.Writable;
-import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.plot.Axis;
 import ch.psi.pshell.plot.LinePlotBase;
 import ch.psi.pshell.plot.LinePlotErrorSeries;
@@ -22,6 +21,7 @@ import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
+import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.Range;
@@ -45,29 +45,17 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
     final ArrayList<Integer> writableIndexes = new ArrayList();        
     
     
-    @Override
-    protected Class getPlotClass(Object plotType) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        try{
-            return super.getPlotClass(plotType);
-        } catch (ClassNotFoundException ex){
-            if (plotType instanceof String string) {                  
-                return Context.getClassByName(string);                
-            }            
-            throw ex;
-        }
-    }
-    
     public void setActive(boolean value) {
         if (value) {
-            Context.getInterpreter().addScanListener(scanListener);
+            Interpreter.getInstance().addScanListener(scanListener);
         } else {
-            Context.getInterpreter().removeScanListener(scanListener);
+            Interpreter.getInstance().removeScanListener(scanListener);
         }
     }
 
     public boolean isActive() {
         
-        return Context.getInterpreter().getScanListeners().contains(scanListener);
+        return Interpreter.getInstance().getScanListeners().contains(scanListener);
     }
 
     
@@ -100,7 +88,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
             writableIndexes.clear();
             currentPass = 1;
             changedScaleX = false;
-            boolean accessDevice = Context.getScriptManager().isThreaded();
+            boolean accessDevice = Interpreter.getInstance().getScriptManager().isThreaded();
 
             try {
 
@@ -228,7 +216,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                     scanRecordBuffer.clear();
                     updating.set(false);
                 }
-                if (!Context.getScriptManager().isThreaded()){
+                if (!Interpreter.getInstance().getScriptManager().isThreaded()){
                     pars.put("writables", scan.getWritableNames());
                     pars.put("readables", scan.getReadableNames());
                     Map<String,Map> attrs = new HashMap<>();

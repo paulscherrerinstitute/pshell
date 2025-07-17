@@ -28,6 +28,7 @@ import ch.psi.pshell.swing.DocumentListener;
 import ch.psi.pshell.swing.Editor;
 import ch.psi.pshell.swing.OutputPanel;
 import ch.psi.pshell.swing.PropertiesDialog;
+import ch.psi.pshell.swing.ScanPanel;
 import ch.psi.pshell.swing.ScriptsPanel;
 import ch.psi.pshell.swing.SearchPanel;
 import ch.psi.pshell.swing.Shell;
@@ -122,6 +123,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
     public StatusBar getStatusBar() {return null;}
     public JToolBar getToolBar() {return null;}
     public OutputPanel getOutputPanel() {return null;}
+    public ScanPanel getScanPanel(){return null;}
     public DataPanel getDataPanel() {return null;}
     public JMenu getMenuFileNew() {return null;}
     public JMenuBar getMenu() {return null;}

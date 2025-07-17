@@ -49,6 +49,22 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return INSTANCE!=null;
     }    
     
+    
+    public static boolean isHandlingSessions(){
+        if (hasInstance()){
+            switch (INSTANCE.getMode()) {
+                case On, Files -> {
+                    return true;
+                }
+                case Exclusive -> {
+                    return !Setup.isLocal();
+                }
+            }
+        }
+        return false;        
+    }
+    
+    
     public enum SessionHandling {
         Off,
         Files,

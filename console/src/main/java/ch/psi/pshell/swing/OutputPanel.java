@@ -1,7 +1,7 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.scripting.InterpreterResult;
+import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.InterpreterListener;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -56,13 +56,13 @@ public class OutputPanel extends MonitoredPanel {
     
     @Override
     protected void onActive() {
-        Context.getInterpreter().addListener(interpreterListener);
+        Interpreter.getInstance().addListener(interpreterListener);
     }
 
     @Override
     protected void onDesactive() {
         outputTextPane.clear();
-        Context.getInterpreter().removeListener(interpreterListener);        
+        Interpreter.getInstance().removeListener(interpreterListener);        
     }    
 
     final InterpreterListener interpreterListener = new InterpreterListener() {
@@ -83,7 +83,7 @@ public class OutputPanel extends MonitoredPanel {
 
         @Override
         public void onExecutingFile(String fileName) {
-            String scriptName = Context.getInterpreter().getStandardScriptName(fileName);
+            String scriptName = Interpreter.getInstance().getStandardScriptName(fileName);
             outputTextPane.append(getTaskInitMessage(scriptName) + "\n", SwingUtils.getColorOutput());
         }
 
@@ -97,7 +97,7 @@ public class OutputPanel extends MonitoredPanel {
                 }
             }
 
-            String scriptName = Context.getInterpreter().getStandardScriptName(fileName);
+            String scriptName = Interpreter.getInstance().getStandardScriptName(fileName);
             outputTextPane.append(getTaskFinishMessage(scriptName) + "\n", SwingUtils.getColorOutput());
         }
     };

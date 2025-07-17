@@ -1,6 +1,6 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.framework.Context;
+import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.Task;
 import ch.psi.pshell.sequencer.TaskManager;
 import ch.psi.pshell.utils.IO;
@@ -66,7 +66,7 @@ public class TasksEditor extends Editor {
     }
 
     void updateTables() {
-        TaskManager taskManager = Context.getInterpreter().getTaskManager();
+        TaskManager taskManager = Interpreter.getInstance().getTaskManager();
         if (taskManager != null) {
             Task[] tasks = taskManager.getAll();
             if (tasks.length != modelLoaded.getRowCount()) {
@@ -195,13 +195,13 @@ public class TasksEditor extends Editor {
 
     void run(String taskName) throws Exception {
         if (taskName != null) {
-            Task task = Context.getInterpreter().getTask(taskName);
+            Task task = Interpreter.getInstance().getTask(taskName);
             if (task != null) {
                 task.run();
             } else {
-                task = Context.getInterpreter().startTask(taskName, 0, -1);
+                task = Interpreter.getInstance().startTask(taskName, 0, -1);
                 task.waitRunning(3000);
-                Context.getInterpreter().stopTask(taskName, false);
+               Interpreter.getInstance().stopTask(taskName, false);
             }
         }
     }
@@ -449,7 +449,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Context.getInterpreter().getTaskManager().start(task);
+                Interpreter.getInstance().getTaskManager().start(task);
             }
             updateTables();
         } catch (Exception ex) {
@@ -461,7 +461,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Context.getInterpreter().getTaskManager().stop(task, true);
+                Interpreter.getInstance().getTaskManager().stop(task, true);
             }
             updateTables();
         } catch (Exception ex) {
@@ -481,7 +481,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Context.getInterpreter().stopTask(task, true);
+                Interpreter.getInstance().stopTask(task, true);
             }
             updateTables();
         } catch (Exception ex) {
@@ -495,7 +495,7 @@ public class TasksEditor extends Editor {
             if (task != null) {
                 Double delayMillis =(((Number) model.getValueAt(table.getSelectedRow(), 2)).doubleValue() * 1000);
                 Double intervalMillis =(((Number) model.getValueAt(table.getSelectedRow(), 3)).doubleValue() * 1000);
-                Context.getInterpreter().startTask(task, delayMillis.intValue(),  intervalMillis.intValue());
+                Interpreter.getInstance().startTask(task, delayMillis.intValue(),  intervalMillis.intValue());
             }
             updateTables();
         } catch (Exception ex) {

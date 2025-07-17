@@ -1,6 +1,6 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.framework.Context;
+import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.utils.State;
 import java.awt.Component;
@@ -29,13 +29,13 @@ public class ScriptButton extends MonitoredPanel {
                 button.setEnabled(state.isReady());
             }
         };
-        Context.getInterpreter().addListener(interpreterListener);
-        button.setEnabled(Context.getState().isReady());
+        Interpreter.getInstance().addListener(interpreterListener);
+        button.setEnabled(Interpreter.getInstance().getState().isReady());
     }
 
     @Override
     protected void onHide() {
-        Context.getInterpreter().addListener(interpreterListener);
+        Interpreter.getInstance().addListener(interpreterListener);
     }
 
     /**
@@ -87,7 +87,7 @@ public class ScriptButton extends MonitoredPanel {
                     args.put(arg, val);
                 }
             }
-            Context.getInterpreter().evalFileAsync(script, args);
+            Interpreter.getInstance().evalFileAsync(script, args);
         } catch (Exception ex) {
             showException(ex);
         }

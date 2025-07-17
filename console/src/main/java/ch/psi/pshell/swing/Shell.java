@@ -2,7 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.app.MainFrame;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.framework.Context;
+import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
@@ -10,6 +10,7 @@ import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.sequencer.CommandSource;
 import ch.psi.pshell.sequencer.ControlCommand;
+import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.InterpreterUtils;
 import ch.psi.pshell.sequencer.ScriptStdio;
@@ -65,6 +66,9 @@ public class Shell extends MonitoredPanel {
         onLafChange();
     }
 
+    Interpreter getInterpreter(){
+        return Interpreter.getInstance();
+    }
     @Override
     protected final void onLafChange() {  
         if (MainFrame.isDark()){
@@ -119,7 +123,7 @@ public class Shell extends MonitoredPanel {
         clear();
         input.setEditable(true);
         input.requestFocus();
-        Context.getInterpreter().addListener(interpreterListener);
+        getInterpreter().addListener(interpreterListener);
     }
 
     boolean propagateVariableEvaluation = false;
@@ -136,7 +140,7 @@ public class Shell extends MonitoredPanel {
         @Override
         public void onShellCommand(CommandSource source, String command) {
             if (source.isDisplayable()){
-                output.append(Context.getInterpreter().getCursor(command) + command + "\n", (source == CommandSource.ui) ? colorInput : colorRemote);
+                output.append(getInterpreter().getCursor(command) + command + "\n", (source == CommandSource.ui) ? colorInput : colorRemote);
             }
         }
 
@@ -147,7 +151,7 @@ public class Shell extends MonitoredPanel {
                     if (result instanceof Throwable throwable) {
                         output.append(InterpreterResult.getPrintableMessage(throwable) + "\n", colorError);
                     } else {
-                        output.append(Context.getInterpreter().interpreterVariableToString(result) + "\n", (source == CommandSource.ui) ? colorOutput : colorRemote);
+                        output.append(getInterpreter().interpreterVariableToString(result) + "\n", (source == CommandSource.ui) ? colorOutput : colorRemote);
                     }
                 }
             }
@@ -310,7 +314,7 @@ public class Shell extends MonitoredPanel {
     final ScanListener printScanListener = new ScanListener() {
         @Override
         public void onScanStarted(Scan scan, final String plotTitle) {
-            if (!Context.getExecutionPars().isScanDisplayed(scan)){
+            if (!getInterpreter().getExecutionPars().isScanDisplayed(scan)){
                 return;
             }            
             output.append(scan.getHeader("\t") + "\n", colorStdout);
@@ -318,7 +322,7 @@ public class Shell extends MonitoredPanel {
 
         @Override
         public void onNewRecord(Scan scan, ScanRecord record) {
-            if (!Context.getExecutionPars().isScanDisplayed(scan)){
+            if (!getInterpreter().getExecutionPars().isScanDisplayed(scan)){
                 return;
             }            
             output.append(record.print("\t") + "\n", colorStdout);
@@ -344,9 +348,9 @@ public class Shell extends MonitoredPanel {
     public void setPrintScan(boolean value) {
         printScan = value;
         if (value) {
-            Context.getInterpreter().addScanListener(printScanListener);
+            getInterpreter().addScanListener(printScanListener);
         } else {
-            Context.getInterpreter().removeScanListener(printScanListener);
+            getInterpreter().removeScanListener(printScanListener);
         }
     }
     
@@ -427,7 +431,7 @@ public class Shell extends MonitoredPanel {
 
     private void inputKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inputKeyPressed
         ignoreTyped = false;
-        List<String> history = Context.getInterpreter().getHistoryEntries();
+        List<String> history = getInterpreter().getHistoryEntries();
         keyChar = evt.getKeyChar();
         keyCode = evt.getKeyCode();
         
@@ -486,13 +490,13 @@ public class Shell extends MonitoredPanel {
                     closePopupAutoComp();
                 }
                 if ((keyCode == KeyEvent.VK_X) && (evt.isControlDown())) {
-                    Context.getInterpreter().abort();
+                    getInterpreter().abort();
                 } else if ((keyCode == KeyEvent.VK_P) && (evt.isControlDown())) {
-                    Context.getInterpreter().pause();
+                    getInterpreter().pause();
                 } else if ((keyCode == KeyEvent.VK_R) && (evt.isControlDown())) {
-                    Context.getInterpreter().resume();
+                    getInterpreter().resume();
                 } else if ((keyCode == KeyEvent.VK_Z) && (evt.isControlDown())) {
-                    if (Context.getInterpreter().waitingStdin()) {
+                    if (getInterpreter().waitingStdin()) {
                         try {
                             submit(ScriptStdio.END_OF_LINES, true);
                         } catch (Exception ex) {
@@ -516,13 +520,15 @@ public class Shell extends MonitoredPanel {
                 } else if ((keyCode == KeyEvent.VK_SPACE) && (evt.isControlDown())) {
                     ArrayList<String> entries = new ArrayList<>();
                     if (evt.isShiftDown()) {
-                        for (String function : Context.getInterpreter().getBuiltinFunctionsNames()) {
-                            entries.add(Context.getInterpreter().getBuiltinFunctionDoc(function).split("\n")[0]);
+                        for (String function : getInterpreter().getBuiltinFunctionsNames()) {
+                            entries.add(getInterpreter().getBuiltinFunctionDoc(function).split("\n")[0]);
                         }
                         truncateMenuContents = false;
                     } else {
-                        for (GenericDevice dev : Context.getDevicePool().getAllDevices()) {
-                            entries.add(dev.getName() + " (" + Nameable.getShortClassName(dev.getClass()) + ")");
+                        if (DevicePool.hasInstance()){
+                            for (GenericDevice dev : DevicePool.getInstance().getAllDevices()) {
+                                entries.add(dev.getName() + " (" + Nameable.getShortClassName(dev.getClass()) + ")");
+                            }
                         }
                         truncateMenuContents = true;
                     }
@@ -565,7 +571,7 @@ public class Shell extends MonitoredPanel {
             String command = input.getText();
             try {
                 //Control commands are send also during execution of statements
-                if ((ControlCommand.match(command)) || (Context.getInterpreter().waitingStdin())) {
+                if ((ControlCommand.match(command)) || (getInterpreter().waitingStdin())) {
                     submit(command, true);
                 } else {
                     submit(command, false);
@@ -597,7 +603,7 @@ public class Shell extends MonitoredPanel {
 
     void submit(String command, boolean background) throws Exception {
         if (!background) {
-            Context.getInterpreter().assertReady(); //Won't pile requests to executor.
+            getInterpreter().assertReady(); //Won't pile requests to executor.
             foregroundTask = commandExecutor.submit(() -> {
                 interpret(command);
             });
@@ -611,7 +617,7 @@ public class Shell extends MonitoredPanel {
     void interpret(String command) {
         if (command != null) {
             try {
-                Context.getInterpreter().evalLine(command);
+                getInterpreter().evalLine(command);
             } catch (Exception ex) {
             }
         }

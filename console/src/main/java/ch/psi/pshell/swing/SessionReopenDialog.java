@@ -1,6 +1,5 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.session.SessionManager;
 import ch.psi.pshell.utils.Sys;
 import java.util.List;
@@ -24,7 +23,7 @@ public class SessionReopenDialog extends StandardDialog {
         super(parent, modal);
         setTitle(title);
         initComponents();
-        manager = Context.isHandlingSessions() ? Context.getSessionManager() : null;
+        manager = SessionManager.isHandlingSessions() ? SessionManager.getInstance() : null;
         modelSessions = (DefaultTableModel) tableSessions.getModel();    
         update();
         int sessions = tableSessions.getRowCount();

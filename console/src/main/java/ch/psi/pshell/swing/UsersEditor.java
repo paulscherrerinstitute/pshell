@@ -1,6 +1,5 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.security.AccessLevel;
 import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.User;
@@ -260,7 +259,7 @@ public class UsersEditor extends Editor {
                 final ConfigDialog dlg = new ConfigDialog(null, true);
                 dlg.setTitle("Rights Configuration: " + level);
                 final Rights rights = new Rights();
-                rights.load(Context.getUsersManager().getRightsFile(level).toString());
+                rights.load(UsersManager.getInstance().getRightsFile(level).toString());
                 dlg.setConfig(rights);
                 dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 dlg.setListener((StandardDialog sd, boolean accepted) -> {
