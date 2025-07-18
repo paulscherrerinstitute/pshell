@@ -32,8 +32,8 @@ public class MetadataEditor extends Editor {
     boolean saved;
 
     public MetadataEditor(String[] knownTypes) {
-        super(new DevicePoolDocument());
-        ((DevicePoolDocument) getDocument()).editor = this;
+        super(new MetadataDocument());
+        ((MetadataDocument) getDocument()).editor = this;
         initComponents();
         this.knownTypes = knownTypes;
         model = (DefaultTableModel) table.getModel();
@@ -57,7 +57,7 @@ public class MetadataEditor extends Editor {
         buttonOk.setEnabled(!readOnly && getDocument().hasChanged());
     }   
 
-    public static class DevicePoolDocument extends Document {
+    public static class MetadataDocument extends Document {
 
         MetadataEditor editor;
 

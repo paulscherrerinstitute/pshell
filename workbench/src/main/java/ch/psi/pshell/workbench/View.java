@@ -1,5 +1,6 @@
 package ch.psi.pshell.workbench;
 
+import ch.psi.pshell.swing.SessionPanel;
 import ch.psi.pshell.app.AboutDialog;
 import ch.psi.pshell.app.Importer;
 import ch.psi.pshell.archiverviewer.ArchiverPanel;
@@ -38,10 +39,8 @@ import ch.psi.pshell.sequencer.Server;
 import ch.psi.pshell.session.SessionManager;
 import ch.psi.pshell.session.SessionManager.ChangeType;
 import ch.psi.pshell.stripchart.StripChart;
-import ch.psi.pshell.swing.CPythonDialog;
 import ch.psi.pshell.swing.CamServerServicePanel;
 import ch.psi.pshell.swing.ConfigDialog;
-import ch.psi.pshell.swing.DataFileDialog;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.pshell.swing.DevicePoolEditor;
@@ -60,7 +59,6 @@ import ch.psi.pshell.swing.PluginsEditor;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.ScanPanel;
 import ch.psi.pshell.swing.SearchPanel;
-import ch.psi.pshell.swing.SessionPanel;
 import ch.psi.pshell.swing.SessionReopenDialog;
 import ch.psi.pshell.swing.SessionsDialog;
 import ch.psi.pshell.swing.StandardDialog;

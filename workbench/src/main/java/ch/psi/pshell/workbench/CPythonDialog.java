@@ -1,9 +1,11 @@
-package ch.psi.pshell.swing;
+package ch.psi.pshell.workbench;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.framework.Task;
 import ch.psi.pshell.scripting.JepUtils;
+import ch.psi.pshell.swing.StandardDialog;
+import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.SwingUtils.OptionResult;
 import ch.psi.pshell.swing.SwingUtils.OptionType;
 import ch.psi.pshell.utils.Miniconda;
