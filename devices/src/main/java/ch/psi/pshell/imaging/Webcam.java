@@ -34,7 +34,7 @@ public class Webcam extends SourceBase {
             this.resolution = -1;
         } else {
             String[] tokens = id.trim().split(":");
-            this.id = tokens[0].trim().isEmpty() ? null : tokens[0].trim();
+            this.id = tokens[0].isBlank() ? null : tokens[0].trim();
             int resolution = -1;
             if (tokens.length > 1) {
                 try {

@@ -546,7 +546,7 @@ public class JsonTableEditor extends Editor {
         JsonTableEditor editor = new JsonTableEditor(columns, types);
         
         editor.load("/Users/gobbo_a/test/tst.json");
-        //if ((args.length > 0) && (args[0] != null) & (!args[0].trim().isEmpty())) {
+        //if ((args.length > 0) && (args[0] != null) & (!args[0].isBlank())) {
         //    editor.load(args[0]);
         //}
         javax.swing.JFrame frame = editor.getFrame();

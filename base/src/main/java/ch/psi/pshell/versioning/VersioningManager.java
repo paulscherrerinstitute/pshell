@@ -672,7 +672,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
         String pwd = "";
         passphrase = null;
         CredentialsProvider credentialsProvider = null;
-        if (remoteLogin != null) {
+        if ((remoteLogin != null) && (!remoteLogin.isBlank())) {
             if (requiresPassword()) {
                 if ((remoteLogin != null) && (remoteLogin.length() > 0)) {
                     usr = remoteLogin;
@@ -784,7 +784,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
      */
     public void startPushUpstream(final boolean allBranches, final boolean force) {
         if ((remotePath != null) && (!remotePath.trim().isEmpty())
-                && (remoteLogin != null) && (!remoteLogin.trim().isEmpty())
+                && (remoteLogin != null) && (!remoteLogin.isBlank())
                 && (!requiresPassword())) {
             Process p = ProcessFactory.createProcess(VersioningManager.class, new String[]{localPath, remotePath, remoteLogin,
                 privateKeyFile, String.valueOf(allBranches), String.valueOf(force)});

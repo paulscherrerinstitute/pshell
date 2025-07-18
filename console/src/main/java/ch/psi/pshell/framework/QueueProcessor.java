@@ -391,7 +391,7 @@ public final class QueueProcessor extends PanelProcessor {
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
                 editor.field.setText((String) value);
-                editor.button.setVisible(!(String.valueOf(model.getValueAt(row, INDEX_FILE))).trim().isEmpty());
+                editor.button.setVisible(!(String.valueOf(model.getValueAt(row, INDEX_FILE))).isBlank());
                 return editor;
             }
 

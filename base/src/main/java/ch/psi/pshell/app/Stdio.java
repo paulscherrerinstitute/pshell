@@ -125,7 +125,7 @@ abstract public class Stdio {
         String[] pars = {};
 
         for (int i = 1; i < tokens.length; i++) {
-            if (!tokens[i].trim().isEmpty()) {
+            if (!tokens[i].isBlank()) {
                 pars = Arr.append(pars, tokens[i].trim());
             }
         }

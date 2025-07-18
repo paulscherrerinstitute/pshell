@@ -195,7 +195,7 @@ public class Acquisition {
                
                 String fprefix=configuration.getDataFilePattern();
                 
-                if ((smodel.getData().getFileName()!=null) && (!smodel.getData().getFileName().trim().isEmpty())){
+                if ((smodel.getData().getFileName()!=null) && (!smodel.getData().getFileName().isBlank())){
                     //fprefix = fprefix.replace(Setup.TOKEN_EXEC_NAME, smodel.getData().getFileName()); 
                     Map pars = new HashMap();
                     pars.put("name", smodel.getData().getFileName());

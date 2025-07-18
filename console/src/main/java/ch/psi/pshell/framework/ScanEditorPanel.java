@@ -678,7 +678,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             StringBuilder sb = new StringBuilder();
             sb.append("[");
             for (int i = 0; i < modelVector.getRowCount(); i++) {
-                if ((modelVector.getValueAt(i, 0) == null) || (modelVector.getValueAt(i, 0).toString().trim().isEmpty())) {
+                if ((modelVector.getValueAt(i, 0) == null) || (modelVector.getValueAt(i, 0).toString().isBlank())) {
                     break;
                 }
                 sb.append("[");
@@ -703,7 +703,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 ret.add(""); //Callbaks
             }
         }
-        if (!textTitle.getText().trim().isEmpty()) {
+        if (!textTitle.getText().isBlank()) {
             ret.add(getParName("title") + "'" + textTitle.getText() + "'");
         }
         if (Context.getScriptType().isPython()) {
@@ -715,7 +715,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 ret.add(getParName("display") + getBoolValue(false));
             }
 
-            if (!textFile.getText().trim().isEmpty()) {
+            if (!textFile.getText().isBlank()) {
                 if (textFile.getText().contains(File.separator) || textFile.getText().contains("/") || textFile.getText().contains(".")) {
                     ret.add(getParName("path") + "'" + textFile.getText() + "'");
                 } else {
@@ -724,14 +724,14 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             } else {
                 ret.add(getParName("name") + "'" + ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) + "'");
             }
-            if (!textTag.getText().trim().isEmpty()) {
+            if (!textTag.getText().isBlank()) {
                 ret.add(getParName("tag") + "'" + textTag.getText() + "'");
             }
-            if ((!comboLayout.getSelectedItem().toString().trim().isEmpty())
+            if ((!comboLayout.getSelectedItem().toString().isBlank())
                     && !comboLayout.getSelectedItem().equals(comboLayout.getModel().getElementAt(0))) {
                 ret.add(getParName("layout") + "'" + String.valueOf(comboLayout.getSelectedItem()).toLowerCase()+ "'");
             }
-            if ((!comboFormat.getSelectedItem().toString().trim().isEmpty())
+            if ((!comboFormat.getSelectedItem().toString().isBlank())
                     && !comboFormat.getSelectedItem().equals(comboFormat.getModel().getElementAt(0))) {
                 ret.add(getParName("format") + "'" + comboFormat.getSelectedItem() + "'");
             }

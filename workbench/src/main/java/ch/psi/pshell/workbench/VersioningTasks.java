@@ -3,6 +3,8 @@ package ch.psi.pshell.workbench;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Task;
 import ch.psi.pshell.sequencer.CommandSource;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 
@@ -25,7 +27,7 @@ public abstract class VersioningTasks{
         @Override
         protected String doInBackground() throws Exception {
             String msg = "Commiting";
-            setMessage(msg);
+            setMessage(msg);            
             setProgress(0);
             try {
                 Context.getApp().sendTaskInit(msg);
@@ -35,7 +37,8 @@ public abstract class VersioningTasks{
                 setMessage(msg);
                 setProgress(100);
                 return msg;
-            } catch (Exception ex) {
+            } catch (Exception ex) {     
+                Logger.getLogger(Commit.class.getName()).log(Level.WARNING, null, ex);
                 setMessage("Error commiting");
                 Context.getApp().sendError(ex.toString());                
                 throw ex;
@@ -83,6 +86,7 @@ public abstract class VersioningTasks{
                 setProgress(100);
                 return msg;
             } catch (Exception ex) {
+                Logger.getLogger(Checkout.class.getName()).log(Level.WARNING, null, ex);
                 setMessage("Error checking out");
                 Context.getApp().sendError(ex.toString());
                 throw ex;
@@ -113,6 +117,7 @@ public abstract class VersioningTasks{
                 setProgress(100);
                 return msg;
             } catch (Exception ex) {
+                Logger.getLogger(PullUpstream.class.getName()).log(Level.WARNING, null, ex);
                 setMessage("Error pulling from upstream");
                 Context.getApp().sendError(ex.toString());
                 throw ex;
@@ -154,6 +159,7 @@ public abstract class VersioningTasks{
                 setProgress(100);
                 return msg;
             } catch (Exception ex) {
+                Logger.getLogger(PushUpstream.class.getName()).log(Level.WARNING, null, ex);
                 setMessage("Error pushing to upstream");
                 Context.getApp().sendError(ex.toString());
                 throw ex;

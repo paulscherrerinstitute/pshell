@@ -1188,7 +1188,7 @@ public class StripChart extends StandardDialog {
                 }
             }
             stream = new Stream("StripChart stream", dispatcher);
-            if (!textStreamFilter.getText().trim().isEmpty()) {
+            if (!textStreamFilter.getText().isBlank()) {
                 try {
                     stream.setFilter(textStreamFilter.getText().trim());
                 } catch (Exception ex) {
