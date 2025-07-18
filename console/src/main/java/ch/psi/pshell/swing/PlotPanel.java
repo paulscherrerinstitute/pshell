@@ -360,7 +360,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                                 xValue = positions[2].doubleValue();
                                 double yValue = positions[1].doubleValue();
                                 matrixPlotBase.getSeries(0).appendData(xValue, yValue, number.doubleValue());
-                            } else if (plot instanceof LinePlotBase linePlotBase) {//###
+                            } else if (plot instanceof LinePlotBase linePlotBase) {
                                 linePlotBase.getSeries(0).appendData(xValue, number.doubleValue());
                             }
                         } else if (val.getClass().isArray()) {
@@ -381,7 +381,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                             double yValue = positions[1].doubleValue();
                             if (plot instanceof MatrixPlotBase matrixPlotBase) {
                                 matrixPlotBase.getSeries(0).appendData(xValue, yValue, number.doubleValue());
-                            } else if (plot instanceof LinePlotBase linePlotBase) {//###
+                            } else if (plot instanceof LinePlotBase linePlotBase) {
                                 int series = index % (scan.getNumberOfSteps()[1] + 1);
                                 if (newPass) {
                                     linePlotBase.getSeries(0).appendData(xValue, Double.NaN);

@@ -291,7 +291,8 @@ public class View extends MainFrame{
         dropListner = new DropTargetListener();
         dropListner.enable();
 
-        checkHiddenComponents(); //### TODO: Can be done in base class?
+        //Done in base class asynchronously, repeating here to set not visible before drawing the window.
+        checkHiddenComponents(); 
 
         if (Setup.isOffline()) {
             setConsoleLocation(PanelLocation.Hidden);
