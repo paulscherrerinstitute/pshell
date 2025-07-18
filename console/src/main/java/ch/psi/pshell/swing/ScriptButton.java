@@ -2,6 +2,8 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.InterpreterListener;
+import ch.psi.pshell.swing.MonitoredPanel;
+import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.State;
 import java.awt.Component;
 import java.util.HashMap;
