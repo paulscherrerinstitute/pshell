@@ -13,6 +13,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -33,7 +34,6 @@ import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.TagCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
@@ -48,6 +48,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
@@ -96,6 +97,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
     final String privateKeyFile;
     final boolean autoCommit;
     final ArrayList<String> addedFolders;
+    final String secret;
 
     Repository localRepo;
     Git git;
@@ -111,26 +113,28 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
         this.remotePath = config.remotePath();
         this.remoteLogin = config.remoteLogin();
         this.autoCommit = config.autoCommit();
-        this.addedFolders = new ArrayList();
+        this.addedFolders = new ArrayList();        
         for (String folder: config.addedFolders()){
             if (IO.isSubPath(folder, localPath)) {
                 this.addedFolders.add(IO.getRelativePath(folder, localPath));
             }
         }
 
-        if (getConnectionType() == ConnectionType.ssh) {
-            //Evaluating here in order startPush to work in different process (no context)
-            String secret = getKeyFileSecret(remoteLogin);
-            if (secret == null) {
-                File secretFile = new File(Setup.expandPath("{context}/secret"));
-                if (secretFile.exists()) {
-                    try {
-                        secret = new String(Files.readAllBytes(secretFile.toPath())).trim();
-                    } catch (IOException ex) {
-                        logger.log(Level.WARNING, null, ex);
-                    }
+        String secret = getKeyFileSecret(remoteLogin);
+        if (secret == null) {
+            File secretFile = new File(Setup.expandPath("{context}/secret"));
+            if (secretFile.exists()) {
+                try {
+                    secret = new String(Files.readAllBytes(secretFile.toPath())).trim();
+                } catch (IOException ex) {
+                    logger.log(Level.WARNING, null, ex);
                 }
             }
+        }
+        this.secret = secret;
+
+        if (getConnectionType() == ConnectionType.ssh) {
+            //Evaluating here in order startPush to work in different process (no context)
             privateKeyFile = (secret == null)
                     ? Setup.expandPath(remoteLogin)
                     : Setup.expandPath(remoteLogin) + ":" + secret;
@@ -267,7 +271,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
                 return false;
             }
         }
-        return (remoteLogin != null) && (!remoteLogin.contains(":"));
+        return secret == null;
     }
 
     boolean isKeyFileEncripted() {
@@ -292,7 +296,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
     }
 
     //Constructor for process factory
-    VersioningManager(String localPath, String remotePath, String remoteLogin, String keyFile) throws Exception {
+    VersioningManager(String localPath, String remotePath, String remoteLogin, String keyFile, String secret) throws Exception {
         this.config = null;
         this.localPath = localPath;
         this.remotePath = remotePath;
@@ -300,6 +304,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
         this.privateKeyFile = keyFile;
         this.autoCommit = false;
         this.addedFolders = null;
+        this.secret = secret;
 
         File gitFolder = Paths.get(localPath, ".git").toFile();
         localRepo = new FileRepository(gitFolder);
@@ -686,13 +691,13 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
                 if (pwd == null) {
                     throw new IOException("Canceled");
                 }
-            } else {
+            } else {                
                 if (remoteLogin.contains(":")) {
                     usr = remoteLogin.substring(0, remoteLogin.lastIndexOf(":")).trim();
-                    pwd = remoteLogin.substring(remoteLogin.lastIndexOf(":") + 1).trim();
                 } else {
                     usr = remoteLogin;
                 }
+                pwd = secret;
             }
 
             if (getConnectionType() == ConnectionType.ssh) {
@@ -703,7 +708,6 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
                 passphrase = requiresPassword() ? pwd : getKeyFileSecret();
                 pwd = "";
             }
-
             credentialsProvider = new UsernamePasswordCredentialsProvider(usr, pwd);
         }
 
@@ -749,21 +753,42 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
             if (pushTags){
                 cmd.setPushTags();
             }
-            String message = "";
-            Iterable<PushResult> ret = cmd.call();
-            for (PushResult res : ret) {
-                message += res.getMessages() + "\n";
+            
+            Iterable<PushResult> results = cmd.call();
+
+            StringBuilder message = new StringBuilder();
+            boolean hasError = false;
+            for (PushResult result : results) {
+                message.append(result.getMessages()).append("\n");
+
+                for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+                    RemoteRefUpdate.Status status = update.getStatus();
+                    if (status != RemoteRefUpdate.Status.OK && status != RemoteRefUpdate.Status.UP_TO_DATE) {
+                        hasError = true;
+                        message.append("Failed to update ")
+                               .append(update.getRemoteName())
+                               .append(": ")
+                               .append(status.name())
+                               .append(" - ")
+                               .append(update.getMessage())
+                               .append("\n");
+                    }
+                }
             }
-            if (message.trim().length() > 0) {
-                throw new Exception(message);
-            }
+
+            String msg = message.toString().trim();
+            if (hasError) {
+                throw new Exception("Push failed:\n" +msg);
+            } else {
+                logger.log(Level.INFO, "Push successful" + (msg.isEmpty() ? "" : (":\n" +msg)));
+            }            
         }
     }
 
     public void pullFromUpstream() throws Exception {
         if (hasRemoteRepo()) {
             logger.info("Pull from upstream");
-            CredentialsProvider credentialsProvider = getCredentialsProvider();
+            CredentialsProvider credentialsProvider = getCredentialsProvider(); 
             PullCommand cmd = git.pull();
             TransportConfigCallback transportConfigCallback = getTransportConfigCallback();
             if (transportConfigCallback != null) {
@@ -787,7 +812,8 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
                 && (remoteLogin != null) && (!remoteLogin.isBlank())
                 && (!requiresPassword())) {
             Process p = ProcessFactory.createProcess(VersioningManager.class, new String[]{localPath, remotePath, remoteLogin,
-                privateKeyFile, String.valueOf(allBranches), String.valueOf(force)});
+                privateKeyFile, secret, 
+                String.valueOf(allBranches), String.valueOf(force)});
         }
     }
 
@@ -1005,14 +1031,20 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
     /**
      * This is for executing a push in a different process with ProcessFactory
      */
-    public static void main(String[] args) {
-        //ProcessFactory
-        try (VersioningManager vm = new VersioningManager(args[0], args[1], args[2], args[3])) {
-            Boolean allBranches = Boolean.valueOf(args[4]);
-            Boolean force = Boolean.valueOf(args[5]);
-            vm.pushToUpstream(allBranches, false);
+    public static void main(String[] args) throws FileNotFoundException {                
+        //Debugging
+        //java.io.File logFile = new File("output.log");
+        //java.io.PrintStream ps = new java.io.PrintStream(new java.io.FileOutputStream(logFile, false)); 
+        //System.setOut(ps);
+        //System.setErr(ps);
+                
+        try (VersioningManager vm = new VersioningManager(args[0], args[1], args[2], args[3], args[4])) {
+            Boolean allBranches = Boolean.valueOf(args[5]);
+            Boolean force = Boolean.valueOf(args[6]);
+            vm.pushToUpstream(allBranches, force);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }
 }
