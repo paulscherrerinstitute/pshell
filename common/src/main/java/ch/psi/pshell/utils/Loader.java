@@ -37,7 +37,7 @@ public class Loader {
         if (compiler == null) {
             throw new Exception("Java compiler is not present");
         }                  
-        if (compiler.run(null, System.out, System.err, file.getPath()) == 0) {
+        if (compiler.run(null, System.out, System.err, "-proc:none", file.getPath()) == 0) {
             File location = (file.getParentFile() == null) ? new File(".") : file.getParentFile();            
             File classFile = new File(file.getPath().replace(".java", ".class"));
             return Loader.loadClass(classFile);
