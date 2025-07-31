@@ -1,8 +1,8 @@
 rootProject.name = 'root'
 
-include ':base'
+include ':common'
 include ':devices'
-include ':console'
+include ':core'
 include ':dataviewer'
 include ':plotter'
 include ':fda'

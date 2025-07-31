@@ -4,10 +4,10 @@ description = 'pshell'
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.App'
 
 dependencies {
-    implementation project(':base')
+    implementation project(':common')
     implementation project(':devices')
     implementation project(':plotter') 
-    implementation project(':console')           
+    implementation project(':core')           
     implementation project(':fda')    
     implementation project(':stripchart') 
     implementation project(':screenpanel') 

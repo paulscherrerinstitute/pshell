@@ -3,7 +3,7 @@ description = 'devices'
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.devices.App'
 
 dependencies {
-    implementation project(':base')
+    implementation project(':common')
      //implementation 'org.rxtx:rxtx:2.1.7'
     implementation 'com.neuronrobotics:nrjavaserial:5.2.1'
     implementation 'net.wimpi:jamod:1.2'

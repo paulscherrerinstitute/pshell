@@ -1,10 +1,10 @@
-description = 'console'
+description = 'core'
 
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.console.App'
 ext.package_prefix = "pshell"
 
 dependencies {
-    implementation project(':base')
+    implementation project(':common')
     implementation project(':devices')
     implementation project(':plotter')   
     implementation 'jline:jline:2.14.6' 

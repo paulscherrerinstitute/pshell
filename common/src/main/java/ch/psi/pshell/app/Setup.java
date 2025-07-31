@@ -359,7 +359,7 @@ public class Setup{
     }            
             
     public static boolean isRunningInIde() {
-        return isRunningInIde("base");
+        return isRunningInIde("common");
     }
         
     public static String getSourceAssemblyFolder(String project) {
@@ -368,7 +368,7 @@ public class Setup{
     }        
     
     public static String getSourceAssemblyFolder() {
-        return getSourceAssemblyFolder("base");
+        return getSourceAssemblyFolder("common");
     }    
     
     public static String getAppSourceAssemblyFolder() {

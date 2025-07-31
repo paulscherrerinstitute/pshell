@@ -3,7 +3,7 @@ description = 'csm'
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.csm.App'
 
 dependencies {
-    implementation project(':base')
+    implementation project(':common')
     implementation project(':devices')
 }
 

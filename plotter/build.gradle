@@ -3,7 +3,7 @@ description = 'plotter'
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.plotter.App'
 
 dependencies {
-    implementation project(':base')
+    implementation project(':common')
 }
 
 createDefaultTasks(project)

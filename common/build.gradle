@@ -1,4 +1,4 @@
-description = 'base' 
+description = 'common' 
 
 dependencies {        
     implementation 'net.java.dev.jna:jna:5.14.0'  

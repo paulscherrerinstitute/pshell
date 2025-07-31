@@ -43,8 +43,8 @@ public class Loader {
             return Loader.loadClass(classFile);
         } else {            
                throw new Exception("Error compiling plugin: " + file);
-            }       
-        }
+        }       
+    }
 
     public static Class[] loadJar(String fileName) throws Exception {
         String extension = IO.getExtension(fileName);
