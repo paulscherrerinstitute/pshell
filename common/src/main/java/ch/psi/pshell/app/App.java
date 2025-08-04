@@ -490,15 +490,15 @@ public abstract class App extends ObservableBase<AppListener> {
     }
 
     static public String getApplicationVersion() {
-        return getResourceBundleValue("Base", "Application.version");
+        return getResourceBundleValue("Common", "Application.version");
     }
 
     static public String getApplicationCopyright() {
-        return App.getResourceBundleValue("Base", "Application.copyright");
+        return App.getResourceBundleValue("Common", "Application.copyright");
     }
     
     static public String getVendorId() {
-        return getResourceBundleValue("Application.vendorId");
+        return getResourceBundleValue("Common", "Application.vendorId");
     }            
     
 

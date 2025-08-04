@@ -53,7 +53,7 @@ public class AboutDialog extends StandardDialog {
         labelMail.setText("@");
         labelMail.setName("labelMail"); // NOI18N
 
-        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/Base"); // NOI18N
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/Common"); // NOI18N
         textMailUser.setText(bundle.getString("Application.feedback")); // NOI18N
         textMailUser.setName("textMailUser"); // NOI18N
 
