@@ -356,7 +356,7 @@
         </Container>
       </SubComponents>
     </Container>
-    <Component class="ch.psi.pshell.imaging.Renderer" name="renderer">
+    <Component class="ch.psi.pshell.imaging.DeviceRenderer" name="renderer">
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="4"/>
       </AuxValues>

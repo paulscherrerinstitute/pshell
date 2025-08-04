@@ -4,11 +4,11 @@ import ch.psi.pshell.archiver.Inventory;
 import ch.psi.pshell.camserver.CameraSource;
 import ch.psi.pshell.devices.App;
 import ch.psi.pshell.devices.Setup;
-import ch.psi.pshell.imaging.ImageRenderer;
+import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.Overlay;
 import ch.psi.pshell.imaging.Overlays;
 import ch.psi.pshell.imaging.Pen;
-import ch.psi.pshell.imaging.Renderer;
+import ch.psi.pshell.imaging.DeviceRenderer;
 import ch.psi.pshell.imaging.RendererListener;
 import ch.psi.pshell.imaging.RendererMode;
 import ch.psi.pshell.utils.Convert;
@@ -31,7 +31,7 @@ import javax.swing.JDialog;
 public class CameraCalibrationDialog extends StandardDialog {
     
     CameraSource server;
-    Renderer renderer;
+    DeviceRenderer renderer;
     String cameraName;
     Overlay[] calibrationOverlays;
     Pen pen = new Pen(new Color(128, 0, 128), 1, Pen.LineStyle.solid);                        
@@ -40,7 +40,7 @@ public class CameraCalibrationDialog extends StandardDialog {
     Overlays.Crosshairs ovLeft = new Overlays.Crosshairs(pen, new Dimension(1, -1));
     Overlays.Crosshairs ovRight = new Overlays.Crosshairs(pen, new Dimension(1, -1));
         
-    public CameraCalibrationDialog(Window parent, String cameraServer, String cameraName, Renderer renderer) throws IOException {
+    public CameraCalibrationDialog(Window parent, String cameraServer, String cameraName, DeviceRenderer renderer) throws IOException {
         super(parent, cameraName, false);        
         
         initComponents();    
@@ -96,7 +96,7 @@ public class CameraCalibrationDialog extends StandardDialog {
         }
         renderer.addListener(new RendererListener(){
             @Override
-            public void onMoveFinished(ImageRenderer renderer, Overlay overlay) {
+            public void onMoveFinished(Renderer renderer, Overlay overlay) {
                 if (overlay==ovTop){
                     spinnerTop.setValue(ovTop.getPosition().y);
                 } else if (overlay==ovBottom){
@@ -160,7 +160,7 @@ public class CameraCalibrationDialog extends StandardDialog {
         ch.psi.pshell.devices.Options.addCamServer();
         String cameraName = App.getAditionalArgument();
 
-        Renderer renderer = new Renderer();
+        DeviceRenderer renderer = new DeviceRenderer();
         JDialog dlgRenderer = SwingUtils.showDialog(null, cameraName, new Dimension(600,400), renderer);
         CameraCalibrationDialog dialog = new CameraCalibrationDialog(null, Setup.getCameraServer(), cameraName, renderer);
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {

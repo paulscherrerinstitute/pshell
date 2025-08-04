@@ -46,14 +46,14 @@ import javax.swing.event.PopupMenuListener;
  */
 public class RendererMenu extends JPopupMenu {
 
-    final ImageRenderer renderer;
+    final Renderer renderer;
     JMenu menuMode;
     JMenu menuZoom;
     JMenu menuProfile;
     JCheckBoxMenuItem menuPause;
     JCheckBoxMenuItem menuStatus;
 
-    RendererMenu(final ImageRenderer renderer) {        
+    RendererMenu(final Renderer renderer) {        
         this.renderer = renderer;
         menuPause = new JCheckBoxMenuItem("Pause");
         menuStatus = new JCheckBoxMenuItem("Status Bar");
@@ -130,10 +130,10 @@ public class RendererMenu extends JPopupMenu {
         });
         menuSelection.add(menuClear);
         menuSelection.addSeparator();
-        for (ImageRenderer.SelectionType type : ImageRenderer.SelectionType.values()) {
+        for (Renderer.SelectionType type : Renderer.SelectionType.values()) {
             JMenuItem item = new JMenuItem(type.toString());
             item.addActionListener((ActionEvent e) -> {
-                renderer.startDataSelection(ImageRenderer.SelectionType.valueOf(e.getActionCommand()));
+                renderer.startDataSelection(Renderer.SelectionType.valueOf(e.getActionCommand()));
             });
             menuSelection.add(item);
         }
@@ -284,10 +284,10 @@ public class RendererMenu extends JPopupMenu {
         });
 
         menuProfile = new JMenu("Profile");
-        for (ImageRenderer.Profile profile : ImageRenderer.Profile.values()) {
+        for (Renderer.Profile profile : Renderer.Profile.values()) {
             JRadioButtonMenuItem item = new JRadioButtonMenuItem(profile.toString());
             item.addActionListener((ActionEvent e) -> {
-                renderer.setProfile(ImageRenderer.Profile.valueOf(e.getActionCommand()));
+                renderer.setProfile(Renderer.Profile.valueOf(e.getActionCommand()));
             });
             menuProfile.add(item);
         }
@@ -477,7 +477,7 @@ public class RendererMenu extends JPopupMenu {
         final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMouseSelecting());
         renderer.addListener(new RendererListener() {
             @Override
-            public void onSelectionFinished(ImageRenderer renderer, Overlay overlay) {
+            public void onSelectionFinished(Renderer renderer, Overlay overlay) {
                 try {
                     renderer.zoomTo(overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds());
                 } catch (Exception ex) {
@@ -487,7 +487,7 @@ public class RendererMenu extends JPopupMenu {
             }
 
             @Override
-            public void onSelectionAborted(ImageRenderer renderer, Overlay overlay) {
+            public void onSelectionAborted(Renderer renderer, Overlay overlay) {
                 renderer.removeListener(this);
             }
         });

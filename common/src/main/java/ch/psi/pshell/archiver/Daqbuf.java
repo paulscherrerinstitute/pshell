@@ -1,6 +1,6 @@
 package ch.psi.pshell.archiver;
 
-import ch.psi.pshell.data.Manager;
+import ch.psi.pshell.data.FormatManager;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.EncoderJson;
@@ -943,14 +943,14 @@ public class Daqbuf implements ChannelQueryAPI {
     }
 
     public void saveQuery(String filename, String channel, String start, String end, Integer bins) throws IOException, InterruptedException {
-        try (Manager dm = getDataManager(filename)) {
+        try (FormatManager dm = getDataManager(filename)) {
             saveQuery(dm, channel, start, end, bins);
         }
     }
 
-    Manager getDataManager(String filename) throws IOException, InterruptedException {
+    FormatManager getDataManager(String filename) throws IOException, InterruptedException {
         try {
-            return new Manager(filename, "h5");
+            return new FormatManager(filename, "h5");
         } catch (InterruptedException | IOException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -959,7 +959,7 @@ public class Daqbuf implements ChannelQueryAPI {
 
     }
 
-    void saveQuery(Manager dm, String channel, String start, String end, Integer bins) throws IOException, InterruptedException {
+    void saveQuery(FormatManager dm, String channel, String start, String end, Integer bins) throws IOException, InterruptedException {
         String channelBackend = getChannelBackend(channel);
         String channelName = getChannelName(channel);
         String dataGroup = "/" + channelBackend + "/" + channelName + "/";
@@ -1023,7 +1023,7 @@ public class Daqbuf implements ChannelQueryAPI {
     public void saveQuery(String filename, String[] channels, String start, String end, Integer bins) throws IOException, InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         Map<String, CompletableFuture> futures = new HashMap<>();
-        try (Manager dm = getDataManager(filename)) {
+        try (FormatManager dm = getDataManager(filename)) {
             // Submit tasks for each channel
             for (String channel : channels) {
                 CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {

@@ -20,12 +20,12 @@ public class RendererStatusBar extends MonitoredPanel {
 
     double frameRate;
     Timer timerFrameRate;
-    final ImageRenderer renderer;
+    final Renderer renderer;
     final JPopupMenu popupMenuUnits;
 
     /**
      */
-    public RendererStatusBar(ImageRenderer renderer) {
+    public RendererStatusBar(Renderer renderer) {
         initComponents();
         this.renderer = renderer;
         //Font font = SwingUtils.hasFont("Lucida Console")? new Font("Lucida Console", 0, 11) : new Font(Font.MONOSPACED, 0, 11));

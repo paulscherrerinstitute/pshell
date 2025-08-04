@@ -21,18 +21,18 @@ import java.util.logging.Logger;
 import jep.NDArray;
 
 /**
- * Manages the automatic persistence of DAQ scritps.
+ * Implements format class instantiation and common data handling logic.
  */
-public class Manager implements AutoCloseable {
+public class FormatManager implements AutoCloseable {
     //final Context context;
-    static final Logger logger = Logger.getLogger(Manager.class.getName());
+    static final Logger logger = Logger.getLogger(FormatManager.class.getName());
     //Layout layout;
     protected Format format;
     protected File outputFile;
     protected FilePermissions filePermissions = FilePermissions.Default;
     protected DirectoryStream.Filter fileFilter;
     
-    public Manager(){        
+    public FormatManager(){        
     }
     
     public static String[] getLayoutIds(){
@@ -44,31 +44,31 @@ public class Manager implements AutoCloseable {
     }
     
 
-    public Manager(String format) throws Exception {
+    public FormatManager(String format) throws Exception {
         this();
-        Manager.this.setFormat(format);     
+        FormatManager.this.setFormat(format);     
     }
 
-    public Manager(Format format) {
+    public FormatManager(Format format) {
         this();
-        Manager.this.getFormat(format);     
+        FormatManager.this.getFormat(format);     
     }
 
-    public Manager(File outputFile, String format) throws Exception {
+    public FormatManager(File outputFile, String format) throws Exception {
         this(format);
         setOutputFile(outputFile);
     }
     
-    public Manager(String outputFile, String format) throws Exception {
+    public FormatManager(String outputFile, String format) throws Exception {
         this(new File(outputFile), format);
     }
 
-    public Manager(File outputFile, Format format) throws Exception {
+    public FormatManager(File outputFile, Format format) throws Exception {
         this(format);
         setOutputFile(outputFile);
     }
     
-    public Manager(String outputFile, Format format) throws Exception {
+    public FormatManager(String outputFile, Format format) throws Exception {
         this(new File(outputFile), format);
     }
     
@@ -118,7 +118,7 @@ public class Manager implements AutoCloseable {
                 return;
             }
         }
-        Manager.this.getFormat((Format) providerClass.newInstance());
+        FormatManager.this.getFormat((Format) providerClass.newInstance());
     }
 
     public void getFormat(Format format) {
@@ -777,14 +777,14 @@ public class Manager implements AutoCloseable {
         int[] shape =  Arr.getShape(element);
         int[] dimensions = new int[shape.length+1];
         System.arraycopy(shape, 0, dimensions, 1, shape.length);        
-        Map features = Manager.createCompressionFeatures(element, shuffle);
+        Map features = FormatManager.createCompressionFeatures(element, shuffle);
         createDataset(path, type, dimensions, features);
     }
 
     public void createCompressedDataset(String path, Class type, int[] shape, boolean shuffle) throws IOException {
         int[] dimensions = new int[shape.length+1];
         System.arraycopy(shape, 0, dimensions, 0, shape.length);        
-        Map features = Manager.createCompressionFeatures(shape, shuffle);
+        Map features = FormatManager.createCompressionFeatures(shape, shuffle);
         createDataset(path, type, dimensions, features);
     }
 

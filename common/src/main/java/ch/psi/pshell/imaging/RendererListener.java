@@ -9,60 +9,60 @@ import java.awt.image.BufferedImage;
 public interface RendererListener {
 
     //From ImageListener
-    public default void onImage(ImageRenderer renderer, Object origin, BufferedImage image, Data data) {
+    public default void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
     }
 
-    public default void onError(ImageRenderer renderer, Object origin, Exception ex) {
+    public default void onError(Renderer renderer, Object origin, Exception ex) {
     }
 
     //Mouse events
-    public default void onMousePressed(ImageRenderer renderer, Point p) {
+    public default void onMousePressed(Renderer renderer, Point p) {
     }
 
-    public default void onMouseReleased(ImageRenderer renderer, Point p) {
+    public default void onMouseReleased(Renderer renderer, Point p) {
     }
 
-    public default void onMouseMoved(ImageRenderer renderer, Point p) {
+    public default void onMouseMoved(Renderer renderer, Point p) {
     }
 
-    public default void onMouseDragged(ImageRenderer renderer, Point p) {
+    public default void onMouseDragged(Renderer renderer, Point p) {
     }
 
-    public default void onMouseDoubleClick(ImageRenderer renderer, Point p) {
+    public default void onMouseDoubleClick(Renderer renderer, Point p) {
     }
 
     //Overlay events
-    public default void onMoveStarted(ImageRenderer renderer, Overlay overlay) {
+    public default void onMoveStarted(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onMoving(ImageRenderer renderer, Overlay overlay) {
+    public default void onMoving(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onMoveFinished(ImageRenderer renderer, Overlay overlay) {
+    public default void onMoveFinished(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onMoveAborted(ImageRenderer renderer, Overlay overlay) {
+    public default void onMoveAborted(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onSelecting(ImageRenderer renderer, Overlay overlay) {
+    public default void onSelecting(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onSelectionStarted(ImageRenderer renderer, Overlay overlay) {
+    public default void onSelectionStarted(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onSelectionFinished(ImageRenderer renderer, Overlay overlay) {
+    public default void onSelectionFinished(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onSelectionAborted(ImageRenderer renderer, Overlay overlay) {
+    public default void onSelectionAborted(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onSelectedOverlayChanged(ImageRenderer renderer, Overlay overlay) {
+    public default void onSelectedOverlayChanged(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onDeleted(ImageRenderer renderer, Overlay overlay) {
+    public default void onDeleted(Renderer renderer, Overlay overlay) {
     }
 
-    public default void onInserted(ImageRenderer renderer, Overlay overlay) {
+    public default void onInserted(Renderer renderer, Overlay overlay) {
     }
 
 }

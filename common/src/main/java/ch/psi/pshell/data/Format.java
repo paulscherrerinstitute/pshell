@@ -151,7 +151,7 @@ public interface Format {
     }            
 
     default int getDepthDimension(){
-        return Manager.getDefaultDepthDimension(); 
+        return FormatManager.getDefaultDepthDimension(); 
     }
 
     default public void checkLogFile(String logFile) throws IOException{

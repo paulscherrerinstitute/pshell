@@ -17,7 +17,7 @@ import ch.psi.pshell.imaging.DimensionDouble;
 import ch.psi.pshell.imaging.Histogram;
 import ch.psi.pshell.imaging.ImageBuffer;
 import ch.psi.pshell.imaging.ImageListener;
-import ch.psi.pshell.imaging.ImageRenderer;
+import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.Overlay;
 import ch.psi.pshell.imaging.Overlays;
 import ch.psi.pshell.imaging.Overlays.Text;
@@ -309,7 +309,7 @@ public class CamServerViewer extends MonitoredPanel {
                     final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMovingOverlay());
                     renderer.addListener(new RendererListener() {
                         @Override
-                        public void onSelectionFinished(ImageRenderer renderer, Overlay overlay) {
+                        public void onSelectionFinished(Renderer renderer, Overlay overlay) {
                             try {
                                 renderer.setShowReticle(false);
                                 Rectangle roi = overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds();
@@ -327,7 +327,7 @@ public class CamServerViewer extends MonitoredPanel {
                         }
 
                         @Override
-                        public void onSelectionAborted(ImageRenderer renderer, Overlay overlay) {
+                        public void onSelectionAborted(Renderer renderer, Overlay overlay) {
                             renderer.removeListener(this);
                         }
                     });
@@ -464,7 +464,7 @@ public class CamServerViewer extends MonitoredPanel {
 
             renderer.addListener(new RendererListener() {
                 @Override
-                public void onMoveFinished(ImageRenderer renderer, Overlay overlay) {
+                public void onMoveFinished(Renderer renderer, Overlay overlay) {
                     if (overlay == marker) {
                         onMarkerChanged();
                     }
@@ -580,7 +580,7 @@ public class CamServerViewer extends MonitoredPanel {
         return imageBuffer;
     }
     
-    public ImageRenderer getRenderer(){
+    public Renderer getRenderer(){
         return renderer;
     }
    
@@ -1086,7 +1086,7 @@ public class CamServerViewer extends MonitoredPanel {
         boolean slicing;
         boolean valid;
 
-        ImageData(Stream stream, ImageRenderer renderer) {
+        ImageData(Stream stream, Renderer renderer) {
             if (stream != null) {
                 cache = stream.take();                
                 valid = true;
@@ -1217,7 +1217,7 @@ public class CamServerViewer extends MonitoredPanel {
 
     public static class Frame extends ImageData {
 
-        Frame(Stream stream, ImageRenderer renderer, Data data) {
+        Frame(Stream stream, Renderer renderer, Data data) {
             super(stream, renderer);
             this.data = data;
         }
@@ -2381,7 +2381,7 @@ public class CamServerViewer extends MonitoredPanel {
         }
     }
 
-    protected static Overlay[] getUserOverlays(ArrayList<UserOverlay> userOverlayConfig, ImageRenderer renderer, ImageData id) {
+    protected static Overlay[] getUserOverlays(ArrayList<UserOverlay> userOverlayConfig, Renderer renderer, ImageData id) {
         ArrayList<Overlay> ret = new ArrayList<>();
         if (id != null) {
 
@@ -2811,7 +2811,7 @@ public class CamServerViewer extends MonitoredPanel {
     public void setShowProfile(boolean value) {
         showProfile = value;
         if (value) {
-            renderer.setProfile(ImageRenderer.Profile.None);
+            renderer.setProfile(Renderer.Profile.None);
         } else {
             renderer.removeOverlays(profileOv);
             profileOv = null;
@@ -2822,7 +2822,7 @@ public class CamServerViewer extends MonitoredPanel {
     public void setShowFit(boolean value) {
         showFit = value;
         if (showFit) {
-            renderer.setProfile(ImageRenderer.Profile.None);
+            renderer.setProfile(Renderer.Profile.None);
         } else {
             renderer.removeOverlays(fitOv);
             fitOv = null;
@@ -3109,7 +3109,7 @@ public class CamServerViewer extends MonitoredPanel {
         comboName = new javax.swing.JComboBox();
         labelType = new javax.swing.JLabel();
         comboType = new javax.swing.JComboBox();
-        renderer = new ch.psi.pshell.imaging.Renderer();
+        renderer = new ch.psi.pshell.imaging.DeviceRenderer();
         sidePanel = new javax.swing.JPanel();
         panelPipeline = new javax.swing.JPanel();
         checkThreshold = new javax.swing.JCheckBox();
@@ -4713,7 +4713,7 @@ public class CamServerViewer extends MonitoredPanel {
     private javax.swing.JPanel panelStream;
     private javax.swing.JPanel panelZoom;
     private ch.psi.pshell.swing.ValueSelection pauseSelection;
-    protected ch.psi.pshell.imaging.Renderer renderer;
+    protected ch.psi.pshell.imaging.DeviceRenderer renderer;
     private javax.swing.JPanel sidePanel;
     private javax.swing.JSpinner spinnerAvFrames;
     private javax.swing.JSpinner spinnerAvMode;

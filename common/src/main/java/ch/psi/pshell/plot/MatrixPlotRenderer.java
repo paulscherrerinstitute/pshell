@@ -2,7 +2,7 @@ package ch.psi.pshell.plot;
 
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.imaging.Data;
-import ch.psi.pshell.imaging.ImageRenderer;
+import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.RendererMode;
 import ch.psi.pshell.imaging.Utils;
 import ch.psi.pshell.swing.SwingUtils;
@@ -31,7 +31,7 @@ import javax.swing.event.PopupMenuListener;
  */
 public class MatrixPlotRenderer extends MatrixPlotBase {
 
-    ImageRenderer renderer;
+    Renderer renderer;
     BufferedImage image;
     Data imageData;
     DataBufferDouble dataBuffer;
@@ -65,9 +65,9 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         title.setText((getTitle()==null) ? "" : getTitle());
     }
 
-    public ImageRenderer getRenderer() {
+    public Renderer getRenderer() {
         if (renderer == null) {
-            renderer = new ImageRenderer();
+            renderer = new Renderer();
             renderer.setMode(RendererMode.Fixed);
         }
         return renderer;

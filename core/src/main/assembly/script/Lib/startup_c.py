@@ -445,6 +445,7 @@ from ch.psi.pshell.imaging import Pen as Pen
 from ch.psi.pshell.imaging import Data as Data
 from ch.psi.pshell.imaging import Colormap as Colormap
 from ch.psi.pshell.imaging import Renderer as Renderer
+from ch.psi.pshell.imaging import DeviceRenderer as DeviceRenderer
 
 
 from ch.psi.pshell.plot import RangeSelectionPlot as RangeSelectionPlot

@@ -20,7 +20,7 @@ import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Slit;
 import ch.psi.pshell.epics.Scaler;
 import ch.psi.pshell.epics.Scienta;
-import ch.psi.pshell.imaging.Renderer;
+import ch.psi.pshell.imaging.DeviceRenderer;
 import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.swing.CamServerServicePanel;
 import ch.psi.pshell.swing.CamServerStreamPanel;
@@ -116,7 +116,7 @@ public class DevicePanelManager {
             JDialog dlg = deviceDialogs.get(dev);
             if (dlg.isDisplayable()) {
                 dlg.requestFocus();
-                Class type = dev instanceof Source ? Renderer.class : DevicePanel.class;
+                Class type = dev instanceof Source ? DeviceRenderer.class : DevicePanel.class;
                 Component[] ret = SwingUtils.getComponentsByType(dlg, type);
                 if ((ret.length == 0) || !(type.isAssignableFrom(ret[0].getClass()))) {
                     ret = SwingUtils.getComponentsByType(dlg, HistoryChart.class);
@@ -125,7 +125,7 @@ public class DevicePanelManager {
                      }
                 }
                 if (dev instanceof Source source) {
-                    ((Renderer) ret[0]).setDevice(source);
+                    ((DeviceRenderer) ret[0]).setDevice(source);
                 }
                 return (MonitoredPanel) ret[0];
             }
@@ -179,9 +179,9 @@ public class DevicePanelManager {
 
     public static final String RENDERER_DIALOG_NAME_PREFIX = "Renderer ";
 
-    Renderer newRenderer(final Source source, Window parent) {
+    DeviceRenderer newRenderer(final Source source, Window parent) {
         final String name = source.getName();
-        final Renderer renderer = new Renderer() {
+        final DeviceRenderer renderer = new DeviceRenderer() {
             @Override
             protected void onHide() {
                 super.onHide();
@@ -313,7 +313,7 @@ public class DevicePanelManager {
         JDialog dlg = getPanelDialog(name); 
         if (dlg != null) {
             if (dlg.isDisplayable()) {
-                for (Renderer renderer : SwingUtils.getComponentsByType(dlg.getContentPane(), Renderer.class)) {
+                for (DeviceRenderer renderer : SwingUtils.getComponentsByType(dlg.getContentPane(), DeviceRenderer.class)) {
                     renderer.setBackgroundRendering(backgroundRendering);
                     Source source = (Source) DevicePool.getInstance().getByName(name);
                     if (source != null) {

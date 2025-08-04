@@ -2,7 +2,7 @@ package ch.psi.pshell.framework;
 
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.imaging.ImageRenderer;
+import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.swing.ConfigDialog;
 import ch.psi.pshell.swing.DevicePanel;
@@ -80,7 +80,7 @@ public interface Plugin extends ch.psi.pshell.sequencer.Plugin {
         return App.getDevicePanelManager().hidePanel(device);
     }        
     
-    default ImageRenderer showRenderer(String name) {
+    default Renderer showRenderer(String name) {
         GenericDevice c = getDevice(name);
         if (c instanceof Source source) {
             return showRenderer(source);
@@ -88,8 +88,8 @@ public interface Plugin extends ch.psi.pshell.sequencer.Plugin {
         return null;
     }
 
-    default ImageRenderer showRenderer(Source source) {
-        return (ImageRenderer) App.getDevicePanelManager().showPanel(source, getTopLevel());
+    default Renderer showRenderer(Source source) {
+        return (Renderer) App.getDevicePanelManager().showPanel(source, getTopLevel());
     }
 
     default boolean hideRenderer(String source) {

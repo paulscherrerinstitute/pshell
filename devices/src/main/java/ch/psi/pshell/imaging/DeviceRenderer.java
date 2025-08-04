@@ -6,7 +6,7 @@ import ch.psi.pshell.devices.DevicePoolListener;
 
 /**
  */
-public class Renderer extends ImageRenderer {
+public class DeviceRenderer extends Renderer {
     //Fixed source name
     private String deviceName;
 

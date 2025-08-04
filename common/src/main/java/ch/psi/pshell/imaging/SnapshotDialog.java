@@ -23,9 +23,9 @@ import javax.swing.SwingUtilities;
  */
 public class SnapshotDialog extends StandardDialog {
 
-    final ImageRenderer renderer;
+    final Renderer renderer;
 
-    public SnapshotDialog(ImageRenderer renderer) {
+    public SnapshotDialog(Renderer renderer) {
         super(SwingUtils.getFrame(renderer), "Snapshot Dialog", false);
         initComponents();
         this.renderer = renderer;
@@ -90,7 +90,7 @@ public class SnapshotDialog extends StandardDialog {
             if (everyFrame) {
                 rendererListener = new RendererListener() {
                     @Override
-                    public void onImage(ImageRenderer renderer, Object origin, BufferedImage image, Data data) {
+                    public void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
                         try {
                             Path path = Paths.get(folder, prefix + String.format("_%04d", index) + "." + format);
                             grab(path, format, overwrite, overlays);

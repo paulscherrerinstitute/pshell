@@ -241,12 +241,12 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
     }
 
     @Override
-    public void onImage(ImageRenderer renderer, Object origin, BufferedImage image, Data data) {
+    public void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
         onImage(origin, image, data);
     }
 
     @Override
-    public void onError(ImageRenderer renderer, Object origin, Exception ex) {
+    public void onError(Renderer renderer, Object origin, Exception ex) {
         onError(origin, ex);
     }
 
@@ -298,9 +298,9 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
         }
     }
 
-    protected ImageRenderer renderer;
+    protected Renderer renderer;
 
-    public void setRenderer(ImageRenderer renderer) {
+    public void setRenderer(Renderer renderer) {
         if (isVisible()) {
             onHide();
         }
@@ -313,11 +313,11 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
     }
 
     
-    public static Histogram create(ImageRenderer renderer){
+    public static Histogram create(Renderer renderer){
         return create(renderer, false);
     }
             
-    public static Histogram create(ImageRenderer renderer, boolean autoSave){
+    public static Histogram create(Renderer renderer, boolean autoSave){
         Histogram histogram = new Histogram(autoSave);
         histogram.setRenderer(renderer);
         JDialog dlg = SwingUtils.showDialog(SwingUtils.getWindow(renderer), "Histogram", null, histogram);

@@ -45,6 +45,7 @@ import ch.psi.pshell.framework.Context as Context
 import ch.psi.pshell.framework.Setup as Setup
 import ch.psi.pshell.framework.App as App
 
+import ch.psi.pshell.data.FormatManager as FormatManager
 import ch.psi.pshell.data.DataManager as DataManager
 import ch.psi.pshell.data.DataSlice as DataSlice
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
@@ -210,6 +211,7 @@ import ch.psi.pshell.imaging.Pen as Pen
 import ch.psi.pshell.imaging.Data as Data
 import ch.psi.pshell.imaging.Colormap as Colormap
 import ch.psi.pshell.imaging.Renderer as Renderer
+import ch.psi.pshell.imaging.DeviceRenderer as DeviceRenderer
 
 
 import ch.psi.pshell.plot.Plot as Plot

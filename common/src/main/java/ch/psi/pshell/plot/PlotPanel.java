@@ -1,7 +1,7 @@
 package ch.psi.pshell.plot;
 
 import ch.psi.pshell.data.DataSlice;
-import ch.psi.pshell.data.Manager;
+import ch.psi.pshell.data.FormatManager;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.plot.LinePlot.Style;
 import ch.psi.pshell.plot.Plot.Quality;
@@ -48,7 +48,7 @@ public class PlotPanel extends MonitoredPanel {
     protected PlotPreferences prefs;
     protected boolean changedScaleX;
     final protected ArrayList<Plot> plots;
-    Manager dataManager;
+    FormatManager dataManager;
 
     public PlotPanel() {
         initComponents();
@@ -693,7 +693,7 @@ public class PlotPanel extends MonitoredPanel {
                 } else {
                     series.setListener((SlicePlotSeries series1, int page) -> {
                         try {
-                            Manager dm = new Manager("h5"); //Test!!! Assume only h5 can cope with 4d data
+                            FormatManager dm = new FormatManager("h5"); //Test!!! Assume only h5 can cope with 4d data
                             DataSlice slice = dm.getData(descriptor.root, descriptor.path, page);   
                             Object data1 = slice.sliceData;
                             if (slice.unsigned) {

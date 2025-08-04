@@ -8,7 +8,7 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.framework.App.ExecutionStage;
 import ch.psi.pshell.imaging.FileSource;
-import ch.psi.pshell.imaging.Renderer;
+import ch.psi.pshell.imaging.DeviceRenderer;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotPanel;
 import ch.psi.pshell.scan.Scan;
@@ -945,8 +945,8 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
         return getPanels(Editor.class);
     }
 
-    public List<Renderer> getRenderers() {
-        return getPanels(Renderer.class);
+    public List<DeviceRenderer> getRenderers() {
+        return getPanels(DeviceRenderer.class);
     }
 
     public List<JPanel> getDocumentPanels(){
@@ -1544,12 +1544,12 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
     }
     
 
-    public Renderer openImageFile(String file) throws IOException, InterruptedException {
+    public DeviceRenderer openImageFile(String file) throws IOException, InterruptedException {
         if (file == null) {
             return null;
         }
         
-        for (Renderer renderer : getRenderers()) {
+        for (DeviceRenderer renderer : getRenderers()) {
             try{
                 String filename = ((FileSource)renderer.getDevice()).getUrl();
                 if (filename != null) {
@@ -1561,7 +1561,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
             } catch (Exception ex){                
             }
         }        
-        Renderer renderer = new Renderer();
+        DeviceRenderer renderer = new DeviceRenderer();
         openComponent(new File(file).getName(), renderer);
         FileSource source = new FileSource(new File(file).getName(), file);
         renderer.setDevice(source);

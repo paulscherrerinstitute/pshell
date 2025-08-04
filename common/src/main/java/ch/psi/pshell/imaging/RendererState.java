@@ -23,5 +23,5 @@ public class RendererState implements Serializable {
     public RendererMode formerMode;
     public Overlay marker;
     Calibration calibration;
-    public ImageRenderer.Profile profile;
+    public Renderer.Profile profile;
 }

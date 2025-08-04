@@ -11,8 +11,6 @@ import ch.psi.pshell.plot.MatrixPlotSeries;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.PlotPanel;
-import static ch.psi.pshell.plot.PlotPanel.getLinePlotImpl;
-import static ch.psi.pshell.plot.PlotPanel.getMatrixPlotImpl;
 import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.SwingUtils;
@@ -74,7 +72,7 @@ import javax.swing.WindowConstants;
 
 /**
  */
-public class ImageRenderer extends MonitoredPanel implements ImageListener, ImageBuffer, Observable<RendererListener> {
+public class Renderer extends MonitoredPanel implements ImageListener, ImageBuffer, Observable<RendererListener> {
 
     final JLabel painter;
     JScrollPane scrollPane;
@@ -115,7 +113,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
             double scaleY = getScaleY();
 
             if (backgroundRendering) {
-                Rectangle rect = (Rectangle) ImageRenderer.this.clip;
+                Rectangle rect = (Rectangle) Renderer.this.clip;
                 if (rect != null) {
                     g.clipRect(rect.x, rect.y, rect.width, rect.height);
                 }
@@ -227,7 +225,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
 
     public static final Cursor DEFAULT_CURSOR = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
 
-    public ImageRenderer() {
+    public Renderer() {
         this.observableBridge = new ObservableBase<>();
         autoScroll = true;
         painter = new Painter();
@@ -259,7 +257,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
                         triggerMouseReleased(toImageCoord(e.getPoint()));
                     }
                 } catch (Exception ex) {
-                     Logger.getLogger(ImageRenderer.class.getName()).log(Level.WARNING, null, ex);
+                     Logger.getLogger(Renderer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
 
@@ -281,7 +279,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
                     }
                     checkPopupMenu(e);
                 } catch (Exception ex) {
-                     Logger.getLogger(ImageRenderer.class.getName()).log(Level.WARNING, null, ex);
+                     Logger.getLogger(Renderer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
 
@@ -972,7 +970,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
                                 painter.setPreferredSize(d);
                                 painter.setSize(d);
                             } catch (Exception ex) {
-                                Logger.getLogger(ImageRenderer.class.getName()).log(Level.SEVERE, null, ex);
+                                Logger.getLogger(Renderer.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         };
                         if (SwingUtilities.isEventDispatchThread()) {
@@ -1780,7 +1778,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
         zoomToSelection = new Overlays.Rect(new Pen(penSelectedOverlay.getColor(), 1, Pen.LineStyle.dotted));
         addListener(new RendererListener() {
             @Override
-            public void onSelectionFinished(ImageRenderer renderer, Overlay overlay) {
+            public void onSelectionFinished(Renderer renderer, Overlay overlay) {
                 if (overlay == zoomToSelection) {
                     try {
                         if ((overlay.getUtmost().x < overlay.getPosition().x) && (overlay.getUtmost().y < overlay.getPosition().y)) {
@@ -1797,7 +1795,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
             }
 
             @Override
-            public void onSelectionAborted(ImageRenderer renderer, Overlay overlay) {
+            public void onSelectionAborted(Renderer renderer, Overlay overlay) {
                 if (overlay == zoomToSelection) {
                     zoomToSelection = null;
                     renderer.removeListener(this);
@@ -1892,21 +1890,21 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
     
     final RendererListener selectionListener = new RendererListener() {
         @Override
-        public void onImage(ImageRenderer renderer, Object origin, BufferedImage image, Data data) {
+        public void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
             if (selectionOverlay != null) {
                 updateDataSelectionDialogPlot();
             }
         }
 
         @Override
-        public void onError(ImageRenderer renderer, Object origin, Exception ex) {
+        public void onError(Renderer renderer, Object origin, Exception ex) {
             if (selectionOverlay != null) {
                 cleanPlot();
             }
         }
 
         @Override
-        public void onMoveFinished(ImageRenderer renderer, Overlay overlay) {
+        public void onMoveFinished(Renderer renderer, Overlay overlay) {
             if (selectionOverlay != null) {
                 if (overlay == selectionOverlay) {
                     updateDataSelectionDialog();
@@ -1915,7 +1913,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
         }
 
         @Override
-        public void onDeleted(ImageRenderer renderer, Overlay overlay) {
+        public void onDeleted(Renderer renderer, Overlay overlay) {
             if (selectionOverlay != null) {
                 if (overlay == selectionOverlay) {
                     removeDataSelection();
@@ -1981,13 +1979,13 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
                     case Line:
                     case Horizontal:
                     case Vertical:
-                        plot = (PlotBase) Plot.newPlot(getLinePlotImpl());
+                        plot = (PlotBase) Plot.newPlot(PlotPanel.getLinePlotImpl());
                         series = new LinePlotSeries("Selection");
                         plot.getAxis(Plot.AxisId.X).setLabel(null);
                         plot.getAxis(Plot.AxisId.Y).setLabel(null);
                         break;
                     case Rectangle:
-                        plot = (PlotBase) Plot.newPlot(getMatrixPlotImpl());
+                        plot = (PlotBase) Plot.newPlot(PlotPanel.getMatrixPlotImpl());
                         plot.getAxis(Plot.AxisId.Y).setInverted(true);
                         //Rectangle dataRect = getData().getInverseRect(rect);                        
                         //series = new MatrixPlotSeries("Selection", minX, maxX, dataRect.width, minY, maxY, dataRect.height );
@@ -1996,7 +1994,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
                         break;
                 }
             } else if (integration != null) {
-                plot = (PlotBase) Plot.newPlot(getLinePlotImpl());
+                plot = (PlotBase) Plot.newPlot(PlotPanel.getLinePlotImpl());
                 series = new LinePlotSeries("Integration");
                 plot.getAxis(Plot.AxisId.X).setLabel(null);
                 plot.getAxis(Plot.AxisId.Y).setLabel(null);
@@ -2131,7 +2129,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
             
     RendererListener integrationListener = new RendererListener() {
         @Override
-        public void onImage(ImageRenderer renderer, Object origin, BufferedImage image, Data data) {
+        public void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
             updateDataSelectionDialogPlot();
         }
     };
@@ -2156,7 +2154,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
             removeDataSelectionOverlay();
             addListener(new RendererListener() {
                 @Override
-                public void onSelectionFinished(ImageRenderer renderer, Overlay overlay) {
+                public void onSelectionFinished(Renderer renderer, Overlay overlay) {
                     try {
                         if (overlay.getLength() > 0) {
                             Overlay dataSelection = overlay.copy();                        
@@ -2170,7 +2168,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
                 }
 
                 @Override
-                public void onSelectionAborted(ImageRenderer renderer, Overlay overlay) {
+                public void onSelectionAborted(Renderer renderer, Overlay overlay) {
                     renderer.removeListener(this);
                     removeDataSelectionDialog();
                 }
@@ -2468,7 +2466,7 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
             Files.write(file, Serializer.encode(state, Serializer.EncoderType.bin));
             IO.setFilePermissions(file.toFile(), IO.FilePermissions.Public);
         } catch (Exception ex) {
-            Logger.getLogger(ImageRenderer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Renderer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     boolean restoringState;
@@ -2508,15 +2506,15 @@ public class ImageRenderer extends MonitoredPanel implements ImageListener, Imag
                         }
                     }, 100);
                 } catch (TimeoutException ex) {
-                    Logger.getLogger(ImageRenderer.class.getName()).info("Timeout waiting initial camera image to restore image position");
+                    Logger.getLogger(Renderer.class.getName()).info("Timeout waiting initial camera image to restore image position");
                 } catch (Exception ex) {
-                    Logger.getLogger(ImageRenderer.class.getName()).log(Level.WARNING, null, ex);
+                    Logger.getLogger(Renderer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }).start();
         } catch (NoSuchFileException ex) {
-            Logger.getLogger(ImageRenderer.class.getName()).log(Level.INFO, null, ex);
+            Logger.getLogger(Renderer.class.getName()).log(Level.INFO, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(ImageRenderer.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(Renderer.class.getName()).log(Level.WARNING, null, ex);
         }
         restoringState = false;
     }
