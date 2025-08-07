@@ -423,12 +423,12 @@ public class DevicePanel extends MonitoredPanel {
     }        
     
 
-    public static JPanel showDevicePanel(Component parent, GenericDevice device) {
+    public static MonitoredPanel showDevicePanel(Component parent, GenericDevice device) {
         Window window = (parent instanceof Window w) ? w : SwingUtils.getWindow(parent);
         return DevicePanelManager.getInstance().showPanel(device, window);
     }
 
-    public JPanel showDevicePanel(GenericDevice device) {
+    public MonitoredPanel showDevicePanel(GenericDevice device) {
         return showDevicePanel(getFrame() == null ? this : getFrame(), device);
     }
     

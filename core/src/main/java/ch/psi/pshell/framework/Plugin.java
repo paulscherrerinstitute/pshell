@@ -2,10 +2,11 @@ package ch.psi.pshell.framework;
 
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.imaging.Renderer;
+import ch.psi.pshell.imaging.DeviceRenderer;
 import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.swing.ConfigDialog;
 import ch.psi.pshell.swing.DevicePanel;
+import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.StandardDialog;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Config;
@@ -60,7 +61,7 @@ public interface Plugin extends ch.psi.pshell.sequencer.Plugin {
         return dlg;
     }
 
-    default DevicePanel showDevicePanel(String name) {
+    default MonitoredPanel showDevicePanel(String name) {
         GenericDevice c = getDevice(name);
         if (c instanceof Device device) {
             return showDevicePanel(device);
@@ -68,7 +69,7 @@ public interface Plugin extends ch.psi.pshell.sequencer.Plugin {
         return null;
     }
 
-    default DevicePanel showDevicePanel(Device device) {
+    default MonitoredPanel showDevicePanel(Device device) {
         return (DevicePanel) App.getDevicePanelManager().showPanel(device, getTopLevel());
     }
 
@@ -80,7 +81,7 @@ public interface Plugin extends ch.psi.pshell.sequencer.Plugin {
         return App.getDevicePanelManager().hidePanel(device);
     }        
     
-    default Renderer showRenderer(String name) {
+    default DeviceRenderer showRenderer(String name) {
         GenericDevice c = getDevice(name);
         if (c instanceof Source source) {
             return showRenderer(source);
@@ -88,8 +89,8 @@ public interface Plugin extends ch.psi.pshell.sequencer.Plugin {
         return null;
     }
 
-    default Renderer showRenderer(Source source) {
-        return (Renderer) App.getDevicePanelManager().showPanel(source, getTopLevel());
+    default DeviceRenderer showRenderer(Source source) {
+        return (DeviceRenderer) App.getDevicePanelManager().showPanel(source, getTopLevel());
     }
 
     default boolean hideRenderer(String source) {
