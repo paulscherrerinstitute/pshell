@@ -28,3 +28,11 @@ dependencies {
     api 'org.glassfish.jersey.media:jersey-media-json-jackson:3.1.10'
     api 'org.glassfish.jersey.core:jersey-client:3.1.10'                    
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
