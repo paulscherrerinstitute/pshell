@@ -4,6 +4,7 @@ import ch.psi.pshell.app.Stdio;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamCamera;
 import ch.psi.pshell.bs.StreamValue;
+import ch.psi.pshell.camserver.CameraClient;
 import ch.psi.pshell.camserver.CameraSource;
 import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.data.DataManager;
@@ -217,7 +218,6 @@ public class CamServerViewer extends MonitoredPanel {
                         String cameraName = getCameraName();
                         String cameraConfigJson = null;
                         try ( CameraSource srv = newCameraSource()) {
-                            srv.initialize();
                             //TODO: replace into encodeMultiline
                             cameraConfigJson = EncoderJson.encode(srv.getConfig(getCameraName()), true);
                         }
@@ -348,6 +348,116 @@ public class CamServerViewer extends MonitoredPanel {
                     }
                 }
             });
+            
+            
+            JMenuItem menuSetCameraROI = new JMenuItem("Set Camera ROI");
+            menuSetCameraROI.addActionListener((ActionEvent e) -> {                
+                renderer.abortSelection();
+                if (server != null) {
+                    try {
+                        checkCanChangeCameraROI();
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }
+                    
+                    
+                    final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMovingOverlay());
+                    renderer.addListener(new RendererListener() {
+                        @Override
+                        public void onSelectionFinished(Renderer renderer, Overlay overlay) {
+                            try {
+                                renderer.setShowReticle(false);
+
+                                CameraClient cc = new CameraClient(getCameraServerUrl());
+                                Rectangle roi = overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds();
+                                int[] cur = cc.getRoi(getCameraName());
+                                if (cur != null) {
+                                    cc.setRoi(getCameraName(), new int[]{roi.x + cur[0], roi.y + cur[1], roi.width, roi.height});
+                                } else {
+                                    cc.setRoi(getCameraName(), new int[]{roi.x, roi.y, roi.width, roi.height});
+                                }
+                            } catch (Exception ex) {
+                                showException(ex);
+                            } finally {
+                                renderer.removeListener(this);
+                            }
+                        }
+
+                        @Override
+                        public void onSelectionAborted(Renderer renderer, Overlay overlay) {
+                            renderer.removeListener(this);
+                        }
+                    });
+                    selection.setFixed(true);
+                    renderer.startSelection(selection);
+                }
+            });
+
+            JMenuItem menuResetCameraROI = new JMenuItem("Reset Camera ROI");
+            menuResetCameraROI.addActionListener((ActionEvent e) -> {
+                renderer.abortSelection();
+                if (server != null) {
+                    try {
+                        checkCanChangeCameraROI();                        
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                    
+                    try {
+                        renderer.setShowReticle(false);
+                        
+                        CameraClient cc = new CameraClient(getCameraServerUrl());
+                        cc.resetRoi(getCameraName());
+                        
+                    } catch (IOException ex) {
+                        showException(ex);
+                    }
+                }
+            });
+            
+            
+            JMenuItem menuSetCameraBackground = new JMenuItem("Set Current Background to Camera");
+            menuSetCameraBackground.addActionListener((ActionEvent e) -> {
+                if (server != null) {
+                    try {
+                        if (!server.isBackgroundSubtractionEnabled()){
+                            throw new Exception("Pipeline background subtraction is not enabled");
+                        }
+                        String image = getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background", "").toString();
+                        if (image.isBlank()){
+                            throw new Exception("Background subtraction image is undefined");
+                        }
+                        if (Boolean.FALSE.equals(getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background_ok", true))){
+                            throw new Exception("Background subtraction image is invalid: " + image);
+                        }  
+                        server.setBackground(null);
+                        server.setBackgroundEnabled(false);
+                        CameraClient cc = new CameraClient(getCameraServerUrl());
+                        cc.setBackground(getCameraName(), image);
+                        
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                }
+            });          
+            
+            JMenuItem menuResetCameraBackground = new JMenuItem("Reset Camera Background");
+            menuResetCameraBackground.addActionListener((ActionEvent e) -> {
+                if (server != null) {
+                    try {
+                        CameraClient cc = new CameraClient(getCameraServerUrl());
+                        cc.setBackground(getCameraName(), null);
+                        
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                }
+            });           
+            
 
             JCheckBoxMenuItem menuFrameIntegration = new JCheckBoxMenuItem("Multi-Frame", (integration != 0));
             menuFrameIntegration.addActionListener((ActionEvent e) -> {
@@ -394,6 +504,10 @@ public class CamServerViewer extends MonitoredPanel {
                 menuConfig.addSeparator();
                 menuConfig.add(menuCameraConfig);                
                 menuConfig.add(menuCalibrate);
+                menuConfig.add(menuSetCameraROI);                                
+                menuConfig.add(menuResetCameraROI);   
+                menuConfig.add(menuSetCameraBackground);
+                menuConfig.add(menuResetCameraBackground);
                 menuConfig.addSeparator();
                 menuConfig.add(menuRendererConfig);
                 menuConfig.add(menuSetImageBufferSize);
@@ -433,6 +547,8 @@ public class CamServerViewer extends MonitoredPanel {
                         menuPipelineConfig.setEnabled(server!=null);
                         menuCameraConfig.setEnabled((getCameraServerUrl()!=null)&&(cameraName!=null));
                         menuCalibrate.setEnabled(menuCameraConfig.isEnabled() && ((calibrationDialolg == null) || (!calibrationDialolg.isShowing())));                     
+                        menuSetCameraROI.setEnabled(menuCameraConfig.isEnabled());
+                        menuResetCameraROI.setEnabled(menuCameraConfig.isEnabled());
                     }
 
                     @Override
@@ -478,6 +594,14 @@ public class CamServerViewer extends MonitoredPanel {
     }
     
                 
+    void checkCanChangeCameraROI() throws Exception{
+        if (server.isRoiEnabled()){
+            throw new Exception("Remove pipeline ROI to set camera ROI");
+        }
+        if (server.isBackgroundSubtractionEnabled()){
+            throw new Exception("Remove background subtraction to set camera ROI");
+        }
+    };
     
     public void initialize(String selectionMode) throws IOException, InterruptedException {
         SourceSelecionMode mode = (selectionMode==null) ? SourceSelecionMode.Cameras : SourceSelecionMode.valueOf(selectionMode);
@@ -1082,6 +1206,7 @@ public class CamServerViewer extends MonitoredPanel {
 
         boolean background;
         boolean threshold;
+        boolean background_ok;
         boolean goodRegion;
         boolean slicing;
         boolean valid;
@@ -1093,6 +1218,7 @@ public class CamServerViewer extends MonitoredPanel {
                 try {
                     Map<String, Object> pars = getProcessingParameters(cache);
                     background = (boolean) pars.get("image_background_enable");
+                    background_ok =  (boolean) pars.getOrDefault("image_background_ok", true);
                     Number th = (Number) (pars.get("image_threshold"));
                     threshold = (th != null) && (th.doubleValue() > 0);
                     goodRegion = ((Map<String, Object>) pars.get("image_good_region")) != null;
@@ -1100,7 +1226,7 @@ public class CamServerViewer extends MonitoredPanel {
                     String processingError = (String) pars.getOrDefault("processing_error", null);   
                     valid = (processingError==null) || (processingError.isBlank());
                 } catch (Exception ex) {
-                }
+                }                                                  
                 if (valid){
                     String prefix = goodRegion ? "gr_" : "";
                     x_fit_mean = getDouble(prefix + "x_fit_mean");
@@ -1628,12 +1754,13 @@ public class CamServerViewer extends MonitoredPanel {
         return processingError==null;
     }
     
-    public void addErrorOverlay(String str){
+    public Overlay addErrorOverlay(String str){
         Overlay former = errorOverlay;
         errorOverlay = new Text(renderer.getPenErrorText(), str, new Font("Verdana", Font.PLAIN, 12), new Point(20, 20));
         errorOverlay.setFixed(true);
         errorOverlay.setAnchor(Overlay.ANCHOR_VIEWPORT_TOP_LEFT);
         renderer.updateOverlays(errorOverlay, former);        
+        return errorOverlay;
     }
     
     public Map<String, Object> getConfig(String instanceName) throws IOException, InterruptedException {
@@ -1968,7 +2095,7 @@ public class CamServerViewer extends MonitoredPanel {
                     if ((lastPipelinePars == null) || !lastPipelinePars.equals(pars)) {
                         lastPipelinePars = pars;
                         updatePipelineControls();
-                        String processingError = (String) lastPipelinePars.getOrDefault("processing_error", null);                        
+                        String processingError = (String) lastPipelinePars.getOrDefault("processing_error", null);  
                         if (processingError!= this.processingError){
                             if ((processingError !=null) && (!processingError.isBlank())){                            
                                 addErrorOverlay(processingError);
@@ -1976,7 +2103,7 @@ public class CamServerViewer extends MonitoredPanel {
                                 clearErrorOverlay();
                             }
                             this.processingError =processingError;
-                        }                        
+                        }                                        
                     }
                 }
             }

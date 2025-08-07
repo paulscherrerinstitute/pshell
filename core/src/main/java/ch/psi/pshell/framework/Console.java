@@ -47,11 +47,11 @@ public class Console implements AutoCloseable{
     }
 
     public void attachInterpreterOutput() {
-        Context.getInterpreter().addListener(contextListener);
+        Context.getInterpreter().addListener(interpreterListener);
     }
 
     public void detachInterpreterOutput() {
-        Context.getInterpreter().removeListener(contextListener);
+        Context.getInterpreter().removeListener(interpreterListener);
     }
     
     //Pure Java, no history and headless: suited for server
@@ -185,7 +185,7 @@ public class Console implements AutoCloseable{
         }
     };
 
-    final InterpreterListener contextListener = new InterpreterListener() {
+    final InterpreterListener interpreterListener = new InterpreterListener() {
         @Override
         public void onShellCommand(CommandSource source, String command) {
             if (source.isRemote() && !Context.isServerCommandsHidden()) {

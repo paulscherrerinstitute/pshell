@@ -200,7 +200,7 @@ subprojects {
             project.publishing {
                 publications {
                     MyPublication(MavenPublication) {
-                    from project.components.java
+                        from project.components.java
                         if (project.tasks.findByName('sourcesJar')) {
                             //artifact project.tasks.sourcesJar
                         }

@@ -84,6 +84,17 @@ public abstract class InstanceManagerClient extends CamServerClient {
         Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
+    
+    public Object getConfigValue(String name, String entry) throws IOException {
+        Map<String, Object> pars = getConfig(name);
+        return pars.get(entry);
+    }    
+
+    public void setConfigValue(String name, String entry, Object value) throws IOException {
+        Map<String, Object> pars = getConfig(name);
+        pars.put(entry, value);
+        setConfig(name, pars);
+    }        
 
     public List<String> getConfigNames() throws IOException {
         WebTarget resource = client.target(prefix + "/config_names");

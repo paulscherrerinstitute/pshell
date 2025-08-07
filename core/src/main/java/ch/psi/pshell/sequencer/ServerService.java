@@ -798,7 +798,7 @@ public class ServerService {
         }
     }
 
-    final InterpreterListener contextListener = new InterpreterListener() {
+    final InterpreterListener interpreterListener = new InterpreterListener() {
         @Override
         public void onStateChanged(State state, State former) {
             sendEvent("state", interpreter.getState());
@@ -928,7 +928,7 @@ public class ServerService {
     public EventOutput subscribe() {
         if (!initialized) {
             initialized = true;
-            interpreter.addListener(contextListener); //If already a listener does nothing
+            interpreter.addListener(interpreterListener); //If already a listener does nothing
             interpreter.addScanListener(scanListener); //If already a listener does nothing
             interpreter.addEventListener(eventListener);            
             interpreter.remoteUserInterface = remoteUserInterface;

@@ -835,7 +835,7 @@ def hklscan(vector, readables,latency = 0.0,  passes = 1, **pars):
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
     Returns:
         ScanResult object.
 

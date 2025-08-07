@@ -101,5 +101,74 @@ public class CameraClient extends InstanceManagerClient{
     public void setInstanceConfig(String instanceId, Map<String, Object> config) throws IOException {
         setInstanceConfig(instanceId, config);
     }    
+    
+            
+    public void resetRoi(String cameraName) throws IOException {
+        setConfigValue(cameraName, "roi", null);
+    }
 
+    public void setRoi(String cameraName, int x, int y, int width, int height) throws IOException {
+        if (x<0) {
+            throw new IOException("Invalid ROI x: " + x );
+        }        
+        if (y<0) {
+            throw new IOException("Invalid ROI y: " + y );
+        }        
+        if ((width<=0) ||(height<=0)){
+            throw new IOException("Invalid ROI size: " + width + " x " + height);
+        }        
+        setConfigValue(cameraName, "roi", new int[]{x, width, y, height});
+    }
+
+    public void setRoi(String cameraName, int[] roi) throws IOException {
+        setRoi(cameraName, roi[0], roi[1], roi[2], roi[3]);
+    }
+
+    public int[] getRoi(String cameraName) throws IOException {
+        Object roi = getConfigValue(cameraName, "roi");
+        if (roi instanceof List) {
+            List<Integer> l = (List<Integer>) roi;
+            if (l.size() >= 4) {
+                return new int[]{l.get(0), l.get(2), l.get(1), l.get(3)};
+            }
+        }
+        return null;
+    }
+    
+    public void setMirrorX(String cameraName, boolean value) throws IOException {
+        setConfigValue(cameraName, "mirror_x", value);
+    }
+
+    public boolean getMirrorX(String cameraName) throws IOException {
+        Object ret = getConfigValue(cameraName, "mirror_x");
+        return Boolean.TRUE.equals(ret);
+    }    
+    
+    public void setMirrorY(String cameraName, boolean value) throws IOException {
+        setConfigValue(cameraName, "mirror_y", value);
+    }
+
+    public boolean getMirrorY(String cameraName) throws IOException {
+        Object ret = getConfigValue(cameraName, "mirror_y");
+        return Boolean.TRUE.equals(ret);
+    }    
+
+    public void setRotate(String cameraName, int value) throws IOException {
+        setConfigValue(cameraName, "rotate", value);
+    }
+
+    public int getRotate(String cameraName) throws IOException {
+        Object ret = getConfigValue(cameraName, "rotate");
+        return (ret instanceof Number n) ? n.intValue(): 0;
+    }    
+
+    public void setBackground(String cameraName, String value) throws IOException {
+        setConfigValue(cameraName, "image_background", value);
+    }
+
+    public String getBackground(String cameraName) throws IOException {
+        Object ret = getConfigValue(cameraName, "image_background");
+        return (ret == null) ? null : ret.toString();
+    }    
+    
 }

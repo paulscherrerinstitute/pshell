@@ -287,7 +287,7 @@ public class Setup{
         return expandedPathNames.get(logPath);
     }
 
-    public static String getDevicesPath() {
+        public static String getDevicesPath() {
         return expandedPathNames.get(devicesPath);
     }
 

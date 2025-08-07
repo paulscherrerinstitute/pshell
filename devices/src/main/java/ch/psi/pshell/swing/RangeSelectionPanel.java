@@ -56,7 +56,7 @@ public class RangeSelectionPanel extends MonitoredPanel {
             indexMiddle = showMiddle ? 1 : -1;
             indexUpper = showMiddle ? 2 : 1;
             if (tableInitialized) {
-                this.setAditionalColumns(new String[0], new Class[0]);
+                this.setAdditionalColumns(new String[0], new Class[0]);
             }
         }
     }
@@ -244,7 +244,7 @@ public class RangeSelectionPanel extends MonitoredPanel {
 
     }
 
-    public void setAditionalColumns(String[] names, final Class[] types) {
+    public void setAdditionalColumns(String[] names, final Class[] types) {
         //model
         model = new javax.swing.table.DefaultTableModel(new Object[][]{},
                 Arr.append(showMiddle ? new String[]{"Lower", "Middle", "Upper"} : new String[]{"Lower", "Upper"}, names)) {

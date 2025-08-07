@@ -35,7 +35,7 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - meta (dict, optional): scan metadata.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -80,7 +80,7 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - meta (dict, optional): scan metadata.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -130,7 +130,7 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - meta (dict, optional): scan metadata.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -177,7 +177,7 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - meta (dict, optional): scan metadata.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -227,7 +227,7 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - meta (dict, optional): scan metadata.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -355,7 +355,7 @@ def bscan(stream, records, timeout = None, passes=1, **pars):
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - meta (dict, optional): scan metadata.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -390,7 +390,7 @@ def tscan(readables, points, interval, passes=1, fixed_rate=True, **pars):
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - meta (dict, optional): scan metadata.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -430,7 +430,7 @@ def mscan(trigger, readables, points=-1, timeout=None, async=True, take_initial=
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - meta (dict, optional): scan metadata.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -451,7 +451,7 @@ def escan(name, **pars):
         title(str, optional): plotting window name.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         ScanResult.
@@ -502,7 +502,7 @@ def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         SearchResult.
@@ -528,7 +528,7 @@ def hsearch(writables, readable, range_min, range_max, initial_step, resolution,
         range_max(list of float): maximum positions of writables.
         initial_step(float or list of float):initial step size for for each writable.
         resolution(float or list of float): resolution of search for each writable (minimum step size).
-        filter(int): number of aditional steps to filter noise
+        filter(int): number of additional steps to filter noise
         maximum (bool , optional): if True (default) search maximum, otherwise minimum.
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
         relative (bool, optional): if true, start and end positions are relative to current.
@@ -541,7 +541,7 @@ def hsearch(writables, readable, range_min, range_max, initial_step, resolution,
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
-            - Aditional arguments defined by set_exec_pars.
+            - Additional arguments defined by set_exec_pars.
 
     Returns:
         SearchResult.

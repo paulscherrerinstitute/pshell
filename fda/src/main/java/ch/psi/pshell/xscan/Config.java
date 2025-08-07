@@ -43,8 +43,8 @@ public class Config extends ch.psi.pshell.utils.Config{
     }
         
     public static boolean isContinuousUpdate() {
-        if (App.hasAditionalArgumentValue("xscan.continuous.update")){
-            return App.getBoolAditionalArgumentValue("xscan.continuous.update");
+        if (App.hasAdditionalArgumentValue("xscan.continuous.update")){
+            return App.getBoolAdditionalArgumentValue("xscan.continuous.update");
         }
         return getConfig().continuousUpdate;
     }    
@@ -59,35 +59,35 @@ public class Config extends ch.psi.pshell.utils.Config{
     }
 
     public static int getActorMoveTimeout() {
-        if (App.hasAditionalArgumentValue("xscan.move.timeout")){
-            return Integer.valueOf(App.getAditionalArgumentValue("xscan.move.timeout"));
+        if (App.hasAdditionalArgumentValue("xscan.move.timeout")){
+            return Integer.valueOf(App.getAdditionalArgumentValue("xscan.move.timeout"));
         }
-        if (App.hasAditionalArgumentValue("move.timeout")) {
-            return Integer.valueOf(App.getAditionalArgumentValue("move.timeout"));
+        if (App.hasAdditionalArgumentValue("move.timeout")) {
+            return Integer.valueOf(App.getAdditionalArgumentValue("move.timeout"));
         }
         return getConfig().moveTimeout;
     }
 
     public static boolean getAppendSuffix() {
-        if (App.hasAditionalArgumentValue("xscan.suffix")){
-            return App.getBoolAditionalArgumentValue("xscan.suffix");
+        if (App.hasAdditionalArgumentValue("xscan.suffix")){
+            return App.getBoolAdditionalArgumentValue("xscan.suffix");
         }
-        if (App.hasAditionalArgumentValue("fdanosuffix")) {
+        if (App.hasAdditionalArgumentValue("fdanosuffix")) {
             return false;
         }
         return getConfig().appendSuffix;
     }
 
     public static int getChannelCreationRetries() {
-        if (App.hasAditionalArgumentValue("xscan.channel.retries")){
-            return Integer.valueOf(App.getAditionalArgumentValue("xscan.channel.retries"));
+        if (App.hasAdditionalArgumentValue("xscan.channel.retries")){
+            return Integer.valueOf(App.getAdditionalArgumentValue("xscan.channel.retries"));
         }
         return getConfig().channelCreationRetries;
     }
     
     public static boolean isFdaSerialization() {
-        if (App.hasAditionalArgumentValue("xscan.fda.serialization")){
-            return App.getBoolAditionalArgumentValue("xscan.fda.serialization");
+        if (App.hasAdditionalArgumentValue("xscan.fda.serialization")){
+            return App.getBoolAdditionalArgumentValue("xscan.fda.serialization");
         }
         return getConfig().fdaSerialization;
     }

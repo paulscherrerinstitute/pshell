@@ -65,14 +65,14 @@ public class PipelineSource extends StreamCamera {
     }   
     
     /**
-     * Return the name of the current streaming pipeline.
+     * Return the name of the current pipeline name.
      */
     public String getCurrentPipeline() {
         return currentPipeline;
     }
 
     /**
-     * Return the name of the current streaming pipeline.
+     * Return the name of the current streaming camera.
      */
     public String getCurrentCamera() {
         try {
@@ -83,7 +83,7 @@ public class PipelineSource extends StreamCamera {
     }
 
     /**
-     * Return the name of the current streaming pipeline.
+     * Return the name of the current pipeline instance.
      */
     public String getCurrentInstance() {
         return currentInstance;
@@ -538,8 +538,17 @@ public class PipelineSource extends StreamCamera {
     }
 
     public void setBackground(String id) throws IOException {
+        setBackground(id, true);
+    }
+    
+    public void setBackground(String id, boolean saveConfig) throws IOException {
         assertStarted();
         client.setBackground(currentInstance, id);
+        if (saveConfig){
+            if (currentPipeline != null){
+                client.setConfigValue(currentPipeline, "image_background", null);
+            }
+        }
     }
 
     public String getLastBackground() throws IOException {
@@ -551,7 +560,7 @@ public class PipelineSource extends StreamCamera {
         assertStarted();
         String id = client.captureBackground(getCurrentCamera(), images);
         if (id != null) {
-            setBackground(id);
+            setBackground(null, true); //Use latest
         }
         return id;        
     }

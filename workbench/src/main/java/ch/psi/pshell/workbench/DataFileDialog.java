@@ -58,7 +58,7 @@ public class DataFileDialog extends StandardDialog {
         buttonUndoActionPerformed(null);
     }
 
-    final InterpreterListener contextListener = new InterpreterListener() {
+    final InterpreterListener interpreterListener = new InterpreterListener() {
         @Override
         public void onStateChanged(State state, State former) {
             if ((dialogTokens != null) && (dialogTokens.isShowing())) {
@@ -83,13 +83,13 @@ public class DataFileDialog extends StandardDialog {
 
     @Override
     protected void onOpened() {
-        Context.getInterpreter().addListener(contextListener);
-        contextListener.onStateChanged(Context.getState(), null);
+        Context.getInterpreter().addListener(interpreterListener);
+        interpreterListener.onStateChanged(Context.getState(), null);
     }
 
     @Override
     protected void onClosed() {
-        Context.getInterpreter().removeListener(contextListener);
+        Context.getInterpreter().removeListener(interpreterListener);
     }
 
     Object[][] getTokenData() {

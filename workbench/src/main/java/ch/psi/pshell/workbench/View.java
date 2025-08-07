@@ -177,7 +177,7 @@ public class View extends MainFrame{
         //loggerPanel.setInverted(true);
         loggerPanel.start();
 
-        Context.getInterpreter().addListener(contextListener);
+        Context.getInterpreter().addListener(interpreterListener);
         if (Context.hasVersioningManager()){
             Context.getVersioningManager().addListener(versioningListener);
         }
@@ -651,7 +651,7 @@ public class View extends MainFrame{
         }
     }
     
-    final InterpreterListener contextListener = new InterpreterListener() {
+    final InterpreterListener interpreterListener = new InterpreterListener() {
         @Override
         public void onInitialized(int runCount) {
             if (runCount == 0) {

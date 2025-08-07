@@ -450,7 +450,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     @Override
     public boolean createFilePanel() {
         //!!! Align preferences x command line names
-        return Context.getView().getPreference("showXScanFileBrowser")==Boolean.TRUE || App.hasAditionalArgument("xscan_panel");
+        return Context.getView().getPreference("showXScanFileBrowser")==Boolean.TRUE || App.hasAdditionalArgument("xscan_panel");
     }
 
     public  Config getConfiguration() {

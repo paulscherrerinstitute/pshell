@@ -229,24 +229,24 @@ public abstract class App extends ObservableBase<AppListener> {
     }
         
     //Arguments
-    static public String[] getAditionalArguments(){
+    static public String[] getAdditionalArguments(){
          if (commandLine==null){
              return new String[0];
          }
          return commandLine.getArgList().toArray(new String[0]);
     }
     
-    static public boolean hasAditionalArgument(String argument) {
-        return Arr.containsEqual(getAditionalArguments(), argument);
+    static public boolean hasAdditionalArgument(String argument) {
+        return Arr.containsEqual(getAdditionalArguments(), argument);
     }    
     
     
-    static public boolean hasAditionalArgumentValue(String argument) {
-        return getAditionalArgumentValue(argument)!=null;
+    static public boolean hasAdditionalArgumentValue(String argument) {
+        return getAdditionalArgumentValue(argument)!=null;
     }    
 
-    static public String getAditionalArgumentValue(String argument) {
-        String[] args = getAditionalArguments();
+    static public String getAdditionalArgumentValue(String argument) {
+        String[] args = getAdditionalArguments();
         for (int i=0; i<args.length-1; i++){
             if (args[i].trim().equals(argument.trim())){
                 return args[i+1];
@@ -255,22 +255,22 @@ public abstract class App extends ObservableBase<AppListener> {
         return null;
     }    
 
-    static public String getAditionalArgument() {
-        String[] args = getAditionalArguments();
+    static public String getAdditionalArgument() {
+        String[] args = getAdditionalArguments();
         if ((args!=null) && (args.length>0)){
             return args[0].trim();
         }
         return null;
     }        
 
-    static public boolean hasAditionalArgument() {
-        String[] args = getAditionalArguments();
+    static public boolean hasAdditionalArgument() {
+        String[] args = getAdditionalArguments();
         return ((args!=null) && (args.length>0));
     }    
     
-    static public boolean getBoolAditionalArgumentValue(String arg) {
-        if (hasAditionalArgumentValue(arg)) {
-            String val = getAditionalArgumentValue(arg);
+    static public boolean getBoolAdditionalArgumentValue(String arg) {
+        if (hasAdditionalArgumentValue(arg)) {
+            String val = getAdditionalArgumentValue(arg);
             if (val!=null){
                 return !(val.equalsIgnoreCase("false")) && !(val.equalsIgnoreCase("0"));
             }

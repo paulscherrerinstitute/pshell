@@ -76,7 +76,7 @@ public interface Option {
                 if (App.hasArgument(argument)) {
                     return App.getBoolArgumentValue(argument);
                 }
-               if (App.hasAditionalArgument(argument)){
+               if (App.hasAdditionalArgument(argument)){
                    return true;
                }
             }

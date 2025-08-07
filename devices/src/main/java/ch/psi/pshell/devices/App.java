@@ -38,7 +38,7 @@ public class App extends ch.psi.pshell.app.App{
     }
     
     static public String getDeviceViewerArgs() {
-        return getAditionalArgument();
+        return getAdditionalArgument();
     }        
     
     

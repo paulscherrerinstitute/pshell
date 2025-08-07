@@ -30,29 +30,29 @@ public class CrlogicConfig extends ch.psi.pshell.utils.Config{
     }
     
     public static String getPrefix() {
-        if (App.hasAditionalArgumentValue("crlogic.prefix")) {
-            return App.getAditionalArgumentValue("crlogic.prefix");
+        if (App.hasAdditionalArgumentValue("crlogic.prefix")) {
+            return App.getAdditionalArgumentValue("crlogic.prefix");
         }
         return getConfig().prefix;
     }
 
     public static String getIoc() {
-        if (App.hasAditionalArgumentValue("crlogic.ioc")) {
-            return App.getAditionalArgumentValue("crlogic.ioc");
+        if (App.hasAdditionalArgumentValue("crlogic.ioc")) {
+            return App.getAdditionalArgumentValue("crlogic.ioc");
         }
         return getConfig().ioc;
     }
 
     public static String getChannel() {
-        if (App.hasAditionalArgumentValue("crlogic.channel")) {
-            return App.getAditionalArgumentValue("crlogic.channel");
+        if (App.hasAdditionalArgumentValue("crlogic.channel")) {
+            return App.getAdditionalArgumentValue("crlogic.channel");
         }
         return getConfig().channel;
     }
 
     public static boolean getAbortable() {
-        if (App.hasAditionalArgumentValue("crlogic.abortable")){
-            return App.getBoolAditionalArgumentValue("crlogic.abortable");
+        if (App.hasAdditionalArgumentValue("crlogic.abortable")){
+            return App.getBoolAdditionalArgumentValue("crlogic.abortable");
         }
         return getConfig().abortable;
     }
@@ -61,8 +61,8 @@ public class CrlogicConfig extends ch.psi.pshell.utils.Config{
         if (Setup.isSimulation()){
             return true;
         }
-        if (App.hasAditionalArgumentValue("crlogic.simulated")){
-            return App.getBoolAditionalArgumentValue("crlogic.simulated");
+        if (App.hasAdditionalArgumentValue("crlogic.simulated")){
+            return App.getBoolAdditionalArgumentValue("crlogic.simulated");
         }
         return getConfig().simulated;
     }    

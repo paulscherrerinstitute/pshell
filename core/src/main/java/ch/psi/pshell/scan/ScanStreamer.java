@@ -49,8 +49,8 @@ public class ScanStreamer extends Publisher {
     public static void main(String[] args) throws Exception {        
         App.init(args);
         String server = "localhost:5563";        
-        if (App.hasAditionalArgument()) {
-            server = App.getAditionalArgument();
+        if (App.hasAdditionalArgument()) {
+            server = App.getAdditionalArgument();
         }
         org.zeromq.ZMQ.Context context = org.zeromq.ZMQ.context(1);
         org.zeromq.ZMQ.Socket subscriber = context.socket(org.zeromq.ZMQ.SUB);

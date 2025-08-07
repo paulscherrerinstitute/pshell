@@ -51,7 +51,7 @@ public class App extends ch.psi.pshell.devices.App{
                 viewer.setSidePanelVisible(Options.SIDEBAR.getBool(false));       
                 viewer.setCameraServerUrl(Setup.getCameraServer());
                 viewer.setPipelineServerUrl(Setup.getPipelineServer());
-                viewer.setShared(Options.SHARED.getBool(false));
+                viewer.setShared(Options.SHARED.getBool(true));
                 if ((Setup.getContextPath()!=null) && new File(Setup.getContextPath()).isDirectory()) {
                     viewer.setPersistenceFile(Paths.get(Setup.getContextPath(), "camserver_viewer.bin"));                    
                 } else {

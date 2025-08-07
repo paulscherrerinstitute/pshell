@@ -93,7 +93,7 @@
 
 <p>
 
-The startup scripts of application RPMs use the aditional environmet variables:
+The startup scripts of application RPMs use the additional environmet variables:
 
 <br>
 

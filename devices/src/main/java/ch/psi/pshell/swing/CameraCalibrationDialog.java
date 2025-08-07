@@ -158,7 +158,7 @@ public class CameraCalibrationDialog extends StandardDialog {
     public static void main(String args[]) throws Exception {
         App.init(args);        
         ch.psi.pshell.devices.Options.addCamServer();
-        String cameraName = App.getAditionalArgument();
+        String cameraName = App.getAdditionalArgument();
 
         DeviceRenderer renderer = new DeviceRenderer();
         JDialog dlgRenderer = SwingUtils.showDialog(null, cameraName, new Dimension(600,400), renderer);

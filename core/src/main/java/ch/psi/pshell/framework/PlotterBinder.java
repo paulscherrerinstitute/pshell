@@ -37,7 +37,7 @@ public class PlotterBinder implements AutoCloseable {
     public PlotterBinder(Plotter pm) {
         this.pm = pm;
         this.scanListener = new BinderScanListener();
-        this.interpreterListener = new BinderContextListener();
+        this.interpreterListener = new BinderInterpreterListener();
         this.plotListener = new BinderPlotListener();
         Context.getInterpreter().addScanListener(scanListener);
         Context.getInterpreter().addListener(interpreterListener);
@@ -115,7 +115,7 @@ public class PlotterBinder implements AutoCloseable {
 
     }
 
-    class BinderContextListener implements InterpreterListener {
+    class BinderInterpreterListener implements InterpreterListener {
 
         @Override
         public void onStateChanged(State state, State former) {
