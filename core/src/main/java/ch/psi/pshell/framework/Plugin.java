@@ -70,7 +70,7 @@ public interface Plugin extends ch.psi.pshell.sequencer.Plugin {
     }
 
     default MonitoredPanel showDevicePanel(Device device) {
-        return (DevicePanel) App.getDevicePanelManager().showPanel(device, getTopLevel());
+        return (MonitoredPanel) App.getDevicePanelManager().showPanel(device, getTopLevel());
     }
 
     default boolean hideDevicePanel(String device) {
