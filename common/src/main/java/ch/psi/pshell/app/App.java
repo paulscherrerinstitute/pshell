@@ -325,8 +325,11 @@ public abstract class App extends ObservableBase<AppListener> {
         ArrayList<String> argumentValues = new ArrayList<>();
         if (commandLine!=null){
             if (commandLine.hasOption(name)) {
-                for (String value : commandLine.getOptionValues(name)) {
-                    argumentValues.add(value);
+                String[] values =  commandLine.getOptionValues(name);
+                if (values!=null){
+                    for (String value :values) {
+                        argumentValues.add(value);
+                    }
                 }
             }
         }

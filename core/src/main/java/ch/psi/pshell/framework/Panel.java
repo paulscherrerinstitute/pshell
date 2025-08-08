@@ -130,7 +130,7 @@ public class Panel extends MonitoredPanel implements Plugin {
     public boolean isActive() {
         if (Setup.isDetached()) {
             List<String> names = Setup.getDetachedPanels();            
-            if ((names != null) && (names.size()>0)){
+            if (names != null){
                 for (String name : names){
                     if (IO.getPrefix(name).equals(getTitle())){
                         return true;

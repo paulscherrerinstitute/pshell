@@ -387,7 +387,13 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     }
 
     static public List<String> getDetachedPanels() { 
-        return Options.DETACHED.getStringList();
+        List<String> ret =  Options.DETACHED.getStringList();
+        if (ret != null) {
+            if ((ret.size()==0) || ((ret.size()==1) && (ret.get(0).isBlank()))){
+                return null;
+            }
+        }
+        return ret;
     }
     
     //If running from jar and no console, redirect stdout and stderr to Output window
