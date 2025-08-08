@@ -41,6 +41,9 @@ import javax.script.ScriptException;
  */
 public class ScriptManager implements AutoCloseable {
     static  ScriptManager INSTANCE;    
+    public static boolean hasInstance(){  
+        return INSTANCE!=null;
+    }
     public static  ScriptManager getInstance(){  
         return INSTANCE;
     }
@@ -835,6 +838,23 @@ public class ScriptManager implements AutoCloseable {
         Process p = ProcessFactory.createProcess(ScriptManager.class, Arr.insert(libraryPath, scriptFilePermissions.toString(),0));
     }
 
+    
+    public Class getClass(String className){
+        try{
+            //TODO: Only works for threaded
+            InterpreterResult ir = evalBackground(className);
+            if (ir != null) {
+                if (ir.exception == null) {
+                    Object cls = ir.result;
+                    if ((cls != null) && (cls instanceof Class c)) {
+                        return c;
+                    }                    
+                }                
+            }
+        } catch (Exception ex){
+        }
+        return null;
+    }
     /**
      * This is for executing a push in a different process with ProcessFactory
      */

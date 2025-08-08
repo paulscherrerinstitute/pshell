@@ -163,18 +163,7 @@ public class Context {
     }
     
     public static Class getClassByName(String className) throws ClassNotFoundException {
-        try {
-            return PluginManager.getClass(className);
-        } catch (ClassNotFoundException ex) {
-            try {
-                Object cls = getInterpreter().evalLineBackground(className);
-                if ((cls != null) && (cls instanceof Class c)) {
-                    return c;
-                }
-            } catch (Exception e) {                
-            }            
-            throw ex;
-        }        
+        return PluginManager.getClass(className);
     }               
     
     public static ScriptType getScriptType() {                
