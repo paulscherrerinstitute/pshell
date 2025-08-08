@@ -1,7 +1,5 @@
 package ch.psi.pshell.framework;
 
-import ch.psi.pshell.app.MainFrame;
-import ch.psi.pshell.app.StatusBar;
 import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.SwingUtils;
