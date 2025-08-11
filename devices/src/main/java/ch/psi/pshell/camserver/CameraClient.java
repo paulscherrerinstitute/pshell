@@ -166,6 +166,10 @@ public class CameraClient extends InstanceManagerClient{
         setConfigValue(cameraName, "image_background", value);
     }
 
+    public void setLatestBackground(String cameraName) throws IOException {
+        setConfigValue(cameraName, "image_background", true);
+    }
+
     public String getBackground(String cameraName) throws IOException {
         Object ret = getConfigValue(cameraName, "image_background");
         return (ret == null) ? null : ret.toString();

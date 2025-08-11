@@ -41,7 +41,7 @@ public class DefaultProcessingPipelineClient extends PipelineClient{
     }
 
     public void setRoi(String instanceId, int[] roi) throws IOException {
-        setRoi(instanceId, roi[0], roi[1], roi[2], roi[3]);
+        setRoi(instanceId, roi[0], roi[2], roi[1], roi[3]);
     }
 
     public int[] getRoi(String instanceId) throws IOException {

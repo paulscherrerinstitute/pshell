@@ -71,6 +71,13 @@ public class PipelineSource extends StreamCamera {
         return currentPipeline;
     }
 
+    public void assertSavedConfig() throws IOException {
+        if ((currentPipeline == null) || (currentPipeline.isEmpty())){
+            throw new IOException ("No persisted pipeline configuration");
+        }
+    }
+
+
     /**
      * Return the name of the current streaming camera.
      */
@@ -491,6 +498,33 @@ public class PipelineSource extends StreamCamera {
     public Object getInstanceConfigValue(String value) throws IOException {       
         return getInstanceConfigValue(currentInstance, value);
     }        
+    
+    
+    public Map<String, Object> getSavedConfig() throws IOException {
+        assertStarted();
+        assertSavedConfig();
+        return getConfig(currentPipeline);
+    }
+    
+    public Object getSavedConfigValue(String value) throws IOException {      
+        assertStarted();
+        assertSavedConfig();       
+        Map<String, Object> pars = getSavedConfig();
+        return pars.get(value);
+    }    
+    
+    public void setSavedConfig(Map<String, Object> config) throws IOException {
+        assertStarted();
+        assertSavedConfig();
+        client.setConfig(currentPipeline,config);
+    }
+
+    public void setSavedConfigValue(String name, Object value) throws IOException {
+        assertStarted();
+        assertSavedConfig();
+        client.setConfigValue(currentPipeline, name, value);
+    }       
+    
 
     public boolean isRoiEnabled() throws IOException {
         assertStarted();
@@ -546,6 +580,7 @@ public class PipelineSource extends StreamCamera {
         client.setBackground(currentInstance, id);
         if (saveConfig){
             if (currentPipeline != null){
+                //If persisted config had another background, set to use latest
                 client.setConfigValue(currentPipeline, "image_background", null);
             }
         }
@@ -560,7 +595,7 @@ public class PipelineSource extends StreamCamera {
         assertStarted();
         String id = client.captureBackground(getCurrentCamera(), images);
         if (id != null) {
-            setBackground(null, true); //Use latest
+            setBackground(id, true); //Use latest
         }
         return id;        
     }

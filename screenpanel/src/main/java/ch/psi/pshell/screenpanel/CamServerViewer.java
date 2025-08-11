@@ -232,13 +232,13 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             });
                         
-            JMenuItem menuPipelineConfig = new JMenuItem("Pipeline Configuration");
-            menuPipelineConfig.addActionListener((ActionEvent e) -> {
+            JMenuItem menuInstanceConfig = new JMenuItem("Instance Configuration");
+            menuInstanceConfig.addActionListener((ActionEvent e) -> {
                 try {
                     if (server!=null){                    
                         String instance = server.getInstanceId();                        
-                        if ((instance!=null) && (server.getInstanceConfig()!=null)){
-                            Map cfg = (Map) server.getInstanceConfig();
+                        Map<String, Object> cfg = server.getInstanceConfig();
+                        if ((instance!=null) && (cfg!=null)){
                             String json = EncoderJson.encode(cfg, true);
                             ScriptDialog dlg = new ScriptDialog(getWindow(), true, instance, json, "json");
                             dlg.setVisible(true);
@@ -271,6 +271,29 @@ public class CamServerViewer extends MonitoredPanel {
                     showException(ex);
                 }
             });
+            
+            JMenuItem menuSavedConfig = new JMenuItem("Saved Configuration");
+            menuSavedConfig.addActionListener((ActionEvent e) -> {
+                try {
+                    if (server!=null){           
+                        Map<String, Object> cfg = server.getSavedConfig();
+                        String pipeline = server.getCurrentPipeline();
+                        if ((cfg!=null) && (pipeline!=null)){
+                            String json = EncoderJson.encode(cfg, true);
+                            ScriptDialog dlg = new ScriptDialog(getWindow(), true, pipeline, json, "json");
+                            dlg.setVisible(true);
+                            if (dlg.getResult()){
+                                json = dlg.getText();
+                                cfg = (Map) EncoderJson.decode(json, Map.class);
+                                server.setConfig(pipeline, cfg);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            });
+            
 
             JMenuItem menuSetImageBufferSize = new JMenuItem("Stack Size");
             menuSetImageBufferSize.addActionListener((ActionEvent e) -> {
@@ -315,9 +338,9 @@ public class CamServerViewer extends MonitoredPanel {
                                 Rectangle roi = overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds();
                                 if (server.isRoiEnabled()) {
                                     int[] cur = server.getRoi();
-                                    server.setRoi(new int[]{roi.x + cur[0], roi.y + cur[1], roi.width, roi.height});
+                                    server.setRoi(new int[]{roi.x + cur[0], roi.width,  roi.y + cur[1], roi.height});
                                 } else {
-                                    server.setRoi(new int[]{roi.x, roi.y, roi.width, roi.height});
+                                    server.setRoi(new int[]{roi.x, roi.width, roi.y, roi.height});
                                 }
                             } catch (Exception ex) {
                                 showException(ex);
@@ -417,25 +440,24 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             });
             
-            
-            JMenuItem menuSetCameraBackground = new JMenuItem("Set Current Background to Camera");
-            menuSetCameraBackground.addActionListener((ActionEvent e) -> {
+            JMenuItem menuApplySavedBackground = new JMenuItem("Apply Instance Background to Saved");
+            menuApplySavedBackground.addActionListener((ActionEvent e) -> {
                 if (server != null) {
                     try {
                         if (!server.isBackgroundSubtractionEnabled()){
                             throw new Exception("Pipeline background subtraction is not enabled");
                         }
-                        String image = getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background", "").toString();
+                        Object bg = getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background", null);
+                        String image = (bg==null) ? "" : bg.toString().trim();
                         if (image.isBlank()){
                             throw new Exception("Background subtraction image is undefined");
                         }
                         if (Boolean.FALSE.equals(getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background_ok", true))){
                             throw new Exception("Background subtraction image is invalid: " + image);
                         }  
-                        server.setBackground(null);
-                        server.setBackgroundEnabled(false);
-                        CameraClient cc = new CameraClient(getCameraServerUrl());
-                        cc.setBackground(getCameraName(), image);
+         
+                        server.setSavedConfigValue("image_background_enable", server.getBackgroundSubtraction());                                
+                        server.setSavedConfigValue("image_background", image);                                                
                         
                     } catch (Exception ex) {
                         showException(ex);
@@ -443,6 +465,126 @@ public class CamServerViewer extends MonitoredPanel {
                     }                    
                 }
             });          
+
+            JMenuItem menuApplySavedROI = new JMenuItem("Apply Instance ROI to Saved");
+            menuApplySavedROI.addActionListener((ActionEvent e) -> {
+                if (server != null) {
+                    try {
+         
+                        server.setSavedConfigValue("image_region_of_interest", server.getRoi());                                
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                }
+            });          
+         
+            
+            JMenuItem menuResetSavedROI = new JMenuItem("Reset Saved ROI");
+            menuResetSavedROI.addActionListener((ActionEvent e) -> {
+                if (server != null) {
+                    try {
+         
+                        server.setSavedConfigValue("image_region_of_interest", null);                                
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                }
+            });          
+
+            JMenuItem menuSetSavedBackground = new JMenuItem("Set Saved Background to Latest");
+            menuSetSavedBackground.addActionListener((ActionEvent e) -> {
+                if (server != null) {
+                    try {
+                        String last = server.getLastBackground();
+                        if ((last==null) || (last.isBlank())){
+                            throw new Exception("No background image file is available");
+                        }
+                        server.setSavedConfigValue("image_background_enable", true);
+                        server.setSavedConfigValue("image_background", null);
+                        
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                }
+            });          
+
+            JMenuItem menuResetSavedBackground = new JMenuItem("Reset Saved Background");
+            menuResetSavedBackground.addActionListener((ActionEvent e) -> {
+                if (server != null) {
+                    try {
+                        try{
+                            server.setSavedConfigValue("image_background_enable", false);
+                        } catch (IOException ex){
+                            //Not persisted
+                        }                        
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                }
+            });           
+            
+            
+            
+            JMenuItem menuApplyCameraBackground = new JMenuItem("Apply Instance Background to Camera");
+            menuApplyCameraBackground.addActionListener((ActionEvent e) -> {
+                if (server != null) {
+                    try {
+                        if (!server.isBackgroundSubtractionEnabled()){
+                            throw new Exception("Pipeline background subtraction is not enabled");
+                        }
+                        if (server.getBackgroundSubtraction().equals("signed")){
+                            throw new Exception("Camera only supports unsigned background subtraction");
+                        }
+                        Object bg = getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background", null);
+                        String image = (bg==null) ? "" : bg.toString().trim();
+                        if (image.isBlank()){
+                            throw new Exception("Background subtraction image is undefined");
+                        }
+                        if (Boolean.FALSE.equals(getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background_ok", true))){
+                            throw new Exception("Background subtraction image is invalid: " + image);
+                        }  
+                        server.setBackground(null);
+                        server.setBackgroundSubtraction(false);
+                        try{
+                            server.setSavedConfigValue("image_background_enable", false);
+                        } catch (IOException ex){
+                            //Not persisted
+                        }                        
+                                
+                        CameraClient cc = new CameraClient(getCameraServerUrl());
+                        cc.setBackground(getCameraName(), image);
+                        updatePipelineControls();
+                        
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                }
+            });          
+ 
+            JMenuItem menuSetCameraBackground = new JMenuItem("Set Camera Background to Latest");
+            menuSetCameraBackground.addActionListener((ActionEvent e) -> {
+                if (server != null) {
+                    try {
+                        String last = server.getLastBackground();
+                        if ((last==null) || (last.isBlank())){
+                            throw new Exception("No background image file is available");
+                        }
+                        
+                        CameraClient cc = new CameraClient(getCameraServerUrl());
+                        cc.setLatestBackground(getCameraName());
+                        updatePipelineControls();                        
+                    } catch (Exception ex) {
+                        showException(ex);
+                        return;
+                    }                    
+                }                
+           });          
+            
             
             JMenuItem menuResetCameraBackground = new JMenuItem("Reset Camera Background");
             menuResetCameraBackground.addActionListener((ActionEvent e) -> {
@@ -498,16 +640,32 @@ public class CamServerViewer extends MonitoredPanel {
                         menu.addSeparator();
                         menu.add(menuFrameIntegration);
                     }
-                }
-                menuConfig.add(menuPipelineConfig);                
-                menuConfig.add(menuPipelineDetach);                
-                menuConfig.addSeparator();
-                menuConfig.add(menuCameraConfig);                
-                menuConfig.add(menuCalibrate);
-                menuConfig.add(menuSetCameraROI);                                
-                menuConfig.add(menuResetCameraROI);   
-                menuConfig.add(menuSetCameraBackground);
-                menuConfig.add(menuResetCameraBackground);
+                }      
+                JMenu menuPipelineCfg = new JMenu ("Pipeline");
+                JMenu menuCameraCfg = new JMenu ("Camera");
+                menuPipelineCfg.add(menuInstanceConfig);                                                
+                menuPipelineCfg.addSeparator();
+                menuPipelineCfg.add(menuSavedConfig);
+                menuPipelineCfg.addSeparator();
+                menuPipelineCfg.add(menuApplySavedROI);                
+                menuPipelineCfg.add(menuResetSavedROI);                
+                menuPipelineCfg.addSeparator();
+                menuPipelineCfg.add(menuApplySavedBackground);
+                menuPipelineCfg.add(menuResetSavedBackground);
+                menuPipelineCfg.add(menuSetSavedBackground);
+                menuCameraCfg.add(menuCameraConfig);                
+                menuCameraCfg.addSeparator();
+                menuCameraCfg.add(menuCalibrate);
+                menuCameraCfg.addSeparator();
+                menuCameraCfg.add(menuSetCameraROI);                                
+                menuCameraCfg.add(menuResetCameraROI);   
+                menuCameraCfg.addSeparator();
+                menuCameraCfg.add(menuApplyCameraBackground);
+                menuCameraCfg.add(menuResetCameraBackground);
+                menuCameraCfg.add(menuSetCameraBackground);
+                menuConfig.add(menuPipelineCfg);
+                menuConfig.add(menuCameraCfg);
+                menuConfig.add(menuPipelineDetach);                                
                 menuConfig.addSeparator();
                 menuConfig.add(menuRendererConfig);
                 menuConfig.add(menuSetImageBufferSize);
@@ -543,12 +701,10 @@ public class CamServerViewer extends MonitoredPanel {
                         menuFrameIntegration.setSelected(integration != 0);
                         menuSetROI.setEnabled(server != null);
                         menuResetROI.setEnabled(server != null);
+                        menuPipelineCfg.setEnabled(server!=null);
                         menuPipelineDetach.setEnabled(server!=null);
-                        menuPipelineConfig.setEnabled(server!=null);
-                        menuCameraConfig.setEnabled((getCameraServerUrl()!=null)&&(cameraName!=null));
-                        menuCalibrate.setEnabled(menuCameraConfig.isEnabled() && ((calibrationDialolg == null) || (!calibrationDialolg.isShowing())));                     
-                        menuSetCameraROI.setEnabled(menuCameraConfig.isEnabled());
-                        menuResetCameraROI.setEnabled(menuCameraConfig.isEnabled());
+                        menuCameraCfg.setEnabled((camera!=null) && (getCameraServerUrl()!=null) && (cameraName!=null));
+                        menuCalibrate.setEnabled((calibrationDialolg == null) || !calibrationDialolg.isShowing());                     
                     }
 
                     @Override
@@ -1583,9 +1739,7 @@ public class CamServerViewer extends MonitoredPanel {
                         pipelineName = getPipelineName(cameraName);
                     }
                     instanceName = getInstanceName(pipelineName, false);
-                    List<String> ret = server.createFromConfig(cfg, instanceName);
-                    String instance_id = ret.get(0);
-                    server.start(instance_id, true);
+                    server.startConfig(cfg, instanceName);
                 } else {
                     switch (getSourceSelecionMode()) {
                         case Instances:
@@ -2666,7 +2820,7 @@ public class CamServerViewer extends MonitoredPanel {
     protected void updatePause() {
         int index = ((int) pauseSelection.getValue()) - 1;
         synchronized (imageBuffer) {
-            if (index < imageBuffer.size()) {
+            if ((index>=0) && (index < imageBuffer.size())) {
                 StreamValue streamValue = imageBuffer.get(index).cache;
                 Data data = imageBuffer.get(index).data;
                 long pid = streamValue.getPulseId();
