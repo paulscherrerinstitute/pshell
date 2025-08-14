@@ -19,7 +19,9 @@ import ch.psi.pshell.app.Setup;
     BUFFER_SIZE, 
     SHARED, 
     SIDEBAR, 
-    PERSIST;
+    PERSIST,
+    LOCAL_FIT,
+    USER_OVERLAYS;
  
     public static void add(){           
         ch.psi.pshell.app.Options.addBasic();
@@ -40,5 +42,7 @@ import ch.psi.pshell.app.Setup;
         SHARED.add("sh", "If true use shared pipeline instances (default)");
         SIDEBAR.add("sb", "Add sidebar at startup");
         PERSIST.add("pe", "Persist device state: false, image, true");
+        LOCAL_FIT.add("lc", "Execute fit calculations localy - stream values not userd");
+        USER_OVERLAYS.add("uo", "Set user overlays file name");
     }   
 }

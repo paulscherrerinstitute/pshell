@@ -37,50 +37,14 @@ public class App extends ch.psi.pshell.devices.App{
                 Window window = SwingUtils.showFrame(parent, dialogTitle, (size==null)? new Dimension(800, 600):size, viewer);
                 SwingUtils.centerComponent(null, window);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
-                Integer bufferSize = Options.BUFFER_SIZE.getInt(null);
-                if (bufferSize!=null) {
-                    try {
-                        viewer.setBufferLength(bufferSize);
-                    } catch (Exception ex) {
-                        Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
-                    }     
-                }
-                viewer.setTypeList(Options.TYPE.hasValue() ? List.of(Options.TYPE.getString(null).split(",")) : null);
-                viewer.setStreamList(Options.STREAM_LIST.hasValue() ? Arrays.asList(Options.STREAM_LIST.getString(null).split("\\|")) : null);
-                viewer.setConsoleEnabled(Options.CONSOLE.getBool(false));
-                viewer.setSidePanelVisible(Options.SIDEBAR.getBool(false));       
-                viewer.setCameraServerUrl(Setup.getCameraServer());
-                viewer.setPipelineServerUrl(Setup.getPipelineServer());
-                viewer.setShared(Options.SHARED.getBool(true));
-                if ((Setup.getContextPath()!=null) && new File(Setup.getContextPath()).isDirectory()) {
-                    viewer.setPersistenceFile(Paths.get(Setup.getContextPath(), "camserver_viewer.bin"));                    
-                } else {
-                    viewer.setPersistenceFile(Paths.get(Sys.getUserHome(), ".camserver_viewer.bin"));                    
-                }              
-                viewer.getRenderer().clear();
-                if (Options.STREAM.hasValue()) {
-                    viewer.setStartupStream(Options.STREAM.getString(null));
-                }
-                if (Options.CAM_NAME.hasValue()) {
-                    viewer.setStartupStream(Options.CAM_NAME.getString(null));
-                }
-                if (Options.PERSIST.defined()) {
-                    if (!"image".equals(Options.PERSIST.getString(null))){
-                        if (Options.PERSIST.getBool(false)){
-                            viewer.setPersistCameraState(true);
-                        } else{
-                            GenericDeviceBase.setPersistenceEnabled(false);
-                        }
-                    }
-                }
-                viewer.initialize(App.getArgumentValue(Options.SP_MODE.getString(null)));                   
-                       
+                viewer.applyOptions();
+                viewer.initialize(App.getArgumentValue(Options.SP_MODE.getString(null)));     
             } catch (Exception ex) {
                 Logger.getLogger(CamServerViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         return viewer;
-    }
+    }   
     
     /**
      */

@@ -8,6 +8,7 @@ import ch.psi.pshell.camserver.CameraClient;
 import ch.psi.pshell.camserver.CameraSource;
 import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.imaging.Colormap;
@@ -43,6 +44,7 @@ import ch.psi.pshell.utils.Config;
 import ch.psi.pshell.utils.Config.ConfigListener;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.EncoderJson;
+import ch.psi.pshell.utils.Sys;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -749,6 +751,56 @@ public class CamServerViewer extends MonitoredPanel {
         updateButtons();
     }
     
+    
+    public void applyOptions(){
+        Integer bufferSize = Options.BUFFER_SIZE.getInt(null);
+        if (bufferSize!=null) {
+            try {
+                setBufferLength(bufferSize);
+            } catch (Exception ex) {
+                Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
+            }     
+        }
+        setTypeList(Options.TYPE.hasValue() ? List.of(Options.TYPE.getString(null).split(",")) : null);
+        setStreamList(Options.STREAM_LIST.hasValue() ? Arrays.asList(Options.STREAM_LIST.getString(null).split("\\|")) : null);
+        setConsoleEnabled(Options.CONSOLE.getBool(false));
+        setSidePanelVisible(Options.SIDEBAR.getBool(false));       
+        setCameraServerUrl(ch.psi.pshell.framework.Setup.getCameraServer());
+        setPipelineServerUrl(ch.psi.pshell.framework.Setup.getPipelineServer());
+        setShared(Options.SHARED.getBool(true));
+        if ((ch.psi.pshell.framework.Setup.getContextPath()!=null) && new File(ch.psi.pshell.framework.Setup.getContextPath()).isDirectory()) {
+            setPersistenceFile(Paths.get(ch.psi.pshell.framework.Setup.getContextPath(), "camserver_viewer.bin"));                    
+        } else {
+            setPersistenceFile(Paths.get(Sys.getUserHome(), ".camserver_viewer.bin"));                    
+        }              
+        getRenderer().clear();
+        if (Options.STREAM.hasValue()) {
+            setStartupStream(Options.STREAM.getString(null));
+        }
+        if (Options.CAM_NAME.hasValue()) {
+            setStartupStream(Options.CAM_NAME.getString(null));
+        }
+        if (Options.PERSIST.defined()) {
+            if (!"image".equals(Options.PERSIST.getString(null))){
+                if (Options.PERSIST.getBool(false)){
+                    setPersistCameraState(true);
+                } else{
+                    GenericDeviceBase.setPersistenceEnabled(false);
+                }
+            }
+        }               
+        if (Options.LOCAL_FIT.getBool(false)) {
+            setLocalFit(true);
+        }        
+        
+        if (Options.USER_OVERLAYS.defined()) {
+            try {
+                setUserOverlaysConfigFile(Options.USER_OVERLAYS.getString(null));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }        
+        }
+    }
                 
     void checkCanChangeCameraROI() throws Exception{
         if (server.isRoiEnabled()){
