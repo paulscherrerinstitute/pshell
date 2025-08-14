@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -401,6 +402,12 @@ public class PluginManager implements AutoCloseable {
         plugins.add(plugin);
         return plugin;
     }
+    
+    class ReadonlyFolderException extends Exception{
+        ReadonlyFolderException(String file){
+            super("Readonly plogin folder: " + file);
+        }
+    }
 
     Class loadJavaFile(File file) throws Exception {
         Class cls = null;
@@ -416,6 +423,9 @@ public class PluginManager implements AutoCloseable {
             }
         }
         if (cls == null) {
+            if (!Files.isWritable(file.getParentFile().toPath())){
+                throw new ReadonlyFolderException(file.toString());
+            }
             // Compile source file.       
             cls = Loader.compileClass(file);
         }         
@@ -423,7 +433,25 @@ public class PluginManager implements AutoCloseable {
     }
 
     public Plugin loadJavaPlugin(File file) throws Exception {
-        Class cls = loadJavaFile(file);
+        Class cls = null;
+        try{
+            cls = loadJavaFile(file);
+        } catch (ReadonlyFolderException ex){
+            String cachePath = Setup.getContextPath();
+            File parent = file.getParentFile();
+            if (IO.isSamePath(parent.getAbsolutePath(), cachePath)){
+                throw ex;
+            }
+            //Try caching the file if folder is read-only
+            File cached = Paths.get(cachePath, file.getName()).toFile();
+            if ((!cached.exists()) || (file.lastModified() > cached.lastModified())) {
+                logger.info("Plugin is in readonly folder - caching to context folder: " + file.getName());                
+                IO.copy(file.toString(), cached.toString());
+            } else {
+                logger.info("Plugin is in readonly folder - loading from context folder: " + file.getName());                
+            }
+            cls = loadJavaFile(cached);
+        }
         if (Plugin.class.isAssignableFrom(cls)) {
             Plugin plugin = (Plugin) cls.newInstance();
             initPlugin(plugin, file);
