@@ -36,3 +36,15 @@ publishing {
         }
     }
 }
+
+tasks {
+    shadowJar {
+        shadowJarSetup(delegate)
+        minimize()                    
+        shadowJarExcludeJzy3dFiles(delegate)
+        dependencies {
+            shadowJarExcludeJzy3d(delegate)    
+        }              
+    }
+    
+}
