@@ -1,7 +1,7 @@
 
 package ch.psi.pshell.archiverviewer;
 
-import ch.psi.pshell.framework.Setup;
+import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -24,7 +24,7 @@ public class App extends ch.psi.pshell.devices.App{
         java.awt.EventQueue.invokeLater(() -> {
             ArchiverPanel dialog = new ArchiverPanel(null, url, backend, title, modal,  (defaultFolder==null) ? ArchiverPanel.getDaqbufFolderArg() : defaultFolder);
             
-            dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(ch.psi.pshell.framework.App.getResourceUrl("IconSmall.png")));
+            dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(getResourceUrl("IconSmall.png")));
             if (size!=null){
                 dialog.setSize(size);
             }            
@@ -37,7 +37,7 @@ public class App extends ch.psi.pshell.devices.App{
             });
             SwingUtils.centerComponent(null, dialog);
             if (dialog.getOwner() != null) {
-                dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(ch.psi.pshell.framework.App.getResourceUrl("IconSmall.png")));
+                dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(getResourceUrl("IconSmall.png")));
             }
             dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
@@ -48,7 +48,7 @@ public class App extends ch.psi.pshell.devices.App{
     
     public static void main(String args[]) {
         Options.add();
-        ch.psi.pshell.framework.App.init(args);
+        init(args);
         create();
     }
     

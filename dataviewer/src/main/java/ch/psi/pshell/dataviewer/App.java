@@ -2,8 +2,8 @@
 package ch.psi.pshell.dataviewer;
 
 import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.framework.Context;
-import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Sys;
@@ -63,13 +63,13 @@ public class App extends ch.psi.pshell.app.App{
             }
             panel.setDefaultDataPanelListener();            
             
-            dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(ch.psi.pshell.framework.App.getResourceUrl("IconSmall.png")));
+            dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(getResourceUrl("IconSmall.png")));
             if (size!=null){
                 dialog.setSize(size);
             }            
             SwingUtils.centerComponent(null, dialog);
             if (dialog.getOwner() != null) {
-                dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(ch.psi.pshell.framework.App.getResourceUrl("IconSmall.png")));
+                dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(getResourceUrl("IconSmall.png")));
             }
             dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
@@ -81,7 +81,7 @@ public class App extends ch.psi.pshell.app.App{
     
     public static void main(String args[]) {
         Options.add();
-        ch.psi.pshell.framework.App.init(args);
+        init(args);
         DataDialog dialog = create();
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override

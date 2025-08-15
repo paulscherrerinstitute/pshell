@@ -1,18 +1,12 @@
 
 package ch.psi.pshell.screenpanel;
 
-import ch.psi.pshell.device.GenericDeviceBase;
+import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.epics.Epics;
-import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.swing.SwingUtils;
-import ch.psi.pshell.utils.Sys;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
-import java.io.File;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
