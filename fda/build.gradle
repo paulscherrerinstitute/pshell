@@ -7,7 +7,7 @@ createDefaultTasks(project)
 dependencies {
     implementation project(':common')
     implementation project(':devices')
-    implementation project(':core')       
+    implementation project(':pshell-core')       
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
     implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
     implementation 'com.sun.xml.bind:jaxb-core:4.0.5'

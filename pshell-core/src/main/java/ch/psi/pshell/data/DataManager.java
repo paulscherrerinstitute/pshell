@@ -121,7 +121,7 @@ public class DataManager extends ch.psi.pshell.data.FormatManager {
     int dataRootDepth;
 
     /**
-     * Configures this data manager for scan persistence
+     * Configures the application data manager for scan persistence
      */
           
     public void initialize(String format, String layout) throws Exception {

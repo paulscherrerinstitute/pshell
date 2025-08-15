@@ -5,7 +5,7 @@ ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.archivervi
 dependencies {
     implementation project(':common')
     implementation project(':devices')    
-    implementation project(':core')    
+    implementation project(':pshell-core')    
     implementation project(':dataviewer')   
 }
 

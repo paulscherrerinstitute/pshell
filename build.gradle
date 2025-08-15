@@ -10,7 +10,6 @@ allprojects {
     ext.release = '1'
     ext.app_jdk = '21'
     ext.jar_suffix = 'fat'
-    ext.package_prefix = ''
     ext.build_type = 'py'     //py, groovy, js, all or light
    
     repositories {
@@ -109,19 +108,14 @@ subprojects {
         def app_version = project.version.toString()
         def app_release = project.ext.release.toString()
         def jar_suffix = project.ext.jar_suffix.toString()
-        def package_prefix = project.ext.package_prefix.toString()
-        def package_name = package_prefix ? (
-                project.name.startsWith(package_prefix) ? project.name : "${package_prefix}-${project.name}"
-            ) : project.name   
+        def package_name = project.name   
         def app_path = '/opt/' + package_name + "/" + app_version
         def app_jdk = project.ext.app_jdk.toString()
         def jar_file_name = app_name + "-" + app_version + "-" + jar_suffix + ".jar";
         def jar_file_path = app_path + '/lib/' + jar_file_name;
         def sys_bin ='/usr/local/bin/'
         def sys_lib ='/usr/local/lib/'
-        def bin_file_name =  package_prefix ? "${package_prefix}-${app_name}-${app_version}" : "${app_name}-${app_version}"
-        def bin_file_name_no_ver =  package_prefix ? "${package_prefix}-${app_name}" : "${app_name}"        
-                
+        def bin_file_name = "${app_name}-${app_version}"               
 
         project.tasks.register("rpm", Rpm) {
             doFirst {
@@ -193,7 +187,7 @@ subprojects {
             }
 
             link(sys_bin + bin_file_name, app_path + '/bin/' + bin_file_name)   
-            link(sys_bin + bin_file_name_no_ver, sys_bin + bin_file_name) 
+            link(sys_bin + app_name, sys_bin + bin_file_name) 
         }
         
         project.afterEvaluate {

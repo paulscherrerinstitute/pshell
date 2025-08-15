@@ -6,7 +6,6 @@ import ch.psi.pshell.sequencer.ExecutionParameters;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Miniconda;
-import ch.psi.pshell.utils.Sys;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -532,11 +531,11 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     }
     
     public static boolean isRunningInIde() {
-        return isRunningInIde("core");
+        return isRunningInIde("pshell-core");
     }
 
     public static String getSourceAssemblyFolder() {
-        return getSourceAssemblyFolder("core");
+        return getSourceAssemblyFolder("pshell-core");
     }        
 
     

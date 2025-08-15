@@ -1,13 +1,12 @@
 description = 'workbench'
 
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.workbench.App'
-ext.package_prefix = "pshell"
 
 dependencies {
     api project(':common')
     api project(':devices')
     api project(':plotter') 
-    api project(':core')          
+    api project(':pshell-core')          
     implementation project(':fda')    
     implementation project(':stripchart') 
     implementation project(':screenpanel') 
