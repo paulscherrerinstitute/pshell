@@ -11,7 +11,9 @@ fi
 
 # Read JVM options from environment variables PSHELL_JVM_OPTIONS and APP_NAME_JVM_OPTIONS
 APP_JVM_OPTIONS_NAME=\$(echo "APP_${app_name}" | tr '[:lower:]' '[:upper:]')_JVM_OPTIONS
+APP_JVM_OPTIONS_NAME=\${APP_JVM_OPTIONS_NAME//-/_}
 APP_ARGS_NAME=\$(echo "APP_${app_name}" | tr '[:lower:]' '[:upper:]')_ARGS
+APP_ARGS_NAME=\${APP_ARGS_NAME//-/_}
 
 # Run the JAR with all passed arguments
 exec "\$JAVA_CMD" \$PSHELL_JVM_OPTIONS \${!APP_JVM_OPTIONS_NAME} -jar ${jar_file} \$PSHELL_ARGS \${!APP_ARGS_NAME} "\$@"
