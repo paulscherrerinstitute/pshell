@@ -165,12 +165,12 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
     
     protected void checkBackColor() {
         if ((!isEnabled())) {
-            text.setBackground(MainFrame.isDark() ? ValueSelection.TEXT_DISPLAY_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_DISPLAY_BACKGROUND_COLOR);
+            text.setBackground(getTextReadonlyBackgroundColor());
         } else {
             if (isEditing()) {
-                text.setBackground(MainFrame.isDark() ? ValueSelection.TEXT_EDIT_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_EDIT_BACKGROUND_COLOR);
+                text.setBackground(getTextEditBackgroundColor());
             } else {
-                text.setBackground(MainFrame.isDark() ? ValueSelection.TEXT_READONLY_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_READONLY_BACKGROUND_COLOR);
+                text.setBackground(getTextDisplayBackgroundColor());
             }
         }
     }

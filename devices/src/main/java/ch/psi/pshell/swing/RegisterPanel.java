@@ -89,16 +89,16 @@ public final class RegisterPanel extends DevicePanel {
     private boolean isEditing() {
         return editing;
     }
-
+   
     @Override
     protected void checkBackColor() {
         if (isReadOnly() || isReadonlyRegister() || !isEnabled()) {
-            txtRegisterReadout.setBackground(getTextDisplayBackgroundColor());
+            txtRegisterReadout.setBackground(getTextReadonlyBackgroundColor());
         } else {
             if (isEditing()) {
                 txtRegisterReadout.setBackground(getTextEditBackgroundColor());
             } else {
-                txtRegisterReadout.setBackground(getTextReadonlyBackgroundColor());
+                txtRegisterReadout.setBackground(getTextDisplayBackgroundColor());
             }
         }
     }
@@ -212,7 +212,7 @@ public final class RegisterPanel extends DevicePanel {
     }//GEN-LAST:event_txtRegisterReadoutMouseEntered
 
     private void txtRegisterReadoutFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtRegisterReadoutFocusLost
-        // 
+        setEditing(false); 
     }//GEN-LAST:event_txtRegisterReadoutFocusLost
 
     private void txtRegisterReadoutKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtRegisterReadoutKeyPressed

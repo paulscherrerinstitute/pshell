@@ -69,16 +69,16 @@ public final class MotorReadoutPanel extends DevicePanel {
     private boolean isEditing() {
         return editing;
     }
-
+   
     @Override
     protected void checkBackColor() {
         if ((isReadOnly()) || (!isEnabled())) {
-            txtMotorReadout.setBackground(getTextDisplayBackgroundColor());
+            txtMotorReadout.setBackground(getTextReadonlyBackgroundColor());
         } else {
             if (isEditing()) {
                 txtMotorReadout.setBackground(getTextEditBackgroundColor());
             } else {
-                txtMotorReadout.setBackground(getTextReadonlyBackgroundColor());
+                txtMotorReadout.setBackground(getTextDisplayBackgroundColor());
             }
         }
     }
@@ -168,7 +168,7 @@ public final class MotorReadoutPanel extends DevicePanel {
     }//GEN-LAST:event_txtMotorReadoutMouseEntered
 
     private void txtMotorReadoutFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtMotorReadoutFocusLost
-        // 
+        setEditing(false);
     }//GEN-LAST:event_txtMotorReadoutFocusLost
 
     private void txtMotorReadoutKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtMotorReadoutKeyPressed

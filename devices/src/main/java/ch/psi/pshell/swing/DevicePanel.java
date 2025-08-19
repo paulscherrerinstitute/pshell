@@ -45,11 +45,11 @@ public class DevicePanel extends MonitoredPanel {
     }
         
     public Color getTextEditBackgroundColor(){
-        return ValueSelection.getTextDisplayBackgroundColor();
+        return ValueSelection.getTextEditBackgroundColor();
     }
 
     public Color getTextReadonlyBackgroundColor(){
-        return ValueSelection.getTextDisplayBackgroundColor();
+        return ValueSelection.getTextReadonlyBackgroundColor();
     }
 
     protected Logger getLogger() {
