@@ -315,7 +315,31 @@ public class Setup{
         }
         return expandedPathNames.get(wwwPath);
     }
+        
+    public static String getCachePath(String name){
+        return getCachePath(name, true);
+    }
+    
+    public static String getCachePath(String name, boolean isFolder){
+        String contextPath = getContextPath();
+        String cachePath =  null;
+        if ((contextPath!=null) && new File(contextPath).isDirectory()) {
+            cachePath = Paths.get(getContextPath(),name).toString();
+        } else {
+            cachePath = Paths.get(Sys.getUserHome(), ".pshell", name).toString();
+        }
+        if (isFolder){
+            new File(cachePath).mkdirs();
+        } else {
+            new File(cachePath).getParentFile().mkdirs();
+        }
+        return cachePath;
+    }
 
+    public static String getCachePathPlugins(){
+        return getCachePath("plugins");
+    }
+  
 
     public static String getJarFile() {
         return IO.getExecutingJar(Setup.class);

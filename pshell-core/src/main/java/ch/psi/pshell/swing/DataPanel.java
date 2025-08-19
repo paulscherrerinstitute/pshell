@@ -1982,11 +1982,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
         return null;
     }
-
-    static Path getWindowStatePath() {
-        return Paths.get(Setup.getContextPath(), DataPanel.class.getSimpleName() + "_" + "WindowState.xml");
-    }
-
+   
     List<Plot> plot(Window parent, String title, PlotDescriptor[] plots, ViewPreference.PlotPreferences preferences) throws Exception {
         return plot(plotPanel, parent, title, plots, preferences);
     }

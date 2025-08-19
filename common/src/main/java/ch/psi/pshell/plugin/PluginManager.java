@@ -437,7 +437,7 @@ public class PluginManager implements AutoCloseable {
         try{
             cls = loadJavaFile(file);
         } catch (ReadonlyFolderException ex){
-            String cachePath = Setup.getContextPath();
+            String cachePath = Setup.getCachePathPlugins();
             File parent = file.getParentFile();
             if (IO.isSamePath(parent.getAbsolutePath(), cachePath)){
                 throw ex;
@@ -445,10 +445,10 @@ public class PluginManager implements AutoCloseable {
             //Try caching the file if folder is read-only
             File cached = Paths.get(cachePath, file.getName()).toFile();
             if ((!cached.exists()) || (file.lastModified() > cached.lastModified())) {
-                logger.info("Plugin is in readonly folder - caching to context folder: " + file.getName());                
+                logger.info("Plugin is in readonly folder - caching to: " + file.getName());                                
                 IO.copy(file.toString(), cached.toString());
             } else {
-                logger.info("Plugin is in readonly folder - loading from context folder: " + file.getName());                
+                logger.info("Plugin is in readonly folder - loading from cache: " + file.getName());                
             }
             cls = loadJavaFile(cached);
         }

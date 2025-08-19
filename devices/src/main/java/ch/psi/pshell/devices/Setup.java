@@ -3,6 +3,7 @@ package ch.psi.pshell.devices;
 import ch.psi.pshell.archiver.Daqbuf;
 import ch.psi.pshell.camserver.CameraClient;
 import ch.psi.pshell.camserver.PipelineClient;
+import java.nio.file.Paths;
 
 /**
  * Entity class holding the application defaults and command-line options, folder structure 
@@ -42,4 +43,8 @@ public class Setup extends ch.psi.pshell.app.Setup {
     public static String getEpicsConfig() {
         return Options.EPICS_CONFIG.getString(null);
     }                                   
+    
+    public static String getCachePathRenderers(){
+        return getCachePath("renderers");
+    }        
 }

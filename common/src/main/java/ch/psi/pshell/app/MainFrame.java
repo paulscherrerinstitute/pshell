@@ -404,7 +404,8 @@ public abstract class MainFrame extends StandardFrame{
     
     //Window state persistence
     public String getPersistencePath() {
-        return Paths.get(Sys.getUserHome(), "." + getClass().getName()).toString();
+        String cache =  Setup.getCachePath("mainframe");
+        return Paths.get(cache, getClass().getName()).toString();
     }
 
     //Other windows with persisted state   
@@ -653,7 +654,7 @@ public abstract class MainFrame extends StandardFrame{
     }
 
     protected String getPersistenceFilename(Window window) {
-        return getComponentName(window) + ".session." + sessionEncoder.toString();
+        return getComponentName(window) + ".state." + sessionEncoder.toString();
     }
 
     public void save(Component root, String fileName) {

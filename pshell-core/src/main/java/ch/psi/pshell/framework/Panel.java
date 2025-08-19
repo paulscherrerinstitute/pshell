@@ -317,7 +317,7 @@ public class Panel extends MonitoredPanel implements Plugin {
 
     //State persistence
     protected String getContextPath() {
-        return Setup.getContextPath();
+        return Setup.getCachePath("panels");
     }
 
     /**

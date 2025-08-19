@@ -767,12 +767,8 @@ public class CamServerViewer extends MonitoredPanel {
         setSidePanelVisible(Options.SIDEBAR.getBool(false));       
         setCameraServerUrl(ch.psi.pshell.framework.Setup.getCameraServer());
         setPipelineServerUrl(ch.psi.pshell.framework.Setup.getPipelineServer());
-        setShared(Options.SHARED.getBool(true));
-        if ((ch.psi.pshell.framework.Setup.getContextPath()!=null) && new File(ch.psi.pshell.framework.Setup.getContextPath()).isDirectory()) {
-            setPersistenceFile(Paths.get(ch.psi.pshell.framework.Setup.getContextPath(), "camserver_viewer.bin"));                    
-        } else {
-            setPersistenceFile(Paths.get(Sys.getUserHome(), ".camserver_viewer.bin"));                    
-        }              
+        setShared(Options.SHARED.getBool(true));        
+        setPersistenceFile(Paths.get(Setup.getCachePathRenderers(), "cam_server_viewer.bin"));                            
         getRenderer().clear();
         if (Options.STREAM.hasValue()) {
             setStartupStream(Options.STREAM.getString(null));
@@ -1339,7 +1335,8 @@ public class CamServerViewer extends MonitoredPanel {
             if (camera == null){
                 return null;
             }
-            return Setup.expandPath("{context}/screen_panel/" + getCameraName() + ".properties");
+            String cache = Setup.getCachePath("screen_panel");
+            return Paths.get(cache, getCameraName() + ".properties").toString();
         }
     }
 

@@ -315,11 +315,6 @@ public class View extends MainFrame{
     }
        
     
-    @Override
-    public String getPersistencePath() {
-        return Setup.getContextPath();
-    }
-
     //Callbacks from MainFrame
     /**
      * Called once when frame is created, before being visible

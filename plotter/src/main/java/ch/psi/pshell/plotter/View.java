@@ -113,13 +113,8 @@ public class View extends MainFrame {
     }
 
     @Override
-    public String getPersistencePath() {
-        return Sys.getUserHome();
-    }
-
-    @Override
     protected String getPersistenceFilename(Window window) {
-        return "." + getComponentName(window) + "." + Sys.getLocalHost() + "_" + ps.port + ".session." + sessionEncoder.toString();
+        return getComponentName(window) + "." + Sys.getLocalHost() + "_" + ps.port + ".state." + sessionEncoder.toString();
     }
 
     void updatePanel() {

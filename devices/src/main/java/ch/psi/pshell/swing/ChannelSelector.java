@@ -23,6 +23,7 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventObject;
@@ -158,6 +159,15 @@ public class ChannelSelector extends MonitoredPanel {
     public String getBackend() {
         return backend;
     }
+    
+    @Override
+    public void setName(String name){
+        String oldName = super.getName();        
+        super.setName(name);
+        if ((historySize>0) && (name!=null) && (!name.equals(oldName))){
+            initializeHistory();
+        }        
+    }
 
     public void setHistorySize(int historySize) {
         if (historySize < 0) {
@@ -204,11 +214,7 @@ public class ChannelSelector extends MonitoredPanel {
                 });
 
                 layout.replace(text, combo);
-                String path = (Setup.getContextPath() != null) ? Setup.expandPath("{context}") : Sys.getUserHome();
-                history = new History(path + "/ChannelSelector" + getName() + ".dat", historySize, true);
-                List entries = history.get();
-                Collections.reverse(entries);
-                combo.setModel(new DefaultComboBoxModel(entries.toArray()));
+                initializeHistory();
             } else {
                 layout.replace(combo, text);
                 combo = null;
@@ -216,6 +222,18 @@ public class ChannelSelector extends MonitoredPanel {
             }
 
         }
+    }
+    
+    private void initializeHistory(){
+        if (getName()==null){
+            history = new History(null, historySize, false);   
+        } else {
+            String cache = Setup.getCachePath("selectors");
+            history = new History(Paths.get(cache, getName() + ".dat").toString(), historySize, true);               
+        }
+        List entries = history.get();
+        Collections.reverse(entries);
+        combo.setModel(new DefaultComboBoxModel(entries.toArray()));        
     }
 
     @Override

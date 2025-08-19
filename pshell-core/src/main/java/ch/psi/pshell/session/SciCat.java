@@ -30,14 +30,11 @@ public class SciCat {
     }
     
     final public static String DEFAULT_PROPERTIES_FILE = "{config}/scicat.properties";
-    final public static String FILE_LISTING_FILE = "{context}/filelisting.txt";
-    final public static String JSON_FILE = "{context}/metadata.json";
+    final public static String FILE_LISTING_FILE = "filelisting.txt";
+    final public static String JSON_FILE = "metadata.json";
     
     final public static String DATASET_TYPE_RAW = "raw";
     final public static String DATASET_TYPE_DERIVED = "derived";
-
-    //final public static String FILE_LISTING_FILE = "filelisting.txt";
-    //final public static String JSON_FILE = "metadata.json";
 
     static String DEFAULT_PARAMETERS = "-ingest -allowexistingsource -noninteractive -autoarchive";     
     
@@ -355,10 +352,9 @@ public class SciCat {
     public synchronized IngestOutput ingest() throws IOException, InterruptedException {
         String listing = getFileListing();
         String json = getJson();
-        //Files.writeString(Paths.get(".", FILE_LISTING_FILE), listing);
-        //Files.writeString(Paths.get(".", JSON_FILE), json);
-        String jsonFile = Setup.expandPath(JSON_FILE);
-        String fileListingFile =   Setup.expandPath(FILE_LISTING_FILE);
+        String cachePath = Setup.getCachePath("scicat");
+        String jsonFile = Paths.get(cachePath, JSON_FILE).toString();
+        String fileListingFile = Paths.get(cachePath, FILE_LISTING_FILE).toString();
         Files.writeString(Paths.get(jsonFile), json);
         Files.writeString(Paths.get(fileListingFile), listing);
 
