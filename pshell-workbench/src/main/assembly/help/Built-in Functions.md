@@ -109,6 +109,7 @@ These functions provide the script API to many aspects of PShell:
     - inject
     - notify
     - expand_path
+    - send_event
     - help       
 
  * UI interaction:

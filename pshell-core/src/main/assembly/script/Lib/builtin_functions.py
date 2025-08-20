@@ -1868,6 +1868,16 @@ def expand_path(path, timestamp=-1):
 
     return Setup.expandPath(path, timestamp)
 
+
+ def send_event(name, value=True):
+    """Send an interpreter event, which is  propagated as a SSE.
+
+    Args:
+        name(str): event name.
+        value(Object): event value.
+    """
+    get_interpreter().sendEvent(name, value)
+
 ###################################################################################################
 #UI
 ###################################################################################################
@@ -1917,7 +1927,7 @@ def set_preference(preference, value):
             DOMAIN_AXIS: Set the domain axis source: "Time", "Index", or a readable name.
                 Default(None): first positioner
             STATUS: set application status
-        value(object): preference value
+        value(Object): preference value
 
     Returns:
         None
