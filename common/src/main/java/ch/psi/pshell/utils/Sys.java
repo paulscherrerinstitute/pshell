@@ -72,6 +72,44 @@ public class Sys {
         return getOSFamily() == OSFamily.Linux;
     }
 
+    public enum Arch {
+        X86,
+        X86_64,
+        ARM64,
+        ARM,
+        Unknown
+    }    
+    
+    public static Arch getArch() {
+        String arch = java.lang.System.getProperty("os.arch").toLowerCase();
+        if (arch.equals("aarch64") || arch.equals("arm64")) {
+            return Arch.ARM64;
+        } else if (arch.contains("64")) {
+            return Arch.X86_64;
+        } else if (arch.contains("86")){
+            return Arch.X86;
+        } else if (arch.contains("arm")) {
+            return Arch.ARM;
+        }
+        return Arch.Unknown;
+    }
+    
+    public static boolean isX86() {
+        return getArch() == Arch.X86;
+    }
+
+    public static boolean isARM64() {
+        return getArch() == Arch.ARM64;
+    }
+
+    public static boolean isX86_64() {
+        return getArch() == Arch.X86_64;
+    }
+    
+    public static boolean isArm() {
+        return getArch() == Arch.ARM;
+    }
+
     public static double getJavaVersion() {
         try {
             return Double.parseDouble(System.getProperty("java.specification.version"));

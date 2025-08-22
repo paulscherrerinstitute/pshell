@@ -23,6 +23,7 @@ import javax.swing.WindowConstants;
  *
  */
 public class CPythonDialog extends StandardDialog {
+    public static String DEFAULT_PYTHON_HOME = "{home}/cpython";
 
     public CPythonDialog(java.awt.Window parent, boolean modal) {
         super(parent, modal);
@@ -49,12 +50,21 @@ public class CPythonDialog extends StandardDialog {
     void setDefaults() {
         try {
             String pythonHome = JepUtils.getPythonHome();
-            String installPath = Setup.expandPath((pythonHome!=null) ? pythonHome : "{home}/cpython");
+            String installPath = Setup.expandPath((pythonHome!=null) ? pythonHome : DEFAULT_PYTHON_HOME);
             textPythonHome.setText(pythonHome);
             textInstaller.setText(Miniconda.getStandardInstaller());
             textLink.setText(Miniconda.MINICONDA_DOWNLOAD_LINK);
             textPath.setText(installPath);
-            textPackages.setText(String.join("\n", Miniconda.getDefaultPackages()));                                            
+            textPackages.setText(String.join("\n", Miniconda.getDefaultPackages()));       
+            
+            if (JepUtils.getPythonHome()==null){
+                if (App.getInstance().getConfig().getPythonHome()==null){
+                    //User DEFAULT_PYTHON_HOME, so save it.
+                    App.getInstance().getConfig().pythonHome = DEFAULT_PYTHON_HOME;
+                    App.getInstance().getConfig().save();
+                }
+            }
+            
         } catch (Exception ex) {
             showException(ex);
         }
@@ -154,10 +164,11 @@ public class CPythonDialog extends StandardDialog {
                 setMessage(msg);
                 setProgress(100);
                 return msg;
-            } catch (Exception ex) {
+            } catch (Exception ex) {                
                 msg = "Error installing CPython";
                 setMessage(msg);
                 Context.getApp().sendError(ex.toString());
+                showException(ex);
                 throw ex;
             } finally {
                 updateVersion();

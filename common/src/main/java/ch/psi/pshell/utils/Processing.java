@@ -55,8 +55,8 @@ public class Processing {
         }
         String err = builderErr.toString();
         String out = builderOut.toString();
-        Logger.getLogger(Processing.class.getName()).fine("err: " + err);   
-        Logger.getLogger(Processing.class.getName()).fine("out: " + out);   
+        Logger.getLogger(Processing.class.getName()).fine("stderr: " + err);   
+        Logger.getLogger(Processing.class.getName()).fine("stdout: " + out);   
         
         return new String[]{out, err};                
     }
@@ -71,6 +71,7 @@ public class Processing {
     }    
     
     public  static String  run( ProcessBuilder processBuilder, boolean throwError, boolean print) throws IOException, InterruptedException {         
+        Logger.getLogger(Processing.class.getName()).info("Starting process: " + String.join(" ", processBuilder.command()));        
         Process process = processBuilder.start();
         process.waitFor();    
         String stdout = null;
@@ -81,15 +82,17 @@ public class Processing {
             byte[] arr = new byte[bytes];
             process.getInputStream().read(arr, 0, bytes);
             stdout = new String(arr);
+            Logger.getLogger(Processing.class.getName()).fine("stdout: " + stdout);   
             if (print){
                 System.out.println(stdout);
-            }
+            }            
         }
         bytes = process.getErrorStream().available();
         if (bytes>0){
             byte[] arr = new byte[bytes];
             process.getErrorStream().read(arr, 0, bytes);
             stderr = new String(arr);
+            Logger.getLogger(Processing.class.getName()).fine("stderr: " + stderr);   
             if (print){
                 System.err.println(stderr);
             }

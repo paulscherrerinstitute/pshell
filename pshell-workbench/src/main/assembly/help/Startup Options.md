@@ -24,7 +24,7 @@
 | -be,--backend <name>          | PSHELL_BACKEND                | Set the default backend (othrerwise defined by DAQBUF_DEFAULT_BACKEND)|
 | -s,--simulation               | PSHELL_SIMULATION             | All devices are simulated|
 | -k,--empty                    | PSHELL_EMPTY                  | Empty mode: device pool is not loaded at startup|
-| -u,--parallel                 | PSHELL_PARALLEL               | Parallel initialization of devices (values: true or false)|
+| -u,--parallel                 | PSHELL_PARALLEL               | Parallel initialization of devices (values: true (default)or false)|
 | -f,--file <path>              | PSHELL_FILE                   | File to run or open in file in editor|
 | -e,--eval <code>              | PSHELL_EVAL                   | Evaluate the script statement|
 | -t,--task                     | PSHELL_TASK                   | Start a task using the format script,delay,interval|
