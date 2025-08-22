@@ -1,5 +1,6 @@
 package ch.psi.pshell.camserver;
 
+import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.imaging.Utils;
 import ch.psi.pshell.utils.EncoderJson;
 import jakarta.ws.rs.client.WebTarget;
@@ -18,12 +19,16 @@ public class CameraClient extends InstanceManagerClient{
     final public static String DEFAULT_URL = "localhost:8888";
     final public static String PREFIX = "cam";
     
-    public CameraClient(String host, int port) {
-        super( host, port, PREFIX);
+    public CameraClient() {
+        this(null);
+    }
+    
+    public CameraClient(String url) {
+        super((url == null) ? Setup.getCameraServer() : url, PREFIX);
     }
 
-    public CameraClient(String url) {
-        super((url == null) ? DEFAULT_URL : url, PREFIX);
+    public CameraClient(String host, int port) {
+        super( host, port, PREFIX);
     }
 
     /**

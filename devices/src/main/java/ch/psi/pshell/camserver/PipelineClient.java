@@ -1,5 +1,6 @@
 package ch.psi.pshell.camserver;
 
+import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.imaging.Utils;
 import ch.psi.pshell.utils.EncoderJson;
 import jakarta.ws.rs.client.Entity;
@@ -26,12 +27,16 @@ public class PipelineClient extends InstanceManagerClient{
     final public static String DEFAULT_URL = "localhost:8889";
     final public static String PREFIX = "pipeline";
 
-    public PipelineClient(String host, int port) {
-        super( host, port, PREFIX);
+    public PipelineClient() {
+        this(null);
     }
 
     public PipelineClient(String url) {
-        super((url == null) ? DEFAULT_URL : url, PREFIX);
+        super((url == null) ? Setup.getPipelineServer() : url, PREFIX);
+    }
+
+    public PipelineClient(String host, int port) {
+        super( host, port, PREFIX);
     }
 
     /**

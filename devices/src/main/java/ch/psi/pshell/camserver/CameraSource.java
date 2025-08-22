@@ -1,6 +1,7 @@
 package ch.psi.pshell.camserver;
 
 import ch.psi.pshell.bs.StreamCamera;
+import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.imaging.ColormapSourceConfig;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
@@ -25,7 +26,7 @@ public class CameraSource extends StreamCamera {
      * Optional persisted configuration of CameraServer objects.
      */
     public static class CameraServerConfig extends ColormapSourceConfig {
-        public String serverURL = CameraClient.DEFAULT_URL;
+        public String serverURL = Setup.getCameraServer();
     }
 
     public CameraSource(String name) {

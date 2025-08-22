@@ -1,5 +1,6 @@
 package ch.psi.pshell.camserver;
 
+import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.utils.EncoderJson;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
@@ -15,15 +16,18 @@ import java.util.Map;
  */
 public class ProxyClient extends CamServerClient{
    
-    final public static String DEFAULT_URL = "localhost:8889";
     final public static String PREFIX = "proxy";
     
-    public ProxyClient(String host, int port) {
-        super( host, port, PREFIX);
+    public ProxyClient() {
+        this(null);
     }
 
     public ProxyClient(String url) {
-        super((url == null) ? DEFAULT_URL : url, PREFIX);
+        super((url == null) ? Setup.getPipelineServer() : url, PREFIX);
+    }
+
+    public ProxyClient(String host, int port) {
+        super( host, port, PREFIX);
     }
     
     public Map<String, Map<String, Object>> getServers() throws IOException {

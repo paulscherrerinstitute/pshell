@@ -1,9 +1,9 @@
 package ch.psi.pshell.devices;
 
 import ch.psi.pshell.archiver.Daqbuf;
+import ch.psi.pshell.bs.Dispatcher;
 import ch.psi.pshell.camserver.CameraClient;
 import ch.psi.pshell.camserver.PipelineClient;
-import java.nio.file.Paths;
 
 /**
  * Entity class holding the application defaults and command-line options, folder structure 
@@ -30,6 +30,10 @@ public class Setup extends ch.psi.pshell.app.Setup {
     
     public static String getCameraServer() {
         return Options.CAMERA_SERVER.getString(CameraClient.DEFAULT_URL);
+    }        
+
+    public static String getDispatcher() {
+        return Options.DISPATCHER.getString(Dispatcher.DEFAULT_URL);
     }        
 
     public static String getArchiver() {

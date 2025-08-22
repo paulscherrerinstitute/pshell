@@ -31,6 +31,10 @@ public class Dispatcher extends Provider {
 
     Client client;
 
+    public Dispatcher(String name) {
+        this(name, Setup.getDispatcher());
+    }
+    
     public Dispatcher(String name, String address) {
         super(name, address, new DispatcherConfig());
         ClientConfig config = new ClientConfig().register(JacksonFeature.class);
@@ -236,7 +240,7 @@ public class Dispatcher extends Provider {
     }    
                                                                                                            
     public static Dispatcher createDefault() {
-        Dispatcher dispatcher =  new Dispatcher("dispatcher", Options.DISPATCHER.getString(DEFAULT_URL));
+        Dispatcher dispatcher =  new Dispatcher("dispatcher");
         try{
             dispatcher.initialize();
         } catch (Exception ex){

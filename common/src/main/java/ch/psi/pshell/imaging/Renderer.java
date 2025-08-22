@@ -1212,7 +1212,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     }
 
     public void addOverlay(Overlay overlay) {
-    updateOverlays(overlay, null);
+        updateOverlays(overlay, null);
     }
 
     public void removeOverlay(Overlay overlay) {

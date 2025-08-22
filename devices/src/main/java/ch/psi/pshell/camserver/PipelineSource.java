@@ -1,6 +1,7 @@
 package ch.psi.pshell.camserver;
 
 import ch.psi.pshell.bs.StreamCamera;
+import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.imaging.ColormapSourceConfig;
 import ch.psi.pshell.utils.EncoderJson;
 import java.awt.image.BufferedImage;
@@ -30,7 +31,7 @@ public class PipelineSource extends StreamCamera {
      */
     public static class PipelineSourceConfig extends ColormapSourceConfig {
 
-        public String serverURL = PipelineClient.DEFAULT_URL;
+        public String serverURL = Setup.getPipelineServer();
     }
     
     public DefaultProcessingPipelineClient getClient() {
