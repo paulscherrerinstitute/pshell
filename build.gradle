@@ -108,6 +108,7 @@ subprojects {
         def app_version = project.version.toString()
         def app_release = project.ext.release.toString()
         def jar_suffix = project.ext.jar_suffix.toString()
+        def main_class = project.hasProperty('mainClass') ? project.mainClass : ''
         def package_name = project.name   
         def app_path = '/opt/' + package_name + "/" + app_version
         def app_jdk = project.ext.app_jdk.toString()
@@ -115,7 +116,9 @@ subprojects {
         def jar_file_path = app_path + '/lib/' + jar_file_name;
         def sys_bin ='/usr/local/bin/'
         def sys_lib ='/usr/local/lib/'
-        def bin_file_name = "${app_name}-${app_version}"               
+        def bin_file_name = "${app_name}-${app_version}"              
+        def app_args_var = "APP_${app_name.replace('-', '_').toUpperCase()}_ARGS"
+        def app_jvm_options_var = "APP_${app_name.replace('-', '_').toUpperCase()}_JVM_OPTIONS"
 
         project.tasks.register("rpm", Rpm) {
             doFirst {
@@ -180,7 +183,10 @@ subprojects {
                 expand([
                     "app_name": app_name,
                     "app_version": app_version,
+                    "app_jvm_options_var": app_jvm_options_var,
+                    "app_args_var": app_args_var,
                     "app_jdk": app_jdk,
+                    "main_class": main_class,
                     "jar_file": jar_file_path
                 ])
                 fileMode 0755
