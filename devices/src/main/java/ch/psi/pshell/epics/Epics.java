@@ -78,21 +78,11 @@ public class Epics {
         }                              
     }
     
-    public static boolean parallelCreation;
-
     public static void create() {
-        create(false);
-    }
-    
-    public static void create(boolean parallelCreation) {
-        create(null, parallelCreation);
-    }
-
-    public static void create(String configFileName) {
-        create(configFileName, false);
+        create(null);
     }
             
-    public static void create(String configFileName, boolean parallelCreation) {        
+    public static void create(String configFileName) {        
         destroy();             
         parseOptions();
         
@@ -133,7 +123,6 @@ public class Epics {
             maxArrayBytes = Integer.valueOf(JcaeProperties.getInstance().getMaxArrayBytes());
         } catch (Exception ex) {
         }
-        Epics.parallelCreation = parallelCreation;    
         
         if (Setup.isSimulation()) {
             Epics.getChannelFactory().setDryrun(true);
@@ -163,7 +152,7 @@ public class Epics {
 
     public static Channel newChannel(ChannelDescriptor descriptor) throws ChannelException, InterruptedException, TimeoutException {
         ChannelService factory = getChannelFactory();
-        if (parallelCreation){
+        if (Setup.isParallelInit()){
             if (factory.isDryrun()) {
                 return getChannelFactory().createChannel(new DummyChannelDescriptor(descriptor.getType(), descriptor.getName(), descriptor.getMonitored(), descriptor.getSize()));
             }
@@ -187,12 +176,12 @@ public class Epics {
     }
 
     public static <T> Channel<T> newChannel(String name, Class<T> type) throws ChannelException, InterruptedException, TimeoutException {
-        return newChannel(name, type, null);
+            return newChannel(name, type, null);
     }
 
     public static void closeChannel(Channel channel) {                
         try {
-            if (parallelCreation){               
+            if (Setup.isParallelInit()){               
                 channel.destroy();
             } else {
                 synchronized (creationLock) {

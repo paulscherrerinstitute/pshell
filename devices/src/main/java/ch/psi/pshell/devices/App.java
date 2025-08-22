@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 public class App extends ch.psi.pshell.app.App{                
     
     public static void create(String pars) {
-        Epics.create(Setup.isParallelInit());
+        Epics.create();
         try {
             String[] tokens = Str.splitIgnoringQuotesAndMultSpaces(pars);
             String className = tokens[0];

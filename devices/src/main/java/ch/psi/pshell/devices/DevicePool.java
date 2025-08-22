@@ -74,7 +74,6 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     final static Logger logger = Logger.getLogger(DevicePool.class.getName());
     static final HashMap<String, GenericDevice> deviceList = new HashMap<>();
     static final HashMap<GenericDevice, GenericDevice[]> dependencies = new HashMap<>();
-    boolean parallelInitialization;
     boolean initialized;
     public static final String SIMULATED_FLAG = "$";
    
@@ -566,7 +565,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     }
     
     public void initializeDevices(GenericDevice[] devices) throws InterruptedException {
-        if (parallelInitialization) {
+        if (Setup.isParallelInit()) {
             ArrayList<GenericDevice> processed = new ArrayList<>();
             ArrayList<Callable> callables = new ArrayList();
             for (GenericDevice dev : devices) {
@@ -601,7 +600,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
 
     public ArrayList<GenericDevice> retryInitializeDevices(){
         ArrayList<GenericDevice> ret = new ArrayList<>();
-        if (parallelInitialization) {
+        if (Setup.isParallelInit()) {
             ArrayList<Callable> callables = new ArrayList();
             ArrayList<GenericDevice> processed = new ArrayList<>();
             for (GenericDevice dev : getAllDevicesWithState(State.Invalid)) {

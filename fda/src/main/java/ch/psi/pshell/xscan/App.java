@@ -52,11 +52,12 @@ public class App extends ch.psi.pshell.framework.App {
         dataManager = new DataManager();            
         interpreter = new Interpreter();
         interpreter.disableStartupScriptsExecution();
+        ch.psi.pshell.devices.Options.PARALLEL.set();
     }
     
     @Override
-    protected void onStart() {
-        Epics.create(Setup.getDefaultEpicsConfigFile(), true);
+    protected void onStart() {        
+        Epics.create(Setup.getDefaultEpicsConfigFile());
         super.onStart();
         try {            
             launchApp(View.class);                        

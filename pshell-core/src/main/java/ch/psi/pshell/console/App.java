@@ -222,7 +222,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             interpreter.setNotificationLevel(config.notificationLevel);
             interpreter.setNotifiedTasks(config.getNotifiedTasks());
             
-            Epics.create(Setup.getDefaultEpicsConfigFile(), Setup.isParallelInit());
+            Epics.create(Setup.getDefaultEpicsConfigFile());
                         
             devicePool = new DevicePool();
             logger.log(Level.INFO, "Loading Device Pool");
