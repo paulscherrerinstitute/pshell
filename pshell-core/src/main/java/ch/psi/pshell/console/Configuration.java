@@ -53,7 +53,6 @@ public class Configuration extends Config {
     public LogLevel logLevel = LogLevel.Info;
     public NotificationLevel notificationLevel = NotificationLevel.Off;
     public String notificationTasks = "";
-    public boolean pythonNoBytecodeFiles = false;
     public String pythonHome= "";
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
@@ -141,15 +140,6 @@ public class Configuration extends Config {
             if (!str.isEmpty()) {
                 ret.add(str);
             }
-        }
-        return ret;
-    }
-
-    public boolean getNoBytecodeFiles(){
-        boolean ret = pythonNoBytecodeFiles;
-        String prop = System.getProperty(Options.NO_BYTECODE.toProperty());
-        if ((prop != null) && (prop.length() > 0)) {
-            ret =  Boolean.valueOf(prop);
         }
         return ret;
     }

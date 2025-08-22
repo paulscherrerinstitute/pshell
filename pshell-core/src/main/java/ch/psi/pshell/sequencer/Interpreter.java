@@ -215,17 +215,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     public NotificationLevel getNotificationLevel(){
         return notificationLevel;
-    }    
-    
-    private boolean writeBytecode=true;    
-
-    public void setWriteBytecode(boolean value){
-        writeBytecode = value;
-    }
-
-    public boolean getWriteBytecode(){
-        return writeBytecode;
-    }    
+    }       
     
     private boolean saveConsoleSessions=false;    
 
@@ -984,7 +974,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 runInInterpreterThread(null, (Callable<InterpreterResult>) () -> {
                     String[] libraryPath = Setup.getLibraryPath();                    
                     try {
-                        scriptManager = new ScriptManager(getScriptType(), libraryPath, injections, Context.getScriptFilePermissions(), !getWriteBytecode());
+                        scriptManager = new ScriptManager(getScriptType(), libraryPath, injections, Context.getScriptFilePermissions(), Setup.getNoBytecodes());
                         scriptManager.setSessionFilePath((getSaveConsoleSessions() && !isLocalMode()) ? Setup.getConsolePath() : null);
                         setStdioListener(scriptStdioListener);
                         String startupScript = getStartupScript();
@@ -1044,7 +1034,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 } else {
                     if (extractedUtilities) {
                         //TODO: remove this  when Jython fixes this: https://github.com/jython/jython/issues/93                
-                        if (getWriteBytecode() && !isVolatileMode()) {
+                        if (!Setup.getNoBytecodes() && !isVolatileMode()) {
                             new Thread(() -> {
                                 scriptManager.fixClassFilesPermissions();
                             }).start();
@@ -3318,7 +3308,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         if (scriptManager != null) {
             if (!Setup.isRunningInIde()){
                 //TODO: remove this  when Jython fixes this: https://github.com/jython/jython/issues/93                
-                if (getWriteBytecode() && !isVolatileMode()) {
+                if (!Setup.getNoBytecodes() && !isVolatileMode()) {
                     scriptManager.startFixClassFilesPermissions();
                 }
             }
