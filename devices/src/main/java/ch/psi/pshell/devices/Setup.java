@@ -21,7 +21,7 @@ public class Setup extends ch.psi.pshell.app.Setup {
     }
     
     public static boolean isParallelInit(){
-        return Options.PARALLEL.getBool(Boolean.FALSE);
+        return Options.PARALLEL.getBool(Boolean.TRUE);
     }
         
     public static String getPipelineServer() {

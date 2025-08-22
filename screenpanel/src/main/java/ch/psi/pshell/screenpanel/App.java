@@ -24,7 +24,7 @@ public class App extends ch.psi.pshell.devices.App{
 
     public static CamServerViewer create(Window parent, String title, Dimension size) {
         String dialogTitle = (title==null) ? Optional.ofNullable(Setup.getTitle()).orElse("ScreenPanel") : title;
-        Epics.create(true);
+        Epics.create();
         CamServerViewer viewer = new CamServerViewer();
         SwingUtilities.invokeLater(() -> {
             try {                

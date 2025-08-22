@@ -24,7 +24,7 @@ public enum Options implements Option {
         ch.psi.pshell.app.Options.DEVICES_PATH.add("devp", "Set devices config folder (default is " + ch.psi.pshell.app.Options.DEVICES_PATH.toEnvVar() + " or else {home}/devices)", "path");
         ch.psi.pshell.devices.Options.addEpics();
         ch.psi.pshell.devices.Options.addCamServer();
-        ch.psi.pshell.devices.Options.PARALLEL.add("u", "Parallel initialization of devices (values: true or false)");                                
+        ch.psi.pshell.devices.Options.PARALLEL.add("u", "Parallel initialization of devices (values: true (default) or false)");                                
         ch.psi.pshell.app.Options.FILE.add("f", "Open a StripChart configuration file (.scd)", "path");
         ch.psi.pshell.app.Options.CONFIG.add("cf", "JSON configuration string (as in .scd file) or list of channel names", "json");
         ch.psi.pshell.framework.Options.SERVER.add("v", "Create a StripChart server");
