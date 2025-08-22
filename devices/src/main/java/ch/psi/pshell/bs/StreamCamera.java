@@ -186,8 +186,8 @@ public class StreamCamera extends ColormapSource {
                 Object x = getValue(channelAxisX);
                 Object y = getValue(channelAxisY);
                 if ((x != null) && (y != null)) {
-                    width = Array.getLength(x);
-                    height = Array.getLength(y);
+                    width = (x instanceof Number) ? 1 : Array.getLength(x);
+                    height = (y instanceof Number) ? 1 : Array.getLength(y);
                     setCalibration(new Calibration(x, y));
                 } else {                
                     if ((shape!=null) && (shape.length==2)){                        
