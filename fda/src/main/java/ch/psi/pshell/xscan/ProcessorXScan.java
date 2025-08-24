@@ -5,6 +5,7 @@ import ch.psi.jcae.impl.DefaultChannelService;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.FormatFDA;
 import ch.psi.pshell.data.Layout;
+import ch.psi.pshell.data.LayoutFDA;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.MainFrame;
 import ch.psi.pshell.framework.Processor;
@@ -37,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -674,6 +676,11 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         //boolean deserializerTXT = (path == null);
         Map<String, Object> info = dm.getInfo(file.toString(), path);
         boolean deserializerTXT = info.containsKey(FormatFDA.INFO_FIELD_DIMENSIONS); // File generated with XScan persistence
+        deserializerTXT = false;
+        Path fullPath = (path == null) ? file.toPath() : Paths.get(file.toString(), path+".txt");
+        if (LayoutFDA.isFdaSerialization(fullPath)){
+            deserializerTXT = true;
+        }
         File dir = file.getParentFile();
         String name = file.getName();
         name = name.replaceAll("_[0-9]*.txt$", "");

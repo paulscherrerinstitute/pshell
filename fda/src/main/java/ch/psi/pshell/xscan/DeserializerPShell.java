@@ -3,6 +3,7 @@ package ch.psi.pshell.xscan;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.LayoutTable;
+import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.utils.EventBus;
 import ch.psi.pshell.utils.IO;
 import java.io.File;
@@ -50,9 +51,12 @@ public class DeserializerPShell implements Deserializer {
         this.metadata = new ArrayList<>();
         try {
             // Read metadata
-            //dm = new DataManager(Context.getInstance(), file.isDirectory() ? "txt" : "h5", Context.getInstance().getConfig().getDataLayout());
+            //dm = new DataManager(Context.getInstance(), file.isDirectory() ? "txt" : "h5", Context.getInstance().getConfig().getDataLayout());            
             if (!ProcessorXScan.SCAN_TYPE.toString().equalsIgnoreCase(String.valueOf(dm.getAttribute(filename, path, Layout.ATTR_TYPE)))) {
-                throw new RuntimeException("Not XScan data");
+                dm = new DataManager(file.isDirectory() ? "txt" : "h5", Context.getDataManager().getLayout().getId());            
+                if (!ProcessorXScan.SCAN_TYPE.toString().equalsIgnoreCase(String.valueOf(dm.getAttribute(filename, path, Layout.ATTR_TYPE)))) {
+                    throw new RuntimeException("Not XScan data");
+                }
             }
             dimensions = (int[]) dm.getAttribute(filename, path, "dims");
             ids = (String[]) dm.getAttribute(filename, path, "names");
