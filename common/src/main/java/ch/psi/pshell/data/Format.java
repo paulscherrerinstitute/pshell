@@ -42,6 +42,11 @@ public interface Format {
     public static final String INFO_VAL_DATA_TYPE_BOOLEAN = "BOOLEAN";
     public static final String INFO_VAL_DATA_TYPE_BITFIELD = "BITFIELD";
 
+    public static final String INFO_FILE_NAME = "File";
+    public static final String INFO_FILE_REVISION = "Version";
+    public static final String PATH_META= "meta/"; 
+
+
     public static final String[] COMPOUND_DATA_INFO = new String[]{INFO_FIELDS, INFO_FIELD_NAMES, INFO_FIELD_TYPES, INFO_FIELD_LENGTHS};
 
     default public String getId() {

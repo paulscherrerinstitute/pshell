@@ -257,6 +257,7 @@ public class Context {
     static DataManager dataManager;    
     public static void setDataManager(DataManager value) {
         dataManager = value;
+        dataManager.setGlobal();
     }        
     
     public static DataManager getDataManager() {

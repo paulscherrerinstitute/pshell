@@ -62,7 +62,7 @@ public class DataManager extends ch.psi.pshell.data.FormatManager {
         } else {
             dataRootDepth = Paths.get(IO.getRelativePath(ep.getPath(), getDataFolder())).getNameCount();
         }        
-        getFormat(new FormatHDF5());
+        setFormat(new FormatHDF5());
         setLayout(new LayoutDefault());        
     }    
 
@@ -74,7 +74,7 @@ public class DataManager extends ch.psi.pshell.data.FormatManager {
     
     public DataManager(Format format, Layout layout) {
         this();
-        getFormat(format);
+        setFormat(format);
         setLayout(layout);
     }
     

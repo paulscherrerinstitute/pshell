@@ -1,21 +1,20 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.app.App;
+import ch.psi.pshell.app.Setup;
 import ch.psi.pshell.data.Converter;
 import ch.psi.pshell.data.DataAddress;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Format;
-import ch.psi.pshell.data.Layout;
-import ch.psi.pshell.data.LayoutBase;
+import ch.psi.pshell.data.FormatManager;
 import ch.psi.pshell.data.PlotDescriptor;
-import ch.psi.pshell.framework.App;
-import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Processor;
-import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotPanel;
+import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.scripting.ViewPreference;
-import ch.psi.pshell.swing.DataPanel.DataPanelListener;
+import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.Convert;
@@ -373,7 +372,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             menuConvertFile.setVisible(menuConvertFile.getMenuComponentCount() > 0);
                             //}
 
-                            if (isRoot && Context.hasInterpreter()) {
+                            if (isRoot && Interpreter.hasInstance()) {
                                 setupProcessMenu(menuProcessing);
                                 menuProcessing.setVisible(true);
                             } else {
@@ -446,8 +445,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             if (listener != null) {
                 try {
 
-                    String fileName = (String) dataManager.getAttribute(currentFile.getPath(), "/", Layout.ATTR_FILE);
-                    String revision = (String) dataManager.getAttribute(currentFile.getPath(), "/", Layout.ATTR_VERSION);
+                    String fileName = (String) dataManager.getAttribute(currentFile.getPath(), "/", Format.INFO_FILE_NAME);
+                    String revision = (String) dataManager.getAttribute(currentFile.getPath(), "/", Format.INFO_FILE_REVISION);
                     if (revision != null) {
                         try {
                             String script = Versioning.getFileContents(fileName, revision);
@@ -475,8 +474,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 }
                 String var = getString("Enter variable name:", null);
                 if ((var != null) && (!var.trim().isEmpty())) {
-                    //!!! TODO
-                    //Context.tryEvalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
+                    Interpreter.getInstance().tryEvalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
                 }
             } catch (Exception ex) {
                 showException(ex);
@@ -535,7 +533,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                     }
                                 }
                             } else if (type.equals(Format.INFO_VAL_TYPE_DATASET) || type.equals(Format.INFO_VAL_TYPE_SOFTLINK)) {
-                                menuAssign.setVisible(Context.hasScriptManager());
+                                menuAssign.setVisible(Interpreter.hasInstance());
                                 if (dataManager.isDisplayablePlot(info)) {
                                     menuConvert.removeAll();
                                     for (Converter converter : Converter.getServiceProviders()) {
@@ -565,7 +563,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                             String self = path.getLastPathComponent().toString();
                                             String parentPath = getDataPath(path.getParentPath());
                                             String[] siblings = dataManager.getChildren(currentFile.getPath(), parentPath);
-                                            siblings = Arr.append(siblings, dataManager.getChildren(currentFile.getPath(), parentPath+"/"+LayoutBase.PATH_META));
+                                            siblings = Arr.append(siblings, dataManager.getChildren(currentFile.getPath(), parentPath+"/"+Format.PATH_META));
                                             for (String sibling : siblings) {
                                                 String name = getShortName(sibling);
                                                 if (!name.equals(self)){
@@ -597,7 +595,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 }
                             }
                         }
-                        menuOpenScript.setVisible((info != null) && "/".equals(dataPath) && (dataManager.getAttribute(currentFile.getPath(), dataPath, Layout.ATTR_FILE) != null));
+                        menuOpenScript.setVisible((info != null) && "/".equals(dataPath) && (dataManager.getAttribute(currentFile.getPath(), dataPath, Format.INFO_FILE_NAME) != null));
                         menuPlotDataSeparator.setVisible(menuPlotData.isVisible());
                         menuConvertSeparator.setVisible(menuConvert.isVisible());
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
@@ -838,11 +836,13 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 String[] tokens = script.split("\\|");
                 String file = tokens[0].trim();
                 String category = ((tokens.length == 1) || (tokens[1].isBlank())) ? "" : tokens[1].trim();
-                File f = Context.getInterpreter().getScriptFile(file);
-                if ((f != null) && (f.exists())) {
-                    scripts.add(new ImmutablePair(file, category));
-                    if (!category.isEmpty()) {
-                        categories.add(category);
+                if (Interpreter.hasInstance()){
+                    File f = Interpreter.getInstance().getScriptFile(file);
+                    if ((f != null) && (f.exists())) {
+                        scripts.add(new ImmutablePair(file, category));
+                        if (!category.isEmpty()) {
+                            categories.add(category);
+                        }
                     }
                 }
             }
@@ -863,15 +863,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 JMenuItem item = new JMenuItem(IO.getPrefix(file));
                 item.addActionListener((ActionEvent ae) -> {
                     try {
-                        //!!!TODO
-                        /*
-                        Context.evalFileBackgroundAsync(file, List.of(getCurrentRoot())).handle((ret, ex) -> {
+                        Interpreter.getInstance().evalFileBackgroundAsync(file, List.of(getCurrentRoot())).handle((ret, ex) -> {
                             if (ex != null) {
                                 showException((Exception) ex);
                             }
                             return ret;
                         });
-                        */
                     } catch (Exception ex) {
                         showException(ex);
                     }
@@ -956,8 +953,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     }
     
     public void initialize() {
-       
-        initialize(Context.getDataManager());        
+        if ((!FormatManager.isDefault())&& (FormatManager.getGlobal() instanceof DataManager dataManager)){       
+            initialize(dataManager);        
+        }
     }
     
     //!!! get arguments from App.getInstance().getMainFrame().getPreferences()
@@ -1815,20 +1813,20 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                format =  IO.getExtension(file);
             }             
             if ((format==null) || (format.isBlank())){
-                if (Context.getFormat()!=null){
-                    format = Context.getFormat().getId();
-                } else {
+                if (FormatManager.isDefault()){
                     if (file.isFile()){
                         format = "h5";
                     } else {
                         format = "txt";
                     }
+                } else {                    
+                    format = FormatManager.getGlobal().getFormat().getId();
                 }                
             }
         } 
         if ((layout==null) || (layout.isBlank())){
-            if (Context.getLayout()!=null){
-                layout = Context.getLayout().getId();
+            if ((!FormatManager.isDefault()) && (FormatManager.getGlobal() instanceof DataManager dataManager)){     
+                layout = dataManager.getLayout().getId();
             } else {
                 layout = "default";
             }
@@ -1913,7 +1911,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         @Override
         public JPanel openFile(String fileName) throws Exception {
-            if (IO.getExtension(fileName).equalsIgnoreCase(Context.getScriptType().getExtension())) {
+            if (ScriptType.isScript(fileName)) {
                 return openScript(new String(Files.readAllBytes(Paths.get(fileName))), fileName);
             } else {
                 DataPanel panel = new DataPanel();

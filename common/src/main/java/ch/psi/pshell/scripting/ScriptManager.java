@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.CompiledScript;
@@ -257,6 +258,28 @@ public class ScriptManager implements AutoCloseable {
             Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    public File getScriptFile(String script) {
+        if ((script != null) && (getLibrary() != null)) {
+            try {
+                script = getLibrary().resolveFile(script);
+                if (script != null) {
+                    File ret = new File(script);
+                    if (ret.exists()) {
+                        try {
+                            ret = ret.getCanonicalFile();
+                        } catch (Exception ex) {
+                        }
+                        return ret;
+                    }
+                }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, "Error getting script file: {0}", ex.getMessage());
+            }
+        }
+        return null;
+    }
+    
 
     public void setWriter(Writer writer) {
         engine.getContext().setWriter(writer);

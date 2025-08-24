@@ -1444,30 +1444,17 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         
 
     public File getScriptFile(String script) {
-        if ((script != null) && (scriptManager != null)) {
-            if (scriptManager.getLibrary() != null) {
-                try {
-                    if (!scriptManager.isThreaded()) {
-                        String aux = script;
-                        script = (String) runInInterpreterThread(null, (Callable<String>) () -> {
-                            return scriptManager.getLibrary().resolveFile(aux);
-                        });
-                    } else {
-                        script = scriptManager.getLibrary().resolveFile(script);
-                    }
-                    if (script != null) {
-                        File ret = new File(script);
-                        if (ret.exists()) {
-                            try {
-                                ret = ret.getCanonicalFile();
-                            } catch (Exception ex) {
-                            }
-                            return ret;
-                        }
-                    }
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, "Error getting script file: {0}", ex.getMessage());
+        if (scriptManager != null) {
+            try {
+                //!!! Is this invoking still needed?
+                if (!scriptManager.isThreaded()) {
+                    return (File) runInInterpreterThread(null, (Callable<File>) () -> {
+                        return scriptManager.getScriptFile(script);
+                    });
+                } else {
+                    return scriptManager.getScriptFile(script);
                 }
+            } catch (Exception ex) {                
             }
         }
         return null;

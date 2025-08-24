@@ -31,8 +31,26 @@ public class FormatManager implements AutoCloseable {
     protected File outputFile;
     protected FilePermissions filePermissions = FilePermissions.Default;
     protected DirectoryStream.Filter fileFilter;
+    static FormatManager defaultManager;
+    static FormatManager global;
     
     public FormatManager(){        
+    }
+    
+    public void setGlobal(){
+        global = this;
+    }
+    
+    public static FormatManager getGlobal(){
+        if (global == null) {
+            defaultManager = new FormatManager(new FormatHDF5());
+            global = defaultManager;
+        }
+        return global;
+    }
+    
+    public static boolean isDefault(){
+        return  (global==null) || (global.equals(defaultManager));
     }
     
     public static String[] getLayoutIds(){
@@ -51,7 +69,7 @@ public class FormatManager implements AutoCloseable {
 
     public FormatManager(Format format) {
         this();
-        FormatManager.this.getFormat(format);     
+        FormatManager.this.setFormat(format);     
     }
 
     public FormatManager(File outputFile, String format) throws Exception {
@@ -118,10 +136,10 @@ public class FormatManager implements AutoCloseable {
                 return;
             }
         }
-        FormatManager.this.getFormat((Format) providerClass.newInstance());
+        FormatManager.this.setFormat((Format) providerClass.newInstance());
     }
 
-    public void getFormat(Format format) {
+    public void setFormat(Format format) {
         logger.log(Level.FINE, "Setting data format: {0}", format.getClass().getName());
         this.format = format;
         fileFilter = null;

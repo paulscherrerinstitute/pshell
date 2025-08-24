@@ -99,7 +99,7 @@ public class Miniconda {
         String installationPath = getInstallationPath(folder);
         new File(installationPath).getParentFile().mkdirs();
         if (downloadLink==null) {
-            downloadLink = installer;
+            downloadLink = MINICONDA_DOWNLOAD_LINK;
         }
         if (installer==null){
             installer= getStandardInstaller();

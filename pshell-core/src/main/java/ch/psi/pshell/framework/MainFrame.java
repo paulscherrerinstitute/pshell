@@ -1725,7 +1725,10 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
 
     public void plotData(String contextName, String root, String path, PlotPreferences preferences, DataManager dm) throws Exception {
         try {
-            plotData(contextName, dm.getScanPlots(root, path).toArray(new PlotDescriptor[0]), preferences);
+             List<Plot> plots = plotData(contextName, dm.getScanPlots(root, path).toArray(new PlotDescriptor[0]), preferences);
+             if (plots.isEmpty()){
+                 Processor.tryProcessorsPlot(root, path, dm);
+             }
         } catch (Exception ex) {
             //If cannot open file, try with external processors
             if (!Processor.tryProcessorsPlot(root, path, dm)) {

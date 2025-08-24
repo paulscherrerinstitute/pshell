@@ -30,7 +30,7 @@ public abstract class LayoutBase implements Layout {
     public static String PATH_SNAPS = "snaps/";
     public static String PATH_DIAGS = "diags/";
     public static String PATH_LOGS = "logs/";   
-    public static String PATH_META = "meta/";   
+    public static String PATH_META = Format.PATH_META;   
 
     Boolean persistSetpoints;
     Boolean persistTimestamps;
