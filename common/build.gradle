@@ -5,7 +5,10 @@ dependencies {
     implementation 'javax.mail:javax.mail-api:1.6.2'
     implementation 'com.sun.mail:javax.mail:1.6.2'    
     implementation 'org.jetbrains.pty4j:pty4j:0.12.13' // Not updated because use of Gradle Kotlin build file adds Kotlin libraries to jar file
-    implementation 'com.github.JetBrains:jediterm:ba1165965cac86a2c4fc18efa340822cc61830e7'
+    implementation 'org.jetbrains.jediterm:jediterm-core:3.54'
+    implementation 'org.jetbrains.jediterm:jediterm-ui:3.54'
+    implementation 'org.jetbrains.jediterm:jediterm-pty:2.69'
+    implementation 'org.jetbrains.jediterm:jediterm-typeahead:2.69'
     implementation 'redis.clients:jedis:5.1.5'
     implementation 'com.formdev:flatlaf:3.4.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
@@ -29,13 +32,7 @@ dependencies {
     api 'org.glassfish.jersey.core:jersey-client:3.1.10'                    
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-}
+createPublishingTask(project)
 
 tasks {
     shadowJar {

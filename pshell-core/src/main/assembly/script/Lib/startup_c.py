@@ -2766,7 +2766,7 @@ def expand_path(path, timestamp=-1):
 
     return Setup.expandPath(path, timestamp)
 
- def send_event(name, value=True):
+def send_event(name, value=True):
     """Send an interpreter event, which is  propagated as a SSE.
 
     Args:

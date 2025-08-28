@@ -13,9 +13,11 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
@@ -434,21 +436,32 @@ public class IO {
     }
 
     static public void deleteRecursive(File file) throws IOException {
-        deleteRecursive(file.getCanonicalPath());
+        deleteRecursive(file.toPath());
     }
 
     static public void deleteRecursive(String pathName) throws IOException {
-        Path path = Paths.get(pathName);
-
-        if (Files.exists(path)) {
-            if (Files.isDirectory(path)) {
-                for (File child : new File(pathName).listFiles()) {
-                    deleteRecursive(child.getAbsolutePath());
-                }
-            }
-            Files.delete(path);
-        }
+        deleteRecursive(Paths.get(pathName));
     }
+    
+    public static void deleteRecursive(Path path) throws IOException {
+        if (!Files.exists(path)) {
+            return; // nothing to delete
+        }
+
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }    
 
     public static long getSize(File file) {
         if (!file.isDirectory()) {

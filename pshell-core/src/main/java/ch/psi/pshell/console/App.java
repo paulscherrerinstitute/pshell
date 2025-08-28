@@ -134,7 +134,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         dataManager.initialize(config.getDataFormat(), config.getDataLayout());                                
     }
         
-    
+     
     @Override
     protected void onStart() {                
         super.onStart();        

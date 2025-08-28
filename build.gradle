@@ -15,7 +15,7 @@ allprojects {
     repositories {
         mavenCentral()
         maven { url "https://maven.scijava.org/" }
-        //maven { url 'https://www.jitpack.io' }
+        maven { url 'https://www.jitpack.io' }
         maven { 
             credentials {
                 username = githubUser 
@@ -32,6 +32,7 @@ allprojects {
             }       
         maven { url "https://maven.scijava.org/content/repositories/public/" }         
         //maven { url "https://artifacts.psi.ch/artifactory/libs-snapshots-local/" }
+        maven { url "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies/" }                 
     }
 }
 
@@ -129,7 +130,7 @@ subprojects {
                 }
             }            
             
-            requires 'java-' + app_jdk + '-openjdk'
+            requires 'java-' + app_jdk + '-openjdk-devel'
             dependsOn 'shadowJar'                        
                                     
             release = app_release
@@ -195,7 +196,10 @@ subprojects {
             link(sys_bin + bin_file_name, app_path + '/bin/' + bin_file_name)   
             link(sys_bin + app_name, sys_bin + bin_file_name) 
         }
-        
+        createPublishingTask(project)
+    }    
+    
+    ext.createPublishingTask = { Project project ->
         project.afterEvaluate {
             project.publishing {
                 publications {

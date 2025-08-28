@@ -340,6 +340,9 @@ public class Setup{
         return getCachePath("plugins");
     }
   
+    public static String getCachePathDownloads(){
+        return getCachePath("downloads");
+    }
 
     public static String getJarFile() {
         return IO.getExecutingJar(Setup.class);

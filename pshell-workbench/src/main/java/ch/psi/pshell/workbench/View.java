@@ -4373,15 +4373,14 @@ public class View extends MainFrame{
         setScanPlotDetached(radioPlotsDetached.isSelected());
     }//GEN-LAST:event_radioPlotsVisibleActionPerformed
 
-    CPythonDialog dialogCPython;
+    PythonDialog dialogCPython;
     
     private void menuCPythonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCPythonActionPerformed
         try {
             if ((dialogCPython == null) || (!dialogCPython.isDisplayable())) {
-                dialogCPython = new CPythonDialog(this, false);
+                dialogCPython = new PythonDialog(this, false);
                 dialogCPython.setDefaultCloseOperation(HIDE_ON_CLOSE);
-                dialogCPython.setReadOnly(Context.getRights().denyConfig);
-                dialogCPython.setSize(600, 400);
+                dialogCPython.setReadOnly(Context.getRights().denyConfig);                
             } 
             showChildWindow(dialogCPython);
         } catch (Exception ex) {

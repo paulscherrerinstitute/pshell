@@ -22,10 +22,10 @@ import javax.swing.WindowConstants;
 /**
  *
  */
-public class CPythonDialog extends StandardDialog {
+public class MinicondaDialog extends StandardDialog {
     public static String DEFAULT_PYTHON_HOME = "{home}/cpython";
 
-    public CPythonDialog(java.awt.Window parent, boolean modal) {
+    public MinicondaDialog(java.awt.Window parent, boolean modal) {
         super(parent, modal);
         setTitle("CPython");
         initComponents();
@@ -36,11 +36,11 @@ public class CPythonDialog extends StandardDialog {
         String java_home = System.getenv("JAVA_HOME");            
         if ((java_home==null) || (java_home.isBlank())) {
             String jdk = System.getProperty("java.home");
-            java.util.logging.Logger.getLogger(CPythonDialog.class.getName()).info("Setting JAVA_HOME to: " + jdk) ;
+            java.util.logging.Logger.getLogger(MinicondaDialog.class.getName()).info("Setting JAVA_HOME to: " + jdk) ;
             try{
                 Sys.setEnvironmentVariable("JAVA_HOME", jdk);
             } catch (Exception ex){                    
-                java.util.logging.Logger.getLogger(CPythonDialog.class.getName()).warning("Cannot set  JAVA_HOME") ;
+                java.util.logging.Logger.getLogger(MinicondaDialog.class.getName()).warning("Cannot set  JAVA_HOME") ;
             }
         }        
         java_home = System.getenv("JAVA_HOME");
@@ -56,15 +56,6 @@ public class CPythonDialog extends StandardDialog {
             textLink.setText(Miniconda.MINICONDA_DOWNLOAD_LINK);
             textPath.setText(installPath);
             textPackages.setText(String.join("\n", Miniconda.getDefaultPackages()));       
-            
-            if (JepUtils.getPythonHome()==null){
-                if (App.getInstance().getConfig().getPythonHome()==null){
-                    //User DEFAULT_PYTHON_HOME, so save it.
-                    App.getInstance().getConfig().pythonHome = DEFAULT_PYTHON_HOME;
-                    App.getInstance().getConfig().save();
-                }
-            }
-            
         } catch (Exception ex) {
             showException(ex);
         }
@@ -85,13 +76,20 @@ public class CPythonDialog extends StandardDialog {
                 if (showOption("JAVA_HOME is undefined and cannot be set.\nJEP compilation may fail and manual installation be required.\nDo you want to continue?", this, OptionType.YesNo) == OptionResult.No) {
                     return;
                 }
-            }            
+            }                        
             Context.getApp().getState().assertReady();
+            if (JepUtils.getPythonHome()==null){
+                if (App.getInstance().getConfig().getPythonHome()==null){
+                    //User DEFAULT_PYTHON_HOME, so save it.
+                    App.getInstance().getConfig().pythonHome = DEFAULT_PYTHON_HOME;
+                    App.getInstance().getConfig().save();
+                }
+            }            
             Context.getApp().startTask(new CPythonInstall());
 
         } catch (Exception ex) {
             showException(ex);
-            Logger.getLogger(CPythonDialog.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(MinicondaDialog.class.getName()).log(Level.WARNING, null, ex);
         }
 
     }
@@ -368,21 +366,23 @@ public class CPythonDialog extends StandardDialog {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(CPythonDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MinicondaDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(CPythonDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MinicondaDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(CPythonDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MinicondaDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(CPythonDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MinicondaDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
         //</editor-fold>
         //</editor-fold>
 
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                CPythonDialog dialog = new CPythonDialog(new javax.swing.JFrame(), true);
+                MinicondaDialog dialog = new MinicondaDialog(new javax.swing.JFrame(), true);
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
