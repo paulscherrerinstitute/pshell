@@ -328,10 +328,10 @@ public class CommandManager implements AutoCloseable {
 
     //Callbacks for triggering script handlers to command start/finish
     void onCommandStarted(CommandInfo info) {
-        if (scriptCallbacksEnabled){
+        if (scriptCallbacksEnabled && Context.hasScriptManager()){
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
-                if ((Context.getScriptManager()!=null) && (Context.getScriptManager().isThreaded())) {
+                if (Context.getScriptManager().isThreaded()) {
                     Context.getScriptManager().getEngine().put(var_name, info);
                     Context.getScriptManager().getEngine().eval("on_command_started(" + var_name + ")");
                 }
@@ -342,10 +342,10 @@ public class CommandManager implements AutoCloseable {
     }
 
     void onCommandFinished(CommandInfo info) {
-        if (scriptCallbacksEnabled){
+        if (scriptCallbacksEnabled && Context.hasScriptManager()){
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
-                if ((Context.getScriptManager()!=null) && (Context.getScriptManager().isThreaded())) {
+                if (Context.getScriptManager().isThreaded()) {
                     Context.getScriptManager().getEngine().put(var_name, info);
                     Context.getScriptManager().getEngine().eval("on_command_finished(" + var_name + ")");
                 }
@@ -369,10 +369,10 @@ public class CommandManager implements AutoCloseable {
     }
 
     void onChangeDataPath(File dataPath) {
-        if (scriptCallbacksEnabled){
+        if (scriptCallbacksEnabled && Context.hasScriptManager()){
             try {
                 String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
-                if ((Context.getScriptManager()!=null) && (Context.getScriptManager().isThreaded())) {
+                if (Context.getScriptManager().isThreaded()) {
                     Context.getScriptManager().getEngine().eval("on_change_data_path(" + filename + ")");
                 }
             } catch (Exception ex) {
@@ -382,9 +382,9 @@ public class CommandManager implements AutoCloseable {
     }
 
     public void onSessionStarted(int id) {
-        if (scriptCallbacksEnabled){
+        if (scriptCallbacksEnabled && Context.hasScriptManager()){
             try {
-                if ((Context.getScriptManager()!=null) && (Context.getScriptManager().isThreaded())) {
+                if (Context.getScriptManager().isThreaded()) {
                     Context.getScriptManager().getEngine().eval("on_session_started(" + id + ")");
                 }
             } catch (Exception ex) {
@@ -394,9 +394,9 @@ public class CommandManager implements AutoCloseable {
     }
 
     public void onSessionFinished(int id) {
-        if (scriptCallbacksEnabled){
+        if (scriptCallbacksEnabled && Context.hasScriptManager()){
             try {
-                if ((Context.getScriptManager()!=null) && (Context.getScriptManager().isThreaded())) {
+                if (Context.getScriptManager().isThreaded()) {
                     Context.getScriptManager().getEngine().eval("on_session_finished(" + id + ")");
                 }
             } catch (Exception ex) {
