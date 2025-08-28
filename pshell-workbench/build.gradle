@@ -1,6 +1,7 @@
 description = 'workbench'
 
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.workbench.App'
+ext.rpm_requires = ['openssl-devel', 'zlib-devel']
 
 dependencies {
     api project(':common')

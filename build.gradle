@@ -11,6 +11,7 @@ allprojects {
     ext.app_jdk = '21'
     ext.jar_suffix = 'fat'
     ext.build_type = 'py'     //py, groovy, js, all or light
+    ext.rpm_requires = []
    
     repositories {
         mavenCentral()
@@ -120,6 +121,7 @@ subprojects {
         def bin_file_name = "${app_name}-${app_version}"              
         def app_args_var = "APP_${app_name.replace('-', '_').toUpperCase()}_ARGS"
         def app_jvm_options_var = "APP_${app_name.replace('-', '_').toUpperCase()}_JVM_OPTIONS"
+        def proj_requires = project.rpm_requires
 
         project.tasks.register("rpm", Rpm) {
             doFirst {
@@ -131,6 +133,9 @@ subprojects {
             }            
             
             requires 'java-' + app_jdk + '-openjdk-devel'
+            proj_requires.each { dep ->
+                requires dep
+            }            
             dependsOn 'shadowJar'                        
                                     
             release = app_release
