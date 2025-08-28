@@ -36,7 +36,7 @@ public class PythonDialog extends StandardDialog {
         updateCurrent();
         setDefaults();        
         
-        String java_home = System.getenv("JAVA_HOME");            
+        String java_home = System.getenv().get("JAVA_HOME");            
         if ((java_home==null) || (java_home.isBlank())) {
             String jdk = System.getProperty("java.home");
             java.util.logging.Logger.getLogger(PythonDialog.class.getName()).info("Setting JAVA_HOME to: " + jdk) ;
@@ -46,7 +46,7 @@ public class PythonDialog extends StandardDialog {
                 java.util.logging.Logger.getLogger(PythonDialog.class.getName()).warning("Cannot set  JAVA_HOME") ;
             }
         }        
-        java_home = System.getenv("JAVA_HOME");
+        java_home = System.getenv().get("JAVA_HOME");
         textJavaHome.setText((java_home==null)? "" : java_home);        
     }
 
@@ -92,7 +92,7 @@ public class PythonDialog extends StandardDialog {
     void install() {
         try {            
             if ((textJavaHome.getText().isBlank())) {
-                if (showOption("JAVA_HOME is undefined and cannot be set.\nJEP compilation may fail and manual installation be required.\nDo you want to continue?", this, OptionType.YesNo) == OptionResult.No) {
+                if (showOption("Error", "JAVA_HOME is undefined and cannot be set.\nJEP compilation may fail and manual installation be required.\nDo you want to continue?", OptionType.YesNo) == OptionResult.No) {
                     return;
                 }
             }            
@@ -146,7 +146,7 @@ public class PythonDialog extends StandardDialog {
         protected String doInBackground() throws Exception {
             String msg = "Installing CPython";
             Path path = getInstallationPath();
-            String version = getInstalledVersion();
+            String version = getInstallationVersion();
             var ret  = new ArrayList<String>();
             setMessage(msg);
             setProgress(0);

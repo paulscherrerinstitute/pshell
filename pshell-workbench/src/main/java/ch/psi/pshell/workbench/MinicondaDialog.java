@@ -33,7 +33,7 @@ public class MinicondaDialog extends StandardDialog {
         setDefaults();
         updateVersion();
         
-        String java_home = System.getenv("JAVA_HOME");            
+        String java_home = System.getenv().get("JAVA_HOME");            
         if ((java_home==null) || (java_home.isBlank())) {
             String jdk = System.getProperty("java.home");
             java.util.logging.Logger.getLogger(MinicondaDialog.class.getName()).info("Setting JAVA_HOME to: " + jdk) ;
@@ -43,7 +43,7 @@ public class MinicondaDialog extends StandardDialog {
                 java.util.logging.Logger.getLogger(MinicondaDialog.class.getName()).warning("Cannot set  JAVA_HOME") ;
             }
         }        
-        java_home = System.getenv("JAVA_HOME");
+        java_home = System.getenv().get("JAVA_HOME");
         textJavaHome.setText((java_home==null)? "" : java_home);        
     }
 

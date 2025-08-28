@@ -79,7 +79,7 @@ public abstract class App extends ObservableBase<AppListener> {
          if (positionalArguments.length>0){
              return positionalArguments[0];
          }
-        String val = System.getenv(Options.COMMAND.toEnvVar());
+        String val = System.getenv().get(Options.COMMAND.toEnvVar());
         if ((val!=null) && (!val.isBlank())){
             return val.trim();            
         }

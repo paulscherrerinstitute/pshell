@@ -266,7 +266,7 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     }
     
     public static String getPythonHome() {
-         String ph = System.getenv("PYTHONHOME");
+         String ph = System.getenv().get("PYTHONHOME");
          String ret =  Options.PYTHON_HOME.getString(((ph==null) || ph.isBlank()) ? null : ph);
          return (ret==null) ? null : expandPath(ret.trim());
     }        

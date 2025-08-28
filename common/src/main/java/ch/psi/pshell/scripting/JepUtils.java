@@ -16,7 +16,7 @@ public class JepUtils {
         return ret;
     }    
     public static String getPythonHome() {
-         String ret = System.getenv("PYTHONHOME");
+         String ret = System.getenv().get("PYTHONHOME");
          if ((ret==null) || ret.isBlank()){
              return null;
          }

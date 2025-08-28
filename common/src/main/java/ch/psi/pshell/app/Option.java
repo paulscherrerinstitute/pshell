@@ -47,7 +47,7 @@ public interface Option {
                 }
             }
             if (envVar!=null){
-                String val = System.getenv(envVar);
+                String val = System.getenv().get(envVar);
                 if ((val!=null) && (!val.isBlank())){
                     return val.trim();
                 }
@@ -81,7 +81,7 @@ public interface Option {
                }
             }
             if (envVar!=null){
-                String val = System.getenv(envVar);
+                String val = System.getenv().get(envVar);
                 if ((val!=null) && (!val.isBlank())){
                     val = val.trim();
                     return !(val.equalsIgnoreCase("false")) && !(val.equalsIgnoreCase("0"));
@@ -119,7 +119,7 @@ public interface Option {
         }
         String separator = ",";
         if (envVar!=null){            
-            String val = System.getenv(envVar);
+            String val = System.getenv().get(envVar);
             if ((val!=null) && (!val.isBlank())){
                 for (String str : Str.splitRemoveQuotes(val.trim(),separator)){
                     if (str.isBlank()){
