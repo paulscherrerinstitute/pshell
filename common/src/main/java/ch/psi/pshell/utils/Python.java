@@ -154,7 +154,7 @@ public class Python {
                     runProcess(buildFolder, configureCmd.toArray(new String[0]));                    
                     runProcess(buildFolder, "make");
                     runProcess(buildFolder, "make", "install"); 
-                    
+                                        
                     try{
                         //Make sure there is a python link to python3
                         Path binDir = Paths.get(installationPath).resolve("bin");
@@ -171,9 +171,17 @@ public class Python {
                         }
                     } catch (Exception ex){
                         logger.log(Level.WARNING, null, ex); 
-                    }
+                    }       
                     break;
-            }     
+                }
+            try{
+                //Update pip
+                logger.log(Level.INFO, "Trying to install pip");  
+                execute (Paths.get(installationPath), "python -m pip install --upgrade pip");                                                            
+            } catch (Exception ex){
+                logger.log(Level.WARNING, null, ex); 
+            }                    
+
             Files.delete(Paths.get(installerFileName));
             IO.deleteRecursive(sourceFolder);
             IO.deleteRecursive(buildFolder);
@@ -326,13 +334,12 @@ private static boolean hasZlibHeaders() {
             if (!cmd.startsWith("python")){
                 path +=  "Scripts\\";
             }
-            processBuilder = new ProcessBuilder(
-                "cmd.exe", "/c", path + cmd
-            );
-        } else {
-            processBuilder = new ProcessBuilder(
-                "sh", "-c", 
-               installationPath + "/bin/" + cmd);
+            processBuilder = new ProcessBuilder("cmd.exe", "/c", path + cmd);
+        } else {            
+            if (cmd.startsWith("python")) {
+                cmd = cmd.replaceFirst("^python", "python3");
+            }            
+            processBuilder = new ProcessBuilder("sh", "-c", installationPath + "/bin/" + cmd);
         }   
         if (env!=null){
             logger.log(Level.INFO, "With env: " + Str.toString(env));
@@ -390,7 +397,7 @@ private static boolean hasZlibHeaders() {
 
     public static String getVersion(Path folder) {        
         try {
-            String cmd = "python3 --version";
+            String cmd = "python --version";
             String version = execute(folder, cmd);        
             return (version == null) ? "" : version;
         } catch (Exception ex) {
