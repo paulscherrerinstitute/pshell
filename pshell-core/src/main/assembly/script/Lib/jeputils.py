@@ -12,10 +12,10 @@
 #In general the only pre-condition is the environment variable "PYTHONHOME" to be be set with a Python 
 #environment having JEP installed.
 #
-#Optionally one may use the config option PythonHome or command line argument -python_home. In this case the
-#software will try to set "PYTHONHOME".
+#Optionally one may use the config option PythonHome or command line argument -python_home_home. In this case the
+#software will try to set "PYTHONHOME". 
 #
-#In some platforms it may be needed:
+#In some platforms and depending if Python is  compiled as shared library it may be needed:
 #       - Add JEP library folder to LD_LIBRARY_PATH
 #       - Add <python home>/lib folder to LD_LIBRARY_PATH			
 #	- Set LD_PRELOAD=<python home>/lib/libpython*.so
@@ -63,6 +63,7 @@ def init_jep():
         pass    # Removed in 4.2
     __jep[java.lang.Thread.currentThread()] = j
     j.eval("import sys")
+    j.eval("import os")
     #sys.argv is not present in JEP and may be needed for certain modules (as Tkinter)
     j.eval("sys.argv = ['PShell']");
     #Add standard script path to python path
@@ -89,6 +90,10 @@ def init_jep():
            "        from importlib import reload  # Python 3.4+\n" +
            "    except ImportError:\n" +
            "        from imp import reload  # Python 3.0 - 3.3\n")
+    #Utility functions
+    j.eval("def is_sys_module(module):\n" + 
+           "    path = getattr(module, '__file__', None)\n" +
+           "    return not path or (os.path.commonpath([sys.prefix, path]) == sys.prefix)\n")
 
 def __print_stdout():
     j=__get_jep()
@@ -159,7 +164,10 @@ def call_jep(module, function, args = [], kwargs = {}, reload=False):
     try:
         if reload:
             eval_jep("import " + module)
-            eval_jep("_=reload(" + module+")")
+            #Do not reload system modules
+            eval_jep("if not is_sys_module(" + module + "): \n" + 
+                     "    _=reload(" + module+")\n")
+
         eval_jep("from " + module + " import " + function + " as " + f)    
         if (kwargs is not None) and (len(kwargs)>0):
             hm=java.util.HashMap()
@@ -173,7 +181,7 @@ def call_jep(module, function, args = [], kwargs = {}, reload=False):
         __print_stdout()    
     return ret
 
-#Converts pythonlist or Java array to numpy array
+#Converts python list or Java array to numpy array
 def to_npa(data, dimensions = None, type = None):   
     if (not isinstance(data, PyArray)) or (type is not None):
         data = to_array(data,'d' if type is None else type)
