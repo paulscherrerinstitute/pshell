@@ -49,10 +49,9 @@ subprojects {
     }
 
     ext.timestamp = new Date().format("yyMMddHHmm")
-    ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime java.base/java.util'
-    ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED java.base/java.util=ALL-UNNAMED'
-    ext.run_addexports = "java.desktop/sun.awt=ALL-UNNAMED"
-    ext.run_jvargs = ["--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens", "java.base/java.util=ALL-UNNAMED", "--add-exports", "java.desktop/sun.awt=ALL-UNNAMED"]
+    ext.add_opens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime java.base/java.util'
+    ext.add_exports = "java.desktop/sun.awt=ALL-UNNAMED"
+    ext.run_jvargs = ["--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens", "java.base/java.util=ALL-UNNAMED", "--add-exports", "java.desktop/sun.awt=ALL-UNNAMED", "--enable-native-access=ALL-UNNAMED"]
 
     if (hasProperty('java_exec_jdk')) {
         ext.java_exec_jdk= java_exec_jdk
@@ -98,6 +97,8 @@ subprojects {
                 debug = (taskName == 'debug')
                 executable = project.java_exec_jdk
                 jvmArgs = project.run_jvargs
+                //environment 'PYTHONHOME', '/Users/gobbo_a/dev/pshell/config/dev/python-3.11.7'
+                //executable = '/Applications/Apache NetBeans.app/Contents/Home/bin/java'
             }
         }           
         
@@ -329,7 +330,8 @@ subprojects {
     ext.shadowJarSetup = { jarTask ->
         def mainClassName = project.hasProperty('mainClass') ? project.mainClass : ''
         def buildTime = project.hasProperty('timestamp') ? project.timestamp : new Date().format("yyMMddHHmm")
-        def manif_addopens = project.hasProperty('manif_addopens') ? project.manif_addopens : ''
+        def add_opens = project.hasProperty('add_opens') ? project.add_opens : ''
+        def add_exports = project.hasProperty('add_exports') ? project.add_exports : ''
         def jar_suffix = project.ext.jar_suffix.toString()
         def build_type = project.ext.build_type.toString()
         jarTask.manifest {
@@ -338,7 +340,9 @@ subprojects {
                 'Implementation-Version': project.version,
                 'Build-Time': buildTime,
                 'Build-Type': build_type,
-                'Add-Opens': manif_addopens
+                'Add-Opens': add_opens,
+                'Add-Exports': add_exports,
+                'Enable-Native-Access':'ALL-UNNAMED' 
             )
         }
         
