@@ -2,7 +2,6 @@ package ch.psi.pshell.console;
 
 import ch.psi.pshell.framework.Config;
 import ch.psi.pshell.framework.Context.DataTransferMode;
-import ch.psi.pshell.framework.Options;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.logging.LogLevel;
 import ch.psi.pshell.notification.NotificationManager.NotificationLevel;
@@ -148,7 +147,7 @@ public class Configuration extends Config {
         return (((dataDepthDimension < 0) || (dataDepthDimension > 2)) ? 0 : dataDepthDimension);
     }
     
-    public String getPythonHome(){
+    public String getPythonHome(){        
         String prop = Setup.getPythonHome();
         if (prop != null){
             return prop;

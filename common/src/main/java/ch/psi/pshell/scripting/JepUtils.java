@@ -14,13 +14,5 @@ public class JepUtils {
             ret=Convert.reshape(ret, dims);                
         }                            
         return ret;
-    }    
-    public static String getPythonHome() {
-         String ret = System.getenv().get("PYTHONHOME");
-         if ((ret==null) || ret.isBlank()){
-             return null;
-         }
-         return ret.trim();
-    }            
-    
+    }        
 }

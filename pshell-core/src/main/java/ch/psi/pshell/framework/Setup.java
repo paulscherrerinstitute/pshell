@@ -265,23 +265,14 @@ public class Setup extends ch.psi.pshell.devices.Setup {
         return ret;
     }
     
+    //Priority config < setup < PYTHONHOME
     public static String getPythonHome() {
-         String ph = System.getenv().get("PYTHONHOME");
-         String ret =  Options.PYTHON_HOME.getString(((ph==null) || ph.isBlank()) ? null : ph);
-         return (ret==null) ? null : expandPath(ret.trim());
-    }        
-    
-    public static boolean isPythonInstalled(){
-        try{
-            Path path = Paths.get(getPythonHome());
-            if (path.toFile().isDirectory()){
-                String version = Miniconda.getVersion(path);
-                return (version == null) ? false : true;                
-            }
-        } catch (Exception ex){            
-        }
-        return false;
-    }      
+         String ret = System.getenv().get("PYTHONHOME");
+         if (((ret==null) || ret.isBlank())){
+             ret =  Options.PYTHON_HOME.getString(null);
+         }
+         return  ((ret==null) || ret.isBlank()) ? null : expandPath(ret.trim());
+    }             
     
     public static String getDataFormat() {
          return Options.DATA_FORMAT.getString(null);

@@ -3,15 +3,17 @@ package ch.psi.pshell.workbench;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.framework.Task;
-import ch.psi.pshell.scripting.JepUtils;
+import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.swing.StandardDialog;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.SwingUtils.OptionResult;
 import ch.psi.pshell.swing.SwingUtils.OptionType;
+import ch.psi.pshell.utils.Miniconda;
 import ch.psi.pshell.utils.Python;
 import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Sys;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -34,7 +36,10 @@ public class PythonDialog extends StandardDialog {
         initComponents();
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         updateCurrent();
-        setDefaults();        
+        setDefaults();    
+        updateInstallSource();
+        Font f = Preferences.getDefaultEditorFont().toFont();
+        textInstalledPackages.setFont(f.deriveFont(f.getSize()-2));
         
         String java_home = System.getenv().get("JAVA_HOME");            
         if ((java_home==null) || (java_home.isBlank())) {
@@ -47,26 +52,41 @@ public class PythonDialog extends StandardDialog {
             }
         }        
         java_home = System.getenv().get("JAVA_HOME");
-        textJavaHome.setText((java_home==null)? "" : java_home);        
+        textJavaHome.setText((java_home==null)? "" : java_home);    
     }
 
     void setDefaults() {
-        try {
-            String pythonHome = JepUtils.getPythonHome();                        
+        try {            
             textDownloadURL.setText(Python.BASE_URL);
             textDownloadVersion.setText(Python.DEFAULT_VERSION);
-            String installPath = Setup.expandPath((pythonHome!=null) ? pythonHome : getPythonHome(Python.DEFAULT_VERSION));
-            textInstallationPath.setText(installPath);
             textInstallationPackages.setText(String.join("\n", Python.getDefaultPackages()));                                           
+            String installPath = getPythonHome(textDownloadVersion.getText());
+            textInstallationPath.setText(installPath);                        
+            textInstallerMiniconda.setText(Miniconda.getStandardInstaller());
+            textDownloadURLMiniconda.setText(Miniconda.MINICONDA_DOWNLOAD_LINK);
+      
+            
             updateInstallation();
         } catch (Exception ex) {
             showException(ex);
         }
 
     }
+    
+    void updateInstallSource(){
+        boolean miniconda = radioMiniconda.isSelected();
+        labelDownloadURLMiniconda.setVisible(miniconda);        
+        labelInstallerMiniconda.setVisible(miniconda);
+        textDownloadURLMiniconda.setVisible(miniconda);
+        textInstallerMiniconda.setVisible(miniconda);
+        labelDownloadURL.setVisible(!miniconda);        
+        labelDownloadVersion.setVisible(!miniconda);
+        textDownloadURL.setVisible(!miniconda);
+        textDownloadVersion.setVisible(!miniconda);
+    }
             
     Path getCurrentPath() {
-        String home = JepUtils.getPythonHome();
+        String home = Setup.getPythonHome();
         if (home == null){
             return null;
         }
@@ -79,10 +99,11 @@ public class PythonDialog extends StandardDialog {
     }
 
     void updateCurrent() {
-        String pythonHome = JepUtils.getPythonHome();                        
+        String pythonHome = Setup.getPythonHome();                        
         textPythonHome.setText(pythonHome);
         textInstalledVersion.setText(getInstalledVersion());
         textInstalledPackages.setText(String.join("\n", getInstalledPackages()));   
+        buttonCheckConnection.setEnabled(!textInstalledVersion.getText().isBlank());
     }
     void updateInstallation(){
         textInstallationVersion.setText(getInstallationVersion());        
@@ -103,7 +124,25 @@ public class PythonDialog extends StandardDialog {
             showException(ex);
             Logger.getLogger(PythonDialog.class.getName()).log(Level.WARNING, null, ex);
         }
-
+    }
+    
+    void checkInstall() {
+        try {                        
+            String prefix = null;
+            if (Context.getInterpreter().getScriptType() == ScriptType.cpy){
+                prefix = (String )Context.getInterpreter().evalLine("sys.prefix");     
+            } else {
+                Context.getInterpreter().evalLine("from jeputils import get_jep");
+                prefix = (String )Context.getInterpreter().evalLine("get_jep('sys.prefix')");                                
+            }
+            if (textPythonHome.getText().equals(prefix)){
+                showMessage("Success", "CPython correctly installed on path: " + prefix);
+            } else {
+                showMessage("Success", "Check your system, active CPython path is wrong: " + prefix);
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
     }
 
     String getInstalledVersion() {
@@ -143,8 +182,9 @@ public class PythonDialog extends StandardDialog {
     public class CPythonInstall extends Task {
 
         @Override
-        protected String doInBackground() throws Exception {
-            String msg = "Installing CPython";
+        protected String doInBackground() throws Exception {            
+            boolean miniconda = radioMiniconda.isSelected();
+            String msg = "Installing CPython with " + (miniconda? "Miniconda" : "Python.org");            
             Path path = getInstallationPath();
             String version = getInstallationVersion();
             var ret  = new ArrayList<String>();
@@ -161,13 +201,17 @@ public class PythonDialog extends StandardDialog {
                 } else {
                     splash = SwingUtils.showSplash(Context.getView(), "Install", new Dimension(400, 200), "Installing CPython...");
                     try {
-                        Python.install(textDownloadVersion.getText().trim(), path);
+                        if (miniconda){
+                            ret.add(Miniconda.install(textDownloadURLMiniconda.getText().trim(), textInstallerMiniconda.getText().trim(), path));
+                        } else {
+                            Python.install(textDownloadVersion.getText().trim(), path);
+                        }
                         msg = "Installing packages";
                     } finally {
                         splash.setVisible(false);
                     }
                 }
-                if (JepUtils.getPythonHome()==null){
+                if (Setup.getPythonHome()==null){
                     if (App.getInstance().getConfig().getPythonHome()==null){
                         App.getInstance().getConfig().pythonHome = path.toString();
                         App.getInstance().getConfig().save();
@@ -182,7 +226,11 @@ public class PythonDialog extends StandardDialog {
                     if (packages.length>0){
                         splash = SwingUtils.showSplash(Context.getView(), "Install", new Dimension(400, 200), "Installing Packages...");
                         try {
-                            ret.add(Python.installPackages(path, packages));
+                            if (miniconda){
+                                ret.add(Miniconda.installPackages(path, packages));
+                            } else {
+                                ret.add(Python.installPackages(path, packages));
+                            }
                         } finally {
                             splash.setVisible(false);
                         }
@@ -194,7 +242,11 @@ public class PythonDialog extends StandardDialog {
 
                 splash = SwingUtils.showSplash(Context.getView(), "Install", new Dimension(400, 200), "Installing JEP...");
                 try {
-                    ret.add(Python.installJep(path, textJavaHome.getText()));
+                    if (miniconda){
+                        ret.add(Miniconda.pipInstallPackage(path, "jep"));
+                    } else {
+                        ret.add(Python.installJep(path, textJavaHome.getText()));
+                    }
                 } finally {
                     splash.setVisible(false);
                 }
@@ -229,6 +281,8 @@ public class PythonDialog extends StandardDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         textInstalledVersion = new javax.swing.JTextField();
@@ -237,14 +291,15 @@ public class PythonDialog extends StandardDialog {
         jLabel2 = new javax.swing.JLabel();
         textPythonHome = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
+        buttonCheckConnection = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         textJavaHome = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         textInstallationPackages = new javax.swing.JTextPane();
         textDownloadVersion = new javax.swing.JTextField();
-        jLabel8 = new javax.swing.JLabel();
+        labelDownloadURL = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
+        labelDownloadVersion = new javax.swing.JLabel();
         textDownloadURL = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         textInstallationPath = new javax.swing.JTextField();
@@ -253,10 +308,14 @@ public class PythonDialog extends StandardDialog {
         butonInstall = new javax.swing.JButton();
         jLabel9 = new javax.swing.JLabel();
         textInstallationVersion = new javax.swing.JTextField();
+        labelDownloadURLMiniconda = new javax.swing.JLabel();
+        textDownloadURLMiniconda = new javax.swing.JTextField();
+        textInstallerMiniconda = new javax.swing.JTextField();
+        labelInstallerMiniconda = new javax.swing.JLabel();
+        radioPyhtonOrg = new javax.swing.JRadioButton();
+        radioMiniconda = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Current"));
 
         jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel6.setText("Python Home:");
@@ -274,21 +333,33 @@ public class PythonDialog extends StandardDialog {
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel4.setText("Installed Packages:");
 
+        buttonCheckConnection.setText("Check Connection");
+        buttonCheckConnection.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonCheckConnectionActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel6)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2)
-                    .addComponent(textInstalledVersion)
-                    .addComponent(textPythonHome))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel2))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 290, Short.MAX_VALUE)
+                            .addComponent(textInstalledVersion)
+                            .addComponent(textPythonHome)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(buttonCheckConnection)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -298,31 +369,33 @@ public class PythonDialog extends StandardDialog {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
                     .addComponent(textPythonHome, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(textInstalledVersion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonCheckConnection)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel4)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Installation"));
+        jTabbedPane1.addTab("Active", jPanel1);
 
         textJavaHome.setEditable(false);
 
         jScrollPane1.setViewportView(textInstallationPackages);
 
-        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel8.setText("Download URL:");
+        labelDownloadURL.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        labelDownloadURL.setText("Download URL:");
 
         jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel5.setText("Packages:");
 
-        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel3.setText("Download Version:");
+        labelDownloadVersion.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        labelDownloadVersion.setText("Download Version:");
 
         textDownloadURL.setEditable(false);
 
@@ -357,40 +430,69 @@ public class PythonDialog extends StandardDialog {
 
         textInstallationVersion.setEditable(false);
 
+        labelDownloadURLMiniconda.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        labelDownloadURLMiniconda.setText("Download URL:");
+
+        textDownloadURLMiniconda.setEditable(false);
+
+        labelInstallerMiniconda.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        labelInstallerMiniconda.setText("Installer:");
+
+        buttonGroup1.add(radioPyhtonOrg);
+        radioPyhtonOrg.setSelected(true);
+        radioPyhtonOrg.setText("Python.org");
+        radioPyhtonOrg.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                radioPyhtonOrgActionPerformed(evt);
+            }
+        });
+
+        buttonGroup1.add(radioMiniconda);
+        radioMiniconda.setText("Miniconda");
+        radioMiniconda.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                radioMinicondaActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel7)
-                    .addComponent(jLabel8)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel9)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel5))
-                        .addGap(5, 5, 5)))
+                .addGap(6, 6, 6)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(labelDownloadURL, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(labelDownloadVersion, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(labelDownloadURLMiniconda, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(labelInstallerMiniconda, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(radioPyhtonOrg)
+                        .addGap(18, 18, 18)
+                        .addComponent(radioMiniconda)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(textJavaHome)
                     .addComponent(textDownloadURL)
                     .addComponent(jScrollPane1)
                     .addComponent(textDownloadVersion)
                     .addComponent(textInstallationPath, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(textInstallationVersion, javax.swing.GroupLayout.Alignment.TRAILING))
+                    .addComponent(textInstallationVersion, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(textInstallerMiniconda)
+                    .addComponent(textDownloadURLMiniconda))
                 .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap(102, Short.MAX_VALUE)
+                .addContainerGap(107, Short.MAX_VALUE)
                 .addComponent(buttonDefaults)
                 .addGap(18, 18, 18)
                 .addComponent(butonInstall)
-                .addContainerGap(90, Short.MAX_VALUE))
+                .addGap(95, 95, 95))
         );
-
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel3, jLabel5});
 
         jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butonInstall, buttonDefaults});
 
@@ -411,16 +513,30 @@ public class PythonDialog extends StandardDialog {
                     .addComponent(textJavaHome, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel8)
+                    .addComponent(radioPyhtonOrg)
+                    .addComponent(radioMiniconda))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelDownloadURL)
                     .addComponent(textDownloadURL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
+                    .addComponent(labelDownloadVersion)
                     .addComponent(textDownloadVersion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelDownloadURLMiniconda)
+                    .addComponent(textDownloadURLMiniconda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelInstallerMiniconda)
+                    .addComponent(textInstallerMiniconda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel5)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butonInstall)
@@ -428,24 +544,22 @@ public class PythonDialog extends StandardDialog {
                 .addContainerGap())
         );
 
+        jTabbedPane1.addTab("Installation", jPanel2);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jTabbedPane1)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jTabbedPane1)
                 .addContainerGap())
         );
 
@@ -463,6 +577,18 @@ public class PythonDialog extends StandardDialog {
     private void butonInstallActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butonInstallActionPerformed
         install();
     }//GEN-LAST:event_butonInstallActionPerformed
+
+    private void radioPyhtonOrgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioPyhtonOrgActionPerformed
+        updateInstallSource();
+    }//GEN-LAST:event_radioPyhtonOrgActionPerformed
+
+    private void radioMinicondaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioMinicondaActionPerformed
+        updateInstallSource();
+    }//GEN-LAST:event_radioMinicondaActionPerformed
+
+    private void buttonCheckConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonCheckConnectionActionPerformed
+       checkInstall();
+    }//GEN-LAST:event_buttonCheckConnectionActionPerformed
 
     /**
      * @param args the command line arguments
@@ -511,27 +637,36 @@ public class PythonDialog extends StandardDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butonInstall;
+    private javax.swing.JButton buttonCheckConnection;
     private javax.swing.JButton buttonDefaults;
+    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JLabel labelDownloadURL;
+    private javax.swing.JLabel labelDownloadURLMiniconda;
+    private javax.swing.JLabel labelDownloadVersion;
+    private javax.swing.JLabel labelInstallerMiniconda;
+    private javax.swing.JRadioButton radioMiniconda;
+    private javax.swing.JRadioButton radioPyhtonOrg;
     private javax.swing.JTextField textDownloadURL;
+    private javax.swing.JTextField textDownloadURLMiniconda;
     private javax.swing.JTextField textDownloadVersion;
     private javax.swing.JTextPane textInstallationPackages;
     private javax.swing.JTextField textInstallationPath;
     private javax.swing.JTextField textInstallationVersion;
     private javax.swing.JTextPane textInstalledPackages;
     private javax.swing.JTextField textInstalledVersion;
+    private javax.swing.JTextField textInstallerMiniconda;
     private javax.swing.JTextField textJavaHome;
     private javax.swing.JTextField textPythonHome;
     // End of variables declaration//GEN-END:variables

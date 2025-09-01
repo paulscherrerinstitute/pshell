@@ -49,7 +49,7 @@ public class MinicondaDialog extends StandardDialog {
 
     void setDefaults() {
         try {
-            String pythonHome = JepUtils.getPythonHome();
+            String pythonHome = Setup.getPythonHome();
             String installPath = Setup.expandPath((pythonHome!=null) ? pythonHome : DEFAULT_PYTHON_HOME);
             textPythonHome.setText(pythonHome);
             textInstaller.setText(Miniconda.getStandardInstaller());
@@ -78,7 +78,7 @@ public class MinicondaDialog extends StandardDialog {
                 }
             }                        
             Context.getApp().getState().assertReady();
-            if (JepUtils.getPythonHome()==null){
+            if (Setup.getPythonHome()==null){
                 if (App.getInstance().getConfig().getPythonHome()==null){
                     //User DEFAULT_PYTHON_HOME, so save it.
                     App.getInstance().getConfig().pythonHome = DEFAULT_PYTHON_HOME;

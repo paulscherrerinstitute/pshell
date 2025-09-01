@@ -155,11 +155,13 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         //A new file for each session
         boolean firstRun = (Context.getState() == State.Invalid);
         Config.setDefaultPermissions(config.filePermissionsConfig);
-        String configuredPythonHome = config.getPythonHome();
-        if (configuredPythonHome != null) {
+        
+        String pythonHome = config.getPythonHome();
+        String envPythonHome = System.getenv().getOrDefault("PYTHONHOME", "");
+        if ((pythonHome != null)  &&  (!pythonHome.equals(envPythonHome))){
             try {
-                logger.log(Level.WARNING, "Attempt to override variable PYTHONHOME: {0}", configuredPythonHome);
-                Sys.setEnvironmentVariable("PYTHONHOME", configuredPythonHome);
+                logger.log(Level.WARNING, "Attempt to override variable PYTHONHOME: {0}", pythonHome);
+                Sys.setEnvironmentVariable("PYTHONHOME", pythonHome);
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, "Cannot set PYTHONHOME: {0}", ex.getMessage());
             }

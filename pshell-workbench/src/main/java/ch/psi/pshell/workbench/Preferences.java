@@ -210,12 +210,16 @@ public class Preferences {
         
         return preferences;
     }
+    
+    public static FontSpec getDefaultEditorFont(){
+        return SwingUtils.hasFont("Lucida Console")
+            ? new FontSpec("Lucida Console", 0, 11)
+            : new FontSpec(Font.MONOSPACED, 0, 13);
+    }
 
     @Transient
     public static FontSpec[] getDefaultFonts() {
-        FontSpec editorFont = SwingUtils.hasFont("Lucida Console")
-                ? new FontSpec("Lucida Console", 0, 11)
-                : new FontSpec(Font.MONOSPACED, 0, 13);
+        FontSpec editorFont = getDefaultEditorFont();
         FontSpec commandFont = new FontSpec(Font.SANS_SERIF, 0, 13);
         FontSpec plotLabelFont = new FontSpec(Font.SANS_SERIF, 0, 11);        
         FontSpec plotTickFont = new FontSpec(Font.SANS_SERIF, 0, 10); 
@@ -229,7 +233,6 @@ public class Preferences {
             terminalFont = new FontSpec(Font.MONOSPACED, 0, 13);
         }
         
-
         return new FontSpec[]{
             editorFont,
             editorFont,

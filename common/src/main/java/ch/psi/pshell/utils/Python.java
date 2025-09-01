@@ -105,19 +105,19 @@ public class Python {
         }
         Files.createDirectories(buildFolder);
         try{
-            String installerFileName = installationFile.toString();              
+            String installerFileName = installationFile.toAbsolutePath().toString();              
 
             OSFamily os = Sys.getOSFamily();
             Arch arch = Sys.getArch();    
 
             switch(os){
                 case Windows:
-                    logger.log(Level.INFO, "Installing Python to: " + installationPath);        
+                    logger.log(Level.INFO, "Installing " + installerFileName + " to: " + installationPath);        
                     runProcess(installerFileName, "/quiet", "TargetDir=" + installationPath);
                     break;
                 case Mac:
                 case Linux:
-                    logger.log(Level.INFO, "Extracting Python to: " + downloadsFolder);        
+                    logger.log(Level.INFO, "Extracting " + installerFileName + " to: " + downloadsFolder);        
                     runProcess("tar", "-xzf", installerFileName, "-C", downloadsFolder.toString());
                     
                     List<String> configureCmd = new ArrayList<>();
@@ -144,9 +144,9 @@ public class Python {
                         }                                                                                                    
                         
                     }
-                    configureCmd.add("--enable-shared"); // <<-- needed for JEP                     
+                    configureCmd.add("--enable-shared"); // <<-- needed for JEP                                         
                     ldFlags += "-Wl,-rpath," + installationPath + "/lib";
-                                        
+                    //ldFlags += "-Wl,-rpath,@loader_path/../lib";
                     configureCmd.add("LDFLAGS=" + ldFlags);                    
                     
                     logger.log(Level.INFO, "Building Python to:" + installationPath + " with config: " + Str.toString(configureCmd));                
@@ -176,7 +176,7 @@ public class Python {
                 }
             try{
                 //Update pip
-                logger.log(Level.INFO, "Trying to install pip");  
+                logger.log(Level.INFO, "Trying to upgarde pip");  
                 execute (Paths.get(installationPath), "python -m pip install --upgrade pip");                                                            
             } catch (Exception ex){
                 logger.log(Level.WARNING, null, ex); 
@@ -336,7 +336,7 @@ private static boolean hasZlibHeaders() {
             }
             processBuilder = new ProcessBuilder("cmd.exe", "/c", path + cmd);
         } else {            
-            if (cmd.startsWith("python")) {
+            if (cmd.startsWith("python ")) {
                 cmd = cmd.replaceFirst("^python", "python3");
             }            
             processBuilder = new ProcessBuilder("sh", "-c", installationPath + "/bin/" + cmd);
@@ -381,16 +381,19 @@ private static boolean hasZlibHeaders() {
      }
     
     public static String installJep(Path folder, String java_home) throws IOException, InterruptedException{
+        installPackages(folder, new String[]{"setuptools", "wheel"});
         Map env = new HashMap();
-        env.put("JAVA_HOME", java_home);  // set PIC for ARM64, required for Linux           
-                
-        String libDir = folder.resolve("lib").toString();
+        env.put("JAVA_HOME", java_home); 
+        env.put("PYTHONHOME",  folder.toString());                
+        
         String includeDir = folder.resolve("include").toString();
 
+        String libDir = folder.resolve("lib").toString();
         env.put("LDFLAGS", "-Wl,-rpath," + libDir);
+        //env.put("LDFLAGS", "-Wl,-rpath,@loader_path/../lib");                
         env.put("CPPFLAGS", "-I" + includeDir);        
         
-        String options = "--force-reinstall --no-cache-dir";
+        String options = "--no-build-isolation --force-reinstall --no-cache-dir";
     
         return installPackages(folder, env, options, new String[]{"jep"});
     }    
@@ -413,7 +416,19 @@ private static boolean hasZlibHeaders() {
             if (ret != null){
                 String[] rows = ret.split("\\r?\\n");
                 for (int i=2; i< rows.length; i++){
-                    list.add(rows[i].substring(0, rows[i].indexOf(" ")));
+                    String row = rows[i].trim();
+                    if (!row.isEmpty()){           
+                        list.add(row);
+                        /*
+                        if (!row.contains(" ")){
+                            list.add(row);
+                        } else {
+                            String name = row.substring(0, row.indexOf(" "));
+                            String ver = row.substring(row.lastIndexOf(" ")).trim();
+                            list.add(name+"=="+ver);
+                        }
+                        */
+                    }
                 }
             }            
         } catch (Exception ex) {            
@@ -421,6 +436,17 @@ private static boolean hasZlibHeaders() {
         return list.toArray(new String[0]);
     }
     
+    
+    public static boolean isInstalled(Path folder){
+        try{
+            if (folder.toFile().isDirectory()){
+                String version = getVersion(folder);
+                return (version == null) ? false : true;                
+            }
+        } catch (Exception ex){            
+        }
+        return false;
+    }     
            
     public static void main(String[] args) throws Exception {
         //String folder = ((args.length > 0) && (args[0] != null) & (!args[0].isBlank())) ?  args[0] : "~";
