@@ -12,7 +12,7 @@ fi
 if [ -n "\$PSHELL_CLASS_PATH" ]; then
     # If PSHELL_CLASS_PATH is set, build a classpath and run with -cp + main class
     CP="${jar_file}:\${PSHELL_CLASS_PATH}"
-    exec "\$JAVA_CMD" \$PSHELL_JVM_OPTIONS \$${app_jvm_options_var} -cp "\$CP" ${main_class} \$PSHELL_ARGS \$${app_args_var} "\$@"
+    exec "\$JAVA_CMD" ${run_jvargs} \$PSHELL_JVM_OPTIONS \$${app_jvm_options_var} -cp "\$CP" ${main_class} \$PSHELL_ARGS \$${app_args_var} "\$@"
 else
     # Run the JAR with application specific jvm options and arguments, and all command-line passed arguments 
     exec "\$JAVA_CMD" \$PSHELL_JVM_OPTIONS \$${app_jvm_options_var} -jar ${jar_file} \$PSHELL_ARGS \$${app_args_var} "\$@"
