@@ -551,9 +551,14 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     
     
     public static  String getPlotServer() {
-        String ret = Options.PLOT_SERVER.getString(null);
+        String ret = Options.PLOT_SERVER.getString(null);        
         if ((ret!=null) && ret.isBlank()){
-            return null;
+            ret = null;
+        }
+        if (ret==null){
+            if (Options.PLOT_SERVER.getBool(false)){
+                return "localhost";
+            }
         }
         return ret;
     }        
