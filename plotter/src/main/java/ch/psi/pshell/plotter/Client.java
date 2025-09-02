@@ -11,7 +11,6 @@ import java.lang.reflect.Proxy;
  *
  */
 public class Client implements AutoCloseable {
-
     final org.zeromq.ZMQ.Context context;
     final String url;
     final int timeout;
@@ -19,9 +18,18 @@ public class Client implements AutoCloseable {
     org.zeromq.ZMQ.Socket socket;
 
     public Client(String url, int timeout) {
-        if (!url.contains(":")) {
-            url = "tcp://" + url + ":" + PlotServer.DEFAULT_PORT;
+        if ((url==null) || (url.isBlank())){
+            url = "localhost";
         }
+        
+        if (!url.startsWith("tcp://")) {
+            url = "tcp://" + url;
+        }
+        // Ensure port
+        if (!url.matches(".*:\\d+$")) {
+            url = url + ":" + PlotServer.DEFAULT_PORT;
+        }
+        
         this.url = url;
         this.timeout = timeout;
         context = org.zeromq.ZMQ.context(1);
