@@ -76,8 +76,8 @@ public enum Options implements Option {
         SCRIPT_TYPE.add("type", "Set the script type, overriding the setup: py, cpy, jv or groovy");        
         DATA_FORMAT.add("dfmt", "Set the data format, overriding the configuration: h5, txt, csv or fda");        
         DATA_LAYOUT.add("dlay", "Set the data layout, overriding the configuration: default, table, sf or fda");
-        DISABLE_PLOT.add("dspr", "Disable scan plots");
-        DISABLE_PRINT.add("dspl", "Disable printing scans to console");   
+        DISABLE_PLOT.add("dspl", "Disable scan plots");
+        DISABLE_PRINT.add("dspr", "Disable printing scans to console");   
         EXTRACT.add("extr", "Force (true) or disable (false) extraction of startup and utility scrips");     
         VERSIONING.add("vers", "Force versioning enabled (true) or disabled (false)");     
         NO_BYTECODE.add("nbcf", "Force disabling (true) or enabling (false) the use of bytecode files");     
@@ -93,7 +93,7 @@ public enum Options implements Option {
         DETACHED_PLOTS.add("dplt", "Create plots for detached windows");  
         HIDE_COMPONENT.add("hcmp", "Hide component in GUI given its name");      
         PERSIST.add("pers", "Persist state of frames");                
-        PLOT_SERVER.add("psrv", "URL of a plot server (plots are externalized adding '-dspr -hcmp tabPlots')", "url");     
+        PLOT_SERVER.add("psrv", "URL of a plot server (plots are externalized adding '-dspl -hcmp tabPlots')", "url");     
         DISABLE_SESSIONS.add("diss", "Disable session management");        
     }
     

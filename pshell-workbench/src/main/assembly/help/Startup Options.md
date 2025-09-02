@@ -70,8 +70,8 @@
 | -type,--type                  | PSHELL_SCRIPT_TYPE            | Set the script type, overriding the setup: py, cpy, jv or groovy|
 | -dfmt,--data_format           | PSHELL_DATA_FORMAT            | Set the data format, overriding the configuration: h5, txt, csv or fda|
 | -dlay,--data_layout           | PSHELL_DATA_LAYOUT            | Set the data layout, overriding the configuration: default, table, sf or fda|
-| -dspr,--disable_plot          | PSHELL_DISABLE_PLOT           | Disable scan plots|
-| -dspl,--disable_print         | PSHELL_DISABLE_PRINT          | Disable printing scans to console|
+| -dspl,--disable_plot          | PSHELL_DISABLE_PLOT           | Disable scan plots|
+| -dspr,--disable_print         | PSHELL_DISABLE_PRINT          | Disable printing scans to console|
 | -extr,--extract               | PSHELL_EXTRACT                | Force (true) or disable (false) extraction of startup and utility scrips|
 | -vers,--versioning            | PSHELL_VERSIONING             | Force versioning enabled (true) or disabled (false)|
 | -nbcf,--no_bytecode           | PSHELL_NO_BYTECODE            | Force disabling (true) or enabling (false) the use of bytecode files|
