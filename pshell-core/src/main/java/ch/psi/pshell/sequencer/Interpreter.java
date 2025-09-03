@@ -2563,53 +2563,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         return getClass().getSimpleName();
     }
 
-
-    public enum PermissionType {
-        data,
-        logs,
-        scripts,
-        config
-    }
-
-    public void restorePermissions(String type) {
-        restorePermissions(PermissionType.valueOf(type));
-    }
-
-    //Restore permissions
-    public void restorePermissions(PermissionType type) {
-        String folder;
-        String[] ext;
-        switch (type) {
-            case data:
-                setFilePermissions(Setup.getDataPath(), null, Context.getDataFilePermissions());
-                break;
-            case logs:
-                setFilePermissions(Setup.getLogPath(), new String[]{"log"}, Context.getLogFilePermissions());
-                setFilePermissions(Setup.getConsolePath(), new String[]{getScriptType().getExtension()}, Context.getScriptFilePermissions());
-                break;
-            case scripts:
-                setFilePermissions(Setup.getScriptsPath(), null, Context.getScriptFilePermissions());
-                setFilePermissions(Setup.getPluginsPath(), null, Context.getScriptFilePermissions());
-                break;
-            case config:
-                setFilePermissions(Setup.getConfigPath(), null, Context.getConfigFilePermissions());
-                setFilePermissions(Setup.getContextPath(), null, Context.getConfigFilePermissions());
-                setFilePermissions(Setup.getDevicesPath(), null, Context.getConfigFilePermissions());
-                setFilePermissions(Setup.getSessionsPath(), null, Context.getConfigFilePermissions());
-                break;
-        }
-    }
-
-    public void setFilePermissions(String folder, String[] ext, String perm) {
-        setFilePermissions(folder, ext, FilePermissions.valueOf(perm));
-    }
-
-    public void setFilePermissions(String folder, String[] ext, FilePermissions perm) {
-        if (new File(folder).isDirectory()){
-            IO.setFilePermissions(IO.listFilesRecursive(folder, ext), perm);
-        }
-    }
-
+    
     //Session data
     public void writeSessionMetadata(String location, boolean attributes) throws IOException {
         if (Context.isHandlingSessions()) {

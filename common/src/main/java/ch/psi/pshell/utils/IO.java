@@ -886,6 +886,12 @@ public class IO {
         }
     }
     
+   public static void setFolderPermissions(String folder, String[] ext, FilePermissions perm) {
+        if (new File(folder).isDirectory()){
+            setFilePermissions(IO.listFilesRecursive(folder, ext), perm);
+        }
+    }    
+    
     static public boolean isCurrentUserOwner(String file){
         return isCurrentUserOwner(new File(file));
     }

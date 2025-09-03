@@ -226,7 +226,7 @@ subprojects {
                         //    artifact project.tasks.shadowJar
                         //}                        
                         if (project.tasks.findByName('rpm')) {
-                            //artifact project.tasks.rpm
+                            artifact project.tasks.rpm
                         }                            
                         groupId = project.group
                         artifactId = project.name

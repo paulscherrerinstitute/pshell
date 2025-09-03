@@ -449,7 +449,7 @@ public class Context {
 
     static FilePermissions configFilePermissions = FilePermissions.Default;
     public static void setConfigFilePermissions(FilePermissions filePermissions) {
-        configFilePermissions = (configFilePermissions == null) ? IO.FilePermissions.Default : configFilePermissions;
+        configFilePermissions = (filePermissions == null) ? IO.FilePermissions.Default : filePermissions;
     }
     
     public static FilePermissions getConfigFilePermissions() {
@@ -458,7 +458,7 @@ public class Context {
     
     static FilePermissions scriptFilePermissions = FilePermissions.Default;
     public static void setScriptFilePermissions(FilePermissions filePermissions) {
-        scriptFilePermissions = (configFilePermissions == null) ? IO.FilePermissions.Default : configFilePermissions;
+        scriptFilePermissions = (filePermissions == null) ? IO.FilePermissions.Default : filePermissions;
     }
     
     public static FilePermissions getScriptFilePermissions() {
@@ -467,7 +467,7 @@ public class Context {
     
     static FilePermissions logFilePermissions = FilePermissions.Default;
     public static void setLogFilePermissions(FilePermissions filePermissions) {
-        logFilePermissions = (configFilePermissions == null) ? IO.FilePermissions.Default : configFilePermissions;
+        logFilePermissions = (filePermissions == null) ? IO.FilePermissions.Default : filePermissions;
     }
     
     public static FilePermissions getLogFilePermissions() {
@@ -482,7 +482,37 @@ public class Context {
 
     public static void setServerCommandsHidden(boolean value) {        
         serverCommandsHidden = value;        
-    }      
+    }          
+    
+    public static void restoreDataFilePermissions() {
+        IO.setFolderPermissions(Setup.getDataPath(), null, Context.getDataFilePermissions());
+    }    
+
+    public static void restoreScriptFilePermissions() {
+        IO.setFolderPermissions(Setup.getScriptsPath(), null, Context.getScriptFilePermissions());
+        IO.setFolderPermissions(Setup.getPluginsPath(), null, Context.getScriptFilePermissions());        
+    }
+    
+    public static void restoreConfigFilePermissions() {
+        IO.setFolderPermissions(Setup.getConfigPath(), null, Context.getConfigFilePermissions());
+        IO.setFolderPermissions(Setup.getContextPath(), null, Context.getConfigFilePermissions());
+        IO.setFolderPermissions(Setup.getDevicesPath(), null, Context.getConfigFilePermissions());
+        IO.setFolderPermissions(Setup.getSessionsPath(), null, Context.getConfigFilePermissions());
+        
+    }
+    
+    public static void restoreLogFilePermissions() {
+        IO.setFolderPermissions(Setup.getLogPath(), new String[]{"log"}, Context.getLogFilePermissions());
+        IO.setFolderPermissions(Setup.getConsolePath(), new String[]{getScriptType().getExtension()}, Context.getScriptFilePermissions());        
+    }    
+    
+    //Restore permissions
+    public static void restorePermissions() {
+        restoreDataFilePermissions();
+        restoreScriptFilePermissions();
+        restoreConfigFilePermissions();
+        restoreLogFilePermissions();
+    }       
     
     //UI   
     public static UserInterface getUI() {
