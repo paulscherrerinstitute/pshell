@@ -75,7 +75,7 @@
 | -extr,--extract               | PSHELL_EXTRACT                | Force (true) or disable (false) extraction of startup and utility scrips|
 | -vers,--versioning            | PSHELL_VERSIONING             | Force versioning enabled (true) or disabled (false)|
 | -nbcf,--no_bytecode           | PSHELL_NO_BYTECODE            | Force disabling (true) or enabling (false) the use of bytecode files|
-| -nlck,--no_locks              | PSHELL_NO_LOCK                | Disable global application lock (if not in local mode)|
+| -lock,--lock_mode             | PSHELL_LOCK_MODE              | Lock protection for exclusive (not local) mode: none, user (default) or global|
 | -libp,--library_path <path>   | PSHELL_LIBRARY_PATH           | Add to library path|
 | -clsp,--class_path <path>     | PSHELL_CLASS_PATH             | Add to class path|
 | -args,--interp_args <args>    | PSHELL_INTERP_ARGS            | Provide arguments to interpreter|

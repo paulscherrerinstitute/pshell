@@ -495,7 +495,6 @@ public class Context {
     
     public static void restoreConfigFilePermissions() {
         IO.setFolderPermissions(Setup.getConfigPath(), null, Context.getConfigFilePermissions());
-        IO.setFolderPermissions(Setup.getContextPath(), null, Context.getConfigFilePermissions());
         IO.setFolderPermissions(Setup.getDevicesPath(), null, Context.getConfigFilePermissions());
         IO.setFolderPermissions(Setup.getSessionsPath(), null, Context.getConfigFilePermissions());
         
@@ -503,7 +502,7 @@ public class Context {
     
     public static void restoreLogFilePermissions() {
         IO.setFolderPermissions(Setup.getLogPath(), new String[]{"log"}, Context.getLogFilePermissions());
-        IO.setFolderPermissions(Setup.getConsolePath(), new String[]{getScriptType().getExtension()}, Context.getScriptFilePermissions());        
+        IO.setFolderPermissions(Setup.getConsolePath(), new String[]{getScriptType().getExtension()}, Context.getLogFilePermissions());        
     }    
     
     //Restore permissions

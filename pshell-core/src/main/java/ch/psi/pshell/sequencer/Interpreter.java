@@ -8,6 +8,7 @@ import ch.psi.pshell.devices.DevicePoolListener;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Options;
 import ch.psi.pshell.framework.Setup;
+import ch.psi.pshell.framework.Setup.LockMode;
 import ch.psi.pshell.notification.NotificationManager.NotificationLevel;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plugin.Plugin;
@@ -2692,9 +2693,11 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     protected void onCreation() {
         if (!isLocalMode()) {
-            if (Setup.isFileLock()) {
+            LockMode lockMode = Setup.getLockMode();
+            if (lockMode != LockMode.none) {
                 if (lockFile == null) {
-                    Path lockFilePath = Paths.get(Setup.getContextPath(), "Lock.dat");
+                    String path = lockMode==LockMode.global ? new File(Setup.getConfigFile()).getParent() : Setup.getContextPath();
+                    Path lockFilePath = Paths.get(path, "Lock.dat");
                     try {
                         lockFile = new RandomAccessFile(lockFilePath.toFile(), "rw");
                         FileLock lock = lockFile.getChannel().tryLock();
@@ -2703,7 +2706,9 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                         }
                         lockFile.setLength(0);
                         lockFile.write(Sys.getProcessName().getBytes());
-                        IO.setFilePermissions(lockFilePath.toString(), Context.getConfigFilePermissions());
+                        if (lockMode==LockMode.global){
+                            IO.setFilePermissions(lockFilePath.toString(), Context.getConfigFilePermissions());
+                        }
                         lock.release();
                         lock = lockFile.getChannel().tryLock(0, Long.MAX_VALUE, true); //So other process can read active process
                     } catch (FileNotFoundException ex) {

@@ -519,7 +519,7 @@ public class CommandManager implements AutoCloseable {
                 Files.write(path, String.join(";", header).getBytes());
             }
             Files.write(path, String.join(";", data).getBytes(), StandardOpenOption.APPEND);
-            IO.setFilePermissions(path.toFile(), Context.getConfigFilePermissions());
+            IO.setFilePermissions(path.toFile(), Context.getDataFilePermissions());
         }
     }
 

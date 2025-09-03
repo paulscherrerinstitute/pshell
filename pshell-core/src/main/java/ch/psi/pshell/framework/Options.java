@@ -16,7 +16,7 @@ public enum Options implements Option {
     SHELL,    
     DETACHED,   
     PERSIST,  
-    NO_LOCK,  
+    LOCK_MODE,  
     BARE,    
     GENERIC,  
     DISABLE_SESSIONS,      
@@ -81,7 +81,7 @@ public enum Options implements Option {
         EXTRACT.add("extr", "Force (true) or disable (false) extraction of startup and utility scrips");     
         VERSIONING.add("vers", "Force versioning enabled (true) or disabled (false)");     
         NO_BYTECODE.add("nbcf", "Force disabling (true) or enabling (false) the use of bytecode files");     
-        NO_LOCK.add("nlck", "Disable global application lock (if not in local mode)");  
+        LOCK_MODE.add("lock", "Lock protection for exclusive (not local) mode: none, user (default) or global");  
         ch.psi.pshell.app.Options.LIBRARY_PATH.add("libp", "Add to library path", "path");     
         ch.psi.pshell.app.Options.CLASS_PATH.add("clsp", "Add to class path", "path");     
         INTERP_ARGS.add("args", "Provide arguments to interpreter", "args");                     

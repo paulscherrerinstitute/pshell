@@ -391,7 +391,6 @@ public class Panel extends MonitoredPanel implements Plugin {
                     e.writeObject(c);
                 }
                 e.close();
-                IO.setFilePermissions(stateFile, Context.getConfigFilePermissions());
             } else {
                 clearComponentsState();
             }

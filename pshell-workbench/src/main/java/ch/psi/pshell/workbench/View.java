@@ -180,8 +180,7 @@ public class View extends MainFrame{
         Context.getInterpreter().addListener(interpreterListener);
         if (Context.hasVersioningManager()){
             Context.getVersioningManager().addListener(versioningListener);
-        }
-        MainFrame.setPersistenceFilesPermissions(Context.getConfigFilePermissions());
+        }        
         
         menuVersioning.setVisible(false);             
         menuSessions.setVisible(Context.isHandlingSessions());      
@@ -509,9 +508,7 @@ public class View extends MainFrame{
         openCmdLineFiles(true);
     }
 
-    void onStart() {
-        MainFrame.setPersistenceFilesPermissions(Context.getConfigFilePermissions());
-        
+    void onStart() {       
         //User menu
         menuChangeUser.setEnabled(Context.isUsersEnabled());
 

@@ -343,9 +343,27 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     static public boolean isGui() {
         return !isCli() && !isServerMode() && !isHeadless();
     }
+        
+    public enum LockMode{
+        none,
+        user,
+        global
+    }
     
-    static public boolean isFileLock() {
-        return Options.NO_LOCK.getBool(true);
+    static public LockMode getLockMode() {
+        String mode = Options.LOCK_MODE.getString(null);
+        if (mode!=null){
+            switch (mode){
+                case "user": return LockMode.user;
+                case "none", "false": return LockMode.none;
+                case "global", "true": return LockMode.global;            
+            }        
+        }
+        Boolean val = Options.LOCK_MODE.getBool(null);
+        if (val!=null){
+            return val ? LockMode.global : LockMode.none;              
+        }        
+        return LockMode.user; 
     }
 
     static public boolean isShell() {

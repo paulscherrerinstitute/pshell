@@ -60,9 +60,9 @@ public class Setup{
     static String libraryPath = TOKEN_SCRIPT + "; " + DEFAULT_LIB_FOLDER;
     static String configPath = TOKEN_HOME + "/config";
     static String wwwPath = TOKEN_HOME + "/www";
-    static String contextPath = TOKEN_OUTPUT + "/context";
+    static String contextPath = TOKEN_OUTPUT + "/context/{sysuser}";
+    static String logPath = TOKEN_OUTPUT + "/log/{sysuser}";
     static String sessionsPath = TOKEN_OUTPUT + "/sessions";
-    static String logPath = TOKEN_OUTPUT + "/log";
     static String dataPath = TOKEN_OUTPUT + "/data";
     static String imagesPath = TOKEN_DATA;        
     
