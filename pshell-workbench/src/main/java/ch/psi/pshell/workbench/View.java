@@ -180,7 +180,8 @@ public class View extends MainFrame{
         Context.getInterpreter().addListener(interpreterListener);
         if (Context.hasVersioningManager()){
             Context.getVersioningManager().addListener(versioningListener);
-        }        
+        }       
+        MainFrame.setPersistenceFilesPermissions(Context.getContextFilePermissions());
         
         menuVersioning.setVisible(false);             
         menuSessions.setVisible(Context.isHandlingSessions());      

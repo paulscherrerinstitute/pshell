@@ -746,6 +746,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
         };
         try (FileOutputStream out = new FileOutputStream(openedFilesFileName)) {
             openedFiles.store(out, null);
+            IO.setFilePermissions(openedFilesFileName, Context.getContextFilePermissions());
         } catch (Exception ex) {
             logger.log(Level.FINE, null, ex);
         }

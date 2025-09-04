@@ -474,6 +474,15 @@ public class Context {
         return logFilePermissions;
     }            
     
+    public static FilePermissions getContextFilePermissions() {
+        //Make context public if config is
+        if ((configFilePermissions==FilePermissions.Public) || 
+            ((configFilePermissions==FilePermissions.Group))){
+            return configFilePermissions;
+        }
+        return FilePermissions.Default;
+    }
+        
     static boolean serverCommandsHidden;   
     
     public static boolean isServerCommandsHidden() {        
@@ -485,24 +494,27 @@ public class Context {
     }          
     
     public static void restoreDataFilePermissions() {
-        IO.setFolderPermissions(Setup.getDataPath(), null, Context.getDataFilePermissions());
+        IO.setFolderPermissions(Setup.getDataPath(), null, getDataFilePermissions());
     }    
 
     public static void restoreScriptFilePermissions() {
-        IO.setFolderPermissions(Setup.getScriptsPath(), null, Context.getScriptFilePermissions());
-        IO.setFolderPermissions(Setup.getPluginsPath(), null, Context.getScriptFilePermissions());        
+        IO.setFolderPermissions(Setup.getScriptsPath(), null, getScriptFilePermissions());
+        IO.setFolderPermissions(Setup.getPluginsPath(), null, getScriptFilePermissions());        
     }
     
     public static void restoreConfigFilePermissions() {
-        IO.setFolderPermissions(Setup.getConfigPath(), null, Context.getConfigFilePermissions());
-        IO.setFolderPermissions(Setup.getDevicesPath(), null, Context.getConfigFilePermissions());
-        IO.setFolderPermissions(Setup.getSessionsPath(), null, Context.getConfigFilePermissions());
-        
+        IO.setFolderPermissions(Setup.getConfigPath(), null, getConfigFilePermissions());
+        IO.setFolderPermissions(Setup.getDevicesPath(), null, getConfigFilePermissions());
+        IO.setFolderPermissions(Setup.getSessionsPath(), null, getConfigFilePermissions());
     }
     
+    public static void restoreContextFilePermissions() {
+        IO.setFolderPermissions(Setup.getContextPath(), null, getContextFilePermissions());        
+    }    
+    
     public static void restoreLogFilePermissions() {
-        IO.setFolderPermissions(Setup.getLogPath(), new String[]{"log"}, Context.getLogFilePermissions());
-        IO.setFolderPermissions(Setup.getConsolePath(), new String[]{getScriptType().getExtension()}, Context.getLogFilePermissions());        
+        IO.setFolderPermissions(Setup.getLogPath(), new String[]{"log"}, getLogFilePermissions());
+        IO.setFolderPermissions(Setup.getConsolePath(), new String[]{getScriptType().getExtension()}, getLogFilePermissions());        
     }    
     
     //Restore permissions
@@ -510,6 +522,7 @@ public class Context {
         restoreDataFilePermissions();
         restoreScriptFilePermissions();
         restoreConfigFilePermissions();
+        restoreContextFilePermissions();
         restoreLogFilePermissions();
     }       
     
@@ -525,7 +538,7 @@ public class Context {
     
     public static int getFileSequentialNumber() {
         try {
-            return Integer.valueOf(Context.getVariable(FILE_SEQUENTIAL_NUMBER));
+            return Integer.valueOf(getVariable(FILE_SEQUENTIAL_NUMBER));
         } catch (Exception ex) {
             return 0;
         }
@@ -533,17 +546,17 @@ public class Context {
     
     public static int getDaySequentialNumber() {
         try {
-            if (!Chrono.getTimeStr(System.currentTimeMillis(), "YYMMdd").equals(Context.getVariable(LAST_RUN_DATE))) {
-                Context.setVariable(DAY_SEQUENTIAL_NUMBER, 0);
+            if (!Chrono.getTimeStr(System.currentTimeMillis(), "YYMMdd").equals(getVariable(LAST_RUN_DATE))) {
+                setVariable(DAY_SEQUENTIAL_NUMBER, 0);
             }
-            return Integer.valueOf(Context.getVariable(DAY_SEQUENTIAL_NUMBER));
+            return Integer.valueOf(getVariable(DAY_SEQUENTIAL_NUMBER));
         } catch (Exception ex) {
             return 0;
         }
     }
     
     public static void setFileSequentialNumber(int seq) throws IOException {
-        Context.setVariable(FILE_SEQUENTIAL_NUMBER, seq);
+        setVariable(FILE_SEQUENTIAL_NUMBER, seq);
     }
 
     
@@ -565,8 +578,8 @@ public class Context {
         if (seq <= current) {
             throw new IOException("Invalid day run index: " + seq + " - Current: " + current);
         }
-        Context.setVariable(DAY_SEQUENTIAL_NUMBER, seq);
-        Context.setVariable(LAST_RUN_DATE, Chrono.getTimeStr(System.currentTimeMillis(), "YYMMdd"));
+        setVariable(DAY_SEQUENTIAL_NUMBER, seq);
+        setVariable(LAST_RUN_DATE, Chrono.getTimeStr(System.currentTimeMillis(), "YYMMdd"));
     }
 
     static void incrementFileSequentialNumber() throws IOException {
