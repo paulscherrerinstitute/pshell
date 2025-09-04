@@ -45,7 +45,7 @@ public class Setup{
     public static transient final String TOKEN_MIN = "{min}";
     public static transient final String TOKEN_SEC = "{sec}";
     public static transient final String TOKEN_SYS_HOME = "{syshome}";
-    public static transient final String TOKEN_SYS_USER = "{sysuser}";
+    public static transient final String TOKEN_SYS_USER = "{sysuser}";    
 
     public static transient final String DEFAULT_HOME_FOLDER = "~/pshell/home";
     public static transient final String DEFAULT_LIB_FOLDER = TOKEN_SCRIPT + "/Lib";        
@@ -61,7 +61,7 @@ public class Setup{
     static String configPath = TOKEN_HOME + "/config";
     static String wwwPath = TOKEN_HOME + "/www";
     static String contextPath = TOKEN_OUTPUT + "/context/{sysuser}";
-    static String logPath = TOKEN_OUTPUT + "/log/{sysuser}";
+    static String logPath = TOKEN_OUTPUT + "/log";
     static String sessionsPath = TOKEN_OUTPUT + "/sessions";
     static String dataPath = TOKEN_OUTPUT + "/data";
     static String imagesPath = TOKEN_DATA;        
@@ -242,7 +242,7 @@ public class Setup{
             path = TOKEN_SYS_HOME + Str.trimLeft(path).substring(1);
         }
         path = path.replace(TOKEN_SYS_HOME, Sys.getUserHome());
-        path = path.replace(TOKEN_SYS_USER, Sys.getUserName());
+        path = path.replace(TOKEN_SYS_USER, Sys.getUserName());                
         try {
             path = Paths.get(path).toString();
         } catch (Exception ex) {
@@ -510,6 +510,6 @@ public class Setup{
     
     static public String getConfigArg() {
         return  Options.CONFIG.getString(null);
-    }       
-            
+    }      
+                  
 }

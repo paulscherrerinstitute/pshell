@@ -279,8 +279,7 @@ public class App extends ch.psi.pshell.devices.App {
         } else {
             logManager = new LogManager(permissions);
         }
-        String ext = Setup.isLocal() ? "local.log" : "log";
-        logFileName = Setup.expandPath(path + "." + ext);
+        logFileName = Setup.expandPath(path + ".log");
         LogManager.getInstance().start(logFileName, Setup.isLocal() ? -1 : daysToLive);
         LogManager.getInstance().setLevel(level);
     }

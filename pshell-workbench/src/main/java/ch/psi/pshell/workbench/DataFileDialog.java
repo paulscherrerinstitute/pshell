@@ -51,7 +51,7 @@ public class DataFileDialog extends StandardDialog {
             Logger.getLogger(DataFileDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        defaultPath = new Configuration().dataPath;
+        defaultPath = new Configuration().getDataPath();
         SwingUtils.setEnumCombo(comboTransferMode, DataTransferMode.class);
         SwingUtils.setEnumCombo(comboNotification, NotificationLevel.class);
         SwingUtils.setEnumCombo(comboPermissions, FilePermissions.class);
@@ -127,7 +127,7 @@ public class DataFileDialog extends StandardDialog {
     }
 
     boolean changedLocation() {
-        return (!textPathConfig.getText().trim().equals(config.dataPath.trim()));
+        return (!textPathConfig.getText().trim().equals(config.getDataPath().trim()));
 
     }
 
@@ -1015,7 +1015,7 @@ public class DataFileDialog extends StandardDialog {
                 config.save();
                 
                 Context.getDataManager().setDefaultDepthDimension(config.dataDepthDimension);
-                Context.setDataFilePattern(config.dataPath);                 
+                Context.setDataFilePattern(config.getDataPath());                 
                 if (changedFormat) {
                     Context.getDataManager().initialize(config.getDataFormat(), config.getDataLayout());
                 } 

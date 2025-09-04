@@ -38,6 +38,7 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     public static transient final String TOKEN_SESSION_ID = "{session_id}";
     public static transient final String TOKEN_SESSION_NAME = "{session_name}";
     public static transient final String TOKEN_USER = "{user}";    
+    public static transient final String TOKEN_MODE = "{mode}";
 
     
     static String queuesPath = TOKEN_SCRIPT;       
@@ -87,6 +88,10 @@ public class Setup extends ch.psi.pshell.devices.Setup {
         if (path.contains(TOKEN_USER)) {
             path = path.replace(TOKEN_USER, Context.getUserName());
         }        
+        if (path.contains(TOKEN_MODE)) {
+            path = path.replace(TOKEN_MODE, getMode().toString());
+        }            
+        
         ExecutionParameters executionContext = Context.getExecutionPars();
         if (executionContext != null) {
             String execName = executionContext.getName();
@@ -148,10 +153,32 @@ public class Setup extends ch.psi.pshell.devices.Setup {
             }
             if (path.contains(TOKEN_SESSION_NAME)) {
                 path = path.replace(TOKEN_SESSION_NAME, Context.getSessionName());
-            }            
+            }                        
         }
         return ch.psi.pshell.app.Setup.expandPath(path, timestamp);
     }            
+    
+    public enum Mode{
+        loc,
+        gui,
+        cli,
+        srv
+    }
+            
+            
+    static public Mode getMode() {
+        if (isGui()){
+            if (isLocal()){
+                return Mode.loc;
+            } else {
+                return Mode.gui;
+            }
+        }
+        if (isServerMode()){
+            return Mode.srv;
+        }
+        return Mode.cli;
+    }       
     
     public static String[] getLibraryPath() {
         String[] ret = ch.psi.pshell.devices.Setup.getLibraryPath();

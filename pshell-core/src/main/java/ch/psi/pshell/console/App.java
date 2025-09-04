@@ -129,7 +129,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     
     
     void initializeData() throws Exception{
-        Context.setDataFilePattern(config.dataPath); 
+        Context.setDataFilePattern(config.getDataPath()); 
         dataManager.setDefaultDepthDimension(config.dataDepthDimension);
         dataManager.initialize(config.getDataFormat(), config.getDataLayout());                                
     }
@@ -260,7 +260,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     }
                
     public void restartLogger() {        
-        setupLogger(getConfig().logPath, config.getLogLevel(), config.logDaysToLive, config.filePermissionsLogs);
+        setupLogger(config.getLogPath(), config.getLogLevel(), config.logDaysToLive, config.filePermissionsLogs);
     }
     
     @Override

@@ -20,9 +20,13 @@ import java.util.logging.Level;
 public class Configuration extends Config {
     
     public boolean saveConsoleSessionFiles;
-
-    public String dataPath = Setup.TOKEN_DATA + "/" + Setup.TOKEN_YEAR + "_" + Setup.TOKEN_MONTH + "/" + 
+    public static String DEFAULT_LOG_PATH = Setup.TOKEN_LOGS + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME + "." + 
+                    Setup.TOKEN_MODE;
+    public static String DEFAULT_DATA_PATH = Setup.TOKEN_DATA + "/" + Setup.TOKEN_YEAR + "_" + Setup.TOKEN_MONTH + "/" + 
                     Setup.TOKEN_DATE + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME + "_" + Setup.TOKEN_EXEC_NAME;
+    
+
+    public String dataPath = DEFAULT_DATA_PATH;
     @Defaults(values = {"h5", "txt", "txtd","csv", "fda", "tiff"})
     public String dataFormat = "h5";
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
@@ -47,7 +51,7 @@ public class Configuration extends Config {
     public FilePermissions filePermissionsScripts = FilePermissions.Default;
     public FilePermissions filePermissionsConfig = FilePermissions.Default;
     public SessionHandling sessionHandling = SessionHandling.Off;    
-    public String logPath = Setup.TOKEN_LOGS + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME;
+    public String logPath = DEFAULT_LOG_PATH ;
     public int logDaysToLive = -1;
     public LogLevel logLevel = LogLevel.Info;
     public NotificationLevel notificationLevel = NotificationLevel.Off;
@@ -215,5 +219,19 @@ public class Configuration extends Config {
     
     public boolean isVersioningTrackingRemote() {
         return isVersioningEnabled() && versionTrackingRemote!=null && !versionTrackingRemote.isBlank();
-    }               
+    }        
+    
+    public String getLogPath(){
+        if (logPath==null){
+            return DEFAULT_LOG_PATH;
+        }
+        return logPath;
+    }
+    
+    public String getDataPath(){
+        if (dataPath==null){
+            return DEFAULT_DATA_PATH;
+        }
+        return dataPath;        
+    }
 }
