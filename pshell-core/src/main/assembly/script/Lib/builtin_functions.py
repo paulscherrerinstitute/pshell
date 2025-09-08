@@ -1762,7 +1762,7 @@ def exec_cpython(script_name, args = [], method_name = None, python_name = "pyth
         import json
         import tempfile
         script = os.path.abspath(get_interpreter().scriptManager.library.resolveFile(script_name))
-        with open(Setup.getContextPath()+ "/Temp" + str(java.lang.Thread.currentThread().getId())+".py", "wb") as f:
+        with open(Setup.getContextPath()+ "/Temp" + str(java.lang.Thread.currentThread().threadId())+".py", "wb") as f:
             f.write(("script = '" +script +"'\n").replace('\\', '\\\\'))
             f.write("function = '" +method_name +"'\n")
             f.write("jsonargs = '" + json.dumps(args) +"'\n")

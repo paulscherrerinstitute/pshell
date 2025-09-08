@@ -217,8 +217,8 @@ class PShellProxy(PShellClient):
     def tscan(self, readables, points, interval, passes=1, fixed_rate=True, **pars):
         return self._run_scan("tscan", readables, points, interval, passes, fixed_rate, **pars)        
     
-    def mscan(self, trigger, readables, points=-1, timeout=None, async=True, take_initial=False, passes=1, **pars):
-        return self._run_scan("mscan", trigger, readables, points, timeout, async, take_initial, passes, **pars)        
+    def mscan(self, trigger, readables, points=-1, timeout=None, asynchronous=True, take_initial=False, passes=1, **pars):
+        return self._run_scan("mscan", trigger, readables, points, timeout, asynchronous, take_initial, passes, **pars)
     
     def escan(self, name, **pars):
         return self._run_scan("escan", name, **pars)  

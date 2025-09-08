@@ -163,7 +163,7 @@ public class Threading {
         void setRunningThread() {
             runningThread = Thread.currentThread();
             
-            synchronized (lock) {
+            synchronized (lock) {                
                 lock.notifyAll();
             }
         }
@@ -173,8 +173,8 @@ public class Threading {
         }
 
         public Thread waitRunningThread(int timeout) throws InterruptedException {
-            synchronized (lock) {
-                if (runningThread == null) {
+            if (runningThread == null) {
+                synchronized (lock) {                
                     try {
                         lock.wait(timeout);
                     } catch (Exception ex) {
@@ -182,7 +182,7 @@ public class Threading {
                 }
             }
             return runningThread;
-        }
+        }            
         
         public void interrupt(){
             try {
@@ -194,19 +194,47 @@ public class Threading {
     }
 
     //CompletableFuture generation settting completeExceptionally 
-    public static CompletableFuture<?> getFuture(final SupplierWithException<?> supplier) {
+    public static VisibleCompletableFuture<?> getFuture(final SupplierWithException<?> supplier) {
         return getFuture(supplier, ForkJoinPool.commonPool());
     }
 
-    public static CompletableFuture<?> getPrivateThreadFuture(final SupplierWithException<?> supplier) {        
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        CompletableFuture ret =  getFuture(supplier, executor);
-        executor.shutdown();
-        return ret;
-        
+    public static VisibleCompletableFuture<?> getPrivateThreadFuture(final SupplierWithException<?> supplier) {        
+        return getPrivateThreadFuture(supplier, null);
+    }
+    
+    public static VisibleCompletableFuture<?> getPrivateThreadFuture(final SupplierWithException<?> supplier, String name) {        
+        ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r);
+            if (name!=null){
+                t.setName(name);
+            }
+            t.setDaemon(true);    
+            System.out.println(t.threadId());
+            
+            return t;
+        });
+        VisibleCompletableFuture future =  getFuture(supplier, executor);
+        future.whenComplete((res, ex) -> executor.shutdown());
+        return future;      
     }
 
-    public static CompletableFuture<?> getFuture(final SupplierWithException<?> supplier, Executor executor) {
+    public static VisibleCompletableFuture<?> getVolatileThreadFuture(final SupplierWithException<?> supplier) {        
+        return getVolatileThreadFuture(supplier, null);
+    }
+
+    public static VisibleCompletableFuture<?> getVolatileThreadFuture(SupplierWithException<?> supplier, String name) {
+        Executor executor = command -> {
+            Thread t = new Thread(command);
+            if (name!=null){
+                t.setName(name);
+            }
+            t.setDaemon(true);
+            t.start();
+        };
+        return getFuture(supplier, executor);
+    }    
+
+    public static VisibleCompletableFuture<?> getFuture(final SupplierWithException<?> supplier, Executor executor) {
         VisibleCompletableFuture<Object> ret = new VisibleCompletableFuture<>();
         CompletableFuture.supplyAsync(() -> {
             try {
@@ -232,18 +260,18 @@ public class Threading {
         void run() throws Exception;
     }
 
-    public static CompletableFuture<?> getFuture(final RunnableWithException runnable) {
+    public static VisibleCompletableFuture<?> getFuture(final RunnableWithException runnable) {
         return getFuture(runnable, ForkJoinPool.commonPool());
     }
 
-    public static CompletableFuture<?> getPrivateThreadFuture(final RunnableWithException runnable) {
+    public static VisibleCompletableFuture<?> getPrivateThreadFuture(final RunnableWithException runnable) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        CompletableFuture ret =  getFuture(runnable, executor);
+        VisibleCompletableFuture ret =  getFuture(runnable, executor);
         executor.shutdown();
         return ret;
     }
     
-    public static CompletableFuture<?> getFuture(RunnableWithException runnable, Executor executor) {
+    public static VisibleCompletableFuture<?> getFuture(RunnableWithException runnable, Executor executor) {
         VisibleCompletableFuture<Object> ret = new VisibleCompletableFuture<>();
         CompletableFuture.runAsync(() -> {
             try {

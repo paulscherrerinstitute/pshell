@@ -195,8 +195,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     public boolean getServerLight(){
         return serverLight;
     }
-    
-    
+       
     final ArrayList<String> notifiedTasks = new ArrayList<>();    
 
     public void setNotifiedTasks(List<String> notifiedTasks){
@@ -1078,27 +1077,11 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     public Map getResult() throws Exception {
         return getResult(-1);
     }
-
-    long waitNewCommand(CompletableFuture cf) throws InterruptedException {
-        long now = System.currentTimeMillis();
-        if (cf instanceof VisibleCompletableFuture vcf) {
-            Thread thread = vcf.waitRunningThread(1000);
-            if (thread == null) {
-                return -1;
-            }
-            CommandInfo current = commandManager.getThreadCommand(thread, false);
-            if ((current != null) && (current.start >= now)) {
-                return current.id;
-            }
-            return waitNewCommand(thread, 1000);
-        }
-        return -2;
+  
+    long waitAsyncCommand(Threading.VisibleCompletableFuture cf) throws InterruptedException {
+        return commandManager.waitAsyncCommand(cf);
     }
 
-    long waitNewCommand(Thread thread, int timeout) throws InterruptedException {
-        long ret = commandManager.waitNewCommand(thread, timeout);
-        return ret;
-    }
 
     Object runInInterpreterThread(CommandInfo info, Callable callable) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
@@ -1146,7 +1129,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 }
             }
             if (info != null) {
-                commandManager.finishCommandInfo(info, result);
+                commandManager.commandFinished(info, result);
             }
             if (result instanceof Exception) {
                 foregroundException = (Exception) result;
@@ -1231,10 +1214,20 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     CompletableFuture<?> getInterpreterFuture(final Threading.SupplierWithException<?> supplier) {
         return Threading.getFuture(supplier, interpreterExecutor);
     }
+    
+    CompletableFuture<?> getBackgroundFuture(final Threading.SupplierWithException<?> supplier) {
+         //return Threading.getFuture(supplier);
+         //return Threading.getPrivateThreadFuture(supplier);
+         return Threading.getVolatileThreadFuture(supplier);
+    }
 
     public CompletableFuture<?> evalLineAsync(final CommandSource source, final String line) throws InterpreterStateException {
-        assertReady();  //TODO: This is not strict, state can change before the thread starts
-        return getInterpreterFuture(() -> evalLine(source, line));
+        if (ControlCommand.isBackground(line)){
+            return getBackgroundFuture(() -> evalLine(source, line));
+        } else {
+            assertReady();  //TODO: This is not strict, state can change before the thread starts
+            return getInterpreterFuture(() -> evalLine(source, line));
+        }
     }
 
     public CompletableFuture<?> evalFileAsync(final CommandSource source, final String fileName) throws InterpreterStateException {
@@ -1269,7 +1262,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         //Command source in statements execution will be CommandSource.script 
         Object result = null;
         CommandInfo info = new CommandInfo(source, fileName, null, args, true);
-        commandManager.initCommandInfo(info);
+        commandManager.commandStarted(info);
         try {
             createExecutionContext();
             //TODO: args passing is not theread safe
@@ -1283,16 +1276,16 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             throw ex;
         } finally {
             disposeExecutionContext();
-            commandManager.finishCommandInfo(info, result);
+            commandManager.commandFinished(info, result);
         }
     }
 
     public CompletableFuture<?> evalFileBackgroundAsync(final CommandSource source, final String fileName) {
-        return Threading.getFuture(() -> evalFileBackground(source, fileName));
+        return getBackgroundFuture(() -> evalFileBackground(source, fileName));
     }
 
     public CompletableFuture<?> evalFileBackgroundAsync(final CommandSource source, final String fileName, final Object args) {
-        return Threading.getFuture(() -> evalFileBackground(source, fileName, args));
+        return getBackgroundFuture(() -> evalFileBackground(source, fileName, args));
     }
     
     public Object evalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
@@ -1301,7 +1294,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
         Object result = null;
         CommandInfo info = new CommandInfo(source, null, line, null, true);
-        commandManager.initCommandInfo(info);
+        commandManager.commandStarted(info);
         try {
             createExecutionContext();
             InterpreterResult ir = scriptManager.evalBackground(line);
@@ -1316,12 +1309,12 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             return result;
         } finally {
             disposeExecutionContext();
-            commandManager.finishCommandInfo(info, result);
+            commandManager.commandFinished(info, result);
         }
     }
     
     public CompletableFuture<?> evalLineBackgroundAsync(final CommandSource source, final String line) {
-        return Threading.getFuture(() -> evalLineBackground(source, line));
+        return getBackgroundFuture(() -> evalLineBackground(source, line));
     }
     
 
@@ -1888,7 +1881,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     @Hidden
     public void startExecution(final CommandSource source, String fileName, CommandInfo info) throws InterpreterStateException {
         assertReady();
-        commandManager.initCommandInfo(info);
+        commandManager.commandStarted(info);
         if (fileName != null) {
             triggerWillRun(source, fileName, info.args);
             runningScript = fileName;
@@ -1911,7 +1904,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         onCommand(Command.then, new Object[]{command}, currentInfo.source);
         triggerShellCommand(currentInfo.source, "Then: " + command);
         CommandInfo info = new CommandInfo(currentInfo.source, null, command, null, false);
-        commandManager.initCommandInfo(info);
+        commandManager.commandStarted(info);
         next = null;
         aborted = false;
         getExecutionPars().onExecutionStarted();
@@ -1944,7 +1937,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     public void endExecution(CommandInfo info, Object result) throws InterpreterStateException {
         if (info != null) {
             if (info.isRunning()) {
-                commandManager.finishCommandInfo(info, result);
+                commandManager.commandFinished(info, result);
             }
         }
         String then = (info == null) ? null : getThen(info);
@@ -2975,13 +2968,13 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         triggerWillRun(getPublicCommandSource(), fileName, args); 
         CommandInfo parent = commandManager.getCurrentCommand(false);
         CommandInfo info = new CommandInfo(parent, fileName, args);
-        commandManager.initCommandInfo(info);
+        commandManager.commandStarted(info);
         return info;
     }
 
     @Hidden
     public void finishScriptExecution(CommandInfo info, Object result) {
-        commandManager.finishCommandInfo(info, result);
+        commandManager.commandFinished(info, result);
     }
 
 

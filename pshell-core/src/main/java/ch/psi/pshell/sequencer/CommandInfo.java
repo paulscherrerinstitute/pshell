@@ -50,8 +50,7 @@ public class CommandInfo {
         this.thread = background ? Thread.currentThread() : Context.getInterpreter().getInterpreterThread();
         synchronized (CommandInfo.class) {
             this.id = commandId++;
-        }
-        Context.getCommandManager().onNewCommand(this.id);
+        }        
         this.start = System.currentTimeMillis();
     }
     
@@ -99,9 +98,7 @@ public class CommandInfo {
 
     public void join() throws InterruptedException {
         while (isRunning()) {
-            synchronized (Context.getCommandManager().commandInfo) {
-                Context.getCommandManager().commandInfo.wait();
-            }
+            Context.getCommandManager().waitCommandBusChangeEvent();
         }
     }
 

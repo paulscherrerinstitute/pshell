@@ -30,16 +30,28 @@ public enum ControlCommand {
         }
         return command;
     }
+    
+    public static boolean isBackground(String command) {
+        if (command.endsWith(ControlCommand.BACKGROUND_COMMAND_PREFIX.toString())) {
+            return true;
+        }
+        if (command.startsWith(ControlCommand.CONTROL_COMMAND_PREFIX.toString() + ControlCommand.evalb.toString())){
+            return true;
+        }
+        return false;
+    }
 
     public static boolean match(String str) {
         return str.startsWith(CONTROL_COMMAND_PREFIX.toString()) || str.endsWith(BACKGROUND_COMMAND_PREFIX.toString());
     }
 
-    boolean isEval() {
+    public boolean isEval() {
         return (this == evalb) || (this == restart) || (this == inject) || (this == reload)  || (this == shutdown);
     }
 
-    boolean isScripControl() {
+    public boolean isScripControl() {
         return (this == abort) ||  (this == pause) || (this == resume) ||(this == run);
     }    
+    
+    
 }

@@ -6,6 +6,7 @@ import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.logging.LogLevel;
 import ch.psi.pshell.notification.NotificationManager.NotificationLevel;
 import ch.psi.pshell.scan.ScanConfig;
+import ch.psi.pshell.sequencer.CommandBus;
 import ch.psi.pshell.session.SessionManager.SessionHandling;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.Str;
@@ -46,6 +47,7 @@ public class Configuration extends Config {
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
     public String dataTransferPath = "";
     public String dataTransferUser = "";
+    public int dataServerPort = -1;
     public FilePermissions filePermissionsData = FilePermissions.Default;
     public FilePermissions filePermissionsLogs = FilePermissions.Default;
     public FilePermissions filePermissionsScripts = FilePermissions.Default;
@@ -60,8 +62,7 @@ public class Configuration extends Config {
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
     public String versionTrackingRemote = "";
-    public String versionTrackingLogin = "";    
-    public int dataServerPort = -1;
+    public String versionTrackingLogin = "";        
     public boolean serverEnabled;    
     public boolean serverCommandsHidden = false;
     public String serverHostName  = "";        

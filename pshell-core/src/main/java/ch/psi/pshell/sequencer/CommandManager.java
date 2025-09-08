@@ -19,18 +19,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.python.core.PyBaseException;
 
 /**
  *
  */
-public class CommandManager implements AutoCloseable {
+public class CommandManager extends CommandBus implements AutoCloseable {
     
+    public static int COMMAND_BUS_SIZE = 1000;              //Tries cleanup when contains 100 command records
+    public static int COMMAND_BUS_TIME_TO_LIVE = 600000;   //Cleanup commands older than 10 minutes 
+
     static  CommandManager INSTANCE;    
     public static CommandManager getInstance(){        
         return INSTANCE;
     }
-    public CommandManager(){        
+    
+    public CommandManager(){    
+        super(COMMAND_BUS_SIZE, COMMAND_BUS_TIME_TO_LIVE);
         INSTANCE  = this;        
     }    
     
@@ -38,10 +42,6 @@ public class CommandManager implements AutoCloseable {
         return Setup.getOutputPath() + "/statistics";
     }    
 
-    final List<CommandInfo> commandInfo = new ArrayList<>();
-    //final HashMap<Thread, CommandInfo> commandInfo = new HashMap<>();
-    public static int COMMAND_INFO_SIZE = 1000;              //Tries cleanup when contains 100 command records
-    public static int COMMAND_INFO_TIME_TO_LIVE = 600000;   //Cleanup commands older than 10 minutes 
     
     boolean saveCommandStatistics;
     
@@ -64,184 +64,6 @@ public class CommandManager implements AutoCloseable {
     }    
     
 
-
-    void initCommandInfo(CommandInfo info) {
-        if (info != null) {
-            synchronized (commandInfo) {
-                commandInfo.add(0, info);
-                //commandInfo.put(Thread.currentThread(), info);
-                onCommandStarted(info);
-            }
-        }
-    }
-
-    boolean requestedCleanup;
-
-    void finishCommandInfo(CommandInfo info, Object result) {
-        synchronized (commandInfo) {
-            if (Context.isDebug()){
-                if (result instanceof Throwable t){
-                    t.printStackTrace();
-                }                
-            }                            
-            if (info != null) {
-                if (result instanceof PyBaseException) {
-                    result = new Exception(result.toString());
-                }
-                info.result = result;
-                info.end = System.currentTimeMillis();
-                //commandInfo.remove(Thread.currentThread());
-                //commandInfo.remove(info);
-                commandInfo.notifyAll();
-                onCommandFinished(info);
-            }
-        }
-        if (commandInfo.size() > COMMAND_INFO_SIZE) {
-            cleanupCommands();
-        }
-    }
-
-    //void finishCommandInfo(Object result) {
-    //    finishCommandInfo(getCurrentCommand(), result);
-    //}
-    void cleanupCommands() {
-        List old = new ArrayList<>();
-        synchronized (commandInfo) {
-
-            for (CommandInfo ci : getCommands()) {
-                if ((!ci.isRunning()) && (ci.getAge() > COMMAND_INFO_TIME_TO_LIVE)) { //retains info for 10min 
-                    old.add(ci);
-                }
-            }
-            commandInfo.removeAll(old);
-            /*
-            for (Thread thread : commandInfo.keySet()) {
-                CommandInfo ci = commandInfo.get(thread);
-                if ((ci == null) || ((!ci.isRunning()) && (ci.getAge() > COMMAND_INFO_TIME_TO_LIVE))) {//retains info for at least 10min 
-                    old.add(thread);
-                }
-            }
-            commandInfo.keySet().removeAll(old);
-             */
-        }
-    }
-
-    public CommandInfo getCurrentCommand() {
-        return getCurrentCommand(Thread.currentThread(), false);
-    }
-
-    public CommandInfo getCurrentCommand(boolean parent) {
-        return getCurrentCommand(Thread.currentThread(), parent);
-    }
-
-    public CommandInfo getCurrentCommand(Thread thread) {
-        return getCurrentCommand(thread, false);
-    }
-
-    public CommandInfo getCurrentCommand(Thread thread, boolean parent) {
-        CommandInfo threadCommand = getThreadCommand(thread, parent);
-        if (threadCommand != null) {
-            do {
-                if (threadCommand.isRunning()) {
-                    return threadCommand;
-                }
-                threadCommand = threadCommand.parent;
-            } while (threadCommand != null);
-        }
-        return null;
-    }
-
-    public CommandInfo getThreadCommand(Thread thread) {
-        return getThreadCommand(thread, false);
-    }
-
-    public CommandInfo getThreadCommand(Thread thread, boolean parent) {
-
-        for (CommandInfo info : getCommands()) {
-            if ((info.thread == thread)) {
-                CommandInfo ret = info;
-                if (parent) {
-                    while (ret.parent != null) {
-                        ret = ret.parent;
-                    }
-                }
-                return ret;
-            }
-        }
-        return null;
-    }
-
-    public CommandInfo getInterpreterThreadCommand() {
-        return getInterpreterThreadCommand(false);
-    }
-
-    public CommandInfo getInterpreterThreadCommand(boolean parent) {
-        return getThreadCommand(Context.getInterpreter().getInterpreterThread(), parent);
-    }
-
-    public List<CommandInfo> getCommands() {
-        synchronized (commandInfo) {
-            return new ArrayList(commandInfo);
-            //return new ArrayList(commandInfo.values());
-        }
-    }
-
-    public CommandInfo getCommand(long id) {
-        if (id < 0) {
-            return getInterpreterThreadCommand(true);
-        }
-        for (CommandInfo ci : getCommands()) {
-            if (ci.id == id) {
-                return ci;
-            }
-        }
-        return null;
-    }
-
-    public List<CommandInfo> getCurrentCommands() {
-        List currentCommands = new ArrayList<>();
-        for (CommandInfo ci : getCommands()) {
-            if (ci.isRunning()) {
-                currentCommands.add(ci);
-            }
-        }
-        return currentCommands;
-    }
-
-    public boolean abort(final CommandSource source, long id) throws InterruptedException {
-        boolean aborted = false;
-        for (CommandInfo ci : getCommands()) {
-            if (id == -1) {
-                if (ci.background) {
-                    ci.abort();
-                    aborted = true;
-                }
-            } else if (ci.id == id) {
-                ci.abort();
-                aborted = true;
-                break;
-            }
-        }
-        return aborted;
-    }
-
-    public boolean join(long id) throws InterruptedException {
-        CommandInfo cmd = getCommand(id);
-        if (cmd != null) {
-            cmd.join();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isRunning(long id) {
-        CommandInfo cmd = getCommand(id);
-        if (cmd != null) {
-            return cmd.isRunning();
-        }
-        return false;
-    }
-
     public Map getResult(long id) throws Exception {
         CommandInfo cmd;
         if (id < 0) {
@@ -252,6 +74,7 @@ public class CommandManager implements AutoCloseable {
         } else {
             cmd = getCommand(id);
         }
+        cmd = getCommand(id);
         Map ret = new HashMap();
         ret.put("id", id);
         ret.put("exception", null);
@@ -291,43 +114,10 @@ public class CommandManager implements AutoCloseable {
         ret.put("status", status);
         return ret;
     }
-
-    final Object newCommandLock = new Object();
-    private long newCommandId;
-    private Thread newCommandThread;    
-
-    void onNewCommand(long id) {
-        synchronized (newCommandLock) {
-            newCommandId = id;
-            newCommandThread = Thread.currentThread();
-            newCommandLock.notifyAll();
-        }
-    }
-
-    public long waitNewCommand(Thread thread, int timeout) throws InterruptedException {
-        while (true) {
-
-            try {
-                Chrono chrono = new Chrono();
-                synchronized (newCommandLock) {
-                    newCommandLock.wait(timeout);
-                }
-                if ((thread == null) || (newCommandThread == thread)) {
-                    return newCommandId;
-                }
-                timeout = timeout - chrono.getEllapsed();
-                if (timeout < 0) {
-                    break;
-                }
-            } catch (Exception ex) {
-                break;
-            }
-        }
-        return 0;
-    }
+    
 
     //Callbacks for triggering script handlers to command start/finish
-    void onCommandStarted(CommandInfo info) {
+    protected void onCommandStarted(CommandInfo info) {        
         if (scriptCallbacksEnabled && Context.hasScriptManager()){
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
@@ -341,7 +131,7 @@ public class CommandManager implements AutoCloseable {
         }
     }
 
-    void onCommandFinished(CommandInfo info) {
+    protected void onCommandFinished(CommandInfo info) {
         if (scriptCallbacksEnabled && Context.hasScriptManager()){
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
@@ -525,6 +315,6 @@ public class CommandManager implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        commandInfo.clear();
+        super.close();       
     }
 }

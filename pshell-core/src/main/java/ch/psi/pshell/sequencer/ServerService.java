@@ -27,6 +27,7 @@ import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Nameable;
 import ch.psi.pshell.utils.State;
 import ch.psi.pshell.utils.Str;
+import ch.psi.pshell.utils.Threading;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -194,7 +195,8 @@ public class ServerService {
         try {
             String cmd = formatIncomingText(statement);
             CompletableFuture cf = interpreter.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
-            return interpreter.waitNewCommand(cf);
+            long id = interpreter.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
+            return id;
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -616,7 +618,7 @@ public class ServerService {
                 } else {
                     cf = interpreter.evalFileAsync(CommandSource.server, script, pars);
                 }
-                return interpreter.waitNewCommand(cf);
+                return interpreter.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
             } else {
                 if (background) {
                     ret = interpreter.evalFileBackground(CommandSource.server, script, pars);
