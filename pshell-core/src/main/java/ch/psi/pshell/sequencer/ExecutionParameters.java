@@ -224,7 +224,7 @@ public class ExecutionParameters {
             if (dataPath != null) {
                 lastOutputFile = outputFile;
             }
-            Context.getCommandManager().onChangeDataPath(dataPath);
+            Context.getInterpreter().onChangeDataPath(dataPath);
             if (isHandlingSessions()){
                 try{
                     Context.getSessionManager().onChangeDataPath(dataPath);
@@ -756,10 +756,10 @@ public class ExecutionParameters {
     }
     
     public CommandInfo getCommand(boolean parent) {
-        CommandInfo ret = Context.getCommandManager().getCurrentCommand(parent);
+        CommandInfo ret = Context.getCommandBus().getCurrentCommand(parent);
         //If not in background command, return foreground command
         if (ret==null){
-            ret = Context.getCommandManager().getInterpreterThreadCommand(parent);
+            ret = Context.getCommandBus().getInterpreterThreadCommand(parent);
         }
         return ret;
 

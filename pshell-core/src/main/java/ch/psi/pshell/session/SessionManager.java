@@ -175,7 +175,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         setInfo(info);
         setMetadata(metadata);
         triggerChanged(sessionId, ChangeType.STATE);
-        Context.getCommandManager().onSessionStarted(sessionId);
+        Context.getInterpreter().onSessionStarted(sessionId);
         return sessionId;
     }
         
@@ -216,7 +216,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     public void stop() throws IOException {
         if (isStarted()) {
             int sessionId = getCurrentSession();
-            Context.getCommandManager().onSessionFinished(sessionId);
+            Context.getInterpreter().onSessionFinished(sessionId);
             try {
                 setInfo("state", STATE_COMPLETED);
                 setInfo("stop", getTimestamp());
@@ -250,7 +250,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         info.remove("stop");
         setInfo(info);
         triggerChanged(sessionId, ChangeType.STATE);
-        Context.getCommandManager().onSessionStarted(sessionId);
+        Context.getInterpreter().onSessionStarted(sessionId);
         return sessionId;
     }
 

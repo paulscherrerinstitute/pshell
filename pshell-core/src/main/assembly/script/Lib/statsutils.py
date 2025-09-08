@@ -12,7 +12,8 @@ import java.util.Properties as Properties
 import java.lang.Class as Class
 import os
 from startup import get_interpreter, expand_path
-import ch.psi.pshell.sequencer.CommandManager.CommandStatisticsFileRange as CommandStatisticsFileRange
+import ch.psi.pshell.sequencer.CommandStatistics as CommandStatistics
+import ch.psi.pshell.sequencer.CommandStatistics.FileRange as CommandStatisticsFileRange
 
 stmt = None 
 STAT_COLUMN_NAMES = ["Command","Args","Source","Start","End","Background","Result","Return"]
@@ -27,7 +28,7 @@ def get_stats_connection():
     props.put("indexedFiles", "true");
     props.put("columnTypes", "String,String,String,Timestamp,Timestamp,Boolean,String,String");
     
-    fileRange = get_interpreter().commandManager.commandStatisticsConfig.fileRange    
+    fileRange = CommandStatistics.getConfig().fileRange    
     if fileRange==CommandStatisticsFileRange.Daily:
         props.put("fileTailPattern", "(\\d+)_(\\d+)_(\\d+)"); 
         props.put("fileTailParts", "Year,Month,Day");

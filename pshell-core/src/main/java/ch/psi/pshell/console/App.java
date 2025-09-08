@@ -236,7 +236,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             
             //interpreter.restart(source); //!!! TODO: Solve source crap
             interpreter.restart(); 
-            interpreter.getCommandManager().setSaveCommandStatistics(config.saveCommandStatistics);
+            interpreter.setSaveCommandStatistics(config.saveCommandStatistics);
             if (config.isVersioningEnabled()) {        
                 VersioningConfig versioningConfig = new VersioningConfig( 
                     Setup.getHomePath(), 

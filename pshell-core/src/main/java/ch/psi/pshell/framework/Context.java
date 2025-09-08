@@ -21,7 +21,7 @@ import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UserAccessException;
 import ch.psi.pshell.security.UsersManager;
-import ch.psi.pshell.sequencer.CommandManager;
+import ch.psi.pshell.sequencer.CommandBus;
 import ch.psi.pshell.sequencer.ExecutionParameters;
 import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.session.SessionManager;
@@ -319,8 +319,8 @@ public class Context {
         return Interpreter.getInstance();
     }
 
-    public static CommandManager getCommandManager() {
-        return getInterpreter().getCommandManager();
+    public static CommandBus getCommandBus() {
+        return getInterpreter().getCommandBus();
     }
 
     

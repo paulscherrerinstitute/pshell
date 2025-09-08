@@ -1,12 +1,15 @@
 package ch.psi.pshell.sequencer;
 
 import ch.psi.pshell.framework.Context;
+import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.Threading;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -337,11 +340,60 @@ public class CommandBus implements AutoCloseable {
     }
     
     
+    public Map getResult(long id) throws Exception {
+        CommandInfo cmd;
+        if (id < 0) {
+            cmd = getInterpreterThreadCommand(true);
+            if (cmd != null) {
+                id = cmd.id;
+            }
+        } else {
+            cmd = getCommand(id);
+        }
+        cmd = getCommand(id);
+        Map ret = new HashMap();
+        ret.put("id", id);
+        ret.put("exception", null);
+        ret.put("return", null);
+        String status;
+        if (cmd == null) {
+            if (id == 0) {
+                status = "unlaunched";
+            } else {
+                status = (id >= CommandInfo.commandId) ? "invalid" : "removed";
+            }
+        } else {
+            if (cmd.isRunning()) {
+                status = "running";
+            } else {
+                if (cmd.isAborted()) {
+                    status = "aborted";
+                } else if (cmd.result instanceof Exception ex) {
+                    status = "failed";
+                    ret.put("exception", ex.toString());
+                } else if (cmd.result instanceof InterpreterResult res) {
+                    if (res.complete == false) {
+                        status = "aborted";
+                    } else if (res.exception != null) {
+                        status = "failed";
+                        ret.put("exception", res.exception.toString());
+                    } else {
+                        status = "completed";
+                        ret.put("return", res.result);
+                    }
+                } else {
+                    status = "completed";
+                    ret.put("return", cmd.result);
+                }
+            }
+        }
+        ret.put("status", status);
+        return ret;
+    }    
+    
     protected void onCommandStarted(CommandInfo info) {        
-        
     }
     
-    protected void onCommandFinished(CommandInfo info) {
-        
+    protected void onCommandFinished(CommandInfo info) { 
     }
 }

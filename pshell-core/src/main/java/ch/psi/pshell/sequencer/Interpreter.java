@@ -44,7 +44,6 @@ import ch.psi.pshell.utils.State;
 import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Sys;
 import ch.psi.pshell.utils.Threading;
-import ch.psi.pshell.utils.Threading.VisibleCompletableFuture;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -85,6 +84,9 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     static final Logger logger = Logger.getLogger(Interpreter.class.getName());
 
+    public static final int COMMAND_BUS_SIZE = 1000;              //Tries cleanup when contains 100 command records
+    public static final int COMMAND_BUS_TIME_TO_LIVE = 600000;   //Cleanup commands older than 10 minutes 
+    
     Server server;
     final History history;
     final HashMap<Thread, ExecutionParameters> executionPars = new HashMap<>();
@@ -94,7 +96,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     TaskManager taskManager;
     ScriptStdio scriptStdio;
     TerminalServer terminalServer;
-    CommandManager commandManager;
+    CommandBus commandBus;
     volatile String next;
     volatile boolean aborted;
     volatile Exception foregroundException;
@@ -154,7 +156,17 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             history = new History(getCommandHistoryFile(), 1000, true);
         }
 
-        commandManager = new CommandManager();
+        commandBus = new CommandBus(COMMAND_BUS_SIZE, COMMAND_BUS_TIME_TO_LIVE){
+            @Override
+            protected void onCommandStarted(CommandInfo info) {        
+                Interpreter.this.onCommandStarted(info);
+            }
+
+            @Override
+            protected void onCommandFinished(CommandInfo info) { 
+                Interpreter.this.onCommandFinished(info);
+            }
+        };
 
         setStdioListener(null);
 
@@ -658,6 +670,26 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
     
     
+    boolean saveCommandStatistics;
+    
+    public boolean getSaveCommandStatistics(){
+        return saveCommandStatistics;
+    }
+
+    public void setSaveCommandStatistics(boolean value){
+        saveCommandStatistics = value;
+    }
+    
+    boolean scriptCallbacksEnabled=true;
+    
+    public boolean getScriptCallbacksEnabled(){
+        return scriptCallbacksEnabled;
+    }
+
+    public void setScriptCallbacksEnabled(boolean value){
+        scriptCallbacksEnabled = value;
+    }        
+    
    
     
     boolean disableStartupScript;
@@ -665,7 +697,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     
     public void disableStartupScript() {  
         disableStartupScript = true;
-        commandManager.setScriptCallbacksEnabled(false);
+        setScriptCallbacksEnabled(false);
     }
     
     public boolean isStartupScriptDisabled() {  
@@ -767,8 +799,8 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     //Access methods
-    public CommandManager getCommandManager() {
-        return commandManager;
+    public CommandBus getCommandBus() {
+        return commandBus;
     }
 
     public ScriptManager getScriptManager() {
@@ -874,7 +906,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                     evalLineBackground(CommandSource.ctr, "on_system_restart()");
                 }
             } catch (Exception ex) {
-                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+                logger.log(Level.WARNING, null, ex);
             }
         }
 
@@ -1059,19 +1091,19 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     public boolean abort(final CommandSource source, long commandId) throws InterruptedException {
         onCommand(Command.abort, new Object[]{commandId}, source);
-        return commandManager.abort(source, commandId);
+        return commandBus.abort(source, commandId);
     }
 
     boolean join(long commandId) throws InterruptedException {
-        return commandManager.join(commandId);
+        return commandBus.join(commandId);
     }
 
     boolean isRunning(long commandId) {
-        return commandManager.isRunning(commandId);
+        return commandBus.isRunning(commandId);
     }
 
     public Map getResult(long commandId) throws Exception {
-        return commandManager.getResult(commandId);
+        return commandBus.getResult(commandId);
     }
 
     public Map getResult() throws Exception {
@@ -1079,7 +1111,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
   
     long waitAsyncCommand(Threading.VisibleCompletableFuture cf) throws InterruptedException {
-        return commandManager.waitAsyncCommand(cf);
+        return commandBus.waitAsyncCommand(cf);
     }
 
 
@@ -1129,7 +1161,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 }
             }
             if (info != null) {
-                commandManager.commandFinished(info, result);
+                commandBus.commandFinished(info, result);
             }
             if (result instanceof Exception) {
                 foregroundException = (Exception) result;
@@ -1262,7 +1294,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         //Command source in statements execution will be CommandSource.script 
         Object result = null;
         CommandInfo info = new CommandInfo(source, fileName, null, args, true);
-        commandManager.commandStarted(info);
+        commandBus.commandStarted(info);
         try {
             createExecutionContext();
             //TODO: args passing is not theread safe
@@ -1276,7 +1308,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             throw ex;
         } finally {
             disposeExecutionContext();
-            commandManager.commandFinished(info, result);
+            commandBus.commandFinished(info, result);
         }
     }
 
@@ -1294,7 +1326,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
         Object result = null;
         CommandInfo info = new CommandInfo(source, null, line, null, true);
-        commandManager.commandStarted(info);
+        commandBus.commandStarted(info);
         try {
             createExecutionContext();
             InterpreterResult ir = scriptManager.evalBackground(line);
@@ -1309,7 +1341,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             return result;
         } finally {
             disposeExecutionContext();
-            commandManager.commandFinished(info, result);
+            commandBus.commandFinished(info, result);
         }
     }
     
@@ -1777,7 +1809,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             }
         } else if ((getState() == State.Busy) || (getState() == State.Paused)) {
             aborted = true;
-            CommandInfo cmd = commandManager.getInterpreterThreadCommand(false);
+            CommandInfo cmd = commandBus.getInterpreterThreadCommand(false);
             if (cmd != null) {
                 cmd.setAborted();
             }
@@ -1881,7 +1913,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     @Hidden
     public void startExecution(final CommandSource source, String fileName, CommandInfo info) throws InterpreterStateException {
         assertReady();
-        commandManager.commandStarted(info);
+        commandBus.commandStarted(info);
         if (fileName != null) {
             triggerWillRun(source, fileName, info.args);
             runningScript = fileName;
@@ -1904,7 +1936,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         onCommand(Command.then, new Object[]{command}, currentInfo.source);
         triggerShellCommand(currentInfo.source, "Then: " + command);
         CommandInfo info = new CommandInfo(currentInfo.source, null, command, null, false);
-        commandManager.commandStarted(info);
+        commandBus.commandStarted(info);
         next = null;
         aborted = false;
         getExecutionPars().onExecutionStarted();
@@ -1937,7 +1969,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     public void endExecution(CommandInfo info, Object result) throws InterpreterStateException {
         if (info != null) {
             if (info.isRunning()) {
-                commandManager.commandFinished(info, result);
+                commandBus.commandFinished(info, result);
             }
         }
         String then = (info == null) ? null : getThen(info);
@@ -2022,6 +2054,82 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             Context.getDevicePool().retryInitializeDevice(device);
         }
     }
+    
+    
+    
+   //Script callbacks
+    protected void onCommandStarted(CommandInfo info) {        
+        if (scriptCallbacksEnabled &&(scriptManager != null)){
+            try {
+                String var_name = "_command_info_" + Thread.currentThread().getId();
+                if (scriptManager.isThreaded()) {
+                    scriptManager.getEngine().put(var_name, info);
+                    scriptManager.getEngine().eval("on_command_started(" + var_name + ")");
+                }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+    }
+
+    protected void onCommandFinished(CommandInfo info) {
+        if (scriptCallbacksEnabled && (scriptManager != null)){
+            try {
+                String var_name = "_command_info_" + Thread.currentThread().getId();
+                if (scriptManager.isThreaded()) {
+                    scriptManager.getEngine().put(var_name, info);
+                    scriptManager.getEngine().eval("on_command_finished(" + var_name + ")");
+                }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+        if (saveCommandStatistics) {
+            try {
+                CommandStatistics.save(info);
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+    }
+
+    void onChangeDataPath(File dataPath) {
+        if (scriptCallbacksEnabled  && (scriptManager != null)){
+            try {
+                String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
+                if (scriptManager.isThreaded()) {
+                    scriptManager.getEngine().eval("on_change_data_path(" + filename + ")");
+                }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+    }
+
+    public void onSessionStarted(int id) {
+        if (scriptCallbacksEnabled  && (scriptManager != null)){
+            try {
+                if (scriptManager.isThreaded()) {
+                    scriptManager.getEngine().eval("on_session_started(" + id + ")");
+                }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+    }
+
+    public void onSessionFinished(int id) {
+        if (scriptCallbacksEnabled && (scriptManager != null)){
+            try {
+                if (scriptManager.isThreaded()) {
+                    scriptManager.getEngine().eval("on_session_finished(" + id + ")");
+                }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+    }
+     
 
     //UI aceess functions
     volatile UserInterface remoteUserInterface;
@@ -2958,7 +3066,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     //Public command interface    
     CommandSource getPublicCommandSource() {
-        CommandInfo ret = commandManager.getCurrentCommand(false);
+        CommandInfo ret = commandBus.getCurrentCommand(false);
         return (ret == null) ? CommandSource.ui : ret.source;
     }
 
@@ -2966,15 +3074,15 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     @Hidden
     public CommandInfo startScriptExecution(String fileName, Object args) {
         triggerWillRun(getPublicCommandSource(), fileName, args); 
-        CommandInfo parent = commandManager.getCurrentCommand(false);
+        CommandInfo parent = commandBus.getCurrentCommand(false);
         CommandInfo info = new CommandInfo(parent, fileName, args);
-        commandManager.commandStarted(info);
+        commandBus.commandStarted(info);
         return info;
     }
 
     @Hidden
     public void finishScriptExecution(CommandInfo info, Object result) {
-        commandManager.commandFinished(info, result);
+        commandBus.commandFinished(info, result);
     }
 
 

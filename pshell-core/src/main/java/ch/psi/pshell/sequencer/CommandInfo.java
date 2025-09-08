@@ -98,7 +98,7 @@ public class CommandInfo {
 
     public void join() throws InterruptedException {
         while (isRunning()) {
-            Context.getCommandManager().waitCommandBusChangeEvent();
+            Context.getCommandBus().waitCommandBusChangeEvent();
         }
     }
 
