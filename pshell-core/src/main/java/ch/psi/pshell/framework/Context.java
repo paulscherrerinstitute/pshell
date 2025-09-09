@@ -7,7 +7,7 @@ import ch.psi.pshell.data.Format;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePool;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.notification.Notifier;
 import ch.psi.pshell.pkg.PackageManager;
 import ch.psi.pshell.plot.Plot;
@@ -235,22 +235,22 @@ public class Context {
         return VersionControl.getInstance();
     }
         
-    public static boolean hasLogManager(){
-        return LogManager.hasInstance();
+    public static boolean hasLogging(){
+        return Logging.hasInstance();
     }
     
-    public static LogManager getLogManager(){
-        return LogManager.getInstance();
+    public static Logging getLogging(){
+        return Logging.getInstance();
     }
 
     public static Level getLogLevel() {
-        return hasLogManager() ? getLogManager().getLevel() : null;
+        return hasLogging() ? getLogging().getLevel() : null;
     }
     
     //Logging
     public static void setLogLevel(Level level) {
-        if (hasLogManager()) {
-            getLogManager().setLevel(level);
+        if (hasLogging()) {
+            getLogging().setLevel(level);
         }
     }        
     

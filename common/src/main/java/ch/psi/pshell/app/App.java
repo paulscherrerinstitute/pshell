@@ -1,7 +1,7 @@
 package ch.psi.pshell.app;
 
 import ch.psi.pshell.app.MainFrame.LookAndFeelType;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plot.Plot.Quality;
 import ch.psi.pshell.plot.PlotPanel;
 import ch.psi.pshell.plugin.PluginManager;
@@ -219,7 +219,7 @@ public abstract class App extends ObservableBase<AppListener> {
         if (Setup.isForcedHeadless()) {
             System.setProperty("java.awt.headless", "true");
         }
-        LogManager.setConsoleLoggerLevel(Setup.getConsoleLogLevel());         
+        Logging.setConsoleLoggerLevel(Setup.getConsoleLogLevel());         
         
         Quality quality = Setup.getQuality();
         if (quality!=null){

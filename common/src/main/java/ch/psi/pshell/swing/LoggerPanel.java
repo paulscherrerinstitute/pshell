@@ -1,7 +1,7 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.app.MainFrame;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.utils.Str;
 import java.awt.Color;
 import java.awt.Component;
@@ -104,13 +104,13 @@ public class LoggerPanel extends MonitoredPanel {
     }
 
     public void start() {
-        LogManager.addHandler(new Handler() {
+        Logging.addHandler(new Handler() {
 
             @Override
             public void publish(LogRecord record) {
                 try{
                     synchronized(insertLock){
-                        addRow(LogManager.parseLogRecord(record));
+                        addRow(Logging.parseLogRecord(record));
                     }
                     if (!inverted) {                    
                         if (!scrollPane.getVerticalScrollBar().getValueIsAdjusting()) {
@@ -138,7 +138,7 @@ public class LoggerPanel extends MonitoredPanel {
             String line;
             while ((line = reader.readLine()) != null) {
                 // process the line.
-                String[] data = line.split(LogManager.FILE_SEPARATOR);
+                String[] data = line.split(Logging.FILE_SEPARATOR);
                 //The text contains FILE_SEPARATOR
                 if (data.length > 5) {
                     String[] aux = new String[5];
@@ -147,7 +147,7 @@ public class LoggerPanel extends MonitoredPanel {
                     for (int i = 4; i < data.length; i++) {
                         aux[4] += data[i];
                         if (i < (data.length - 1)) {
-                            aux[4] += LogManager.FILE_SEPARATOR;
+                            aux[4] += Logging.FILE_SEPARATOR;
                         }
                     }
                     data = aux;

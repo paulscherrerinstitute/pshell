@@ -2,7 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.ReadbackDevice;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import javax.swing.JLabel;
 
 /**
@@ -32,7 +32,7 @@ public final class DeviceValuePanel extends DevicePanel {
         if (value == null) {
             labelValue.setText(" ");
         } else {
-            labelValue.setText(LogManager.getLogForValue(value,5));
+            labelValue.setText(Logging.getLogForValue(value,5));
         }
     }
 

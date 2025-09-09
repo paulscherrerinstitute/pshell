@@ -11,7 +11,7 @@ import ch.psi.pshell.devices.DevicePanelManager;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.devices.DevicePoolListener;
 import ch.psi.pshell.imaging.Source;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.utils.Nameable;
 import ch.psi.pshell.utils.State;
 import ch.psi.pshell.versioning.VersionControl;
@@ -295,7 +295,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
             int row = getDeviceRow(device);
             if (row >= 0) {
                 String units = (device instanceof ReadonlyProcessVariable pv) ? " " + pv.getUnit() : "";
-                model.setValueAt(LogManager.getLogForValue(value) + units, row, 3);
+                model.setValueAt(Logging.getLogForValue(value) + units, row, 3);
                 model.setValueAt("00:00:00", row, 4);
             }
         }

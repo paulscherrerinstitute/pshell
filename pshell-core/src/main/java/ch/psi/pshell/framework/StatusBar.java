@@ -38,9 +38,9 @@ public class StatusBar extends ch.psi.pshell.app.StatusBar{
                 public void actionPerformed(ActionEvent e) {
                     try {
                         TextEditor editor = new TextEditor();
-                        editor.load(Context.getLogManager().getFileName());
+                        editor.load(Context.getLogging().getFileName());
                         editor.setReadOnly(true);
-                        SwingUtils.showDialog((Frame) getTopLevelAncestor(), Context.getLogManager().getFileName(), new Dimension(800, 400), editor);
+                        SwingUtils.showDialog((Frame) getTopLevelAncestor(), Context.getLogging().getFileName(), new Dimension(800, 400), editor);
                     } catch (Exception ex) {
                     }
                 }

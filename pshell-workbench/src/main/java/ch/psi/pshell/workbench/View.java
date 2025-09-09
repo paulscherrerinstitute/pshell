@@ -24,7 +24,7 @@ import ch.psi.pshell.framework.StatusBar;
 import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.imaging.Utils;
 import ch.psi.pshell.logging.LogLevel;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.scan.Scan;
@@ -4034,7 +4034,7 @@ public class View extends MainFrame{
                             public void run() {
                                 List<String[]> ret;
                                 try {
-                                    ret = LogManager.search(fileNames, Level.parse(logQueryLevel.getSelectedItem().toString().toUpperCase()), logQueryOrigin.getText(), logQueryText.getText(), null, null);
+                                    ret = Logging.search(fileNames, Level.parse(logQueryLevel.getSelectedItem().toString().toUpperCase()), logQueryOrigin.getText(), logQueryText.getText(), null, null);
                                     pn.load(ret);
                                 } catch (IOException ex) {
                                     logger.log(Level.WARNING, null, ex);

@@ -32,7 +32,7 @@ import java.util.logging.Logger;
 /**
  * Management of application logs.
  */
-public class LogManager {
+public class Logging {
     
     
     final FilePermissions filePermissions;
@@ -43,11 +43,11 @@ public class LogManager {
     public static int LAST_LOGS_SIZE = 100;
     ArrayList<String[]> lastLogs = new ArrayList();
 
-    public static LogManager INSTANCE;
+    public static Logging INSTANCE;
     
-    public static LogManager getInstance(){
+    public static Logging getInstance(){
         if (INSTANCE == null){
-            throw new RuntimeException("Log Manager not instantiated.");
+            throw new RuntimeException("Logging not instantiated.");
         }         
         return INSTANCE;
     }
@@ -56,11 +56,11 @@ public class LogManager {
         return INSTANCE!=null;
     }    
     
-    public LogManager() {        
+    public Logging() {        
         this(FilePermissions.Default);
     }
 
-    public LogManager(FilePermissions permissions) {
+    public Logging(FilePermissions permissions) {
         INSTANCE = this;
         this.filePermissions = (permissions==null) ? FilePermissions.Default : permissions;
         Logger globalLogger = Logger.getLogger("");

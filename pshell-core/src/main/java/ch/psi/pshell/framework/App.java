@@ -6,7 +6,7 @@ import ch.psi.pshell.data.DataAddress;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePanelManager;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
 import ch.psi.pshell.plotter.Plotter;
@@ -66,7 +66,7 @@ public class App extends ch.psi.pshell.devices.App {
     Processor runningProcessor;
     Shell shell;
     Console console;
-    LogManager logManager;
+    Logging logging;
         
     static public App getInstance() {
         return (App)instance;
@@ -274,14 +274,14 @@ public class App extends ch.psi.pshell.devices.App {
     }    
                 
     public void setupLogger(String path, Level level, int daysToLive, FilePermissions permissions) {
-        if (LogManager.hasInstance()){
+        if (Logging.hasInstance()){
             //!!! Should change permissions if changed?
         } else {
-            logManager = new LogManager(permissions);
+            logging = new Logging(permissions);
         }
         logFileName = Setup.expandPath(path + ".log");
-        LogManager.getInstance().start(logFileName, Setup.isLocal() ? -1 : daysToLive);
-        LogManager.getInstance().setLevel(level);
+        Logging.getInstance().start(logFileName, Setup.isLocal() ? -1 : daysToLive);
+        Logging.getInstance().setLevel(level);
     }
    
     protected void startRestart() {

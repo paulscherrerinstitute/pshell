@@ -4,7 +4,7 @@ import ch.psi.pshell.app.AboutDialog;
 import ch.psi.pshell.app.App;
 import ch.psi.pshell.app.MainFrame;
 import ch.psi.pshell.app.Setup;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.swing.ConfigDialog;
 import ch.psi.pshell.swing.StandardDialog;
 import ch.psi.pshell.swing.SwingUtils;
@@ -28,7 +28,7 @@ public class View extends MainFrame {
     static final Logger logger = Logger.getLogger(View.class.getName());
     final Plotter pm;
     final PlotServer ps;
-    final LogManager logManager;
+    final Logging logging;
     final boolean persist;
 
     public View() {
@@ -60,10 +60,10 @@ public class View extends MainFrame {
         loggerPanel.setOutputLength(1000);
         //loggerPanel.setInverted(true);
         loggerPanel.start();
-        logManager = new LogManager();
-        logManager.start(null, 0);
-        logManager.setLevel(Level.FINE);
-        logManager.setConsoleLoggerLevel(Level.OFF);
+        logging = new Logging();
+        logging.start(null, 0);
+        logging.setLevel(Level.FINE);
+        logging.setConsoleLoggerLevel(Level.OFF);
         loggerPanel.setVisible(false);
 
         //After ps is instantiated-> the context file depends on the port & host.

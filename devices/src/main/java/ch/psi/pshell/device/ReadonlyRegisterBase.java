@@ -1,6 +1,6 @@
 package ch.psi.pshell.device;
 
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.State;
@@ -126,7 +126,7 @@ public abstract class ReadonlyRegisterBase<T> extends DeviceBase implements Read
             }
             T ret = take();
             if (getLogger().isLoggable(Level.FINEST)) {
-                getLogger().log(Level.FINEST, "Read: {0}", LogManager.getLogForValue(ret));
+                getLogger().log(Level.FINEST, "Read: {0}", Logging.getLogForValue(ret));
             }
             return ret;
         } catch (IOException ex) {

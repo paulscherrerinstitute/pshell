@@ -8,7 +8,7 @@ import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.imaging.ImageBuffer;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.scan.DataAccessDummyScan;
 import ch.psi.pshell.scan.Scan;
@@ -146,7 +146,7 @@ public class ServerService {
     @Produces(MediaType.APPLICATION_JSON)
     public List<String[]> getLogs() {
         try {
-            List<String[]> ret = Context.getLogManager().getLastLogs();
+            List<String[]> ret = Context.getLogging().getLastLogs();
             Collections.reverse(ret);
             return ret;
         } catch (Exception ex) {
@@ -161,7 +161,7 @@ public class ServerService {
     public String getLogs(@PathParam("path") final String path) throws ExecutionException {
         try {
             File file = Paths.get(Setup.getLogPath(), path).toFile();
-            return LogManager.getLogContents(file);
+            return Logging.getLogContents(file);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }

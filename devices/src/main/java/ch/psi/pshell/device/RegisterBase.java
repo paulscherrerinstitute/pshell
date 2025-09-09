@@ -1,6 +1,6 @@
 package ch.psi.pshell.device;
 
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.utils.State;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -68,7 +68,7 @@ public abstract class RegisterBase<T> extends ReadonlyRegisterBase<T> implements
                 setState(State.Ready);
             }
             if (getLogger().isLoggable(Level.FINER)) {
-                getLogger().log(Level.FINER, "Write: {0}", LogManager.getLogForValue(value));
+                getLogger().log(Level.FINER, "Write: {0}", Logging.getLogForValue(value));
             }
         } catch (IOException ex) {
             getLogger().log(Level.FINE, null, ex);

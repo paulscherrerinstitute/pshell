@@ -1,6 +1,6 @@
 package ch.psi.pshell.csm;
 
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Arr;
@@ -31,7 +31,7 @@ public class PanelLogs extends MonitoredPanel {
     public static final Color INFO_COLOR = ch.psi.pshell.app.MainFrame.isDark() ? new Color(187, 187, 187) : Color.BLACK;
     public static final Color WARNING_COLOR = Color.ORANGE;
     public static final Color ERROR_COLOR = ch.psi.pshell.app.MainFrame.isDark() ? new Color(210, 21, 73) : Color.RED;
-    public static final String FILE_SEPARATOR = LogManager.FILE_SEPARATOR;    
+    public static final String FILE_SEPARATOR = Logging.FILE_SEPARATOR;    
     
     final DefaultTableModel model;
     final ExecutorService executorService;

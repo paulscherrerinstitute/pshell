@@ -1,6 +1,6 @@
 package ch.psi.pshell.data;
 
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plugin.PluginManager;
 import ch.psi.pshell.scripting.JepUtils;
 import ch.psi.pshell.utils.Arr;
@@ -822,7 +822,7 @@ public class DataStore implements AutoCloseable {
             }
         }       
         if (logger.isLoggable(Level.FINEST)) {
-            logger.log(Level.FINEST, "Append \"{0}\" = {1}", new Object[]{path, LogManager.getLogForValue(value)});
+            logger.log(Level.FINEST, "Append \"{0}\" = {1}", new Object[]{path, Logging.getLogForValue(value)});
         }
         assertOpen(); //Avoid NullPointerException if don't have rights to data folder
         getFormat().setItem(path, value, type, index);
@@ -846,7 +846,7 @@ public class DataStore implements AutoCloseable {
             }
         }
         if (logger.isLoggable(Level.FINEST)) {
-            logger.log(Level.FINEST, "Set \"{0}:{1}\" = {2}", new Object[]{path, Convert.arrayToString(index, "."), LogManager.getLogForValue(val)});
+            logger.log(Level.FINEST, "Set \"{0}:{1}\" = {2}", new Object[]{path, Convert.arrayToString(index, "."), Logging.getLogForValue(val)});
         }
         assertOpen(); //Avoid NullPointerException if don't have rights to data folder
         getFormat().setItem(path, val, type, index, shape);

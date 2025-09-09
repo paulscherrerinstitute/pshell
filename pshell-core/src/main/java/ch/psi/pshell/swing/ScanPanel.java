@@ -2,7 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
@@ -83,7 +83,7 @@ public class ScanPanel extends MonitoredPanel {
                 if (value == null) {
                     values.add(null);
                 } else if (value.getClass().isArray()) {
-                    values.add(LogManager.getLogForValue(value));
+                    values.add(Logging.getLogForValue(value));
                 } else if ((value instanceof Number) || (value instanceof Boolean) || (value instanceof String)){
                     values.add(value);
                 } else {

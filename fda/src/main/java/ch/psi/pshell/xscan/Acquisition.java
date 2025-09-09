@@ -14,7 +14,7 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.devices.InlineDevice;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.sequencer.ExecutionParameters;
 import ch.psi.pshell.utils.EventBus;
 import ch.psi.pshell.utils.EventBusListener;
@@ -237,14 +237,14 @@ public class Acquisition {
 			if (Config.isFdaSerialization()){
                             File logfile = new File(fprefix+".log");
                             logHandler = new FileHandler(logfile.getAbsolutePath());
-                            logHandler.setFormatter(LogManager.formatter);
+                            logHandler.setFormatter(Logging.formatter);
                         } else{
                             logHandler = new Handler() {
                                 @Override
                                 public void publish(LogRecord rec) {
                                     try {
                                         if (dm.isOpen()){
-                                            String[] tokens = LogManager.parseLogRecord(rec);                            
+                                            String[] tokens = Logging.parseLogRecord(rec);                            
                                             String log =  tokens[3] + " - " + tokens[4] + " [" + tokens[2] + "]";
                                             dm.appendLog(log);
                                         }

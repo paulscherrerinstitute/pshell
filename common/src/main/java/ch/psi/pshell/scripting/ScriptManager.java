@@ -1,6 +1,6 @@
 package ch.psi.pshell.scripting;
 
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.FileSystemWatch;
@@ -170,8 +170,8 @@ public class ScriptManager implements AutoCloseable {
             try {
                 File file = new File(sessionFilePath, Chrono.getTimeStr(System.currentTimeMillis(), "YYMMdd_HHmmss") + "." + type.getExtension());
                 sessionOut = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
-                if (LogManager.hasInstance()){
-                    IO.setFilePermissions(file, LogManager.getInstance().getFilePermissions());
+                if (Logging.hasInstance()){
+                    IO.setFilePermissions(file, Logging.getInstance().getFilePermissions());
                 }
             } catch (IOException e) {
                 logger.log(Level.WARNING, null, e);
@@ -885,10 +885,10 @@ public class ScriptManager implements AutoCloseable {
         //ProcessFactory
         try {
             /*
-            LogManager logManager = new LogManager(FilePermissions.Default);
+            Logging logging = new Logging(FilePermissions.Default);
             String logFileName = Sys.getUserHome() + "/ScriptManager.log";
-            logManager.start(logFileName,-1);
-            logManager.setLevel(Level.FINE);
+            logging.start(logFileName,-1);
+            logging.setLevel(Level.FINE);
             */            
             FilePermissions permissions = FilePermissions.valueOf(args[0]);
             String[] path = Arr.getSubArray(args, 1, args.length-1);

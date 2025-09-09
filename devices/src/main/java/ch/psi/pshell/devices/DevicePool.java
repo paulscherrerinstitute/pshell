@@ -2,7 +2,7 @@ package ch.psi.pshell.devices;
 
 import ch.psi.pshell.device.*;
 import ch.psi.pshell.device.Readable;
-import ch.psi.pshell.logging.LogManager;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plugin.PluginManager;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Chrono;
@@ -874,7 +874,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
             Object value = dev.take();
             if (value != null) {
                 Integer age = dev.getAge();
-                return new String[]{LogManager.getLogForValue(value, maxElements) + units, Chrono.getEllapsedStr(age, "HH:mm:ss"), info};
+                return new String[]{Logging.getLogForValue(value, maxElements) + units, Chrono.getEllapsedStr(age, "HH:mm:ss"), info};
             }
         } catch (Exception ex) {
         }
