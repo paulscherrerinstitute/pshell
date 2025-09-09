@@ -20,7 +20,7 @@ import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UserAccessException;
-import ch.psi.pshell.security.UsersManager;
+import ch.psi.pshell.security.Security;
 import ch.psi.pshell.sequencer.CommandBus;
 import ch.psi.pshell.sequencer.ExecutionParameters;
 import ch.psi.pshell.sequencer.Interpreter;
@@ -352,35 +352,35 @@ public class Context {
         return PackageManager.getInstance();
     }    
     
-    public static boolean hasUsersManager(){
-        return UsersManager.hasInstance();
+    public static boolean hasSecurity(){
+        return Security.hasInstance();
     }
     
-    public static UsersManager getUsersManager(){
-        return UsersManager.getInstance();
+    public static Security getSecurity(){
+        return Security.getInstance();
     }
     
     public static Rights getRights(){
-        if (hasUsersManager()){
-            return getUsersManager().getCurrentRights();
+        if (hasSecurity()){
+            return getSecurity().getCurrentRights();
         }
         return new Rights();
     }
     
     public static boolean isUsersEnabled(){
-        return hasUsersManager() && (getUsersManager().isEnabled());
+        return hasSecurity() && (getSecurity().isEnabled());
     }        
     
     public static String getUserName() {
-        if (hasUsersManager()){
-            return getUsersManager().getCurrentUser().name;
+        if (hasSecurity()){
+            return getSecurity().getCurrentUser().name;
         }
         return User.DEFAULT_USER_NAME;
     }
             
     public static User getUser() {
-        if (hasUsersManager()){
-            return getUsersManager().getCurrentUser();
+        if (hasSecurity()){
+            return getSecurity().getCurrentUser();
         }
         return User.getDefault();
         

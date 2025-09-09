@@ -2542,8 +2542,8 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 break;
             case login:
                 try {
-                    if ((args.length == 1) && (Context.hasUsersManager())){
-                        Context.getUsersManager().selectUser(Context.getUsersManager().getUser(args[0]), source);
+                    if ((args.length == 1) && (Context.hasSecurity())){
+                        Context.getSecurity().selectUser(Context.getSecurity().getUser(args[0]), source);
                     }
                 } catch (Exception ex) {
                     sb.append(ex.getMessage());
@@ -2589,8 +2589,8 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 }
                 break;
             case users:         
-                if  (Context.hasUsersManager()){
-                    for (User user : Context.getUsersManager().getUsers()) {
+                if  (Context.hasSecurity()){
+                    for (User user : Context.getSecurity().getUsers()) {
                         sb.append(user.toString()).append("\n");
                     }
                 }
@@ -3261,16 +3261,16 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     void assertConsoleCommandAllowed(CommandSource source) {
         if (!source.isInternal()) {
-            if (Context.hasUsersManager()){
-                Context.getUsersManager().getCurrentRights(source.isRemote()).assertConsoleAllowed();
+            if (Context.hasSecurity()){
+                Context.getSecurity().getCurrentRights(source.isRemote()).assertConsoleAllowed();
             }
         }
     }
 
     void assertRunAllowed(CommandSource source) {
         if (!source.isInternal()) {
-            if (Context.hasUsersManager()){
-                Context.getUsersManager().getCurrentRights(source.isRemote()).assertRunAllowed();
+            if (Context.hasSecurity()){
+                Context.getSecurity().getCurrentRights(source.isRemote()).assertRunAllowed();
             }
         }
     }

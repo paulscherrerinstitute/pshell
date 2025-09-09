@@ -18,7 +18,6 @@ import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.security.User;
-import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.pshell.swing.UserInterface;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Config;
@@ -60,6 +59,7 @@ import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
 import org.glassfish.jersey.media.sse.SseFeature;
+import ch.psi.pshell.security.SecurityListener;
 
 /**
  * Definition of the application REST API.
@@ -935,8 +935,8 @@ public class ServerService {
             interpreter.addEventListener(eventListener);            
             interpreter.remoteUserInterface = remoteUserInterface;
             interpreter.serverPlotListener = plotListener;
-            if (Context.hasUsersManager()){
-                Context.getUsersManager().addListener(userListener);
+            if (Context.hasSecurity()){
+                Context.getSecurity().addListener(userListener);
             }
         }
         EventOutput eventOutput = new EventOutput();
@@ -944,7 +944,7 @@ public class ServerService {
         return eventOutput;
     }
 
-    final UsersManagerListener userListener = new UsersManagerListener() {
+    final SecurityListener userListener = new SecurityListener() {
         @Override
         public void onUserChange(User user, User former) {
             sendUser();

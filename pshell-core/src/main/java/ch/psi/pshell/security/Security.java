@@ -29,10 +29,10 @@ import java.util.logging.Logger;
 /**
  *
  */
- public class UsersManager extends ObservableBase<UsersManagerListener> implements AutoCloseable {
-    static UsersManager INSTANCE;
+ public class Security extends ObservableBase<SecurityListener> implements AutoCloseable {
+    static Security INSTANCE;
     
-    public static UsersManager getInstance(){
+    public static Security getInstance(){
         if (INSTANCE == null){
             throw new RuntimeException("Users Manager not instantiated.");
         }          
@@ -73,7 +73,7 @@ import java.util.logging.Logger;
         return Paths.get(configFolder, level.toString() + ".properties");
     }
 
-    public UsersManager(String path) {
+    public Security(String path) {
         INSTANCE = this;
         this.configFolder = (path==null) ? Setup.getConfigPath() : path;
         users = new ArrayList<>();
@@ -103,7 +103,7 @@ import java.util.logging.Logger;
         //Create user authenticator
         rights.clear();
         if (enabled) {
-            Logger.getLogger(UsersManager.class.getName()).info("Initializing " + getClass().getSimpleName());
+            Logger.getLogger(Security.class.getName()).info("Initializing " + getClass().getSimpleName());
             for (AccessLevel level : AccessLevel.values()) {
                 Rights rights = new Rights();
                 try {
@@ -125,7 +125,7 @@ import java.util.logging.Logger;
                 } else {
                     userAuthenticator = (UserAuthenticator) cls.getConstructor(new Class[]{String[].class}).newInstance(new Object[]{pars});
                 }
-                Logger.getLogger(UsersManager.class.getName()).info("Finished " + getClass().getSimpleName() + " initialization");
+                Logger.getLogger(Security.class.getName()).info("Finished " + getClass().getSimpleName() + " initialization");
             } catch (Exception ex) {
                 userAuthenticator = null;
             }
@@ -190,7 +190,7 @@ import java.util.logging.Logger;
     DevicePoolListener devicePoolListener = new DevicePoolListener() {
         @Override
         public void onDeviceAdded(GenericDevice dev) {
-            if (Context.hasUsersManager()) {
+            if (Context.hasSecurity()) {
                 if (dev instanceof ch.psi.pshell.device.Device) {
                     dev.addListener(deviceWriteAccessListener);
                 }
@@ -343,11 +343,11 @@ import java.util.logging.Logger;
 
     void triggerUserChange(User user, User former) {
         DevicePoolPanel.setDeviceConfigPanelEnabled(!getCurrentRights().denyDeviceConfig);
-        for (UsersManagerListener listener : getListeners()) {
+        for (SecurityListener listener : getListeners()) {
             try {
                 listener.onUserChange(user, former);
             } catch (Exception ex) {
-                Logger.getLogger(UsersManager.class.getName()).log(Level.WARNING, null, ex);
+                Logger.getLogger(Security.class.getName()).log(Level.WARNING, null, ex);
             }
         }
     }

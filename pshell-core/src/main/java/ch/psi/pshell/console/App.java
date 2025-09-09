@@ -12,7 +12,7 @@ import ch.psi.pshell.pkg.PackageManager;
 import ch.psi.pshell.plugin.PluginManager;
 import ch.psi.pshell.scan.ScanStreamer;
 import ch.psi.pshell.scripting.ScriptManager;
-import ch.psi.pshell.security.UsersManager;
+import ch.psi.pshell.security.Security;
 import ch.psi.pshell.sequencer.CommandSource;
 import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.Interpreter.InterpreterStateException;
@@ -42,7 +42,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     Setup setup;
     final Configuration config;    
     final PluginManager pluginManager;
-    final UsersManager usersManager;
+    final Security security;
     final DataManager dataManager;
     final SessionManager sessionManager;
     VersionControl versionControl;
@@ -116,7 +116,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         dataManager = new DataManager();        
         pluginManager = new PluginManager();
         interpreter = new Interpreter(config.serverHostName);
-        usersManager = new UsersManager(null);
+        security = new Security(null);
         devicePool = new DevicePool();
         sessionManager = new SessionManager();
         sessionManager.setMode(config.sessionHandling);
@@ -201,11 +201,11 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                     dataStreamer = new DataServer(config.dataServerPort);
                 }
             }
-            usersManager.initialize(config.userManagement, config.userAuthenticator);
+            security.initialize(config.userManagement, config.userAuthenticator);
             String userProperty = System.getProperty(ch.psi.pshell.framework.Options.USER.toProperty());
             if (( userProperty != null) && (interpreter.getRunCount() == 0)) {
                 try {
-                    if (!usersManager.selectUser(userProperty, CommandSource.ctr)) {
+                    if (!security.selectUser(userProperty, CommandSource.ctr)) {
                         exit("No password provided");
                     }
                 } catch (Exception ex) {
@@ -281,7 +281,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     @Override
     protected void onExit() {
         super.onExit();
-        for (AutoCloseable ac : new AutoCloseable[]{interpreter, scanStreamer, packageManager,devicePool, versionControl, pluginManager, dataManager, usersManager}) {
+        for (AutoCloseable ac : new AutoCloseable[]{interpreter, scanStreamer, packageManager,devicePool, versionControl, pluginManager, dataManager, security}) {
             try {
                 if (ac != null) {
                     ac.close();

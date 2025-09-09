@@ -17,7 +17,6 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.security.User;
-import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.PlotListener;
 import ch.psi.pshell.swing.CodeEditor;
@@ -86,6 +85,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import ch.psi.pshell.security.SecurityListener;
 
 /**
  * */
@@ -380,8 +380,8 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
         }
             
         });
-        if (Context.hasUsersManager()){
-            Context.getUsersManager().addListener(new UsersManagerListener() {
+        if (Context.hasSecurity()){
+            Context.getSecurity().addListener(new SecurityListener() {
                 @Override
                 public void onUserChange(User user, User former) {
                     MainFrame.this.onUserChange(user, former);

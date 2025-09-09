@@ -3,8 +3,7 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.security.AccessLevel;
 import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.User;
-import ch.psi.pshell.security.UsersManager;
-import ch.psi.pshell.security.UsersManagerListener;
+import ch.psi.pshell.security.Security;
 import ch.psi.pshell.swing.ConfigDialog;
 import ch.psi.pshell.swing.ConfigDialog;
 import ch.psi.pshell.swing.Document;
@@ -27,6 +26,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import ch.psi.pshell.security.SecurityListener;
 
 /**
  *
@@ -34,9 +34,9 @@ import javax.swing.table.TableColumn;
 public class UsersEditor extends Editor {
 
     final DefaultTableModel model;
-    final UsersManager securityManager;
+    final Security securityManager;
 
-    public UsersEditor(UsersManager securityManager) {
+    public UsersEditor(Security securityManager) {
         super(new UsersEditorDocument());
         this.securityManager = securityManager;
         ((UsersEditorDocument) getDocument()).editor = this;
@@ -85,7 +85,7 @@ public class UsersEditor extends Editor {
         securityManager.addListener(securityManagerListener);
     }
 
-    UsersManagerListener securityManagerListener = new UsersManagerListener() {
+    SecurityListener securityManagerListener = new SecurityListener() {
         @Override
         public void onUserChange(User user, User former) {
             closeWindow(true);
@@ -269,7 +269,7 @@ public class UsersEditor extends Editor {
                 final ConfigDialog dlg = new ConfigDialog(null, true);
                 dlg.setTitle("Rights Configuration: " + level);
                 final Rights rights = new Rights();
-                rights.load(UsersManager.getInstance().getRightsFile(level).toString());
+                rights.load(Security.getInstance().getRightsFile(level).toString());
                 dlg.setConfig(rights);
                 dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 dlg.setListener((StandardDialog sd, boolean accepted) -> {

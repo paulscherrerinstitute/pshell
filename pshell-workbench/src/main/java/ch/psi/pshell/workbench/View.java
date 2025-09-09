@@ -3195,7 +3195,7 @@ public class View extends MainFrame{
                 showException(ex);
             }
 
-            menuUsers.setVisible(Context.isUsersEnabled() &&  Context.getUsersManager().getCurrentUser().accessLevel == AccessLevel.administrator);
+            menuUsers.setVisible(Context.isUsersEnabled() &&  Context.getSecurity().getCurrentUser().accessLevel == AccessLevel.administrator);
         }
     }//GEN-LAST:event_menuFileStateChanged
 
@@ -3549,7 +3549,7 @@ public class View extends MainFrame{
 
     private void menuUsersbuttonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUsersbuttonAbortActionPerformed
         try {
-            Editor editor = new UsersEditor(Context.getUsersManager());
+            Editor editor = new UsersEditor(Context.getSecurity());
             editor.setFilePermissions(Context.getConfigFilePermissions());
             EditorDialog dlg = editor.getDialog(this, false);
             dlg.setSize(640, 360);
@@ -3584,10 +3584,10 @@ public class View extends MainFrame{
 
     private void menuChangeUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuChangeUserActionPerformed
         try {
-            String current = Context.getUsersManager().getCurrentUser().name;
-            String name = getString("Select user:", Context.getUsersManager().getUserNames(), current);
+            String current = Context.getSecurity().getCurrentUser().name;
+            String name = getString("Select user:", Context.getSecurity().getUserNames(), current);
             if ((name != null) && (!name.equals(current))) {
-                Context.getUsersManager().selectUser(name);
+                Context.getSecurity().selectUser(name);
             }
         } catch (Exception ex) {
             showException(ex);
