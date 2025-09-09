@@ -9,7 +9,7 @@ import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Options;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.framework.Setup.LockMode;
-import ch.psi.pshell.notification.NotificationManager.NotificationLevel;
+import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plugin.Plugin;
 import ch.psi.pshell.scan.PlotScan;

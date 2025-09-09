@@ -7,7 +7,7 @@ import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.notification.NotificationManager;
+import ch.psi.pshell.notification.Notifier;
 import ch.psi.pshell.pkg.PackageManager;
 import ch.psi.pshell.plugin.PluginManager;
 import ch.psi.pshell.scan.ScanStreamer;
@@ -47,7 +47,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     final SessionManager sessionManager;
     VersionControl versionControl;
     Interpreter interpreter;
-    NotificationManager notificationManager;
+    Notifier notificationManager;
     PackageManager packageManager;
     DevicePool devicePool;    
     ScanStreamer scanStreamer;
@@ -218,7 +218,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             if ((!firstRun) || (!dataManager.isInitialized())) {
                 initializeData();
             }
-            notificationManager = new NotificationManager();
+            notificationManager = new Notifier();
             
             notificationManager.initialize();
             interpreter.setNotificationLevel(config.notificationLevel);

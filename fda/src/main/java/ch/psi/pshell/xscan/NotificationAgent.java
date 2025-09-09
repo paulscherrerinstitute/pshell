@@ -21,7 +21,7 @@ public class NotificationAgent {
                 if ((error && recipient.isError()) || (success && recipient.isSuccess())) {
                     String receiver = recipient.getValue();
                     try {
-                        Context.getNotificationManager().send(aSubject, aBody, null,new String[]{receiver}) ;
+                        Context.getNotifier().send(aSubject, aBody, null,new String[]{receiver}) ;
                     } catch (Exception ex) {
                         Logger.getLogger(NotificationAgent.class.getName()).log(Level.WARNING, "Failed to send notification to " + receiver, ex);
                     }

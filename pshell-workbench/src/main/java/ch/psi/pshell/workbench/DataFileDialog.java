@@ -8,7 +8,7 @@ import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Context.DataTransferConfig;
 import ch.psi.pshell.framework.Context.DataTransferMode;
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.notification.NotificationManager.NotificationLevel;
+import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.scan.ScanConfig;
 import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.swing.StandardDialog;
@@ -181,7 +181,7 @@ public class DataFileDialog extends StandardDialog {
 
     boolean changedNotificationManager() {
         try{
-            return !textRecipients.getText().trim().equals(Context.getNotificationManager().getConfig().to);
+            return !textRecipients.getText().trim().equals(Context.getNotifier().getConfig().to);
         } catch (Exception ex){
             return false;
         }
@@ -271,7 +271,7 @@ public class DataFileDialog extends StandardDialog {
         comboNotification.setSelectedItem(App.getInstance().getConfig().notificationLevel);
         textTasks.setText(App.getInstance().getConfig().notificationTasks);
         try {
-            textRecipients.setText(Context.getNotificationManager().getConfig().to);
+            textRecipients.setText(Context.getNotifier().getConfig().to);
         } catch (Exception ex) {            
         }
     }
@@ -1025,7 +1025,7 @@ public class DataFileDialog extends StandardDialog {
             }
             if (changedNotificationManager()) {
                 String to = textRecipients.getText().trim();
-                Context.getNotificationManager().setRecipients(to);
+                Context.getNotifier().setRecipients(to);
             }
             updateTransfer();
             update();

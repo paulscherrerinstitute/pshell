@@ -4,7 +4,7 @@ import ch.psi.pshell.framework.Config;
 import ch.psi.pshell.framework.Context.DataTransferMode;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.logging.LogLevel;
-import ch.psi.pshell.notification.NotificationManager.NotificationLevel;
+import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.scan.ScanConfig;
 import ch.psi.pshell.sequencer.CommandBus;
 import ch.psi.pshell.session.SessionManager.SessionHandling;

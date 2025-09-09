@@ -15,10 +15,10 @@ import java.util.logging.Logger;
 /**
  *
  */
-public class NotificationManager implements AutoCloseable{
-    public static  NotificationManager INSTANCE;    
+public class Notifier implements AutoCloseable{
+    public static  Notifier INSTANCE;    
     
-    public static NotificationManager getInstance(){
+    public static Notifier getInstance(){
         if (INSTANCE == null){
             throw new RuntimeException("Notification Manager not instantiated.");
         }        
@@ -41,14 +41,14 @@ public class NotificationManager implements AutoCloseable{
     String from;
    
     
-    NotificationConfig config;
+    NotifierConfig config;
     
     public Path getMailConfigFile() {
         return Paths.get(Setup.getConfigPath(), "mail.properties");
     }    
     
-    public NotificationManager(){
-        config = new NotificationConfig();
+    public Notifier(){
+        config = new NotifierConfig();
         INSTANCE  = this;        
     }
 
@@ -57,7 +57,7 @@ public class NotificationManager implements AutoCloseable{
             config.load(getMailConfigFile().toString());
         } catch (IOException ex) {
             if (!Setup.isVolatile()){
-                Logger.getLogger(NotificationManager.class.getName()).log(Level.WARNING, null, ex);
+                Logger.getLogger(Notifier.class.getName()).log(Level.WARNING, null, ex);
             }
         }
 
@@ -83,7 +83,7 @@ public class NotificationManager implements AutoCloseable{
         config.save();
     }
 
-    public NotificationConfig getConfig(){
+    public NotifierConfig getConfig(){
         return config;
     }
 
@@ -117,7 +117,7 @@ public class NotificationManager implements AutoCloseable{
                 to[i] = to[i] + config.smsSuffix;
             }
             else{
-                Logger.getLogger(NotificationManager.class.getName()).log(Level.WARNING, "Invalid email address: " + to[i]);
+                Logger.getLogger(Notifier.class.getName()).log(Level.WARNING, "Invalid email address: " + to[i]);
                 to[i] = null;
             }                
         }

@@ -7,7 +7,7 @@ import ch.psi.pshell.utils.Mail;
  *
  */
 
-public class NotificationConfig  extends Config {
+public class NotifierConfig  extends Config {
     public String from = "";
     public String to  = "";
     public String host  = "";        

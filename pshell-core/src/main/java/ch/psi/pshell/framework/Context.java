@@ -8,7 +8,7 @@ import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.logging.LogManager;
-import ch.psi.pshell.notification.NotificationManager;
+import ch.psi.pshell.notification.Notifier;
 import ch.psi.pshell.pkg.PackageManager;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plugin.PluginManager;
@@ -332,16 +332,16 @@ public class Context {
         return SessionManager.getInstance();
     }
 
-    public static boolean hasNotificationManager(){
-        return NotificationManager.hasInstance();
+    public static boolean hasNotifier(){
+        return Notifier.hasInstance();
     }
 
     public static boolean isNotificationEnabled(){
-        return hasNotificationManager() && (getNotificationManager().isEnabled());
+        return hasNotifier() && (getNotifier().isEnabled());
     }
     
-    public static NotificationManager getNotificationManager(){
-        return NotificationManager.getInstance();
+    public static Notifier getNotifier(){
+        return Notifier.getInstance();
     }
     
     public static boolean hasPackageManager(){
@@ -663,9 +663,9 @@ public class Context {
             }
 
             if (to == null) {
-                getNotificationManager().send(subject, text, att);
+                getNotifier().send(subject, text, att);
             } else {
-                getNotificationManager().send(subject, text, att, to.toArray(new String[0]));
+                getNotifier().send(subject, text, att, to.toArray(new String[0]));
             }
         }
     }
