@@ -1,7 +1,7 @@
 package ch.psi.pshell.workbench;
 
 import ch.psi.pshell.devices.DefaultPanel;
-import ch.psi.pshell.devices.DevicePanelManager;
+import ch.psi.pshell.devices.DevicePanelFactory;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.MainFrame.ScriptEditorPreferences;
 import ch.psi.pshell.framework.MainFrame.ScriptPopupMode;
@@ -171,7 +171,7 @@ public class Preferences {
             preferences.fontTerminal= fonts[7];
             preferences.tabSize = 4;
             preferences.processingScripts = new String[0];
-            preferences.defaultPanels = DevicePanelManager.getDefaultPanels();
+            preferences.defaultPanels = DevicePanelFactory.getDefaultPanels();
             preferences.consoleLocation = DEFAULT_CONSOLE_LOCATION;
             preferences.dataPanelLocation = DEFAULT_DATA_PANEL_LOCATION;
             preferences.defaultPlotColormap = Colormap.Temperature;

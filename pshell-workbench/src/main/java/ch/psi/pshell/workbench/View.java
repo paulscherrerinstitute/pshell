@@ -9,7 +9,7 @@ import ch.psi.pshell.data.FormatHDF5;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.devices.DevicePanelManager;
+import ch.psi.pshell.devices.DevicePanelFactory;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Executor;
 import ch.psi.pshell.framework.MainFrame;
@@ -548,7 +548,7 @@ public class View extends MainFrame{
             }
         }
         
-        DevicePanelManager.getInstance().checkWindowRestart();
+        DevicePanelFactory.getInstance().checkWindowRestart();
 
         menuVersioning.setVisible(App.getInstance().getConfig().isVersioningEnabled());        
         menuPush.setEnabled(App.getInstance().getConfig().isVersioningTrackingRemote());
@@ -1216,8 +1216,8 @@ public class View extends MainFrame{
    
 
     public void applyPreferences() {
-        DevicePanelManager.getInstance().setDefaultPanels(preferences.defaultPanels);
-        DevicePanelManager.getInstance().configure(
+        DevicePanelFactory.getInstance().setDefaultPanels(preferences.defaultPanels);
+        DevicePanelFactory.getInstance().configure(
                 preferences.persistRendererWindows && !Setup.isLocal(), 
                 preferences.showImageStatusBar,
                 preferences.backgroundRendering

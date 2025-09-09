@@ -1,7 +1,7 @@
 package ch.psi.pshell.workbench;
 
 import ch.psi.pshell.devices.DefaultPanel;
-import ch.psi.pshell.devices.DevicePanelManager;
+import ch.psi.pshell.devices.DevicePanelFactory;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.MainFrame.ScriptPopupMode;
 import ch.psi.pshell.framework.Setup;
@@ -1865,7 +1865,7 @@ public class PreferencesDialog extends StandardDialog {
     private void buttonDefaultPanelsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDefaultPanelsActionPerformed
         try {
             modelPanels.setRowCount(0);
-            for (DefaultPanel defaultPanel : DevicePanelManager.getDefaultPanels()) {
+            for (DefaultPanel defaultPanel : DevicePanelFactory.getDefaultPanels()) {
                 modelPanels.addRow(new Object[]{defaultPanel.deviceClassName, defaultPanel.panelClassName});
             }
             updateTablePanels();

@@ -5,7 +5,7 @@ import ch.psi.pshell.app.StatusBar;
 import ch.psi.pshell.data.DataAddress;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.devices.DevicePanelManager;
+import ch.psi.pshell.devices.DevicePanelFactory;
 import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
@@ -215,7 +215,7 @@ public class App extends ch.psi.pshell.devices.App {
                 @Override
                 public MonitoredPanel showPanel(Nameable dev) {
                     if (dev instanceof GenericDevice genericDevice){
-                        return DevicePanelManager.getInstance().showPanel(genericDevice);
+                        return DevicePanelFactory.getInstance().showPanel(genericDevice);
                     }
                     return null;
                 }
@@ -927,8 +927,8 @@ public class App extends ch.psi.pshell.devices.App {
         }
     }
          
-    public static DevicePanelManager getDevicePanelManager() {
-        return DevicePanelManager.getInstance();
+    public static DevicePanelFactory getDevicePanelManager() {
+        return DevicePanelFactory.getInstance();
     }
     
     

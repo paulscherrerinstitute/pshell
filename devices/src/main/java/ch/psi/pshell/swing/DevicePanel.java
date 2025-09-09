@@ -10,7 +10,7 @@ import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Startable;
 import ch.psi.pshell.devices.App;
-import ch.psi.pshell.devices.DevicePanelManager;
+import ch.psi.pshell.devices.DevicePanelFactory;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.devices.DevicePoolListener;
 import ch.psi.pshell.devices.InlineDevice;
@@ -425,7 +425,7 @@ public class DevicePanel extends MonitoredPanel {
 
     public static MonitoredPanel showDevicePanel(Component parent, GenericDevice device) {
         Window window = (parent instanceof Window w) ? w : SwingUtils.getWindow(parent);
-        return DevicePanelManager.getInstance().showPanel(device, window);
+        return DevicePanelFactory.getInstance().showPanel(device, window);
     }
 
     public MonitoredPanel showDevicePanel(GenericDevice device) {
@@ -433,7 +433,7 @@ public class DevicePanel extends MonitoredPanel {
     }
     
     static public boolean hideDevicePanel(GenericDevice device) {
-        return DevicePanelManager.getInstance().hidePanel(device);
+        return DevicePanelFactory.getInstance().hidePanel(device);
     }
 
     protected String getDeviceTooltip(){
@@ -490,7 +490,7 @@ public class DevicePanel extends MonitoredPanel {
     
     public static DevicePanel createFrame(Device device, Window parent, String title, DevicePanel panel, Dimension size) throws Exception {
         DevicePanel devicePanel = (panel==null) ? 
-                (DevicePanel) DevicePanelManager.getInstance().getDefaultPanel(device).getPanelClass().getDeclaredConstructor().newInstance() :
+                (DevicePanel) DevicePanelFactory.getInstance().getDefaultPanel(device).getPanelClass().getDeclaredConstructor().newInstance() :
                 panel;
 
         SwingUtilities.invokeLater(() -> {

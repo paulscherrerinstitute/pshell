@@ -9,7 +9,7 @@ import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.camserver.ProxyClient;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceListener;
-import ch.psi.pshell.devices.DevicePanelManager;
+import ch.psi.pshell.devices.DevicePanelFactory;
 import ch.psi.pshell.utils.EncoderJson;
 import ch.psi.pshell.utils.NamedThreadFactory;
 import ch.psi.pshell.utils.State;
@@ -209,7 +209,7 @@ public class CamServerServicePanel extends DevicePanel {
                 }
             }
         });
-        MonitoredPanel panel = DevicePanelManager.getInstance().showPanel(stream, getWindow());
+        MonitoredPanel panel = DevicePanelFactory.getInstance().showPanel(stream, getWindow());
         Window window = panel.getWindow();
         window.addWindowListener(new WindowAdapter() {
             @Override

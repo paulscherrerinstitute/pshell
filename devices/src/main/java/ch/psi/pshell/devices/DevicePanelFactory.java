@@ -56,13 +56,13 @@ import javax.swing.JDialog;
 /**
  *
  */
-public class DevicePanelManager {
+public class DevicePanelFactory {
     
-    static DevicePanelManager instance;
+    static DevicePanelFactory instance;
 
-    public static DevicePanelManager getInstance() {
+    public static DevicePanelFactory getInstance() {
         if (instance == null) {
-            instance = new DevicePanelManager(App.getMainFrame());
+            instance = new DevicePanelFactory(App.getMainFrame());
         }
         return instance;
     }    
@@ -70,7 +70,7 @@ public class DevicePanelManager {
     final Map<GenericDevice, JDialog> deviceDialogs;
     final Map<Device, JDialog> historyDialogs;
     final MainFrame view;
-    final Logger logger = Logger.getLogger(DevicePanelManager.class.getName());
+    final Logger logger = Logger.getLogger(DevicePanelFactory.class.getName());
 
     boolean persistRendererWindows;
     boolean showImageStatusBar=true;    
@@ -79,7 +79,7 @@ public class DevicePanelManager {
             
     
 
-    DevicePanelManager(MainFrame view) {
+    DevicePanelFactory(MainFrame view) {
         this.view = view;
         this.deviceDialogs = new HashMap<>();
         this.historyDialogs = new HashMap<>();        

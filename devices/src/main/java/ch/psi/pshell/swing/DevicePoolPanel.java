@@ -7,7 +7,7 @@ import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadbackDeviceListener;
 import ch.psi.pshell.device.ReadonlyProcessVariable;
 import ch.psi.pshell.device.Stoppable;
-import ch.psi.pshell.devices.DevicePanelManager;
+import ch.psi.pshell.devices.DevicePanelFactory;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.devices.DevicePoolListener;
 import ch.psi.pshell.imaging.Source;
@@ -157,7 +157,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
             if (dev != null) {
                 try {
                     if (dev instanceof Device d) {
-                         DevicePanelManager.getInstance().showHistory(d);
+                         DevicePanelFactory.getInstance().showHistory(d);
                     }
                 } catch (Exception ex) {
                     showException(ex);
@@ -224,7 +224,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                             menuRevisionHistory.setEnabled(menuConfig.isEnabled() && VersionControl.hasInstance());
                             popupMenu.show(e.getComponent(), e.getX(), e.getY());
                             menuHistory.setEnabled(getSelectedDevice() instanceof Device);
-                            menuPanel.setEnabled(DevicePanelManager.getInstance().hasControlPanel(getSelectedDevice()));
+                            menuPanel.setEnabled(DevicePanelFactory.getInstance().hasControlPanel(getSelectedDevice()));
                             menuPanel.setText((getSelectedDevice() instanceof Source) ? "Render" : "Control panel");
                         }
                     }
@@ -409,7 +409,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
     }
 
     protected void onDoubleClick(GenericDevice dev) throws Exception {
-        DevicePanelManager.getInstance().showPanel(dev);
+        DevicePanelFactory.getInstance().showPanel(dev);
     }
 
     /**
