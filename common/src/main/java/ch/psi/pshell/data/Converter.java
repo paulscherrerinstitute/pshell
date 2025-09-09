@@ -30,7 +30,7 @@ public interface Converter {
         return false;
     }      
     
-    default boolean canConvert(FormatManager manager, File file){
+    default boolean canConvert(DataStore manager, File file){
         try{
             return canConvert(file);
         } catch (Exception ex) {
@@ -38,7 +38,7 @@ public interface Converter {
         }              
     }          
     
-    default boolean canConvert(FormatManager manager, String root, String path, Map<String, Object> info){
+    default boolean canConvert(DataStore manager, String root, String path, Map<String, Object> info){
         try{
             if (info==null){
                 info = manager.getInfo(root, path);
@@ -54,7 +54,7 @@ public interface Converter {
         throw new Exception ("Not implemented");
     }
 
-    default void convert(FormatManager manager, String root, String path, File output) throws Exception {
+    default void convert(DataStore manager, String root, String path, File output) throws Exception {
         DataSlice slice = manager.getData(root, path);
         Map<String, Object> info = manager.getInfo(root, path);
         Map<String, Object> attrs = manager.getAttributes(root, path);
@@ -62,11 +62,11 @@ public interface Converter {
     }
     
     default void convert(File file, File output) throws Exception{        
-        FormatManager manager = new FormatManager(file.isDirectory() ?  FormatManager.getGlobal().getFormat().getId() : IO.getExtension(file));
+        DataStore manager = new DataStore(file.isDirectory() ?  DataStore.getGlobal().getFormat().getId() : IO.getExtension(file));
         convert(manager, file.getParent(), file.getName(), output);
     }        
 
-    default File convert(FormatManager manager, String root, String path, Component parent) throws Exception {
+    default File convert(DataStore manager, String root, String path, Component parent) throws Exception {
         JFileChooser chooser = new JFileChooser(getDefaultOutputFolder(root, path));        
         chooser.addChoosableFileFilter(new ExtensionFileFilter(getName() + " files (*." + getExtension() + ")", new String[]{getExtension()}));
         chooser.setAcceptAllFileFilterUsed(false);
@@ -121,11 +121,11 @@ public interface Converter {
         return Setup.getDataPath();
     }
 
-    default CompletableFuture startConvert(FormatManager manager, String root, String path, File output) {
+    default CompletableFuture startConvert(DataStore manager, String root, String path, File output) {
         return Threading.getFuture(() -> convert(manager, root, path, output));
     }
 
-    default CompletableFuture startConvert(FormatManager manager, String root, String path, Component parent) {
+    default CompletableFuture startConvert(DataStore manager, String root, String path, Component parent) {
         return Threading.getFuture(() -> convert(manager, root, path, parent));
     }
     

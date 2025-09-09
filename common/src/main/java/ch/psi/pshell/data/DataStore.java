@@ -23,27 +23,27 @@ import jep.NDArray;
 /**
  * Implements format class instantiation and common data handling logic.
  */
-public class FormatManager implements AutoCloseable {
+public class DataStore implements AutoCloseable {
     //final Context context;
-    static final Logger logger = Logger.getLogger(FormatManager.class.getName());
+    static final Logger logger = Logger.getLogger(DataStore.class.getName());
     //Layout layout;
     protected Format format;
     protected File outputFile;
     protected FilePermissions filePermissions = FilePermissions.Default;
     protected DirectoryStream.Filter fileFilter;
-    static FormatManager defaultManager;
-    static FormatManager global;
+    static DataStore defaultManager;
+    static DataStore global;
     
-    public FormatManager(){        
+    public DataStore(){        
     }
     
     public void setGlobal(){
         global = this;
     }
     
-    public static FormatManager getGlobal(){
+    public static DataStore getGlobal(){
         if (global == null) {
-            defaultManager = new FormatManager(new FormatHDF5());
+            defaultManager = new DataStore(new FormatHDF5());
             global = defaultManager;
         }
         return global;
@@ -62,31 +62,31 @@ public class FormatManager implements AutoCloseable {
     }
     
 
-    public FormatManager(String format) throws Exception {
+    public DataStore(String format) throws Exception {
         this();
-        FormatManager.this.setFormat(format);     
+        DataStore.this.setFormat(format);     
     }
 
-    public FormatManager(Format format) {
+    public DataStore(Format format) {
         this();
-        FormatManager.this.setFormat(format);     
+        DataStore.this.setFormat(format);     
     }
 
-    public FormatManager(File outputFile, String format) throws Exception {
+    public DataStore(File outputFile, String format) throws Exception {
         this(format);
         setOutputFile(outputFile);
     }
     
-    public FormatManager(String outputFile, String format) throws Exception {
+    public DataStore(String outputFile, String format) throws Exception {
         this(new File(outputFile), format);
     }
 
-    public FormatManager(File outputFile, Format format) throws Exception {
+    public DataStore(File outputFile, Format format) throws Exception {
         this(format);
         setOutputFile(outputFile);
     }
     
-    public FormatManager(String outputFile, Format format) throws Exception {
+    public DataStore(String outputFile, Format format) throws Exception {
         this(new File(outputFile), format);
     }
     
@@ -136,7 +136,7 @@ public class FormatManager implements AutoCloseable {
                 return;
             }
         }
-        FormatManager.this.setFormat((Format) providerClass.newInstance());
+        DataStore.this.setFormat((Format) providerClass.newInstance());
     }
 
     public void setFormat(Format format) {
@@ -795,14 +795,14 @@ public class FormatManager implements AutoCloseable {
         int[] shape =  Arr.getShape(element);
         int[] dimensions = new int[shape.length+1];
         System.arraycopy(shape, 0, dimensions, 1, shape.length);        
-        Map features = FormatManager.createCompressionFeatures(element, shuffle);
+        Map features = DataStore.createCompressionFeatures(element, shuffle);
         createDataset(path, type, dimensions, features);
     }
 
     public void createCompressedDataset(String path, Class type, int[] shape, boolean shuffle) throws IOException {
         int[] dimensions = new int[shape.length+1];
         System.arraycopy(shape, 0, dimensions, 0, shape.length);        
-        Map features = FormatManager.createCompressionFeatures(shape, shuffle);
+        Map features = DataStore.createCompressionFeatures(shape, shuffle);
         createDataset(path, type, dimensions, features);
     }
 

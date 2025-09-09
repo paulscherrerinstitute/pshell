@@ -1,7 +1,7 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.app.Setup;
-import ch.psi.pshell.data.FormatManager;
+import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.utils.IO;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -100,7 +100,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
             labelFormat.setHorizontalAlignment(SwingConstants.CENTER);
             comboFormat = new JComboBox();
             if (formats==null){
-                formats = FormatManager.getFormatIds();
+                formats = DataStore.getFormatIds();
             }
             comboFormat.setModel(new DefaultComboBoxModel(formats));
             addComponent(labelFormat);
@@ -116,7 +116,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
             JLabel labelLayout = new JLabel("Layout:");
             labelLayout.setHorizontalAlignment(SwingConstants.CENTER);
             if (layouts==null){
-                layouts = FormatManager.getLayoutIds();
+                layouts = DataStore.getLayoutIds();
             }
             comboLayout = new JComboBox();
             comboLayout.setModel(new DefaultComboBoxModel(layouts));

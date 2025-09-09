@@ -7,7 +7,7 @@ import ch.psi.pshell.data.DataAddress;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Format;
-import ch.psi.pshell.data.FormatManager;
+import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.framework.Processor;
 import ch.psi.pshell.plot.Plot;
@@ -953,7 +953,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     }
     
     public void initialize() {
-        if ((!FormatManager.isDefault())&& (FormatManager.getGlobal() instanceof DataManager dataManager)){       
+        if ((!DataStore.isDefault())&& (DataStore.getGlobal() instanceof DataManager dataManager)){       
             initialize(dataManager);        
         }
     }
@@ -1813,19 +1813,19 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                format =  IO.getExtension(file);
             }             
             if ((format==null) || (format.isBlank())){
-                if (FormatManager.isDefault()){
+                if (DataStore.isDefault()){
                     if (file.isFile()){
                         format = "h5";
                     } else {
                         format = "txt";
                     }
                 } else {                    
-                    format = FormatManager.getGlobal().getFormat().getId();
+                    format = DataStore.getGlobal().getFormat().getId();
                 }                
             }
         } 
         if ((layout==null) || (layout.isBlank())){
-            if ((!FormatManager.isDefault()) && (FormatManager.getGlobal() instanceof DataManager dataManager)){     
+            if ((!DataStore.isDefault()) && (DataStore.getGlobal() instanceof DataManager dataManager)){     
                 layout = dataManager.getLayout().getId();
             } else {
                 layout = "default";

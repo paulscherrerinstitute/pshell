@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 /**
  * Manages the automatic persistence of DAQ scritps.
  */
-public class DataManager extends ch.psi.pshell.data.FormatManager {
+public class DataManager extends ch.psi.pshell.data.DataStore {
 
     static final Logger logger = Logger.getLogger(DataManager.class.getName());
     
@@ -147,7 +147,7 @@ public class DataManager extends ch.psi.pshell.data.FormatManager {
     }
 
     public static String[] getFormatIds(){
-        return Arr.append(FormatManager.getFormatIds(), "fda");
+        return Arr.append(DataStore.getFormatIds(), "fda");
     }
 
     public static String[] getLayoutIds(){

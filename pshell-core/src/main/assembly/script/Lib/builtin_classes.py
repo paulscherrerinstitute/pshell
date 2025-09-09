@@ -45,7 +45,7 @@ import ch.psi.pshell.framework.Context as Context
 import ch.psi.pshell.framework.Setup as Setup
 import ch.psi.pshell.framework.App as App
 
-import ch.psi.pshell.data.FormatManager as FormatManager
+import ch.psi.pshell.data.DataStore as DataStore
 import ch.psi.pshell.data.DataManager as DataManager
 import ch.psi.pshell.data.DataSlice as DataSlice
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
