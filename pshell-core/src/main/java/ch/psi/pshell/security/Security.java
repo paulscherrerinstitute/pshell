@@ -34,7 +34,7 @@ import java.util.logging.Logger;
     
     public static Security getInstance(){
         if (INSTANCE == null){
-            throw new RuntimeException("Users Manager not instantiated.");
+            throw new RuntimeException("Security not instantiated.");
         }          
         return INSTANCE;
     }

@@ -7,7 +7,7 @@ import ch.psi.pshell.logging.LogLevel;
 import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.scan.ScanConfig;
 import ch.psi.pshell.sequencer.CommandBus;
-import ch.psi.pshell.session.SessionManager.SessionHandling;
+import ch.psi.pshell.session.Sessions.SessionHandling;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.Str;
 import java.io.IOException;

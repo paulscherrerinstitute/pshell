@@ -4,9 +4,8 @@ import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.framework.Task;
 import ch.psi.pshell.session.SciCat;
-import ch.psi.pshell.session.SessionManager;
-import ch.psi.pshell.session.SessionManager.MetadataType;
-import ch.psi.pshell.session.SessionManager.SessionManagerListener;
+import ch.psi.pshell.session.Sessions;
+import ch.psi.pshell.session.Sessions.MetadataType;
 import ch.psi.pshell.swing.SwingUtils.OptionResult;
 import ch.psi.pshell.swing.SwingUtils.OptionType;
 import ch.psi.pshell.utils.Chrono;
@@ -36,11 +35,12 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import ch.psi.pshell.session.Sessions.SessionsListener;
 
 
-public class SessionsDialog extends StandardDialog implements SessionManagerListener{
+public class SessionsDialog extends StandardDialog implements SessionsListener{
 
-    final SessionManager manager;    
+    final Sessions manager;    
     final DefaultTableModel modelSessions;
     final DefaultTableModel modelMetadata;
     final DefaultTableModel modelRuns;
@@ -54,7 +54,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     public SessionsDialog(java.awt.Window parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        manager = Context.isHandlingSessions() ? Context.getSessionManager() : null;
+        manager = Context.isHandlingSessions() ? Context.getSessions() : null;
         modelSessions = (DefaultTableModel) tableSessions.getModel();
         modelMetadata = (DefaultTableModel) tableMetadata.getModel();
         modelRuns = (DefaultTableModel) tableRuns.getModel();
@@ -131,7 +131,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                             Boolean value = (Boolean) modelRuns.getValueAt(runIndex, 0);
                             String data = (String) modelRuns.getValueAt(runIndex, 4);
                             
-                            boolean editable = SessionManager.isSessionEditable(getSelectedSessionState());                                                   
+                            boolean editable = Sessions.isSessionEditable(getSelectedSessionState());                                                   
                             if (editable){
                                 //manager.setRunEnabled(currentSession, runIndex, value);
                                 manager.setRunEnabled(currentSession, data, value);
@@ -179,7 +179,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                         }                            
                         if (!Str.toString(value).equals(current)){
                             String state = getSelectedSessionState();
-                            if (!SessionManager.isSessionEditable(state)){
+                            if (!Sessions.isSessionEditable(state)){
                                 showMessage( "Error", "Cannot change session metadata if state is " + state);
                                 SwingUtilities.invokeLater(()->{ 
                                     selectSession(currentSession); 
@@ -247,7 +247,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     }   
     
     @Override
-    public void onChange(int id, SessionManager.ChangeType type) {
+    public void onChange(int id, Sessions.ChangeType type) {
         SwingUtilities.invokeLater(() -> {
             int session = currentSession;
             switch(type){
@@ -283,8 +283,8 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         int sessionRow = tableSessions.getSelectedRow();
         if (panelSessions.isVisible()){            
             String sessionState = getSelectedSessionState();
-            archiveEnabled = SessionManager.isSessionArchivable(sessionState);
-            editEnabled = SessionManager.isSessionEditable(sessionState) && (currentUser.equals(Sys.getUserName()));
+            archiveEnabled = Sessions.isSessionArchivable(sessionState);
+            editEnabled = Sessions.isSessionEditable(sessionState) && (currentUser.equals(Sys.getUserName()));
         } 
         buttonAddFile.setEnabled(editEnabled);
         buttonRemoveFile.setEnabled(editEnabled && tableFiles.getSelectedRow()>=0);
@@ -304,8 +304,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         updating = true;
         try{
             
-            List<Integer> ids = manager.getIDs(
-                    checkCompleted.isSelected() ? SessionManager.STATE_COMPLETED : null, 
+            List<Integer> ids = manager.getIDs(checkCompleted.isSelected() ? Sessions.STATE_COMPLETED : null, 
                     checkCurrentUser.isSelected() ? Sys.getUserName() : null);            
             modelSessions.setNumRows(ids.size());
             for (int i=0; i<ids.size(); i++){
@@ -497,7 +496,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
         @Override
         protected String doInBackground() throws Exception {
-            SessionManager manager = Context.getSessionManager();
+            Sessions manager = Context.getSessions();
             String msg = "Archiving session data to zip file";
             setMessage(msg);
             setProgress(0);

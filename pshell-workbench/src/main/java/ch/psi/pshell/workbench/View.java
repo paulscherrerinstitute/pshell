@@ -36,8 +36,8 @@ import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.PlotListener;
 import ch.psi.pshell.sequencer.Server;
-import ch.psi.pshell.session.SessionManager;
-import ch.psi.pshell.session.SessionManager.ChangeType;
+import ch.psi.pshell.session.Sessions;
+import ch.psi.pshell.session.Sessions.ChangeType;
 import ch.psi.pshell.stripchart.StripChart;
 import ch.psi.pshell.swing.CamServerServicePanel;
 import ch.psi.pshell.swing.ConfigDialog;
@@ -325,7 +325,7 @@ public class View extends MainFrame{
         super.onCreate();
         if (Context.isHandlingSessions() &&  !Setup.isOffline()){
             try {
-                Context.getSessionManager().addListener((id, type) -> {
+                Context.getSessions().addListener((id, type) -> {
                     if (type == ChangeType.STATE) {
                         SwingUtilities.invokeLater(() -> {
                             checkSessionPanel();
@@ -1145,7 +1145,7 @@ public class View extends MainFrame{
 
     void checkSessionPanel() {        
         try {
-            if (Context.getSessionManager().getCurrentSession() > 0) {
+            if (Context.getSessions().getCurrentSession() > 0) {
                 showSessionPanel();
             } else {
                 hideSessionPanel();
@@ -4140,10 +4140,10 @@ public class View extends MainFrame{
 
     private void menuSessionStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionStartActionPerformed
         try {
-            if (!Context.getSessionManager().isStarted()) {
+            if (!Context.getSessions().isStarted()) {
                 String name = getString("Enter the new session name:", "");
                 if (name != null) {
-                    Context.getSessionManager().start(name);
+                    Context.getSessions().start(name);
                 }
             }
         } catch (Exception ex) {
@@ -4163,23 +4163,23 @@ public class View extends MainFrame{
 
     private void menuSessionStopbuttonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionStopbuttonAbortActionPerformed
         try {
-            if (Context.getSessionManager().isStarted()) {
+            if (Context.getSessions().isStarted()) {
                 SessionPanel sessionPanel = getSessionPanel();
                 if (sessionPanel!=null){
                     tabStatus.setSelectedComponent(sessionPanel);
                 }
-                int id = Context.getSessionManager().getCurrentSession();
-                String name = Context.getSessionManager().getCurrentName();
+                int id = Context.getSessions().getCurrentSession();
+                String name = Context.getSessions().getCurrentName();
                 String session = name.isBlank() ? String.valueOf(id) : String.valueOf(id) + "-" + name;
                 
                 //If no session data cancels this session instead of completing
                 int numberRuns=0;
                 try{
-                    numberRuns = Context.getSessionManager().getNumberRuns();
+                    numberRuns = Context.getSessions().getNumberRuns();
                 } catch (IOException ex) {
                     String msg = String.format("Cannot access current session folder to close it consistently.\nAbort the current session?", session);
                     if (SwingUtils.showOption(this, "Session", msg , OptionType.YesNo) == OptionResult.Yes) {
-                        Context.getSessionManager().abort();                    
+                        Context.getSessions().abort();                    
                     }
                     return;
                 }
@@ -4187,7 +4187,7 @@ public class View extends MainFrame{
                 if (numberRuns==0){
                     String msg = String.format("Do you want to cancel session %s with no runs?", session);
                     if (SwingUtils.showOption(this, "Session", msg , OptionType.YesNo) == OptionResult.Yes) {
-                        Context.getSessionManager().cancel();                    
+                        Context.getSessions().cancel();                    
                     }
                     return;
                 }
@@ -4202,7 +4202,7 @@ public class View extends MainFrame{
                 panel.setPreferredSize(new Dimension(400, panel.getPreferredSize().height));
                 
                 if (showOption("Session", panel , OptionType.YesNo) == OptionResult.Yes) {
-                    Context.getSessionManager().stop();
+                    Context.getSessions().stop();
                     if (checkArchive.isSelected()){
                         SessionsDialog dlg = new SessionsDialog(this, false);
                         dlg.setSingleSession(id);
@@ -4218,7 +4218,7 @@ public class View extends MainFrame{
 
     private void menuSessionsMetadataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionsMetadataActionPerformed
         try{
-            MetadataEditor editor = new MetadataEditor(Convert.toStringArray(SessionManager.MetadataType.values()));  //new TextEditor();
+            MetadataEditor editor = new MetadataEditor(Convert.toStringArray(Sessions.MetadataType.values()));  //new TextEditor();
             EditorDialog dlg = editor.getDialog(this, true);
             editor.setFilePermissions(Context.getConfigFilePermissions());
             editor.load(Setup.getSessionMetadataDefinitionFile());
@@ -4228,7 +4228,7 @@ public class View extends MainFrame{
             editor.setTitle("Session Metadata");
             showChildWindow(dlg);            
             if (editor.wasSaved()){
-                Context.getSessionManager().onMetadataDefinitionChanged();
+                Context.getSessions().onMetadataDefinitionChanged();
             }
         } catch (Exception ex) {
             showException(ex);
@@ -4239,7 +4239,7 @@ public class View extends MainFrame{
 
     private void menuSessionPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionPauseActionPerformed
         try {
-            Context.getSessionManager().pause();
+            Context.getSessions().pause();
         } catch (Exception ex) {
             showException(ex);
         }
@@ -4247,7 +4247,7 @@ public class View extends MainFrame{
 
     private void menuSessionResumeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionResumeActionPerformed
         try {
-            Context.getSessionManager().resume();
+            Context.getSessions().resume();
         } catch (Exception ex) {
             showException(ex);
         }
@@ -4256,8 +4256,8 @@ public class View extends MainFrame{
     private void menuSessionsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuSessionsStateChanged
         try{                
             boolean enabled = !Setup.isOffline();
-            boolean sessionStarted = Context.getSessionManager().isStarted();
-            Boolean paused = sessionStarted ? Context.getSessionManager().isPaused(): false;     
+            boolean sessionStarted = Context.getSessions().isStarted();
+            Boolean paused = sessionStarted ? Context.getSessions().isPaused(): false;     
             menuSessionStop.setEnabled(enabled && sessionStarted);
             menuSessionStart.setEnabled(enabled && !sessionStarted);           
             menuSessionReopen.setEnabled(enabled);           
@@ -4274,7 +4274,7 @@ public class View extends MainFrame{
             SessionReopenDialog dlg = new SessionReopenDialog(this,true, "Reopen Session");
             this.showChildWindow(dlg);
             if (dlg.getResult()) {
-                Context.getSessionManager().restart(dlg.getSelectedSession());
+                Context.getSessions().restart(dlg.getSelectedSession());
             }          
         } catch (Exception ex) {
             showException(ex);
@@ -4286,7 +4286,7 @@ public class View extends MainFrame{
             String name = getString("Enter the session name created with the files selected in the data panel:", "");
             if (name != null) {
                 List<String> files = dataPanel.getSelectedFiles();
-                int id = Context.getSessionManager().create(name, files, null, null);
+                int id = Context.getSessions().create(name, files, null, null);
                 showScrollableMessage("Success", "Success creating session " + id + "-" + name + " with the files:", String.join("\n", files));
             }
         } catch (Exception ex) {

@@ -2672,7 +2672,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             if (location == null) {
                 location = "/";
             }
-            Map<String, Object> metadata = Context.getSessionManager().getMetadata(true);
+            Map<String, Object> metadata = Context.getSessions().getMetadata(true);
             for (String key : metadata.keySet()) {
                 Object value = metadata.get(key);
                 if (value != null) {

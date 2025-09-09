@@ -31,16 +31,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-public class SessionManager extends ObservableBase<SessionManager.SessionManagerListener> {
+public class Sessions extends ObservableBase<Sessions.SessionsListener> {
 
-    static  SessionManager INSTANCE;    
-    public SessionManager(){        
+    static  Sessions INSTANCE;    
+    public Sessions(){        
         INSTANCE  = this;
     }
     
-    public static SessionManager getInstance(){
+    public static Sessions getInstance(){
         if (INSTANCE == null){
-            throw new RuntimeException("Session Manager not instantiated.");
+            throw new RuntimeException("Sessions not instantiated.");
         }        
         return INSTANCE;
     }
@@ -87,17 +87,17 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         Map
     }
 
-    public static interface SessionManagerListener {
+    public static interface SessionsListener {
 
         void onChange(int id, ChangeType type);
     }
 
     void triggerChanged(int id, ChangeType type) {
-        for (SessionManagerListener listener : getListeners()) {
+        for (SessionsListener listener : getListeners()) {
             try {
                 listener.onChange(id, type);
             } catch (Exception ex) {
-                Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+                Logger.getLogger(Sessions.class.getName()).log(Level.WARNING, null, ex);
             }
         }
     }
@@ -221,7 +221,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 setInfo("state", STATE_COMPLETED);
                 setInfo("stop", getTimestamp());
             } catch (Exception ex) {
-                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Sessions.class.getName()).log(Level.SEVERE, null, ex);
             }
             setCurrentSession(null);
             triggerChanged(sessionId, ChangeType.STATE);
@@ -439,7 +439,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         try {
             root = Paths.get(root).toRealPath().toString();
         } catch (Exception ex) {
-            Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(Sessions.class.getName()).log(Level.WARNING, null, ex);
         }
         return root;
     }
@@ -650,7 +650,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Sessions.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         try {
@@ -674,7 +674,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                                     updateLastRun(sessionId, "state", STATE_ERROR + ": " + ex.getMessage());
                                 }
                             } catch (IOException ex1) {
-                                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex1);
+                                Logger.getLogger(Sessions.class.getName()).log(Level.SEVERE, null, ex1);
                             }
                         }
                     }, "Data transfer task: " + currentDataPath.getName()).start();
@@ -682,7 +682,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             }
             currentDataPath = dataPath;
         } catch (Exception ex) {
-            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Sessions.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -695,7 +695,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                     }
                 }
             } catch (Exception ex) {
-                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Sessions.class.getName()).log(Level.SEVERE, null, ex);
             }                        
         }
     }
@@ -706,7 +706,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             properties.load(in);
         } catch (FileNotFoundException ex) {
         } catch (Exception ex) {
-            Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(Sessions.class.getName()).log(Level.WARNING, null, ex);
         }
 
         return properties.entrySet();
@@ -798,7 +798,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 setMetadata(newMetadata);
             }
         } catch (Exception ex) {
-            Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(Sessions.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 
@@ -1074,7 +1074,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         List<String> ret = new ArrayList<>();
         for (String name : getFileList(id, true)) {
             if (new File(name).isAbsolute()) {
-                Logger.getLogger(SessionManager.class.getName()).fine("File not on data root: " + name);
+                Logger.getLogger(Sessions.class.getName()).fine("File not on data root: " + name);
             } else {
                 ret.add(name);
             }
@@ -1103,7 +1103,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             if (f.exists()) {
                 files.add(f);
             } else {
-                Logger.getLogger(SessionManager.class.getName()).warning("Invalid data file: " + f.toString());
+                Logger.getLogger(Sessions.class.getName()).warning("Invalid data file: " + f.toString());
             }
         }
         IO.createZipFile(file, files, preserveDirectoryStructure ? new File(getRoot(id)) : null);

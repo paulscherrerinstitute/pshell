@@ -20,7 +20,7 @@ public class Notifier implements AutoCloseable{
     
     public static Notifier getInstance(){
         if (INSTANCE == null){
-            throw new RuntimeException("Notification Manager not instantiated.");
+            throw new RuntimeException("Notifier not instantiated.");
         }        
         return INSTANCE;
     }

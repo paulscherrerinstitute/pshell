@@ -73,7 +73,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
     
     public static VersionControl getInstance(){
         if (INSTANCE == null){
-            throw new RuntimeException("Versioning Manager not instantiated.");
+            throw new RuntimeException("Version Control not instantiated.");
         }         
         return INSTANCE;
     }

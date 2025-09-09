@@ -77,8 +77,8 @@ def get_device_pool(){
     return Context.getDevicePool()
 }
 
-def get_session_manager(){
-    return Context.getSessionManager()
+def get_sessions(){
+    return Context.getSessions()
 }
 
 def get_plugin_manager(){

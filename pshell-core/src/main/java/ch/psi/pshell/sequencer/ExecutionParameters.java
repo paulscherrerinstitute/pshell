@@ -227,7 +227,7 @@ public class ExecutionParameters {
             Context.getInterpreter().onChangeDataPath(dataPath);
             if (isHandlingSessions()){
                 try{
-                    Context.getSessionManager().onChangeDataPath(dataPath);
+                    Context.getSessions().onChangeDataPath(dataPath);
                 } catch(Exception ex){
                     logger.log(Level.WARNING, null, ex);
                 }

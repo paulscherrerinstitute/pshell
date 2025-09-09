@@ -2,7 +2,7 @@ package ch.psi.pshell.session;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.session.SessionManager.MetadataType;
+import ch.psi.pshell.session.Sessions.MetadataType;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.Config;
 import ch.psi.pshell.utils.EncoderJson;
@@ -378,7 +378,7 @@ public class SciCat {
     }
         
     public IngestOutput ingest(int sessionId, Map<String, Object> metadata) throws IOException, InterruptedException {
-        SessionManager manager = Context.getSessionManager();
+        Sessions manager = Context.getSessions();
         Map<String, Object> info =manager.getInfo(sessionId);           
         Map<String,String> ingested = info.containsKey("ingested") ? (Map<String,String>)info.get("ingested") : new HashMap<>();
         Environment environment = getEnvironment();
@@ -403,7 +403,7 @@ public class SciCat {
         if (result.success){
             ingested.put(env, result.datasetId);
             manager.setInfo(sessionId, "ingested", ingested);
-            manager.setState(sessionId, SessionManager.STATE_ARCHIVED);
+            manager.setState(sessionId, Sessions.STATE_ARCHIVED);
         }
         return result;
     }

@@ -1,6 +1,6 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.session.SessionManager;
+import ch.psi.pshell.session.Sessions;
 import ch.psi.pshell.utils.Sys;
 import java.util.List;
 import java.util.Map;
@@ -17,13 +17,13 @@ public class SessionReopenDialog extends StandardDialog {
 
     final DefaultTableModel modelSessions;  
     volatile boolean updating; 
-    final SessionManager manager;  
+    final Sessions manager;  
     
     public SessionReopenDialog(java.awt.Window parent, boolean modal, String title) {
         super(parent, modal);
         setTitle(title);
         initComponents();
-        manager = SessionManager.isHandlingSessions() ? SessionManager.getInstance() : null;
+        manager = Sessions.isHandlingSessions() ? Sessions.getInstance() : null;
         modelSessions = (DefaultTableModel) tableSessions.getModel();    
         update();
         int sessions = tableSessions.getRowCount();
@@ -64,7 +64,7 @@ public class SessionReopenDialog extends StandardDialog {
                     String start = SessionsDialog.getTimeStr((Number)info.getOrDefault("start", 0));
                     String stop = SessionsDialog.getTimeStr((Number)info.getOrDefault("stop", 0));
                     String state = (String)info.getOrDefault("state", "unknown");
-                    if (SessionManager.isSessionEditable(state)){
+                    if (Sessions.isSessionEditable(state)){
                         modelSessions.setValueAt(String.valueOf(id), i, 0);
                         modelSessions.setValueAt(name, i, 1);
                         modelSessions.setValueAt(start, i, 2);

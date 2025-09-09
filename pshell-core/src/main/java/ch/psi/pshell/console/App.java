@@ -16,7 +16,7 @@ import ch.psi.pshell.security.Security;
 import ch.psi.pshell.sequencer.CommandSource;
 import ch.psi.pshell.sequencer.Interpreter;
 import ch.psi.pshell.sequencer.Interpreter.InterpreterStateException;
-import ch.psi.pshell.session.SessionManager;
+import ch.psi.pshell.session.Sessions;
 import ch.psi.pshell.utils.Config;
 import ch.psi.pshell.utils.Configurable;
 import ch.psi.pshell.utils.History;
@@ -44,7 +44,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     final PluginManager pluginManager;
     final Security security;
     final DataManager dataManager;
-    final SessionManager sessionManager;
+    final Sessions sessions;
     VersionControl versionControl;
     Interpreter interpreter;
     Notifier notificationManager;
@@ -118,8 +118,8 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         interpreter = new Interpreter(config.serverHostName);
         security = new Security(null);
         devicePool = new DevicePool();
-        sessionManager = new SessionManager();
-        sessionManager.setMode(config.sessionHandling);
+        sessions = new Sessions();
+        sessions.setMode(config.sessionHandling);
         var packages =  getPackageArgs();
         if ((packages != null) && (packages.size()>0)) {            
             packageManager = new PackageManager(packages.toArray(new File[0]));
@@ -169,7 +169,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         interpreter.setTerminalPort(config.isTerminalEnabled() ? config.terminalPort : 0);
         interpreter.setServerPort(config.isServerEnabled() ? config.serverPort : 0);    
         interpreter.setServerLight(!Setup.isServerMode());
-        sessionManager.setMode(config.sessionHandling);
+        sessions.setMode(config.sessionHandling);
 
         for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, packageManager, notificationManager,
             devicePool, versionControl}) {

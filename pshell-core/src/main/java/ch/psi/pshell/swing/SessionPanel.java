@@ -1,9 +1,8 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.framework.Context;
-import ch.psi.pshell.session.SessionManager;
-import ch.psi.pshell.session.SessionManager.MetadataType;
-import ch.psi.pshell.session.SessionManager.SessionManagerListener;
+import ch.psi.pshell.session.Sessions;
+import ch.psi.pshell.session.Sessions.MetadataType;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.SessionsDialog;
 import ch.psi.pshell.swing.SwingUtils;
@@ -22,13 +21,14 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import ch.psi.pshell.session.Sessions.SessionsListener;
 
 /**
  *
  */
-public class SessionPanel extends MonitoredPanel implements SessionManagerListener {
+public class SessionPanel extends MonitoredPanel implements SessionsListener {
 
-    final SessionManager manager;
+    final Sessions manager;
     final DefaultTableModel modelMetadata;
     final DefaultTableModel modelRuns;
 
@@ -37,7 +37,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     public SessionPanel() {
         initComponents();        
         int minColSize =  (UIManager.getLookAndFeel().getName().equalsIgnoreCase("nimbus"))? 68:60;
-        manager = Context.isHandlingSessions() ? Context.getSessionManager() : null;
+        manager = Context.isHandlingSessions() ? Context.getSessions() : null;
         modelMetadata = (DefaultTableModel) tableMetadata.getModel();
         modelRuns = (DefaultTableModel) tableRuns.getModel();
         tableRuns.getColumnModel().getColumn(0).setPreferredWidth(minColSize);
@@ -182,7 +182,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     }
 
     @Override
-    public void onChange(int id, SessionManager.ChangeType type) {
+    public void onChange(int id, Sessions.ChangeType type) {
         if (id==manager.getCurrentSession()){
             SwingUtilities.invokeLater(() -> {
                 switch (type) {

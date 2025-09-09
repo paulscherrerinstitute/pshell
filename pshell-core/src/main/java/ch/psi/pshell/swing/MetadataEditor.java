@@ -2,8 +2,8 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.session.SciCat;
-import ch.psi.pshell.session.SessionManager;
-import ch.psi.pshell.session.SessionManager.MetadataType;
+import ch.psi.pshell.session.Sessions;
+import ch.psi.pshell.session.Sessions.MetadataType;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.OrderedProperties;
 import java.awt.BorderLayout;
@@ -101,7 +101,7 @@ public class MetadataEditor extends Editor {
                         def = type.substring(type.indexOf(";") + 1).trim();
                         type = type.substring(0, type.indexOf(";")).trim();                        
                     } else {
-                        def = String.valueOf(SessionManager.getDefaultValue(type));
+                        def = String.valueOf(Sessions.getDefaultValue(type));
                     }
                     editor.model.addRow(new Object[]{key,type, def});
                 } catch (Exception ex) {
@@ -314,7 +314,7 @@ public class MetadataEditor extends Editor {
             if (showOption("Session", panel , SwingUtils.OptionType.OkCancel) == SwingUtils.OptionResult.Yes) {                
                 String key = comboBox.getSelectedItem().toString();
                 MetadataType type = SciCat.metadataFields.get(key);
-                Object def = SessionManager.getDefaultValue(type);
+                Object def = Sessions.getDefaultValue(type);
                 model.insertRow(table.getSelectedRow() + 1, new Object[]{key,type.toString(), def});
                 update();
             }

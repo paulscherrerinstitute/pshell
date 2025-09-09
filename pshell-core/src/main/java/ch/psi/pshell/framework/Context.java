@@ -24,7 +24,7 @@ import ch.psi.pshell.security.Security;
 import ch.psi.pshell.sequencer.CommandBus;
 import ch.psi.pshell.sequencer.ExecutionParameters;
 import ch.psi.pshell.sequencer.Interpreter;
-import ch.psi.pshell.session.SessionManager;
+import ch.psi.pshell.session.Sessions;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.UserInterface;
 import ch.psi.pshell.utils.Chrono;
@@ -324,12 +324,12 @@ public class Context {
     }
 
     
-    public static boolean hasSessionManager(){
-        return SessionManager.hasInstance();
+    public static boolean hasSessions(){
+        return Sessions.hasInstance();
     }
     
-    public static SessionManager getSessionManager(){
-        return SessionManager.getInstance();
+    public static Sessions getSessions(){
+        return Sessions.getInstance();
     }
 
     public static boolean hasNotifier(){
@@ -388,27 +388,27 @@ public class Context {
 
     public static int getSessionId() {
         if (isHandlingSessions()) {
-            return getSessionManager().getCurrentSession();
+            return getSessions().getCurrentSession();
         }
-        return SessionManager.UNDEFINED_SESSION_ID;
+        return Sessions.UNDEFINED_SESSION_ID;
     }
 
     public static String getSessionName() {
         if (isHandlingSessions()) {
-            return getSessionManager().getCurrentName();
+            return getSessions().getCurrentName();
         }
-        return SessionManager.UNDEFINED_SESSION_NAME;
+        return Sessions.UNDEFINED_SESSION_NAME;
     }    
     
     public static void addDetachedFileToSession(File file) throws IOException {
         if (isHandlingSessions()) {
-            getSessionManager().onCreateDetachedFile(file);
+            getSessions().onCreateDetachedFile(file);
         }
     }    
 
     public static boolean isHandlingSessions(){
-        if (hasSessionManager()){
-            return SessionManager.isHandlingSessions();
+        if (hasSessions()){
+            return Sessions.isHandlingSessions();
         }
         return false;        
     }
@@ -602,7 +602,7 @@ public class Context {
     
             
     public static Map getSessionMetadata(){
-        //Map<String, Object> metadata = getSessionManager().getMetadata(true);
+        //Map<String, Object> metadata = getSessions().getMetadata(true);
         return null;
     }
         
