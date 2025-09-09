@@ -34,11 +34,11 @@ import ch.psi.pshell.security.SecurityListener;
 public class UsersEditor extends Editor {
 
     final DefaultTableModel model;
-    final Security securityManager;
+    final Security security;
 
-    public UsersEditor(Security securityManager) {
+    public UsersEditor(Security security) {
         super(new UsersEditorDocument());
-        this.securityManager = securityManager;
+        this.security = security;
         ((UsersEditorDocument) getDocument()).editor = this;
         initComponents();
 
@@ -82,14 +82,14 @@ public class UsersEditor extends Editor {
         });
         update();
 
-        securityManager.addListener(securityManagerListener);
+        security.addListener(securityListener);
     }
 
-    SecurityListener securityManagerListener = new SecurityListener() {
+    SecurityListener securityListener = new SecurityListener() {
         @Override
         public void onUserChange(User user, User former) {
             closeWindow(true);
-            securityManager.removeListener(this);
+            security.removeListener(this);
         }
     };
 
@@ -113,8 +113,8 @@ public class UsersEditor extends Editor {
         @Override
         public void load(String fileName) throws IOException {
             clear();
-            editor.setFileName(editor.securityManager.getUsersFile().toString());
-            for (User user : editor.securityManager.getUsers()) {
+            editor.setFileName(editor.security.getUsersFile().toString());
+            for (User user : editor.security.getUsers()) {
                 editor.model.addRow(new Object[]{user.name, user.accessLevel, user.authentication, user.autoLogon});
             }
             setChanged(false);
@@ -160,7 +160,7 @@ public class UsersEditor extends Editor {
                 throw new IOException("Auto Logon user must not be authenticated");
             }
 
-            editor.securityManager.setUsers(users.toArray(new User[0]));
+            editor.security.setUsers(users.toArray(new User[0]));
             setChanged(false);
         }
     }

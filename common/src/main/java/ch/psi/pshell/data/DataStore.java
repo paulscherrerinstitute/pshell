@@ -31,7 +31,7 @@ public class DataStore implements AutoCloseable {
     protected File outputFile;
     protected FilePermissions filePermissions = FilePermissions.Default;
     protected DirectoryStream.Filter fileFilter;
-    static DataStore defaultManager;
+    static DataStore defaultDataStore;
     static DataStore global;
     
     public DataStore(){        
@@ -43,14 +43,14 @@ public class DataStore implements AutoCloseable {
     
     public static DataStore getGlobal(){
         if (global == null) {
-            defaultManager = new DataStore(new FormatHDF5());
-            global = defaultManager;
+            defaultDataStore = new DataStore(new FormatHDF5());
+            global = defaultDataStore;
         }
         return global;
     }
     
     public static boolean isDefault(){
-        return  (global==null) || (global.equals(defaultManager));
+        return  (global==null) || (global.equals(defaultDataStore));
     }
     
     public static String[] getLayoutIds(){

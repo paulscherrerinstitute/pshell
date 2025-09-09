@@ -91,8 +91,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     final HashMap<Thread, ExecutionParameters> executionPars = new HashMap<>();
     ExecutorService interpreterExecutor;
     Thread interpreterThread;
-    Interpreter scriptManager;
-    TaskManager taskManager;
+    Interpreter interpreter;
+    TaskScheduler taskScheduler;
     ScriptStdio scriptStdio;
     TerminalServer terminalServer;
     CommandBus commandBus;
@@ -776,17 +776,17 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public void setStdioListener(ScriptStdioListener listener) {
         scriptStdioListener = listener;
 
-        if (scriptManager != null) {
+        if (interpreter != null) {
             if (scriptStdio != null) {
                 scriptStdio.close();
             }
             if (scriptStdioListener != null) {
-                scriptStdio = new ScriptStdio(scriptManager);
+                scriptStdio = new ScriptStdio(interpreter);
                 scriptStdio.setListener(listener);
             } else {
                 //If no listener then use to System stdio
-                scriptManager.setWriter(new PrintWriter(System.out));
-                scriptManager.setErrorWriter(new PrintWriter(System.err));
+                interpreter.setWriter(new PrintWriter(System.out));
+                interpreter.setErrorWriter(new PrintWriter(System.err));
             }
         }
     }
@@ -802,12 +802,12 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return commandBus;
     }
 
-    public Interpreter getScriptManager() {
-        return scriptManager;
+    public Interpreter getInterpreter() {
+        return interpreter;
     }
 
-    public TaskManager getTaskManager() {
-        return taskManager;
+    public TaskScheduler getTaskScheduler() {
+        return taskScheduler;
     }
     
     public Server getServer() {
@@ -889,9 +889,9 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         filePermissionsConfig = Context.getConfigFilePermissions();
         Config.setDefaultPermissions(filePermissionsConfig);
 
-        if (scriptManager != null) {
+        if (interpreter != null) {
             try {
-                if (!scriptManager.isThreaded()) {
+                if (!interpreter.isThreaded()) {
                     if (getState().isProcessing()) {
                         abort();
                         waitStateNotProcessing(20000);
@@ -913,7 +913,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         aborted = false;
         foregroundException = null;
 
-        for (AutoCloseable ac : new AutoCloseable[]{taskManager, scriptManager}) {
+        for (AutoCloseable ac : new AutoCloseable[]{taskScheduler, interpreter}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -973,15 +973,15 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             DevicePool.addStaticListener(new DevicePoolListener() {
                 @Override
                 public void onDeviceAdded(GenericDevice dev) {
-                    if (scriptManager != null) {
-                        scriptManager.addInjection(dev.getName(), dev);
+                    if (interpreter != null) {
+                        interpreter.addInjection(dev.getName(), dev);
                     }
                 }
 
                 @Override
                 public void onDeviceRemoved(GenericDevice dev) {
-                    if (scriptManager != null) {
-                        scriptManager.removeInjection(dev.getName());
+                    if (interpreter != null) {
+                        interpreter.removeInjection(dev.getName());
                     }
                 }
             });
@@ -1005,23 +1005,23 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 runInInterpreterThread(null, (Callable<InterpreterResult>) () -> {
                     String[] libraryPath = Setup.getLibraryPath();                    
                     try {
-                        scriptManager = new Interpreter(getScriptType(), libraryPath, injections, Context.getScriptFilePermissions(), Setup.getNoBytecodes());
-                        scriptManager.setSessionFilePath((getSaveConsoleSessions() && !isLocalMode()) ? Setup.getConsolePath() : null);
+                        interpreter = new Interpreter(getScriptType(), libraryPath, injections, Context.getScriptFilePermissions(), Setup.getNoBytecodes());
+                        interpreter.setSessionFilePath((getSaveConsoleSessions() && !isLocalMode()) ? Setup.getConsolePath() : null);
                         setStdioListener(scriptStdioListener);
                         String startupScript = getStartupScript();
                         if (startupScript != null) {
-                            scriptManager.evalFile(startupScript);
+                            interpreter.evalFile(startupScript);
                             logger.info("Executed startup script");
                         }
                                                 
-                        scriptManager.injectVars(); //Do it again because builtin classes in startup script may shadow a device name.
+                        interpreter.injectVars(); //Do it again because builtin classes in startup script may shadow a device name.
                         if (!isGenericMode()) {
                             String localStartupScript = getLocalStartupScript();
                             if (localStartupScript!=null){
                                 try {
-                                    scriptManager.evalFile(localStartupScript);                                    
-                                    logger.info("Executed local startup script: " + scriptManager.getLibrary().resolveFile(localStartupScript));
-                                    scriptManager.resetLineNumber(); //So first statement will be number 1
+                                    interpreter.evalFile(localStartupScript);                                    
+                                    logger.info("Executed local startup script: " + interpreter.getLibrary().resolveFile(localStartupScript));
+                                    interpreter.resetLineNumber(); //So first statement will be number 1
                                 } catch (Exception ex) {
                                     if ((ex instanceof FileNotFoundException) && ex.getMessage().equals(localStartupScript)) {
                                         if (!Setup.isVolatile() || Setup.redefinedStartupScript()){
@@ -1035,7 +1035,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                             }
                         }
                         if (startupScript != null) {
-                            Object obj = scriptManager.eval("_getBuiltinFunctionNames()").result;
+                            Object obj = interpreter.eval("_getBuiltinFunctionNames()").result;
                             Object[] array = null;
                             if (obj instanceof List list) {
                                 array = list.toArray();
@@ -1045,9 +1045,9 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                                 array = (Object[]) obj;
                             }
                             builtinFunctionsNames = (array == null) ? null : Convert.toStringArray(array);
-                            if (!scriptManager.isThreaded()) {
+                            if (!interpreter.isThreaded()) {
                                 for (String name : builtinFunctionsNames) {
-                                    String doc = String.valueOf(scriptManager.eval("_getFunctionDoc(" + name + ")").result);
+                                    String doc = String.valueOf(interpreter.eval("_getFunctionDoc(" + name + ")").result);
                                     builtinFunctionsDoc.put(name, doc);
                                 }
                             }
@@ -1060,14 +1060,14 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                     }
                     return null;
                 });
-                if (scriptManager == null) {
+                if (interpreter == null) {
                     throw new Exception("Error instantiating script manager");
                 } else {
                     if (extractedUtilities) {
                         //TODO: remove this  when Jython fixes this: https://github.com/jython/jython/issues/93                
                         if (!Setup.getNoBytecodes() && !isVolatileMode()) {
                             new Thread(() -> {
-                                scriptManager.fixClassFilesPermissions();
+                                interpreter.fixClassFilesPermissions();
                             }).start();
                         }
                         extractedUtilities = false;
@@ -1075,9 +1075,9 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 }
             }
             //Only instantiate it if state goes ready
-            taskManager = new TaskManager();
+            taskScheduler = new TaskScheduler();
             if (!isLocalMode()) {
-                taskManager.initialize(Setup.getTasksFile());
+                taskScheduler.initialize(Setup.getTasksFile());
             }
             setState(State.Ready);
             triggerInitialized(runCount);
@@ -1215,7 +1215,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             startExecution(source, null, info);
             setSourceUI(source);
             try {
-                InterpreterResult result = (InterpreterResult) runInInterpreterThread(info, (Callable<InterpreterResult>) () -> scriptManager.eval(line));
+                InterpreterResult result = (InterpreterResult) runInInterpreterThread(info, (Callable<InterpreterResult>) () -> interpreter.eval(line));
                 if (result == null) {
                     return null;
                 }
@@ -1298,9 +1298,9 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             createExecutionContext();
             //TODO: args passing is not theread safe
             for (String key : argsDict.keySet()) {
-                scriptManager.setVar(key, argsDict.get(key));
+                interpreter.setVar(key, argsDict.get(key));
             }
-            result = scriptManager.evalFileBackground(fileName);
+            result = interpreter.evalFileBackground(fileName);
             return result;
         } catch (Exception ex) {
             result = ex;
@@ -1328,7 +1328,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         commandBus.commandStarted(info);
         try {
             createExecutionContext();
-            InterpreterResult ir = scriptManager.evalBackground(line);
+            InterpreterResult ir = interpreter.evalBackground(line);
             if (ir == null) {
                 return null;
             }
@@ -1350,7 +1350,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     
 
     Object tryEvalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
-        if (scriptManager.isThreaded()) {
+        if (interpreter.isThreaded()) {
             return evalLineBackground(source, line);
         } else {
             return evalLine(source, line);
@@ -1361,8 +1361,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         assertInterpreterEnabled();
         assertStarted();
         onCommand(Command.startTask, new Object[]{script, delay, interval}, source);
-        Task task = taskManager.create(script, delay, interval);
-        taskManager.start(task);
+        Task task = taskScheduler.create(script, delay, interval);
+        taskScheduler.start(task);
         return task;
     }
 
@@ -1370,8 +1370,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         assertInterpreterEnabled();
         assertStarted();
         onCommand(Command.startTask, new Object[]{task}, source);
-        taskManager.add(task);
-        taskManager.start(task);
+        taskScheduler.add(task);
+        taskScheduler.start(task);
         return task;
     }
 
@@ -1379,26 +1379,26 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         assertInterpreterEnabled();
         assertStarted();
         onCommand(Command.stopTask, new Object[]{script, abort}, source);
-        taskManager.remove(script, abort);
+        taskScheduler.remove(script, abort);
     }
 
     public void stopTask(final CommandSource source, Task task, boolean abort) throws IOException, InterpreterStateException {
         assertInterpreterEnabled();
         assertStarted();
         onCommand(Command.stopTask, new Object[]{task, abort}, source);
-        taskManager.remove(task, abort);
+        taskScheduler.remove(task, abort);
     }
 
     public Task getTask(String name) throws IOException, InterpreterStateException {
         assertInterpreterEnabled();
         assertStarted();
-        return getTaskManager().get(name);
+        return getTaskScheduler().get(name);
     }
 
     public Task[] getTasks() throws IOException, InterpreterStateException {
         assertInterpreterEnabled();
         assertStarted();
-        return taskManager.getAll();
+        return taskScheduler.getAll();
     }
 
     @Hidden
@@ -1464,20 +1464,20 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
     
     public void addLibraryPath(String path){
-        scriptManager.addLibraryPath(Setup.expandPath(path.toString()));                                        
+        interpreter.addLibraryPath(Setup.expandPath(path.toString()));                                        
     }
         
 
     public File getScriptFile(String script) {
-        if (scriptManager != null) {
+        if (interpreter != null) {
             try {
                 //!!! Is this invoking still needed?
-                if (!scriptManager.isThreaded()) {
+                if (!interpreter.isThreaded()) {
                     return (File) runInInterpreterThread(null, (Callable<File>) () -> {
-                        return scriptManager.getScriptFile(script);
+                        return interpreter.getScriptFile(script);
                     });
                 } else {
-                    return scriptManager.getScriptFile(script);
+                    return interpreter.getScriptFile(script);
                 }
             } catch (Exception ex) {                
             }
@@ -1593,15 +1593,15 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 result = runInInterpreterThread(info, (Callable) () -> {
                     Object ret = null;
                     for (String key : argsDict.keySet()) {
-                        scriptManager.setVar(key, argsDict.get(key));
+                        interpreter.setVar(key, argsDict.get(key));
                     }
                     if (batch) {
-                        ret = scriptManager.evalFile(fileName);
+                        ret = interpreter.evalFile(fileName);
                     } else {
                         int exceptionLine = -1;
 
                         final Statement[] statements = parseFile(fileName);
-                        ret = scriptManager.eval(statements);
+                        ret = interpreter.eval(statements);
                     }
                     triggerShellResult(source, ret);
                     return ret;
@@ -1654,7 +1654,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
             if (pauseOnStart) {
                 onCommand(Command.pause, null, source);
-                scriptManager.pauseStatementListExecution();
+                interpreter.pauseStatementListExecution();
                 setState(State.Paused);
             }
 
@@ -1680,7 +1680,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
             try {
                 result = runInInterpreterThread(info, (Callable) () -> {
-                    Object ret = scriptManager.eval(statements, listener);
+                    Object ret = interpreter.eval(statements, listener);
                     triggerShellResult(source, ret);
                     return ret;
                 });
@@ -1699,63 +1699,63 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     public Object getLastEvalResult() {
-        if (scriptManager == null) {
+        if (interpreter == null) {
             return null;
         }
         try {
-            if (!scriptManager.isThreaded()) {
+            if (!interpreter.isThreaded()) {
                 return runInInterpreterThread(null, (Callable<Object>) () -> {
-                    return scriptManager.getLastResult();
+                    return interpreter.getLastResult();
                 });
             }
-            return scriptManager.getLastResult();
+            return interpreter.getLastResult();
         } catch (Exception ex) {
             return null;
         }
     }
 
     public Object getLastScriptResult() {
-        if (scriptManager == null) {
+        if (interpreter == null) {
             return null;
         }
         try {
-            if (!scriptManager.isThreaded()) {
+            if (!interpreter.isThreaded()) {
                 return runInInterpreterThread(null, (Callable<Object>) () -> {
-                    return scriptManager.getScriptResult();
+                    return interpreter.getScriptResult();
                 });
             }
-            return scriptManager.getScriptResult();
+            return interpreter.getScriptResult();
         } catch (Exception ex) {
             return null;
         }
     }
 
     public Object getInterpreterVariable(String name) {
-        if (scriptManager == null) {
+        if (interpreter == null) {
             return null;
         }
         try {
-            if (!scriptManager.isThreaded()) {
+            if (!interpreter.isThreaded()) {
                 return runInInterpreterThread(null, (Callable<Object>) () -> {
-                    return scriptManager.getVar(name);
+                    return interpreter.getVar(name);
                 });
             }
-            return scriptManager.getVar(name);
+            return interpreter.getVar(name);
         } catch (Exception ex) {
             return null;
         }
     }
 
     public void setInterpreterVariable(String name, Object value) {
-        if (scriptManager != null) {
+        if (interpreter != null) {
             try {
-                if (!scriptManager.isThreaded()) {
+                if (!interpreter.isThreaded()) {
                     runInInterpreterThread(null, () -> {
-                        scriptManager.setVar(name, value);
+                        interpreter.setVar(name, value);
                         return null;
                     });
                 } else {
-                    scriptManager.setVar(name, value);
+                    interpreter.setVar(name, value);
                 }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, "Error setting interpreter variable: {0}", name);
@@ -1768,7 +1768,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             return null;
         }
         try {
-            if (!scriptManager.isThreaded()) {
+            if (!interpreter.isThreaded()) {
                 return (String) runInInterpreterThread(null, (Callable<String>) () -> {
                     return obj.toString();
                 });
@@ -1785,7 +1785,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             runInInterpreterThread(null, new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    scriptManager.injectVars();
+                    interpreter.injectVars();
                     return null;
                 }
             });
@@ -1819,13 +1819,13 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             synchronized (runningScans) {
                 runningScans.clear();
             }
-            if (scriptManager != null) {
-                scriptManager.abort();
+            if (interpreter != null) {
+                interpreter.abort();
             }
         }
 
-        if (scriptManager != null) {
-            scriptManager.resetInterpreter();
+        if (interpreter != null) {
+            interpreter.resetInterpreter();
         }
     }
 
@@ -1857,7 +1857,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             }
         }
         if (isRunningStatements()) {
-            scriptManager.pauseStatementListExecution();
+            interpreter.pauseStatementListExecution();
         }
     }
 
@@ -1873,8 +1873,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             }
         }
         if (isRunningStatements()) {
-            if (scriptManager.isStatementListExecutionPaused()) {
-                scriptManager.resumeStatementListExecution();
+            if (interpreter.isStatementListExecutionPaused()) {
+                interpreter.resumeStatementListExecution();
             }
         }
     }
@@ -1887,8 +1887,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                     scan.resume();
                 }
             } else {
-                if (scriptManager.isStatementListExecutionPaused()) {
-                    scriptManager.stepStatementListExecution();
+                if (interpreter.isStatementListExecutionPaused()) {
+                    interpreter.stepStatementListExecution();
                 }
             }
         }
@@ -1940,7 +1940,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         aborted = false;
         getExecutionPars().onExecutionStarted();
         try {
-            InterpreterResult result = (InterpreterResult) runInInterpreterThread(info, (Callable<InterpreterResult>) () -> scriptManager.eval(command));
+            InterpreterResult result = (InterpreterResult) runInInterpreterThread(info, (Callable<InterpreterResult>) () -> interpreter.eval(command));
             if (result == null) {
                 return null;
             }
@@ -2058,12 +2058,12 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     
    //Script callbacks
     protected void onCommandStarted(CommandInfo info) {        
-        if (scriptCallbacksEnabled &&(scriptManager != null)){
+        if (scriptCallbacksEnabled &&(interpreter != null)){
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
-                if (scriptManager.isThreaded()) {
-                    scriptManager.getEngine().put(var_name, info);
-                    scriptManager.getEngine().eval("on_command_started(" + var_name + ")");
+                if (interpreter.isThreaded()) {
+                    interpreter.getEngine().put(var_name, info);
+                    interpreter.getEngine().eval("on_command_started(" + var_name + ")");
                 }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
@@ -2072,12 +2072,12 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     protected void onCommandFinished(CommandInfo info) {
-        if (scriptCallbacksEnabled && (scriptManager != null)){
+        if (scriptCallbacksEnabled && (interpreter != null)){
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
-                if (scriptManager.isThreaded()) {
-                    scriptManager.getEngine().put(var_name, info);
-                    scriptManager.getEngine().eval("on_command_finished(" + var_name + ")");
+                if (interpreter.isThreaded()) {
+                    interpreter.getEngine().put(var_name, info);
+                    interpreter.getEngine().eval("on_command_finished(" + var_name + ")");
                 }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
@@ -2093,11 +2093,11 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     void onChangeDataPath(File dataPath) {
-        if (scriptCallbacksEnabled  && (scriptManager != null)){
+        if (scriptCallbacksEnabled  && (interpreter != null)){
             try {
                 String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
-                if (scriptManager.isThreaded()) {
-                    scriptManager.getEngine().eval("on_change_data_path(" + filename + ")");
+                if (interpreter.isThreaded()) {
+                    interpreter.getEngine().eval("on_change_data_path(" + filename + ")");
                 }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
@@ -2106,10 +2106,10 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     public void onSessionStarted(int id) {
-        if (scriptCallbacksEnabled  && (scriptManager != null)){
+        if (scriptCallbacksEnabled  && (interpreter != null)){
             try {
-                if (scriptManager.isThreaded()) {
-                    scriptManager.getEngine().eval("on_session_started(" + id + ")");
+                if (interpreter.isThreaded()) {
+                    interpreter.getEngine().eval("on_session_started(" + id + ")");
                 }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
@@ -2118,10 +2118,10 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     public void onSessionFinished(int id) {
-        if (scriptCallbacksEnabled && (scriptManager != null)){
+        if (scriptCallbacksEnabled && (interpreter != null)){
             try {
-                if (scriptManager.isThreaded()) {
-                    scriptManager.getEngine().eval("on_session_finished(" + id + ")");
+                if (interpreter.isThreaded()) {
+                    interpreter.getEngine().eval("on_session_finished(" + id + ")");
                 }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
@@ -2397,7 +2397,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             return true;
         }
         if (isRunningStatements()) {
-            if (!scriptManager.isStatementListExecutionPaused()) {
+            if (!interpreter.isStatementListExecutionPaused()) {
                 return true;
             }
         }
@@ -2410,7 +2410,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             if (hasPausedScan()) {
                 return true;
             }
-            if (scriptManager.isStatementListExecutionPaused()) {
+            if (interpreter.isStatementListExecutionPaused()) {
                 if (!isExecutingStatement()) {
                     return true;
                 }
@@ -2422,7 +2422,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     @Hidden
     public boolean isPaused() {
         if (isRunningStatements()) {
-            if (scriptManager.isStatementListExecutionPaused()) {
+            if (interpreter.isStatementListExecutionPaused()) {
                 return true;
             }
         }
@@ -2431,9 +2431,9 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     @Hidden
     public boolean isRunningStatements() {
-        if (scriptManager != null) {
+        if (interpreter != null) {
             if ((getState() == State.Busy) || (getState() == State.Paused)) {
-                if (scriptManager.isRunningStatementList()) {
+                if (interpreter.isRunningStatementList()) {
                     return true;
                 }
             }
@@ -2453,30 +2453,30 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         if (!isRunningStatements()) {
             return null;
         }
-        return scriptManager.getRunningStatement();
+        return interpreter.getRunningStatement();
     }
 
     //File parsing
     @Hidden
     public Statement[] parseFile(String fileName) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
-        if (!scriptManager.isThreaded()) {
+        if (!interpreter.isThreaded()) {
             return (Statement[]) runInInterpreterThread(null, (Callable<Statement[]>) () -> {
-                return scriptManager.parse(fileName);
+                return interpreter.parse(fileName);
             });
         }
-        return scriptManager.parse(fileName);
+        return interpreter.parse(fileName);
     }
 
     @Hidden
     public Statement[] parseString(String script, String name) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
-        if (!scriptManager.isThreaded()) {
+        if (!interpreter.isThreaded()) {
             return (Statement[]) runInInterpreterThread(null, (Callable<Statement[]>) () -> {
-                return scriptManager.parse(script, name);
+                return interpreter.parse(script, name);
             });
         }
-        return scriptManager.parse(script, name);
+        return interpreter.parse(script, name);
     }
 
     @Hidden
@@ -2489,12 +2489,12 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         if ((command != null) && (ControlCommand.match(command))) {
             return "[CTR] ";
         }
-        if (scriptManager == null) {
+        if (interpreter == null) {
             return "[" + getState() + "] ";
         }
 
-        String cursor = "[" + scriptManager.getLineNumber() + "]";
-        if (scriptManager.getStatementLineCount() > 0) {
+        String cursor = "[" + interpreter.getLineNumber() + "]";
+        if (interpreter.getStatementLineCount() > 0) {
             cursor += "...";
         } else {
             cursor += "   ";
@@ -2583,7 +2583,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 injectVars();
                 break;
             case tasks:
-                for (Task task : taskManager.getAll()) {
+                for (Task task : taskScheduler.getAll()) {
                     sb.append(task.toString()).append("\n");
                 }
                 break;
@@ -2611,7 +2611,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     @Hidden
     public String getBuiltinFunctionDoc(String name) {
-        if (scriptManager.isThreaded()) {
+        if (interpreter.isThreaded()) {
             if (Arr.containsEqual(builtinFunctionsNames, name)) {
                 if (!builtinFunctionsDoc.containsKey(name)) {
                     try {
@@ -3090,7 +3090,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public void disable() {
         if (getState().isNormal()) {
             logger.warning("Setting offline mode");
-            for (AutoCloseable ac : new AutoCloseable[]{taskManager, scriptManager}) {
+            for (AutoCloseable ac : new AutoCloseable[]{taskScheduler, interpreter}) {
                 try {
                     if (ac != null) {
                         ac.close();
@@ -3342,7 +3342,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
         logger.info("Close");
 
-        for (AutoCloseable ac : new AutoCloseable[]{taskManager, scriptManager, server}) {
+        for (AutoCloseable ac : new AutoCloseable[]{taskScheduler, interpreter, server}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -3351,11 +3351,11 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 logger.log(Level.WARNING, null, ex);
             }
         }
-        if (scriptManager != null) {
+        if (interpreter != null) {
             if (!Setup.isRunningInIde()){
                 //TODO: remove this  when Jython fixes this: https://github.com/jython/jython/issues/93                
                 if (!Setup.getNoBytecodes() && !isVolatileMode()) {
-                    scriptManager.startFixClassFilesPermissions();
+                    interpreter.startFixClassFilesPermissions();
                 }
             }
         }

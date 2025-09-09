@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  * Manages the creation and disposal of tasks (background script executions), periodic or single
  * execution.
  */
-public class TaskManager implements AutoCloseable {
+public class TaskScheduler implements AutoCloseable {
 
     final ArrayList<Task> backgroundTasks = new ArrayList<>();
 
@@ -20,7 +20,7 @@ public class TaskManager implements AutoCloseable {
      * Load and start tasks defined in properties file.
      */
     public void initialize(String configFileName) {
-        Logger.getLogger(TaskManager.class.getName()).fine("Initializing " + getClass().getSimpleName());
+        Logger.getLogger(TaskScheduler.class.getName()).fine("Initializing " + getClass().getSimpleName());
         try {
             Properties properties = new Properties();
             try (FileInputStream in = new FileInputStream(configFileName)) {
@@ -28,7 +28,7 @@ public class TaskManager implements AutoCloseable {
             }
 
             for (String script : properties.stringPropertyNames()) {
-                Logger.getLogger(TaskManager.class.getName()).info("Starting task: " + script);
+                Logger.getLogger(TaskScheduler.class.getName()).info("Starting task: " + script);
                 try {
                     String value = properties.getProperty(script);
                     int delay=0;
@@ -45,15 +45,15 @@ public class TaskManager implements AutoCloseable {
                     create(script, delay, interval);
                     start(script);
                 } catch (Exception ex) {
-                    Logger.getLogger(TaskManager.class.getName()).log(Level.WARNING, null, ex);
+                    Logger.getLogger(TaskScheduler.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         } catch (FileNotFoundException | NoSuchFileException ex) {
-            Logger.getLogger(TaskManager.class.getName()).log(Level.FINER, null, ex);
+            Logger.getLogger(TaskScheduler.class.getName()).log(Level.FINER, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(TaskManager.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(TaskScheduler.class.getName()).log(Level.WARNING, null, ex);
         }
-        Logger.getLogger(TaskManager.class.getName()).fine("Finished " + getClass().getSimpleName() + " initialization");
+        Logger.getLogger(TaskScheduler.class.getName()).fine("Finished " + getClass().getSimpleName() + " initialization");
     }
 
     

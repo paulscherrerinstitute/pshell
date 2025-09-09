@@ -98,7 +98,7 @@ public class ScriptStdio implements AutoCloseable {
         }
     }
 
-    public ScriptStdio(final Interpreter scriptManager) {
+    public ScriptStdio(final Interpreter interpreter) {
         try {
 
             stdinReader = new BufferedReader(new InputStreamReader(new InputStream() {
@@ -134,13 +134,13 @@ public class ScriptStdio implements AutoCloseable {
                     return -1;
                 }
             }));
-            scriptManager.setReader(stdinReader);
+            interpreter.setReader(stdinReader);
 
             stdoutWriter = new StdioWriter(false);
-            scriptManager.setWriter(stdoutWriter);
+            interpreter.setWriter(stdoutWriter);
 
             stderrWriter = new StdioWriter(true);
-            scriptManager.setErrorWriter(stderrWriter);
+            interpreter.setErrorWriter(stderrWriter);
 
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);

@@ -2,7 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.sequencer.Task;
-import ch.psi.pshell.sequencer.TaskManager;
+import ch.psi.pshell.sequencer.TaskScheduler;
 import ch.psi.pshell.utils.IO;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
@@ -66,9 +66,9 @@ public class TasksEditor extends Editor {
     }
 
     void updateTables() {
-        TaskManager taskManager = Sequencer.getInstance().getTaskManager();
-        if (taskManager != null) {
-            Task[] tasks = taskManager.getAll();
+        TaskScheduler taskScheduler = Sequencer.getInstance().getTaskScheduler();
+        if (taskScheduler != null) {
+            Task[] tasks = taskScheduler.getAll();
             if (tasks.length != modelLoaded.getRowCount()) {
                 modelLoaded.setNumRows(tasks.length);
             }
@@ -80,12 +80,12 @@ public class TasksEditor extends Editor {
             }
 
             String currentTaskEnabling = (table.getSelectedRow() >= 0) ? ((String) model.getValueAt(table.getSelectedRow(), 1)).trim() : null;
-            Task task = taskManager.get(currentTaskEnabling);
+            Task task = taskScheduler.get(currentTaskEnabling);
             buttonLoad.setEnabled((currentTaskEnabling != null) && (task == null));
             buttonRun.setEnabled(table.getSelectedRow() >= 0);
 
             String currentTaskLoaded = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
-            task = taskManager.get(currentTaskLoaded);
+            task = taskScheduler.get(currentTaskLoaded);
             buttonUnload.setEnabled(task != null);
             buttonStart.setEnabled((task != null) && !task.isStarted());
             buttonStop.setEnabled((task != null) && task.isStarted());
@@ -449,7 +449,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Sequencer.getInstance().getTaskManager().start(task);
+                Sequencer.getInstance().getTaskScheduler().start(task);
             }
             updateTables();
         } catch (Exception ex) {
@@ -461,7 +461,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Sequencer.getInstance().getTaskManager().stop(task, true);
+                Sequencer.getInstance().getTaskScheduler().stop(task, true);
             }
             updateTables();
         } catch (Exception ex) {

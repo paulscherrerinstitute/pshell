@@ -88,7 +88,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
             writableIndexes.clear();
             currentPass = 1;
             changedScaleX = false;
-            boolean accessDevice = Sequencer.getInstance().getScriptManager().isThreaded();
+            boolean accessDevice = Sequencer.getInstance().getInterpreter().isThreaded();
 
             try {
 
@@ -216,7 +216,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                     scanRecordBuffer.clear();
                     updating.set(false);
                 }
-                if (!Sequencer.getInstance().getScriptManager().isThreaded()){
+                if (!Sequencer.getInstance().getInterpreter().isThreaded()){
                     pars.put("writables", scan.getWritableNames());
                     pars.put("readables", scan.getReadableNames());
                     Map<String,Map> attrs = new HashMap<>();
