@@ -1949,7 +1949,7 @@ public class PreferencesDialog extends StandardDialog {
             chooser.setFileFilter(filter);
             int rVal = chooser.showOpenDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
-                String file = Context.getInterpreter().getStandardScriptName(chooser.getSelectedFile().getPath());
+                String file = Context.getSequencer().getStandardScriptName(chooser.getSelectedFile().getPath());
                 for (int i =0; i< modelProcessingScripts.getRowCount(); i++){
                     if (file.equals(modelProcessingScripts.getValueAt(i, 0))){
                         return;

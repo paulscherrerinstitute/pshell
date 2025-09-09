@@ -7,7 +7,7 @@ import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
-import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.utils.Chrono;
 import java.util.ArrayList;
 import javax.swing.table.DefaultTableModel;
@@ -30,15 +30,15 @@ public class ScanPanel extends MonitoredPanel {
 
     public void setActive(boolean value) {
         if (value) {
-            Interpreter.getInstance().addScanListener(scanListener);
+            Sequencer.getInstance().addScanListener(scanListener);
         } else {
-            Interpreter.getInstance().removeScanListener(scanListener);
+            Sequencer.getInstance().removeScanListener(scanListener);
             clear();
         }
     }
 
     public boolean isActive() {
-        return Interpreter.getInstance().getScanListeners().contains(scanListener);
+        return Sequencer.getInstance().getScanListeners().contains(scanListener);
     }
 
     public void clear() {
@@ -46,7 +46,7 @@ public class ScanPanel extends MonitoredPanel {
     }
     
     public void startScan(Scan scan, String plotTitle){
-        if (!Interpreter.getInstance().getExecutionPars().isScanDisplayed(scan)){
+        if (!Sequencer.getInstance().getExecutionPars().isScanDisplayed(scan)){
             return;
         }
 

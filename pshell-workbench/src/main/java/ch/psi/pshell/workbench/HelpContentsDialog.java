@@ -56,8 +56,8 @@ public class HelpContentsDialog extends StandardDialog {
             String[] builtinFunctions = null;
             while (builtinFunctions == null) {
                 try {
-                    if (Context.getInterpreter().getState().isInitialized()){
-                        builtinFunctions = Context.getInterpreter().getBuiltinFunctionsNames();
+                    if (Context.getSequencer().getState().isInitialized()){
+                        builtinFunctions = Context.getSequencer().getBuiltinFunctionsNames();
                     }
                 } catch (Exception ex) {
                 }
@@ -112,7 +112,7 @@ public class HelpContentsDialog extends StandardDialog {
                 TreePath tp = event.getPath();
                 if ((tp.getPathCount() == 3) && (tp.getPath()[1] == nodeBuiltinFunction)) {
                     header = tp.getPath()[2].toString();
-                    text = Context.getInterpreter().getBuiltinFunctionDoc(header);
+                    text = Context.getSequencer().getBuiltinFunctionDoc(header);
                 } else if (tp.getPathCount() > 1) {
                     String resource = String.join("/", Arr.remove(Convert.toStringArray(tp.getPath()), 0));
                     if (resource.startsWith("Tutorial/")) {
@@ -137,10 +137,10 @@ public class HelpContentsDialog extends StandardDialog {
         menuRun.addActionListener((ActionEvent e) -> {
             TreePath tp = tree.getSelectionPath();
             try {
-                Context.getInterpreter().assertReady();
+                Context.getSequencer().assertReady();
                 final Path path = Paths.get(Sys.getTempFolder(), "Tutorial_" + tp.getPath()[tp.getPath().length - 1].toString() + "." + getScriptType());
                 Files.write(path, editor.getText().getBytes());
-                Context.getInterpreter().evalFileAsync(path.toString()).handle((ok, ex) -> {
+                Context.getSequencer().evalFileAsync(path.toString()).handle((ok, ex) -> {
                     path.toFile().delete();
                     return ok;
                 });

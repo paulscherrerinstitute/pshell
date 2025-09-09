@@ -61,6 +61,10 @@ def get_view(){
     return Context.getView()
 }
 
+def get_sequencer(){
+    return Context.getSequencer()
+}
+
 def get_interpreter(){
     return Context.getInterpreter()
 }
@@ -594,10 +598,10 @@ def  plot(data, name= null, xdata= null, ydata= null, title=null) {
             }
             plots[i] = new PlotDescriptor(plotName, to_array(data[i], 'd'), to_array(x, 'd'), to_array(y, 'd'));
         }
-        return get_interpreter().plot(plots, title);
+        return get_sequencer().plot(plots, title);
     } else {
         def plot = new PlotDescriptor(name, to_array(data, 'd'), to_array(xdata, 'd'), to_array(ydata, 'd'));
-        return get_interpreter().plot(plot, title);
+        return get_sequencer().plot(plot, title);
     }
 }
 
@@ -761,7 +765,7 @@ def log(log){
     Returns:
         None
     */  
-    get_interpreter().scriptingLog(String.valueOf(log))
+    get_sequencer().scriptingLog(String.valueOf(log))
     get_data_manager().appendLog(String.valueOf(log))
 }
 
@@ -809,7 +813,7 @@ def set_exec_pars(Map args){
         
         Shortcut entries: "line_plots": list of devices with enforced line plots.
     */
-    get_interpreter().setExecutionPars(args)
+    get_sequencer().setExecutionPars(args)
 }
 
 def get_exec_pars(){
@@ -834,7 +838,7 @@ def get_exec_pars(){
             args (obj): return the arguments for the script.
             background (bool): return False if executing in main interpreter thread .
     */
-    return get_interpreter().getExecutionPars()    
+    return get_sequencer().getExecutionPars()    
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1115,7 +1119,7 @@ Object run(script_name, args = null, locals = null) {
     Returns:
     The script return value (if set with set_return)
      */
-    get_interpreter().scriptManager.evalFile(script_name)
+    get_interpreter().evalFile(script_name)
 }
 
 def abort() {
@@ -1236,7 +1240,7 @@ def set_preference(preference, value){
     if (get_rank(value)>0){
         value = to_array(value, 'o') 
     }
-    get_interpreter().setPreference(preference, value)
+    get_sequencer().setPreference(preference, value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1445,7 +1449,7 @@ def stop(){
     Returns:
         None
     */
-    get_interpreter().stopAll()
+    get_sequencer().stopAll()
 }
     
 def update(){
@@ -1458,7 +1462,7 @@ def update(){
     Returns:
         None
     */
-    get_interpreter().updateAll()
+    get_sequencer().updateAll()
 }
 
 def inject(){
@@ -1472,7 +1476,7 @@ def inject(){
         None
 
     */  
-    get_interpreter().injectVars()
+    get_sequencer().injectVars()
 }
 
 

@@ -72,7 +72,7 @@ public class ServerService {
     private static final Logger logger = Logger.getLogger(ServerService.class.getName());
 
     @Inject
-    private Interpreter interpreter;
+    private Sequencer sequencer;
 
     @Inject
     private SseBroadcaster broadcaster;
@@ -108,7 +108,7 @@ public class ServerService {
     @Produces(MediaType.APPLICATION_JSON)
     //@Produces(MediaType.TEXT_PLAIN)
     public State getState() {
-        return interpreter.getState();
+        return sequencer.getState();
     }
 
     @GET
@@ -180,7 +180,7 @@ public class ServerService {
     public String eval(@PathParam("statement") final String statement) throws ExecutionException {
         try {
             String cmd = formatIncomingText(statement);
-            Object ret = interpreter.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
+            Object ret = sequencer.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
             return (ret == null) ? "" : ret.toString();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -194,8 +194,8 @@ public class ServerService {
     public long evalAsync(@PathParam("statement") final String statement) throws ExecutionException {
         try {
             String cmd = formatIncomingText(statement);
-            CompletableFuture cf = interpreter.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
-            long id = interpreter.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
+            CompletableFuture cf = sequencer.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
+            long id = sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
             return id;
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -209,7 +209,7 @@ public class ServerService {
     public String evalJson(@PathParam("statement") final String statement) throws ExecutionException {
         try {
             String cmd = formatIncomingText(statement);
-            Object ret = interpreter.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd);
+            Object ret = sequencer.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd);
             return mapper.writeValueAsString(ret);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -223,7 +223,7 @@ public class ServerService {
         try {
             String name = (String) contents.get("name");
             Object value = contents.get("value");
-            interpreter.setInterpreterVariable(name, value);
+            sequencer.setInterpreterVariable(name, value);
             return Response.ok().build();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -236,7 +236,7 @@ public class ServerService {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
     public String history(@PathParam("index") final Integer index) throws ExecutionException {
-        List<String> history = interpreter.getHistoryEntries();
+        List<String> history = sequencer.getHistoryEntries();
         if ((index >= 0) && (index < history.size())) {
             return (history.get(history.size() - index - 1));
         }
@@ -463,7 +463,7 @@ public class ServerService {
             @PathParam("width") final int width,
             @PathParam("height") final int height) throws ExecutionException {
         try {
-            List<Plot> plots = interpreter.getPlots((title.isBlank() || title.equals("null")) ? null : title);
+            List<Plot> plots = sequencer.getPlots((title.isBlank() || title.equals("null")) ? null : title);
             Dimension size = ((width > 0) && (height > 0)) ? new Dimension(width, height) : null;
             Plot plot = plots.get(index);
             BufferedImage img = plot.getSnapshot(size);
@@ -478,7 +478,7 @@ public class ServerService {
     @Produces(MediaType.TEXT_PLAIN)
     public int getNumPlots(@PathParam("title") final String title) throws ExecutionException {
         try {
-            List<Plot> plots = interpreter.getPlots((title.isBlank() || title.equals("null")) ? null : title);
+            List<Plot> plots = sequencer.getPlots((title.isBlank() || title.equals("null")) ? null : title);
             return plots.size();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -490,7 +490,7 @@ public class ServerService {
     @Path("plots/{title}")
     public Response deletePlotContext(@PathParam("title") final String title) {        
         try {
-            if (interpreter.removePlotContext(title)){
+            if (sequencer.removePlotContext(title)){
                 return Response.ok().build();
             } else {
                 return Response.notModified().build();
@@ -505,7 +505,7 @@ public class ServerService {
     @Produces(MediaType.APPLICATION_JSON)
     public String getPlotTitles() throws ExecutionException {
         try {
-            List<String> ret = interpreter.getPlotTitles();
+            List<String> ret = sequencer.getPlotTitles();
             return (ret == null) ? "" : mapper.writeValueAsString(ret);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -528,7 +528,7 @@ public class ServerService {
                             ret.append(f.getName()).append("/\n");
                         }
                     }
-                    for (File f : IO.listFiles(file, "*." + interpreter.getScriptType().getExtension())) {
+                    for (File f : IO.listFiles(file, "*." + sequencer.getScriptType().getExtension())) {
                         ret.append(f.getName()).append("\n");
                     }
                 } else {
@@ -590,9 +590,9 @@ public class ServerService {
                 }
             }
             if (background) {
-                return String.valueOf(interpreter.evalFileBackground(CommandSource.server, script, argList));
+                return String.valueOf(sequencer.evalFileBackground(CommandSource.server, script, argList));
             } else {
-                return String.valueOf(interpreter.evalFile(CommandSource.server, script, argList));
+                return String.valueOf(sequencer.evalFile(CommandSource.server, script, argList));
             }
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -613,17 +613,17 @@ public class ServerService {
             CompletableFuture cf = null;
             if (async) {
                 if (background) {
-                    cf = interpreter.evalFileBackgroundAsync(CommandSource.server, script, pars);
+                    cf = sequencer.evalFileBackgroundAsync(CommandSource.server, script, pars);
 
                 } else {
-                    cf = interpreter.evalFileAsync(CommandSource.server, script, pars);
+                    cf = sequencer.evalFileAsync(CommandSource.server, script, pars);
                 }
-                return interpreter.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
+                return sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
             } else {
                 if (background) {
-                    ret = interpreter.evalFileBackground(CommandSource.server, script, pars);
+                    ret = sequencer.evalFileBackground(CommandSource.server, script, pars);
                 } else {
-                    ret = interpreter.evalFile(CommandSource.server, script, pars);
+                    ret = sequencer.evalFile(CommandSource.server, script, pars);
                 }
             }
             return mapper.writeValueAsString(ret);
@@ -638,8 +638,8 @@ public class ServerService {
     @Produces(MediaType.TEXT_PLAIN)
     public String evalScript(@PathParam("contents") final String contents) throws ExecutionException {
         try {
-            Statement[] statements = interpreter.parseString(formatIncomingText(contents), "Unknown");
-            return String.valueOf(interpreter.evalStatements(CommandSource.server, statements, false, "Unknown", null));
+            Statement[] statements = sequencer.parseString(formatIncomingText(contents), "Unknown");
+            return String.valueOf(sequencer.evalStatements(CommandSource.server, statements, false, "Unknown", null));
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -659,8 +659,8 @@ public class ServerService {
                     }
                     break;
                 case "<builtins>":
-                    for (String function : interpreter.getBuiltinFunctionsNames()) {
-                        ret.add(interpreter.getBuiltinFunctionDoc(function).split("\n")[0]);
+                    for (String function : sequencer.getBuiltinFunctionsNames()) {
+                        ret.add(sequencer.getBuiltinFunctionDoc(function).split("\n")[0]);
                     }
                     break;
                 case "<devices>":
@@ -669,8 +669,8 @@ public class ServerService {
                     }
                     break;
                 default:
-                    if (Arr.containsEqual(interpreter.getBuiltinFunctionsNames(), input)) {
-                        ret.add(interpreter.getBuiltinFunctionDoc(input));
+                    if (Arr.containsEqual(sequencer.getBuiltinFunctionsNames(), input)) {
+                        ret.add(sequencer.getBuiltinFunctionDoc(input));
                     } else {
                         List<String> signatures = null;
                         if (input.endsWith(".")) {
@@ -693,7 +693,7 @@ public class ServerService {
     @Path("abort")
     public void abort() throws ExecutionException {
         try {
-            interpreter.abort(CommandSource.server);
+            sequencer.abort(CommandSource.server);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -703,7 +703,7 @@ public class ServerService {
     @Path("pause")
     public void pause() throws ExecutionException {
         try {
-            interpreter.pause(CommandSource.server);
+            sequencer.pause(CommandSource.server);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -713,7 +713,7 @@ public class ServerService {
     @Path("resume")
     public void resume() throws ExecutionException {
         try {
-            interpreter.resume(CommandSource.server);
+            sequencer.resume(CommandSource.server);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -723,7 +723,7 @@ public class ServerService {
     @Path("abort/{commandId}")
     public boolean abort(@PathParam("commandId") final Integer commandId) throws ExecutionException {
         try {
-            return interpreter.abort(CommandSource.server, commandId);
+            return sequencer.abort(CommandSource.server, commandId);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -734,7 +734,7 @@ public class ServerService {
     @Produces(MediaType.APPLICATION_JSON)
     public Object result() throws ExecutionException {
         try {
-            return mapper.writeValueAsString(interpreter.getResult(-1));
+            return mapper.writeValueAsString(sequencer.getResult(-1));
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -745,7 +745,7 @@ public class ServerService {
     @Produces(MediaType.APPLICATION_JSON)
     public Object result(@PathParam("commandId") final Integer commandId) throws ExecutionException {
         try {
-            return mapper.writeValueAsString(interpreter.getResult(commandId));
+            return mapper.writeValueAsString(sequencer.getResult(commandId));
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -755,7 +755,7 @@ public class ServerService {
     @Path("reinit")
     public void reinit() throws ExecutionException {
         try {
-            interpreter.reinit(CommandSource.server);
+            sequencer.reinit(CommandSource.server);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -765,7 +765,7 @@ public class ServerService {
     @Path("stop")
     public void stop() throws ExecutionException {
         try {
-            interpreter.stopAll(CommandSource.server);
+            sequencer.stopAll(CommandSource.server);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -775,7 +775,7 @@ public class ServerService {
     @Path("update")
     public void update() throws ExecutionException {
         try {
-            interpreter.updateAll(CommandSource.server);
+            sequencer.updateAll(CommandSource.server);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -800,15 +800,15 @@ public class ServerService {
         }
     }
 
-    final InterpreterListener interpreterListener = new InterpreterListener() {
+    final SequencerListener sequencerListener = new SequencerListener() {
         @Override
         public void onStateChanged(State state, State former) {
-            sendEvent("state", interpreter.getState());
+            sendEvent("state", sequencer.getState());
         }
 
         @Override
         public void onShellCommand(CommandSource source, String command) {
-            sendShell(source, interpreter.getCursor(command) + command);
+            sendShell(source, sequencer.getCursor(command) + command);
         }
 
         @Override
@@ -817,7 +817,7 @@ public class ServerService {
                 if (result instanceof Throwable t) {
                     sendShell(source, InterpreterResult.getPrintableMessage(t));
                 } else {
-                    sendShell(source, interpreter.interpreterVariableToString(result));
+                    sendShell(source, sequencer.interpreterVariableToString(result));
                 }
             }
         }
@@ -887,7 +887,7 @@ public class ServerService {
             } catch (Exception ex) {
                 step = 0.0;
             }
-            if (!interpreter.getExecutionPars().isScanDisplayed(scan)) {
+            if (!sequencer.getExecutionPars().isScanDisplayed(scan)) {
                 return;
             }
             if (printScan) {
@@ -902,7 +902,7 @@ public class ServerService {
         public void onNewRecord(Scan scan, ScanRecord record) {
             progress = Math.min(progress + step, 1.0);
             sendProgress(progress);
-            if (!interpreter.getExecutionPars().isScanDisplayed(scan)) {
+            if (!sequencer.getExecutionPars().isScanDisplayed(scan)) {
                 return;
             }
             if (printScan) {
@@ -930,11 +930,11 @@ public class ServerService {
     public EventOutput subscribe() {
         if (!initialized) {
             initialized = true;
-            interpreter.addListener(interpreterListener); //If already a listener does nothing
-            interpreter.addScanListener(scanListener); //If already a listener does nothing
-            interpreter.addEventListener(eventListener);            
-            interpreter.remoteUserInterface = remoteUserInterface;
-            interpreter.serverPlotListener = plotListener;
+            sequencer.addListener(sequencerListener); //If already a listener does nothing
+            sequencer.addScanListener(scanListener); //If already a listener does nothing
+            sequencer.addEventListener(eventListener);            
+            sequencer.remoteUserInterface = remoteUserInterface;
+            sequencer.serverPlotListener = plotListener;
             if (Context.hasSecurity()){
                 Context.getSecurity().addListener(userListener);
             }

@@ -142,7 +142,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                 try {
                     File file = Paths.get(currentPath, script).toFile();
                     if (file.exists()) {
-                        Context.getInterpreter().evalFileAsync(file.getAbsolutePath());
+                        Context.getSequencer().evalFileAsync(file.getAbsolutePath());
                     }
                 } catch (Exception ex) {
                     showException(ex);

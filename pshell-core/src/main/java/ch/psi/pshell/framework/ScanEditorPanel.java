@@ -2,7 +2,7 @@ package ch.psi.pshell.framework;
 
 import ch.psi.pshell.devices.InlineDevice;
 import ch.psi.pshell.scripting.ScriptType;
-import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.Shell;
 import ch.psi.pshell.swing.SwingUtils;
@@ -173,7 +173,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     @Override
     public void abort() throws InterruptedException {
-        Context.getInterpreter().abort();
+        Context.getSequencer().abort();
     }
 
     @Override
@@ -322,7 +322,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     @Override
     public boolean createMenuNew() {
         //Script-based scans: only works if startup script is used.
-        if (Interpreter.hasInstance() && Interpreter.getInstance().isStartupScriptDisabled()){
+        if (Sequencer.hasInstance() && Sequencer.getInstance().isStartupScriptDisabled()){
             return false;
         }
         return true;
@@ -344,9 +344,9 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         }
         //String name = ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) ;
         //command = "set_exec_pars(name='" + name + "'); " + command;
-        Context.getInterpreter().evalLineAsync(command).handle((ok, ex) -> {
+        Context.getSequencer().evalLineAsync(command).handle((ok, ex) -> {
             result = (ex != null) ? ex : ok;
-            if ((ex != null) && (!Context.getInterpreter().isAborted()) && isDisplayable()) {
+            if ((ex != null) && (!Context.getSequencer().isAborted()) && isDisplayable()) {
                 showException((Exception) ex);
             }
             running = false;

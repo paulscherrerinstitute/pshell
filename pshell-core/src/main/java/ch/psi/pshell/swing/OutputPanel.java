@@ -1,14 +1,14 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.scripting.InterpreterResult;
-import ch.psi.pshell.sequencer.Interpreter;
-import ch.psi.pshell.sequencer.InterpreterListener;
+import ch.psi.pshell.sequencer.Sequencer;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  *
@@ -56,16 +56,16 @@ public class OutputPanel extends MonitoredPanel {
     
     @Override
     protected void onActive() {
-        Interpreter.getInstance().addListener(interpreterListener);
+        Sequencer.getInstance().addListener(sequencerListener);
     }
 
     @Override
     protected void onDesactive() {
         outputTextPane.clear();
-        Interpreter.getInstance().removeListener(interpreterListener);        
+        Sequencer.getInstance().removeListener(sequencerListener);        
     }    
 
-    final InterpreterListener interpreterListener = new InterpreterListener() {
+    final SequencerListener sequencerListener = new SequencerListener() {
         @Override
         public void onShellStdout(String str) {
             outputTextPane.append(str + "\n", SwingUtils.getColorStdout());
@@ -83,7 +83,7 @@ public class OutputPanel extends MonitoredPanel {
 
         @Override
         public void onExecutingFile(String fileName) {
-            String scriptName = Interpreter.getInstance().getStandardScriptName(fileName);
+            String scriptName = Sequencer.getInstance().getStandardScriptName(fileName);
             outputTextPane.append(getTaskInitMessage(scriptName) + "\n", SwingUtils.getColorOutput());
         }
 
@@ -97,7 +97,7 @@ public class OutputPanel extends MonitoredPanel {
                 }
             }
 
-            String scriptName = Interpreter.getInstance().getStandardScriptName(fileName);
+            String scriptName = Sequencer.getInstance().getStandardScriptName(fileName);
             outputTextPane.append(getTaskFinishMessage(scriptName) + "\n", SwingUtils.getColorOutput());
         }
     };

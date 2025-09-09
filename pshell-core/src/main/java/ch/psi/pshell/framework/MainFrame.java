@@ -17,7 +17,6 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.security.User;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.PlotListener;
 import ch.psi.pshell.swing.CodeEditor;
 import ch.psi.pshell.swing.ConfigDialog;
@@ -86,6 +85,7 @@ import javax.swing.WindowConstants;
 import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import ch.psi.pshell.security.SecurityListener;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  * */
@@ -220,7 +220,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
      */    
     @Override
     protected void onOpen() {
-        Context.getInterpreter().addScanListener(new ScanListener() {
+        Context.getSequencer().addScanListener(new ScanListener() {
             @Override
             public void onScanStarted(Scan scan, final String plotTitle) {
                 startScanPlot(scan, plotTitle);
@@ -334,7 +334,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
             restoreOpenedFiles();
         }
         
-        Context.getInterpreter().addListener(new InterpreterListener() {
+        Context.getSequencer().addListener(new SequencerListener() {
             @Override
             public void onStateChanged(State state, State former) {
                 if (!state.isProcessing()) {
@@ -601,11 +601,11 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
 
     public void debugScript(final boolean pauseOnStart) throws Exception {
         try {
-            if (Context.getInterpreter().isPaused()) {
-                Context.getInterpreter().resume();
+            if (Context.getSequencer().isPaused()) {
+                Context.getSequencer().resume();
                 return;
             }
-            Context.getInterpreter().assertState(State.Ready);
+            Context.getSequencer().assertState(State.Ready);
             currentScriptEditor = getSelectedEditor();
             if (currentScriptEditor != null) {
                 final Statement[] statements = currentScriptEditor.parse();
@@ -652,7 +652,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
     
     public void run() throws Exception{
         if (Context.getState()==State.Paused){
-            Context.getInterpreter().resume();
+            Context.getSequencer().resume();
             Processor runningProcessor = getRunningProcessor();
             if ((runningProcessor != null) && runningProcessor.canPause()){
                 runningProcessor.resume();
@@ -671,7 +671,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
     }
     
     public void pause() throws InterruptedException{
-        Context.getInterpreter().pause();
+        Context.getSequencer().pause();
         Processor runningProcessor = getRunningProcessor();
         if (runningProcessor != null) {
             runningProcessor.pause();
@@ -687,7 +687,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
             if (Context.getState().isReady()) {
                 debugScript(true);
             } else {
-                Context.getInterpreter().step();
+                Context.getSequencer().step();
             }
         }
         updateViewState();
@@ -1063,7 +1063,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
 
                 int index = tabPlots.getTabCount() - 1;
                 SwingUtils.setTabClosable(tabPlots, index, (JTabbedPane tabbedPane, int tabIndex) -> {
-                    Context.getInterpreter().removePlotContext(tabbedPane.getTitleAt(tabIndex));
+                    Context.getSequencer().removePlotContext(tabbedPane.getTitleAt(tabIndex));
                     return true;
                 });
                 setTabDetachable(tabPlots, index);

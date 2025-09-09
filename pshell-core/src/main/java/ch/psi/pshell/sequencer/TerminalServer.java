@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 
 /**
- * A simple console interface to the interpreter through a raw TCP connection.
+ * A simple console interface to the sequencer through a raw TCP connection.
  */
 public class TerminalServer extends TcpServer {
 
@@ -24,7 +24,7 @@ public class TerminalServer extends TcpServer {
                 if (buffer != null) {
                     try {
                         String statement = new String((buffer.toByteArray()));
-                        Object ret = Context.getInterpreter().evalLine(CommandSource.terminal, statement.equals("&nbsp") ? "" : statement); //&nbsp is token for empty string
+                        Object ret = Context.getSequencer().evalLine(CommandSource.terminal, statement.equals("&nbsp") ? "" : statement); //&nbsp is token for empty string
                         if (ret != null) {
                             send(String.valueOf(ret).getBytes(), address);
                             send("\n".getBytes(), address);

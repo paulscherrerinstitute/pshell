@@ -67,7 +67,7 @@ public class QueueTask {
         }
         String ext = IO.getExtension(filename);
         if (ext.isEmpty()) {
-            filename = filename + "." + Context.getInterpreter().getScriptType().getExtension();
+            filename = filename + "." + Context.getSequencer().getScriptType().getExtension();
         }
         File file = null;
         for (String path : new String[]{Setup.getScriptsPath(), Setup.getHomePath()}) {
@@ -100,7 +100,7 @@ public class QueueTask {
     static Object expandVariables(Object obj) {
         if (obj instanceof String str) {
             if (str.startsWith("$")) {
-                Object var = Context.getInterpreter().getInterpreterVariable(str.substring(1));
+                Object var = Context.getSequencer().getInterpreterVariable(str.substring(1));
                 if (var != null) {
                     obj = var;
                 }
@@ -154,7 +154,7 @@ public class QueueTask {
                         try {
                             ret.put(name, EncoderJson.decode(value, Object.class));
                         } catch (Exception e) {
-                            Object var = Context.getInterpreter().getInterpreterVariable(value);
+                            Object var = Context.getSequencer().getInterpreterVariable(value);
                             ret.put(name, (var == null) ? value : (forDisplay ? new InterpreterVariable(value, var) : var));
                         }
                     }

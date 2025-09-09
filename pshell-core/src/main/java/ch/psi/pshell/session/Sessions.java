@@ -175,7 +175,7 @@ public class Sessions extends ObservableBase<Sessions.SessionsListener> {
         setInfo(info);
         setMetadata(metadata);
         triggerChanged(sessionId, ChangeType.STATE);
-        Context.getInterpreter().onSessionStarted(sessionId);
+        Context.getSequencer().onSessionStarted(sessionId);
         return sessionId;
     }
         
@@ -216,7 +216,7 @@ public class Sessions extends ObservableBase<Sessions.SessionsListener> {
     public void stop() throws IOException {
         if (isStarted()) {
             int sessionId = getCurrentSession();
-            Context.getInterpreter().onSessionFinished(sessionId);
+            Context.getSequencer().onSessionFinished(sessionId);
             try {
                 setInfo("state", STATE_COMPLETED);
                 setInfo("stop", getTimestamp());
@@ -250,7 +250,7 @@ public class Sessions extends ObservableBase<Sessions.SessionsListener> {
         info.remove("stop");
         setInfo(info);
         triggerChanged(sessionId, ChangeType.STATE);
-        Context.getInterpreter().onSessionStarted(sessionId);
+        Context.getSequencer().onSessionStarted(sessionId);
         return sessionId;
     }
 

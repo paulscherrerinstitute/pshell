@@ -13,7 +13,6 @@ import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.PlotListener;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
@@ -23,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  *
@@ -31,17 +31,17 @@ public class PlotterBinder implements AutoCloseable {
 
     final ScanListener scanListener;
     final PlotListener plotListener;
-    final InterpreterListener interpreterListener;
+    final SequencerListener sequencerListener;
     final Plotter pm;
 
     public PlotterBinder(Plotter pm) {
         this.pm = pm;
         this.scanListener = new BinderScanListener();
-        this.interpreterListener = new BinderInterpreterListener();
+        this.sequencerListener = new BinderSequencerListener();
         this.plotListener = new BinderPlotListener();
-        Context.getInterpreter().addScanListener(scanListener);
-        Context.getInterpreter().addListener(interpreterListener);
-        Context.getInterpreter().setPlotListener(plotListener);
+        Context.getSequencer().addScanListener(scanListener);
+        Context.getSequencer().addListener(sequencerListener);
+        Context.getSequencer().setPlotListener(plotListener);
     }
 
     class BinderScanListener implements ScanListener {
@@ -115,7 +115,7 @@ public class PlotterBinder implements AutoCloseable {
 
     }
 
-    class BinderInterpreterListener implements InterpreterListener {
+    class BinderSequencerListener implements SequencerListener {
 
         @Override
         public void onStateChanged(State state, State former) {
@@ -202,8 +202,8 @@ public class PlotterBinder implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        Context.getInterpreter().removeScanListener(scanListener);
-        Context.getInterpreter().removeListener(interpreterListener);
+        Context.getSequencer().removeScanListener(scanListener);
+        Context.getSequencer().removeListener(sequencerListener);
     }
 
 }

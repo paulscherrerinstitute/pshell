@@ -8,7 +8,6 @@ import ch.psi.pshell.devices.DevicePoolListener;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.sequencer.CommandSource;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.swing.DevicePoolPanel;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Config;
@@ -25,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  *
@@ -162,8 +162,8 @@ import java.util.logging.Logger;
         if (Context.hasConfig()){
             Context.getConfig().addListener(configChangeListener);
         }
-        if (Context.hasInterpreter()){
-            Context.getInterpreter().addListener(interpreterListener);
+        if (Context.hasSequencer()){
+            Context.getSequencer().addListener(sequencerListener);
         }
     }
     
@@ -182,8 +182,8 @@ import java.util.logging.Logger;
         if (Context.hasConfig()){
             Context.getConfig().removeListener(configChangeListener);
         }
-        if (Context.hasInterpreter()){
-            Context.getInterpreter().removeListener(interpreterListener);
+        if (Context.hasSequencer()){
+            Context.getSequencer().removeListener(sequencerListener);
         }  
     }
     
@@ -223,7 +223,7 @@ import java.util.logging.Logger;
         }
     };
     
-    InterpreterListener interpreterListener = new InterpreterListener(){    
+    SequencerListener sequencerListener = new SequencerListener(){    
         public void willEval(CommandSource source, String code) throws SecurityException {
             if (!source.isInternal()) {
                 getCurrentRights(source.isRemote()).assertConsoleAllowed();
@@ -272,8 +272,8 @@ import java.util.logging.Logger;
             if (userAuthenticator == null) {
                 throw new IOException("No user authenticator defined");
             }                                    
-            Context.getInterpreter().setSourceUI(source);
-            String pwd = Context.getInterpreter().getPassword("Enter password:", "Set User");            
+            Context.getSequencer().setSourceUI(source);
+            String pwd = Context.getSequencer().getPassword("Enter password:", "Set User");            
             if (pwd == null) {
                 return false;
             }

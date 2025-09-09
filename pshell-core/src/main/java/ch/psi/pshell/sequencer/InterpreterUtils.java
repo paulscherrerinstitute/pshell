@@ -26,7 +26,7 @@ public class InterpreterUtils {
     static final boolean INCLUDE_IMMUTABLE_ATTRS_SIGNATURES = false;
     
     static boolean canCallInterpreter(){
-        return (Context.getScriptManager().isThreaded() || Context.getState().isReady());
+        return (Context.getInterpreter().isThreaded() || Context.getState().isReady());
     }
 
     
@@ -51,12 +51,12 @@ public class InterpreterUtils {
             String var = str.trim();
             Object obj = null;
             if (var.equals("_")) {
-                obj = Context.getInterpreter().getLastEvalResult();
+                obj = Context.getSequencer().getLastEvalResult();
             } else {
                 if (propagate) {
                     String[] tokens = var.split("\\.");
                     try {
-                        obj = Context.getInterpreter().getInterpreterVariable(tokens[0]);
+                        obj = Context.getSequencer().getInterpreterVariable(tokens[0]);
                         for (int j = 1; j < tokens.length; j++) {
                             String method = tokens[j];
                             //Only process getters
@@ -71,7 +71,7 @@ public class InterpreterUtils {
                         obj = null;
                     }
                 } else {
-                    obj = Context.getInterpreter().getInterpreterVariable(var);
+                    obj = Context.getSequencer().getInterpreterVariable(var);
                 }
             }
             if ((obj != null) && (Convert.getPrimitiveClass(obj.getClass()) == null)) {
@@ -85,7 +85,7 @@ public class InterpreterUtils {
         if (obj instanceof org.python.core.PyObject po) {
             //Not parsed as normal java objects, must "dir" them
             return JythonUtils.getSignatures(po, true);
-        } else if ((Context.getInterpreter().getScriptType()==ScriptType.cpy)   &&  
+        } else if ((Context.getSequencer().getScriptType()==ScriptType.cpy)   &&  
                 (!(obj.getClass().getName().startsWith("ch.psi")))) {
             //TODO: JepScriptEngine.getSignatures does not work for java objects, and 
             //wrapped objects as java.* and jep.* woll show different signatures then the python counbterpars.
@@ -93,8 +93,8 @@ public class InterpreterUtils {
             //Use standard auto-complention for internal (ch.psi) objects because they match Python's.
             try {
                 if (canCallInterpreter()){                                                 
-                    return (List<String>)Context.getInterpreter().runInInterpreterThread(null,(Callable<List<String>>)() ->{
-                        return ((JepScriptEngine)Context.getInterpreter().getScriptManager().getEngine()).getSignatures(
+                    return (List<String>)Context.getSequencer().runInInterpreterThread(null,(Callable<List<String>>)() ->{
+                        return ((JepScriptEngine)Context.getInterpreter().getEngine()).getSignatures(
                                 obj, (name.endsWith(".")) ? name.substring(0, name.length()-1)  : name);
                     });
                 }
@@ -105,7 +105,7 @@ public class InterpreterUtils {
         } else {            
             Class[] excludeClasses = new Class[]{AutoCloseable.class, Observable.class, JPanel.class, JComponent.class, Container.class, Component.class};
             String[] excludeNames = new String[]{};
-            if (Context.getInterpreter().getScriptType() == ScriptType.py) {
+            if (Context.getSequencer().getScriptType() == ScriptType.py) {
                 excludeClasses = Arr.append(excludeClasses, JythonUtils.REFLECTION_EXCLUDE_CLASSES);
                 excludeNames = Arr.append(excludeNames, JythonUtils.REFLECTION_EXCLUDE_NAMES);
             }

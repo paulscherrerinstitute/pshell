@@ -8,8 +8,7 @@ import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Executor;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.scripting.Statement;
-import ch.psi.pshell.sequencer.Interpreter;
-import ch.psi.pshell.sequencer.InterpreterListener;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.sequencer.InterpreterUtils;
 import ch.psi.pshell.swing.CodeEditor;
 import ch.psi.pshell.swing.Document;
@@ -45,6 +44,7 @@ import javax.swing.text.Utilities;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import org.fife.ui.rsyntaxtextarea.TokenMap;
 import org.fife.ui.rsyntaxtextarea.TokenTypes;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  *
@@ -128,12 +128,12 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
                     return;
                 }
             }
-            if ((Context.getState() == State.Closing) || (!Context.hasScriptManager())) {
+            if ((Context.getState() == State.Closing) || (!Context.hasInterpreter())) {
                 return;
             }
             update();                
-            if (Interpreter.hasInstance()){
-                Interpreter.getInstance().addListener(interpreterListener);
+            if (Sequencer.hasInstance()){
+                Sequencer.getInstance().addListener(sequencerListener);
             }
             DevicePool.addStaticListener(devicePoolListener);
         }).start();            
@@ -151,7 +151,7 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
         }
     };
     
-    static final InterpreterListener interpreterListener = new InterpreterListener(){
+    static final SequencerListener sequencerListener = new SequencerListener(){
         public void onInitialized(int runCount) {
             functionNames = null;
             requestUpdate();
@@ -184,10 +184,10 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
                     }
                 }
             }
-            if (Interpreter.hasInstance()){
-                if ((functionNames==null) && (Interpreter.getInstance().getState().isInitialized())){
+            if (Sequencer.hasInstance()){
+                if ((functionNames==null) && (Sequencer.getInstance().getState().isInitialized())){
                     try{
-                        functionNames = Interpreter.getInstance().getBuiltinFunctionsNames();
+                        functionNames = Sequencer.getInstance().getBuiltinFunctionsNames();
                     } catch (Exception ex) {
                         Logger.getLogger(ScriptEditor.class.getName()).log(Level.INFO, null, ex);
                         functionNames = null;
@@ -294,7 +294,7 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
     }
 
     public Statement[] parse() throws ScriptException, IOException, InterruptedException {
-        statements = Context.getInterpreter().parseString(getText(), getScriptName());
+        statements = Context.getSequencer().parseString(getText(), getScriptName());
         return statements;
     }
 
@@ -456,7 +456,7 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
 
     private void editorKeyPressed(java.awt.event.KeyEvent evt) {
         try {
-            List<String> history = Context.getInterpreter().getHistoryEntries();
+            List<String> history = Context.getSequencer().getHistoryEntries();
             char keyChar = evt.getKeyChar();
             int key = evt.getKeyCode();
             if (key == KeyEvent.VK_UP) {
@@ -502,8 +502,8 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
                 } else if ((key == KeyEvent.VK_SPACE) && (evt.isControlDown())) {
                     ArrayList<String> entries = new ArrayList<>();
                     if (evt.isShiftDown()) {
-                        for (String function : Context.getInterpreter().getBuiltinFunctionsNames()) {
-                            entries.add(Context.getInterpreter().getBuiltinFunctionDoc(function).split("\n")[0]);
+                        for (String function : Context.getSequencer().getBuiltinFunctionsNames()) {
+                            entries.add(Context.getSequencer().getBuiltinFunctionDoc(function).split("\n")[0]);
                         }
                         truncateMenuContents = false;
                     } else {

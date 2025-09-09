@@ -185,6 +185,9 @@ def get_app():
 def get_view():
     return Context.getView()
 
+def get_sequencer():
+    return Context.getSequencer()
+
 def get_interpreter():
     return Context.getInterpreter()
 

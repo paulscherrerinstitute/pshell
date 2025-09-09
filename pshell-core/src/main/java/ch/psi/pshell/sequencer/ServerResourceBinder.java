@@ -10,7 +10,7 @@ public class ServerResourceBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        bind(Interpreter.getInstance()).to(Interpreter.class);
+        bind(Sequencer.getInstance()).to(Sequencer.class);
         bind(new SseBroadcaster()).to(SseBroadcaster.class);
     }
 

@@ -1,6 +1,6 @@
 package ch.psi.pshell.sequencer;
 
-import ch.psi.pshell.scripting.ScriptManager;
+import ch.psi.pshell.scripting.Interpreter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -98,7 +98,7 @@ public class ScriptStdio implements AutoCloseable {
         }
     }
 
-    public ScriptStdio(final ScriptManager scriptManager) {
+    public ScriptStdio(final Interpreter scriptManager) {
         try {
 
             stdinReader = new BufferedReader(new InputStreamReader(new InputStream() {

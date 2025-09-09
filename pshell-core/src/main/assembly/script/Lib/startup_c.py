@@ -70,6 +70,9 @@ def get_app():
 def get_view():
     return Context.getView()
 
+def get_sequencer():
+    return Context.getSequencer()
+
 def get_interpreter():
     return Context.getInterpreter()
 
@@ -282,7 +285,7 @@ from ch.psi.pshell.archiver import IocInfoAPI as IocInfoAPI
 from ch.psi.pshell.archiver import Daqbuf as Daqbuf
 
 from ch.psi.pshell.sequencer import CommandSource as CommandSource
-from ch.psi.pshell.sequencer import InterpreterListener as InterpreterListener
+from ch.psi.pshell.sequencer import SequencerListener as SequencerListener
 from ch.psi.pshell.sequencer import ChannelAccessServer as ChannelAccessServer
 
 from ch.psi.pshell.data import DataSlice as DataSlice
@@ -529,10 +532,10 @@ def string_to_obj(o):
         o=str(o)
         if "://" in o:
             return InlineDevice(o)
-        ret =  get_interpreter().getInterpreterVariable(o)
+        ret =  get_sequencer().getInterpreterVariable(o)
         if ret is None:
             try:
-                ret = get_interpreter().getScriptManager().evalBackground(o).result
+                ret = get_interpreter().evalBackground(o).result
             except:                        
                 return None
         o=ret
@@ -860,7 +863,7 @@ def processScanPars(scan, pars):
     scan.setSnaps(to_list(string_to_obj(pars.pop("snaps",None))))
     scan.setDiags(to_list(string_to_obj(pars.pop("diags",None))))
     scan.setMeta(pars.pop("meta",None))
-    get_interpreter().setCommandPars(scan, pars)
+    get_sequencer().setCommandPars(scan, pars)
 
 
 
@@ -947,7 +950,7 @@ def inject():
     else:
         g=_get_caller().f_globals
      
-    i = get_interpreter().getScriptManager().getInjections()
+    i = get_interpreter().getInjections()
     for k in i.keySet():
         g[k]=i[k]
 
@@ -966,9 +969,9 @@ def run(script_name, args = None, locals = None):
     Returns:
         The script return value (if set with set_return)
     """
-    script = get_interpreter().getScriptManager().getLibrary().resolveFile(script_name)
+    script = get_interpreter().getLibrary().resolveFile(script_name)
     if script is not None and os.path.isfile(script):
-        info = get_interpreter().startScriptExecution(script_name, args)
+        info = get_sequencer().startScriptExecution(script_name, args)
         try:
             set_return(None)
             if args is not None:
@@ -983,10 +986,10 @@ def run(script_name, args = None, locals = None):
             else:
                 exec(open(script).read(), globals(), locals)
             ret = get_return()
-            get_interpreter().finishScriptExecution(info, ret)
+            get_sequencer().finishScriptExecution(info, ret)
             return ret
         except Exception as ex:
-            get_interpreter().finishScriptExecution(info, ex)
+            get_sequencer().finishScriptExecution(info, ex)
             raise ex
     raise IOError("Invalid script: " + str(script_name))
 
@@ -1568,10 +1571,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
     if isinstance(data, Table):
         if is_list(xdata):
             xdata = np_to_java(to_array(xdata, 'd'), 'd')
-        return get_interpreter().plot(data,xdata,name,title)
+        return get_sequencer().plot(data,xdata,name,title)
 
     if isinstance(data, ScanResult):
-        return get_interpreter().plot(data,title)
+        return get_sequencer().plot(data,title)
 
     if (name is not None) and is_list(name):
         if len(name)==0:
@@ -1591,10 +1594,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
             if is_list(y) and len(y)>0 and (is_list(y[i]) or isinstance(y[i] , List) or is_array(y[i])):
                 y = y[i]
             plots[i] =  PlotDescriptor(plotName , np_to_java(to_array(data[i], 'd'), 'd'), np_to_java(to_array(x, 'd'), 'd'), np_to_java(to_array(y, 'd'), 'd'))
-        return get_interpreter().plot(plots,title)
+        return get_sequencer().plot(plots,title)
     else:
         plot = PlotDescriptor(name, np_to_java(to_array(data, 'd'), 'd'), np_to_java(to_array(xdata, 'd'), 'd'), np_to_java(to_array(ydata, 'd'), 'd'))
-        return get_interpreter().plot(plot,title)
+        return get_sequencer().plot(plot,title)
 
 def get_plots(title=None):
     """Return all current plots in the plotting window given by 'title'.
@@ -1605,7 +1608,7 @@ def get_plots(title=None):
     Returns:
         List of Plot.
     """
-    return get_interpreter().getPlots(title)
+    return get_sequencer().getPlots(title)
 
 def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path = None):
     """Returns list with file names of plots snapshots from a plotting context.
@@ -1860,7 +1863,7 @@ def log(log, data_file=None):
     Returns:
         None
     """
-    get_interpreter().scriptingLog(str(log))
+    get_sequencer().scriptingLog(str(log))
     if data_file is None:
         data_file = get_exec_pars().isOpen()
     if data_file:
@@ -1921,7 +1924,7 @@ def set_exec_pars(**args):
         domain_axis(str): Set the domain axis source: "Time", "Index", or a readable name. Default: first positioner.
         status(str): set application status
     """
-    get_interpreter().setExecutionPars(args)
+    get_sequencer().setExecutionPars(args)
 
 def get_exec_pars():
     """ Returns script execution parameters.
@@ -1947,7 +1950,7 @@ def get_exec_pars():
             simulation (bool): global simulation flag.
             aborted (bool): True if execution has been aborted
     """
-    return get_interpreter().getExecutionPars()
+    return get_sequencer().getExecutionPars()
 
 
 ###################################################################################################
@@ -2325,7 +2328,7 @@ def stop():
     Returns:
         None
     """
-    get_interpreter().stopAll()
+    get_sequencer().stopAll()
 
 def update():
     """Update all devices.
@@ -2336,7 +2339,7 @@ def update():
     Returns:
         None
     """
-    get_interpreter().updateAll()
+    get_sequencer().updateAll()
 
 def reinit(dev = None):
     """Re-initialize devices.
@@ -2349,8 +2352,8 @@ def reinit(dev = None):
     """
     if dev is not None:
         dev=string_to_obj(dev)
-        return get_interpreter().reinit(dev)
-    return to_list(get_interpreter().reinit())
+        return get_sequencer().reinit(dev)
+    return to_list(get_sequencer().reinit())
 
 def create_device(url, parent=None):
     """Create a device form a definition string(see InlineDevice)
@@ -2402,7 +2405,7 @@ def tweak(dev, step, is2d=False):
     if (get_exec_pars().isBackground()): return
     dev,step = to_list(string_to_obj(dev)),to_list(step)
     while (not (get_exec_pars().getAborted())):
-        key=get_interpreter().waitKey(0)
+        key=get_sequencer().waitKey(0)
         for i in range(len(dev)):
             if not is2d or i==0:
                 if key == 0x25: dev[i].moveRel(-step[i]) #Left
@@ -2773,7 +2776,7 @@ def send_event(name, value=True):
         name(str): event name.
         value(Object): event value.
     """
-    get_interpreter().sendEvent(name, value)
+    get_sequencer().sendEvent(name, value)
 
 
 ###################################################################################################
@@ -2831,7 +2834,7 @@ def set_preference(preference, value):
         None
     """
     value = to_array(value, 'o') #If list then convert to Object array
-    get_interpreter().setPreference(preference, value)
+    get_sequencer().setPreference(preference, value)
 
 def get_string(msg, default = None, alternatives = None, password = False):
     """
@@ -2846,8 +2849,8 @@ def get_string(msg, default = None, alternatives = None, password = False):
         String entered of null if canceled
     """
     if password :
-        return get_interpreter().getPassword(msg, None)
-    return get_interpreter().getString(msg, str(default) if (default is not None) else None, alternatives)
+        return get_sequencer().getPassword(msg, None)
+    return get_sequencer().getString(msg, str(default) if (default is not None) else None, alternatives)
 
 def get_option(msg, type = "YesNoCancel"):
     """
@@ -2859,7 +2862,7 @@ def get_option(msg, type = "YesNoCancel"):
     Returns:
         'Yes', 'No', 'Cancel'
     """
-    return get_interpreter().getOption(msg, type)
+    return get_sequencer().getOption(msg, type)
 
 def show_message(msg, title=None, blocking = True):
     """
@@ -2869,7 +2872,7 @@ def show_message(msg, title=None, blocking = True):
         msg(str): display message.
         title(str, optional): dialog title
     """
-    get_interpreter().showMessage(msg, title, blocking)
+    get_sequencer().showMessage(msg, title, blocking)
 
 def show_panel(device, title=None):
     """
@@ -2884,7 +2887,7 @@ def show_panel(device, title=None):
         device.initialize()
     if is_string(device):
         device = get_device(device)
-    return get_interpreter().showPanel(device)
+    return get_sequencer().showPanel(device)
 
     
 ###################################################################################################
@@ -2935,7 +2938,7 @@ if __name__ == "__main__":
     def ctlm_cmd_task(port,parent_thread, rc):
         try:
             global ctrl_cmd_socket
-            get_interpreter().scriptingLog("Starting control command task")
+            get_sequencer().scriptingLog("Starting control command task")
             quit=False
             with socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM) as ctrl_cmd_socket:
                 ctrl_cmd_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -2957,7 +2960,7 @@ if __name__ == "__main__":
                         on_ctrl_cmd(cmd)
                     ctrl_cmd_socket.sendto("ack".encode('UTF-8'), add)
         finally:
-            get_interpreter().scriptingLog("Quitting control command task")
+            get_sequencer().scriptingLog("Quitting control command task")
 
     ctrl_cmd_task_thread = threading.Thread(target=functools.partial(ctlm_cmd_task, CTRL_CMD_PORT, threading.current_thread(), run_count))
     ctrl_cmd_task_thread.daemon = True

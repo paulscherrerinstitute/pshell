@@ -14,7 +14,7 @@ import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotPanel;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.scripting.ViewPreference;
-import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.Convert;
@@ -372,7 +372,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             menuConvertFile.setVisible(menuConvertFile.getMenuComponentCount() > 0);
                             //}
 
-                            if (isRoot && Interpreter.hasInstance()) {
+                            if (isRoot && Sequencer.hasInstance()) {
                                 setupProcessMenu(menuProcessing);
                                 menuProcessing.setVisible(true);
                             } else {
@@ -474,7 +474,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 }
                 String var = getString("Enter variable name:", null);
                 if ((var != null) && (!var.trim().isEmpty())) {
-                    Interpreter.getInstance().tryEvalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
+                    Sequencer.getInstance().tryEvalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
                 }
             } catch (Exception ex) {
                 showException(ex);
@@ -533,7 +533,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                     }
                                 }
                             } else if (type.equals(Format.INFO_VAL_TYPE_DATASET) || type.equals(Format.INFO_VAL_TYPE_SOFTLINK)) {
-                                menuAssign.setVisible(Interpreter.hasInstance());
+                                menuAssign.setVisible(Sequencer.hasInstance());
                                 if (dataManager.isDisplayablePlot(info)) {
                                     menuConvert.removeAll();
                                     for (Converter converter : Converter.getServiceProviders()) {
@@ -836,8 +836,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 String[] tokens = script.split("\\|");
                 String file = tokens[0].trim();
                 String category = ((tokens.length == 1) || (tokens[1].isBlank())) ? "" : tokens[1].trim();
-                if (Interpreter.hasInstance()){
-                    File f = Interpreter.getInstance().getScriptFile(file);
+                if (Sequencer.hasInstance()){
+                    File f = Sequencer.getInstance().getScriptFile(file);
                     if ((f != null) && (f.exists())) {
                         scripts.add(new ImmutablePair(file, category));
                         if (!category.isEmpty()) {
@@ -863,7 +863,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 JMenuItem item = new JMenuItem(IO.getPrefix(file));
                 item.addActionListener((ActionEvent ae) -> {
                     try {
-                        Interpreter.getInstance().evalFileBackgroundAsync(file, List.of(getCurrentRoot())).handle((ret, ex) -> {
+                        Sequencer.getInstance().evalFileBackgroundAsync(file, List.of(getCurrentRoot())).handle((ret, ex) -> {
                             if (ex != null) {
                                 showException((Exception) ex);
                             }

@@ -224,7 +224,7 @@ public class ExecutionParameters {
             if (dataPath != null) {
                 lastOutputFile = outputFile;
             }
-            Context.getInterpreter().onChangeDataPath(dataPath);
+            Context.getSequencer().onChangeDataPath(dataPath);
             if (isHandlingSessions()){
                 try{
                     Context.getSessions().onChangeDataPath(dataPath);
@@ -484,7 +484,7 @@ public class ExecutionParameters {
         }
         String script = getScript();
         if (script == null) {
-            if (Context.getInterpreter().getRunningStatement() != null) {
+            if (Context.getSequencer().getRunningStatement() != null) {
                 return "script";
             }
             return "console";
@@ -671,12 +671,12 @@ public class ExecutionParameters {
 
     public String getScript() {
         CommandInfo cmd = getCommandInfo();
-        return (cmd != null) ? Context.getInterpreter().getScriptPrefix(cmd.script) : null;
+        return (cmd != null) ? Context.getSequencer().getScriptPrefix(cmd.script) : null;
     }
 
     public File getScriptFile() {
         CommandInfo cmd = getCommandInfo();
-        return (cmd != null) ? Context.getInterpreter().getScriptFile(cmd.script) : null;
+        return (cmd != null) ? Context.getSequencer().getScriptFile(cmd.script) : null;
     }
 
     public String getStatement() {
@@ -709,7 +709,7 @@ public class ExecutionParameters {
     }
 
     public boolean getAborted() {
-        return Context.getInterpreter().isAborted();
+        return Context.getSequencer().isAborted();
     }
 
     public CommandSource getSource() {
@@ -743,12 +743,12 @@ public class ExecutionParameters {
     
     public String getInnerScript() {
         CommandInfo cmd = getInnerCommandInfo();
-        return (cmd != null) ?  Context.getInterpreter().getScriptPrefix(cmd.script) : null;
+        return (cmd != null) ?  Context.getSequencer().getScriptPrefix(cmd.script) : null;
     }
 
     public File getInnerScriptFile() {
         CommandInfo cmd = getInnerCommandInfo();
-        return (cmd != null) ?  Context.getInterpreter().getScriptFile(cmd.script) : null;
+        return (cmd != null) ?  Context.getSequencer().getScriptFile(cmd.script) : null;
     }
     
     public CommandInfo getInnerCommandInfo() {
@@ -771,11 +771,11 @@ public class ExecutionParameters {
 
     public boolean isBackground() {
         CommandInfo cmd = getCommandInfo();
-        return (cmd != null) ? cmd.background : !Context.getInterpreter().isInterpreterThread();
+        return (cmd != null) ? cmd.background : !Context.getSequencer().isInterpreterThread();
     }
     
     public boolean isDebug() {
-        return Context.getInterpreter().isRunningStatements();
+        return Context.getSequencer().isRunningStatements();
     }
     
     public boolean isSimulation() {
@@ -917,7 +917,7 @@ public class ExecutionParameters {
                 plotPreferences.init();
                 break;
         }
-        Context.getInterpreter().triggerPreferenceChange(preference, value);
+        Context.getSequencer().triggerPreferenceChange(preference, value);
     }
 
     public ViewPreference.PlotPreferences getPlotPreferences() {

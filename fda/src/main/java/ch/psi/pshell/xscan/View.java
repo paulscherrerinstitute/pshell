@@ -148,7 +148,6 @@ public class View extends MainFrame {
             return;
         }
         Processor runningProcessor = getRunningProcessor();
-        //Interpreter interp = Context.getInterpreter();
         State state = Context.getState();
         boolean showingProcessor= getSelectedProcessor()!=null;
         boolean ready = (state == State.Ready);

@@ -37,8 +37,8 @@
 
     - With:
         ```
-        Setup.local
-        get_interpreter().serverEnabled
+        Setup.isLocal()
+        Context.isServerEnabled()
         ```
 
  * How to define script setup / cleanup callbacks? This can simplify script flow, so that try/finally

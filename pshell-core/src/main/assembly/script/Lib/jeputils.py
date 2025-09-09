@@ -37,7 +37,7 @@ import java.util.Collections
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 import ch.psi.pshell.framework.Setup as Setup
 
-from startup import to_array, get_interpreter, _get_caller, Convert, Arr
+from startup import to_array, get_sequencer, _get_caller, Convert, Arr
 
 __jep = {}
 
@@ -113,7 +113,7 @@ def __print_stdout():
         
 def run_jep(script_name, vars = {}):    
     global __jep
-    script = get_interpreter().scriptManager.library.resolveFile(script_name)
+    script = get_interpreter().library.resolveFile(script_name)
     if script is None : 
         script= os.path.abspath(script_name)
     j=__get_jep()
@@ -146,7 +146,7 @@ def call_jep(module, function, args = [], kwargs = {}, reload=False):
         args=list(args)
         
     if "/" in module: 
-        script = get_interpreter().scriptManager.library.resolveFile(module)       
+        script = get_interpreter().library.resolveFile(module)       
         if "\\" in script: 
             #Windows paths
             module_path = script[0:script.rfind("\\")]

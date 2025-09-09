@@ -116,7 +116,7 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
                         e.put("jep_stdout", writer);
                         e.eval("sys.stdout=jep_stdout");
                     } catch (Exception ex) {
-                        Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Interpreter.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
 
@@ -127,7 +127,7 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
                         e.put("jep_stderr", writer);
                         e.eval("sys.stderr=jep_stderr");
                     } catch (Exception ex) {
-                        Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Interpreter.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
 
@@ -144,7 +144,7 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
                         e.eval("jep_stdin=JepStdinWrapper(jep_stdin)");
                         e.eval("sys.stdin=jep_stdin");
                     } catch (Exception ex) {
-                        Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Interpreter.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             });
@@ -153,12 +153,12 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
                     e.eval("import sys");
                     for (String path : libraryPath) {
                         path = (new File(path)).getCanonicalPath();
-                        Logger.getLogger(ScriptManager.class.getName()).info("Adding to Python Path: " + path);
+                        Logger.getLogger(Interpreter.class.getName()).info("Adding to Python Path: " + path);
                         e.eval("sys.path.append('" + path + "')");
                     }
                 }
             } catch (Exception ex) {
-                Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Interpreter.class.getName()).log(Level.SEVERE, null, ex);
             }
             return e;
         } catch (ScriptException e) {

@@ -10,8 +10,7 @@ import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.sequencer.CommandSource;
 import ch.psi.pshell.sequencer.ControlCommand;
-import ch.psi.pshell.sequencer.Interpreter;
-import ch.psi.pshell.sequencer.InterpreterListener;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.sequencer.InterpreterUtils;
 import ch.psi.pshell.sequencer.ScriptStdio;
 import ch.psi.pshell.utils.Nameable;
@@ -34,6 +33,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  *
@@ -66,8 +66,8 @@ public class Shell extends MonitoredPanel {
         onLafChange();
     }
 
-    Interpreter getInterpreter(){
-        return Interpreter.getInstance();
+    Sequencer getInterpreter(){
+        return Sequencer.getInstance();
     }
     @Override
     protected final void onLafChange() {  
@@ -123,7 +123,7 @@ public class Shell extends MonitoredPanel {
         clear();
         input.setEditable(true);
         input.requestFocus();
-        getInterpreter().addListener(interpreterListener);
+        getInterpreter().addListener(sequencerListener);
     }
 
     boolean propagateVariableEvaluation = false;
@@ -136,7 +136,7 @@ public class Shell extends MonitoredPanel {
         return propagateVariableEvaluation;
     }
 
-    final InterpreterListener interpreterListener = new InterpreterListener() {
+    final SequencerListener sequencerListener = new SequencerListener() {
         @Override
         public void onShellCommand(CommandSource source, String command) {
             if (source.isDisplayable()){

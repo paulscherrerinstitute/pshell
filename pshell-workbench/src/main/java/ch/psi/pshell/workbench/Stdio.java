@@ -26,12 +26,12 @@ public class Stdio extends ch.psi.pshell.app.Stdio{
                 break;
             case "eval":
                 if (!trimming.isEmpty()) {
-                    System.out.println(Context.getInterpreter().evalLine(trimming));
+                    System.out.println(Context.getSequencer().evalLine(trimming));
                 }
                 break;
             case "evalb":
                 if (!trimming.isEmpty()) {
-                    System.out.println(Context.getInterpreter().evalLineBackground(trimming));
+                    System.out.println(Context.getSequencer().evalLineBackground(trimming));
                 }
                 break;
             case "show":

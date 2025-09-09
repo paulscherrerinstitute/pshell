@@ -45,7 +45,7 @@ public class SerializerPShell implements EventBusListener {
         dm = Context.getDataManager();
         try {
             if (basename != null) {
-                Context.getInterpreter().setExecutionPar("path", basename);
+                Context.getSequencer().setExecutionPar("path", basename);
             }
             dm.openOutput();
             dm.setAttribute("/", Layout.ATTR_FILE, basename + ".xml");

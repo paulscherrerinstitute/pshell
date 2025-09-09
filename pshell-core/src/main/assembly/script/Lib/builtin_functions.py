@@ -582,10 +582,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
     if isinstance(data, ch.psi.pshell.data.Table):
         if is_list(xdata):
             xdata = to_array(xdata, 'd')
-        return get_interpreter().plot(data,xdata,name,title)
+        return get_sequencer().plot(data,xdata,name,title)
 
     if isinstance(data, ch.psi.pshell.scan.ScanResult):
-        return get_interpreter().plot(data,title)
+        return get_sequencer().plot(data,title)
 
     if (name is not None) and is_list(name):
         if len(name)==0:
@@ -605,10 +605,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
             if is_list(y) and len(y)>0 and (is_list(y[i]) or isinstance(y[i] , java.util.List) or isinstance(y[i],PyArray)):
                 y = y[i]
             plots[i] =  PlotDescriptor(plotName , to_array(data[i], 'd'), to_array(x, 'd'), to_array(y, 'd'))
-        return get_interpreter().plot(plots,title)
+        return get_sequencer().plot(plots,title)
     else:
         plot = PlotDescriptor(name, to_array(data, 'd'), to_array(xdata, 'd'), to_array(ydata, 'd'))
-        return get_interpreter().plot(plot,title)
+        return get_sequencer().plot(plot,title)
 
 def get_plots(title=None):
     """Return all current plots in the plotting window given by 'title'.
@@ -619,7 +619,7 @@ def get_plots(title=None):
     Returns:
         List of Plot.
     """
-    return get_interpreter().getPlots(title)
+    return get_sequencer().getPlots(title)
 
 def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path = None):
     """Returns list with file names of plots snapshots from a plotting context.
@@ -881,7 +881,7 @@ def log(log, data_file=None):
     Returns:
         None
     """
-    get_interpreter().scriptingLog(str(log))
+    get_sequencer().scriptingLog(str(log))
     if data_file is None:
         data_file = get_exec_pars().open
     if data_file:
@@ -942,7 +942,7 @@ def set_exec_pars(**args):
         domain_axis(str): Set the domain axis source: "Time", "Index", or a readable name. Default: first positioner.
         status(str): set application status
     """
-    get_interpreter().setExecutionPars(args)
+    get_sequencer().setExecutionPars(args)
 
 def get_exec_pars():
     """ Returns script execution parameters.
@@ -968,7 +968,7 @@ def get_exec_pars():
             simulation (bool): global simulation flag.
             aborted (bool): True if execution has been aborted
     """
-    return get_interpreter().getExecutionPars()
+    return get_sequencer().getExecutionPars()
 
 
 ###################################################################################################
@@ -1149,10 +1149,10 @@ class Callable(java.util.concurrent.Callable):
         self.thread = java.lang.Thread.currentThread()
     def call(self):
         try:
-            get_interpreter().startedChildThread(self.thread)
+            get_sequencer().startedChildThread(self.thread)
             return self.method(*self.args)
         finally:
-            get_interpreter().finishedChildThread(self.thread)
+            get_sequencer().finishedChildThread(self.thread)
 
 def fork(*functions):
     """Start execution of functions in parallel.
@@ -1228,7 +1228,7 @@ def start_task(script, delay = 0.0, interval = -1):
     """
     delay_ms=int(delay*1000)
     interval_ms=int(interval*1000) if (interval>=0) else int(interval)
-    return get_interpreter().startTask(script, delay_ms, interval_ms)
+    return get_sequencer().startTask(script, delay_ms, interval_ms)
 
 def stop_task(script, force = False):
     """Stop a background task
@@ -1240,7 +1240,7 @@ def stop_task(script, force = False):
     Returns:
         None
     """
-    get_interpreter().stopTask(script, force)
+    get_sequencer().stopTask(script, force)
 
 
 ###################################################################################################
@@ -1385,7 +1385,7 @@ def stop():
     Returns:
         None
     """
-    get_interpreter().stopAll()
+    get_sequencer().stopAll()
 
 def update():
     """Update all devices.
@@ -1396,7 +1396,7 @@ def update():
     Returns:
         None
     """
-    get_interpreter().updateAll()
+    get_sequencer().updateAll()
 
 def reinit(dev = None):
     """Re-initialize devices.
@@ -1409,8 +1409,8 @@ def reinit(dev = None):
     """
     if dev is not None:
         dev=string_to_obj(dev)
-        return get_interpreter().reinit(dev)
-    return to_list(get_interpreter().reinit())
+        return get_sequencer().reinit(dev)
+    return to_list(get_sequencer().reinit())
 
 def create_device(url, parent=None):
     """Create a device form a definition string(see InlineDevice)
@@ -1462,7 +1462,7 @@ def tweak(dev, step, is2d=False):
     if (get_exec_pars().isBackground()): return
     dev,step = to_list(string_to_obj(dev)),to_list(step)
     while (True):
-        key=get_interpreter().waitKey(0)
+        key=get_sequencer().waitKey(0)
         for i in range(len(dev)):
             if not is2d or i==0:
                 if key == 0x25: dev[i].moveRel(-step[i]) #Left
@@ -1749,7 +1749,7 @@ def exec_cpython(script_name, args = [], method_name = None, python_name = "pyth
         Return of python process.
     """
     if method_name is None:
-        script = get_interpreter().scriptManager.library.resolveFile(script_name)
+        script = get_interpreter().library.resolveFile(script_name)
         if script is None :
             script= os.path.abspath(script_name)
         c = python_name + " " + script + " "
@@ -1761,7 +1761,7 @@ def exec_cpython(script_name, args = [], method_name = None, python_name = "pyth
         #Calling a method
         import json
         import tempfile
-        script = os.path.abspath(get_interpreter().scriptManager.library.resolveFile(script_name))
+        script = os.path.abspath(get_interpreter().library.resolveFile(script_name))
         with open(Setup.getContextPath()+ "/Temp" + str(java.lang.Thread.currentThread().threadId())+".py", "wb") as f:
             f.write(("script = '" +script +"'\n").replace('\\', '\\\\'))
             f.write("function = '" +method_name +"'\n")
@@ -1876,7 +1876,7 @@ def send_event(name, value=True):
         name(str): event name.
         value(Object): event value.
     """
-    get_interpreter().sendEvent(name, value)
+    get_sequencer().sendEvent(name, value)
 
 ###################################################################################################
 #UI
@@ -1933,7 +1933,7 @@ def set_preference(preference, value):
         None
     """
     value = to_array(value, 'o') #If list then convert to Object array
-    get_interpreter().setPreference(preference, value)
+    get_sequencer().setPreference(preference, value)
 
 def get_string(msg, default = None, alternatives = None, password = False):
     """
@@ -1948,8 +1948,8 @@ def get_string(msg, default = None, alternatives = None, password = False):
         String entered of null if canceled
     """
     if password :
-        return get_interpreter().getPassword(msg, None)
-    return get_interpreter().getString(msg, str(default) if (default is not None) else None, alternatives)
+        return get_sequencer().getPassword(msg, None)
+    return get_sequencer().getString(msg, str(default) if (default is not None) else None, alternatives)
 
 def get_option(msg, type = "YesNoCancel"):
     """
@@ -1961,7 +1961,7 @@ def get_option(msg, type = "YesNoCancel"):
     Returns:
         'Yes', 'No', 'Cancel'
     """
-    return get_interpreter().getOption(msg, type)
+    return get_sequencer().getOption(msg, type)
 
 def show_message(msg, title=None, blocking = True):
     """
@@ -1971,7 +1971,7 @@ def show_message(msg, title=None, blocking = True):
         msg(str): display message.
         title(str, optional): dialog title
     """
-    get_interpreter().showMessage(msg, title, blocking)
+    get_sequencer().showMessage(msg, title, blocking)
 
 def show_panel(device, title=None):
     """
@@ -1986,4 +1986,4 @@ def show_panel(device, title=None):
         device.initialize()
     if is_string(device):
         device = get_device(device)
-    return get_interpreter().showPanel(device)
+    return get_sequencer().showPanel(device)

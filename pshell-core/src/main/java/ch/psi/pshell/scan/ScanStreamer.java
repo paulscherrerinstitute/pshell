@@ -36,12 +36,12 @@ public class ScanStreamer extends Publisher {
                 sendEvent(ENVELOPE_END, scan.getResult().getPath());
             }
         };
-        Context.getInterpreter().addScanListener(listener);
+        Context.getSequencer().addScanListener(listener);
     }
 
     @Override
     public void close() throws Exception {
-        Context.getInterpreter().removeScanListener(listener);
+        Context.getSequencer().removeScanListener(listener);
         super.close();
     }
 

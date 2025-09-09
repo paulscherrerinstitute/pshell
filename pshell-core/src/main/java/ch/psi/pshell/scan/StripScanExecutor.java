@@ -28,7 +28,7 @@ public class StripScanExecutor {
             return persistenceThread;
         });
         persistenceExecutor.submit(() -> {
-            Context.getInterpreter().createExecutionContext();
+            Context.getSequencer().createExecutionContext();
 
             scans.clear();
 
@@ -83,7 +83,7 @@ public class StripScanExecutor {
                             Logger.getLogger(StripScanExecutor.class.getName()).log(Level.WARNING, null, ex);
                         }
                     }
-                    Context.getInterpreter().disposeExecutionContext();
+                    Context.getSequencer().disposeExecutionContext();
                 });
 
             scans.clear();

@@ -104,9 +104,9 @@ def inject():
         None
     """
     if __name__ == "__main__":
-        get_interpreter().injectVars()
+        get_sequencer().injectVars()
     else:
-        _get_caller().f_globals.update(get_interpreter().scriptManager.injections)
+        _get_caller().f_globals.update(get_interpreter().injections)
 
 
 ###################################################################################################
@@ -123,9 +123,9 @@ def run(script_name, args = None, locals = None):
     Returns:
         The script return value (if set with set_return)
     """
-    script = get_interpreter().scriptManager.library.resolveFile(script_name)
+    script = get_interpreter().library.resolveFile(script_name)
     if script is not None and os.path.isfile(script):
-        info = get_interpreter().startScriptExecution(script_name, args)
+        info = get_sequencer().startScriptExecution(script_name, args)
         try:
             set_return(None)
             if args is not None:
@@ -140,10 +140,10 @@ def run(script_name, args = None, locals = None):
             else:
                 execfile(script, globals(), locals)
             ret = get_return()
-            get_interpreter().finishScriptExecution(info, ret)
+            get_sequencer().finishScriptExecution(info, ret)
             return ret
         except Exception, ex:
-            get_interpreter().finishScriptExecution(info, ex)
+            get_sequencer().finishScriptExecution(info, ex)
             raise ex
     raise IOError("Invalid script: " + str(script_name))
 
@@ -156,7 +156,7 @@ def abort():
     Returns:
         None
     """
-    fork(get_interpreter().abort) #Cannot be on script execution thread
+    fork(get_sequencer().abort) #Cannot be on script execution thread
     while True: sleep(10.0)
 
 def is_aborted():

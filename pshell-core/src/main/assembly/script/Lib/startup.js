@@ -21,7 +21,7 @@ File = Java.type('java.io.File')
 Context = Java.type('ch.psi.pshell.framework.Context')
 Setup = Java.type('ch.psi.pshell.framework.Setup')
 CommandSource = Java.type('ch.psi.pshell.sequencer.CommandSource')
-InterpreterListener = Java.type('ch.psi.pshell.sequencer.InterpreterListener')
+SequencerListener = Java.type('ch.psi.pshell.sequencer.SequencerListener')
 InlineDevice = Java.type('ch.psi.pshell.devices.InlineDevice')
 PlotDescriptor = Java.type('ch.psi.pshell.data.PlotDescriptor')
 Table = Java.type('ch.psi.pshell.data.Table')
@@ -115,6 +115,10 @@ function get_view(){
     return Context.getView()
 }
 
+function get_sequencer(){
+    return Context.getSequencer()
+}
+
 function get_interpreter(){
     return Context.getInterpreter()
 }
@@ -123,16 +127,16 @@ function get_data_manager(){
     return Context.getDataManager()
 }
 
-function get_versioning_manager(){
-    return Context.getVersioningManager()
+function get_version_control(){
+    return Context.getVersionControl()
 }
 
 function get_device_pool(){
     return Context.getDevicePool()
 }
 
-function get_session_manager(){
-    return Context.getSessionManager()
+function get_sessions(){
+    return Context.getSessions()
 }
 
 function get_plugin_manager(){

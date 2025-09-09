@@ -1,6 +1,5 @@
 package ch.psi.pshell.framework;
 
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.SwingUtils.OptionResult;
@@ -46,6 +45,7 @@ import javax.swing.JToolBar;
 import javax.swing.JToolBar.Separator;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  * Plugin implementation and JPanel extension, consisting of a panel to be
@@ -609,7 +609,7 @@ public class Panel extends MonitoredPanel implements Plugin {
         buttonRestart.setName("buttonRestart");
         buttonRestart.addActionListener((java.awt.event.ActionEvent evt) -> {
             try {
-                Context.getInterpreter().startRestart();
+                Context.getSequencer().startRestart();
             } catch (Exception ex) {
                 showException(ex);
             }            
@@ -716,7 +716,7 @@ public class Panel extends MonitoredPanel implements Plugin {
             }            
         }            
         
-        Context.getInterpreter().addListener(new InterpreterListener() {
+        Context.getSequencer().addListener(new SequencerListener() {
             @Override
             public void onStateChanged(State state, State former) {
                 boolean ready = (state == State.Ready);
@@ -724,7 +724,7 @@ public class Panel extends MonitoredPanel implements Plugin {
                 boolean paused = (state == State.Paused);
                 buttonRun.setEnabled(ready);
                 buttonDebug.setEnabled((ready) || (paused));
-                buttonPause.setEnabled(p.canPause() && Context.getInterpreter().canPause());
+                buttonPause.setEnabled(p.canPause() && Context.getSequencer().canPause());
                 buttonAbort.setEnabled(busy || paused || (state == State.Initializing));                
                 buttonRestart.setEnabled((state != State.Initializing) && !Setup.isOffline());
             }

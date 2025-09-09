@@ -2,7 +2,7 @@ package ch.psi.pshell.plugin;
 
 import ch.psi.pshell.app.App;
 import ch.psi.pshell.app.Setup;
-import ch.psi.pshell.scripting.ScriptManager;
+import ch.psi.pshell.scripting.Interpreter;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Loader;
@@ -125,8 +125,8 @@ public class PluginManager implements AutoCloseable {
                         return p.getClass();
                     }
                 }
-                if (ScriptManager.hasInstance()){
-                    cls = ScriptManager.getInstance().getClass(className);
+                if (Interpreter.hasInstance()){
+                    cls = Interpreter.getInstance().getClass(className);
                     if (cls != null) {
                         return cls;
                     }

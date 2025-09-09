@@ -226,16 +226,16 @@ public class StatusBar extends ch.psi.pshell.app.StatusBar{
     @Override
     protected void onShow() {
         super.onShow();
-        if (Context.hasInterpreter()){
-            Context.getInterpreter().addScanListener(scanListener);        
+        if (Context.hasSequencer()){
+            Context.getSequencer().addScanListener(scanListener);        
         }
     }    
     
     @Override
     protected void onHide() {
         super.onHide();
-        if (Context.hasInterpreter()){
-            Context.getInterpreter().removeScanListener(scanListener);
+        if (Context.hasSequencer()){
+            Context.getSequencer().removeScanListener(scanListener);
         }
     }
     

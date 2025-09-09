@@ -14,7 +14,6 @@ import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.PlotListener;
 import ch.psi.pshell.swing.ConfigDialog;
 import ch.psi.pshell.swing.DataPanel;
@@ -56,6 +55,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker.StateValue;
 import javax.swing.WindowConstants;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  * The application singleton object.
@@ -113,13 +113,13 @@ public class App extends ch.psi.pshell.devices.App {
             Context.getPackageManager().loadExtensionsFolders();
         }        
         
-        Context.getInterpreter().addListener(new InterpreterListener() {
+        Context.getSequencer().addListener(new SequencerListener() {
             @Override
             public void onStateChanged(State state, State former) {
                 try {
                     if ((former == State.Initializing) && (state == State.Ready)) {
                         for (ch.psi.pshell.sequencer.Task task : getTaskArgs()) {
-                            Context.getInterpreter().startTask(task);
+                            Context.getSequencer().startTask(task);
                         }
                     }
                     for (AppListener listener : getListeners()) {
@@ -260,7 +260,7 @@ public class App extends ch.psi.pshell.devices.App {
         }
         loadCommandLinePlugins();
         setupScanPrinting();
-        Context.getInterpreter().redirectScriptStdio();
+        Context.getSequencer().redirectScriptStdio();
         String plotServer = Setup.getPlotServer();
         if (plotServer != null) {
             startPlotServerConnection(plotServer, 5000);
@@ -397,8 +397,8 @@ public class App extends ch.psi.pshell.devices.App {
     }
     
     protected void disable(){
-        if (Context.hasInterpreter()){
-            Context.getInterpreter().disable();
+        if (Context.hasSequencer()){
+            Context.getSequencer().disable();
         }
         for (AutoCloseable ac : new AutoCloseable[]{}) {
             try {
@@ -443,7 +443,7 @@ public class App extends ch.psi.pshell.devices.App {
                 fileName = Setup.expandPath(fileName);
                 File file = new File(fileName);
                 if (!file.exists()) {
-                    File aux = Context.getInterpreter().getScriptFile(file.getName());
+                    File aux = Context.getSequencer().getScriptFile(file.getName());
                     if ((aux!=null) && (aux.exists())){
                         file = aux;
                     }
@@ -646,7 +646,7 @@ public class App extends ch.psi.pshell.devices.App {
 
     public Object evalFile(File file, Map<String, Object> args, boolean topLevel) throws Exception {
         logger.log(Level.INFO, "Eval file: {0} args: {1} top_level: {2}", new Object[]{file.getPath(), Str.toString(args, 20), topLevel});
-        Context.getInterpreter().clearAborted();
+        Context.getSequencer().clearAborted();
         Processor processor = getProcessor(file);
         if (processor != null) {
             if (getMainFrame()!= null) {
@@ -661,13 +661,13 @@ public class App extends ch.psi.pshell.devices.App {
                 runningProcessor = null;
             }
         }
-        return Context.getInterpreter().evalFile(file.getPath(), args);
+        return Context.getSequencer().evalFile(file.getPath(), args);
     }
             
     public Object evalStatement(String statement) throws Exception {
         logger.log(Level.INFO, "Eval statement: {0}", statement);
-        Context.getInterpreter().clearAborted();
-        return Context.getInterpreter().evalLine(statement);
+        Context.getSequencer().clearAborted();
+        return Context.getSequencer().evalLine(statement);
     }
 
     public void abortEval(File file) throws InterruptedException {
@@ -1080,7 +1080,7 @@ public class App extends ch.psi.pshell.devices.App {
             scanPlot.initialize();
             scanPlot.setPlotTitle(checkPlotsTitle(null));
 
-            Context.getInterpreter().addScanListener(new ScanListener() {
+            Context.getSequencer().addScanListener(new ScanListener() {
                 final HashMap<Scan, String> plotTitles = new HashMap<>();
 
                 @Override
@@ -1090,7 +1090,7 @@ public class App extends ch.psi.pshell.devices.App {
                         synchronized (plotTitles) {
                             plotTitles.put(scan, title);
                             PlotPanel plottingPanel = getPlotPanel(title, null, true);
-                            plottingPanel.setPreferences(Context.getInterpreter().getPlotPreferences());
+                            plottingPanel.setPreferences(Context.getSequencer().getPlotPreferences());
                             plottingPanel.triggerScanStarted(scan, title);
                         }
                     }
@@ -1131,7 +1131,7 @@ public class App extends ch.psi.pshell.devices.App {
     }
         
     protected void setConsolePlotEnvironment(Window parent) {        
-        Context.getInterpreter().setPlotListener(new PlotListener() {
+        Context.getSequencer().setPlotListener(new PlotListener() {
             @Override
             public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
                 if (!SwingUtilities.isEventDispatchThread()){

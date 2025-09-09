@@ -4,7 +4,7 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  */
 public class App extends ch.psi.pshell.framework.App {
     private static final Logger logger = Logger.getLogger(App.class.getName());
-    final Interpreter interpreter;
+    final Sequencer sequencer;
     final DataManager dataManager;            
     
     static public App getInstance() {
@@ -50,8 +50,8 @@ public class App extends ch.psi.pshell.framework.App {
     protected App(){
         Setup.mkdirs(new String[]{Setup.TOKEN_CONFIG, Setup.TOKEN_CONTEXT, Setup.TOKEN_DATA, Setup.TOKEN_LOGS, Setup.TOKEN_SCRIPT});
         dataManager = new DataManager();            
-        interpreter = new Interpreter();
-        interpreter.disableStartupScriptsExecution();
+        sequencer = new Sequencer();
+        sequencer.disableStartupScriptsExecution();
     }
     
     @Override
@@ -75,7 +75,7 @@ public class App extends ch.psi.pshell.framework.App {
         setupLogger(Setup.TOKEN_LOGS + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME, Level.INFO, 7, FilePermissions.Default);        
         try {
             initializeData();
-            interpreter.restart(); 
+            sequencer.restart(); 
         } catch (Throwable ex) {
             logger.log(Level.SEVERE, null, ex);
         }

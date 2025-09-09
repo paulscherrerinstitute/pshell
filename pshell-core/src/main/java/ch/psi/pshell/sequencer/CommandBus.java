@@ -267,7 +267,7 @@ public class CommandBus implements AutoCloseable {
     }
 
     public CommandInfo getInterpreterThreadCommand(boolean parent) {
-        return getThreadCommand(Context.getInterpreter().getInterpreterThread(), parent);
+        return getThreadCommand(Context.getSequencer().getInterpreterThread(), parent);
     }
     
     public CommandInfo getCommand(long id) {

@@ -1,8 +1,8 @@
 package ch.psi.pshell.framework;
 
 import ch.psi.pshell.scripting.Statement;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import javax.script.ScriptException;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  * Task to run or debug scripts.
@@ -18,7 +18,7 @@ public class ScriptExecution extends Task {
         this.args = args;
         this.pauseOnStart = pauseOnStart;
         this.debug = debug;
-        Context.getInterpreter().addListener(new InterpreterListener() {
+        Context.getSequencer().addListener(new SequencerListener() {
             @Override
             public void onNewStatement(final Statement statement) {
                 currentStatement = statement;
@@ -26,11 +26,11 @@ public class ScriptExecution extends Task {
 
             @Override
             public void onExecutedStatement(Statement statement) {
-                if (Context.getInterpreter().isRunningStatements()) {
+                if (Context.getSequencer().isRunningStatements()) {
                     if (!isDone() && statements != null) {
                         //if ((Context.hasView()) && (!Context.getView().hasOngoingScan())) {
                         //!!! Test
-                        if (Context.getInterpreter().getVisibleScans().length==0){  
+                        if (Context.getSequencer().getVisibleScans().length==0){  
                             //Scan progress has priority
                             setProgress((int) (((double) statement.number) * 100 / statements.length));
                         }
@@ -40,7 +40,7 @@ public class ScriptExecution extends Task {
 
             @Override
             public void onExecutedFile(String fileName, Object result) {
-                Context.getInterpreter().removeListener(this);
+                Context.getSequencer().removeListener(this);
             }
         });
     } //Scan progress has priority
@@ -62,15 +62,15 @@ public class ScriptExecution extends Task {
     @Override
     protected Object doInBackground() throws Exception {
         currentStatement = null;
-        scriptName = Context.getInterpreter().getStandardScriptName(fileName);
+        scriptName = Context.getSequencer().getStandardScriptName(fileName);
         setCommand(scriptName);
         setProgress(0);
         try {
             Object ret = null;
             if (debug) {
-                ret = Context.getInterpreter().evalStatements(statements, pauseOnStart, fileName, args);
+                ret = Context.getSequencer().evalStatements(statements, pauseOnStart, fileName, args);
             } else {
-                ret = Context.getInterpreter().evalFile(fileName, args);
+                ret = Context.getSequencer().evalFile(fileName, args);
             }
             setProgress(100);
             checkShowReturn(ret);

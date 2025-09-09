@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Background execution of scripts by the interpreter.
+ * Background execution of scripts.
  */
 public class Task implements AutoCloseable {
 
@@ -112,8 +112,8 @@ public class Task implements AutoCloseable {
             synchronized (lock) {
                 lock.notifyAll();
             }
-            Context.getInterpreter().getState().assertActive();
-            Context.getInterpreter().evalFileBackground(CommandSource.task, script);
+            Context.getSequencer().getState().assertActive();
+            Context.getSequencer().evalFileBackground(CommandSource.task, script);
             Logger.getLogger(Task.class.getName()).fine("Finished background task: " + script);
         } catch (Exception ex) {
             Logger.getLogger(Task.class.getName()).log(Level.WARNING, null, ex);

@@ -19,8 +19,8 @@ import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scan.ScanResult;
 import ch.psi.pshell.scripting.InterpreterResult;
-import ch.psi.pshell.scripting.ScriptManager;
-import ch.psi.pshell.scripting.ScriptManager.StatementsEvalListener;
+import ch.psi.pshell.scripting.Interpreter;
+import ch.psi.pshell.scripting.Interpreter.StatementsEvalListener;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.scripting.ViewPreference;
@@ -65,15 +65,14 @@ import java.util.logging.Logger;
 import javax.script.ScriptException;
 
 /**
- * Global singleton managing creation, disposal and holding the state of the
- * system.
+ * Global singleton managing local and remote execution of commands
  */
-public class Interpreter extends ObservableBase<InterpreterListener> implements AutoCloseable {
+public class Sequencer extends ObservableBase<SequencerListener> implements AutoCloseable {
     
-    private static Interpreter instance;
-    public static Interpreter getInstance(){
+    private static Sequencer instance;
+    public static Sequencer getInstance(){
         if (instance == null){
-            throw new RuntimeException("Interpreter not instantiated.");
+            throw new RuntimeException("Sequencer not instantiated.");
         }        
         return instance;
     }
@@ -82,7 +81,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         return instance!=null;
     }
 
-    static final Logger logger = Logger.getLogger(Interpreter.class.getName());
+    static final Logger logger = Logger.getLogger(Sequencer.class.getName());
 
     public static final int COMMAND_BUS_SIZE = 1000;              //Tries cleanup when contains 100 command records
     public static final int COMMAND_BUS_TIME_TO_LIVE = 600000;   //Cleanup commands older than 10 minutes 
@@ -92,7 +91,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     final HashMap<Thread, ExecutionParameters> executionPars = new HashMap<>();
     ExecutorService interpreterExecutor;
     Thread interpreterThread;
-    ScriptManager scriptManager;
+    Interpreter scriptManager;
     TaskManager taskManager;
     ScriptStdio scriptStdio;
     TerminalServer terminalServer;
@@ -113,11 +112,11 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     public static final String INTERPRETER_THREAD = "MainThread";    
 
-    public Interpreter() {
+    public Sequencer() {
         this(null);
     }
     
-    public Interpreter(String hostName) {
+    public Sequencer(String hostName) {
         instance = this;        
 
         if ((hostName != null) && (!hostName.trim().isEmpty()) && (!hostName.equalsIgnoreCase("null"))) {
@@ -143,8 +142,8 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             }
         }
 
-        if (System.getProperty(ScriptManager.PROPERTY_PYTHON_HOME) == null){
-            System.setProperty(ScriptManager.PROPERTY_PYTHON_HOME, Setup.getScriptsPath());
+        if (System.getProperty(Interpreter.PROPERTY_PYTHON_HOME) == null){
+            System.setProperty(Interpreter.PROPERTY_PYTHON_HOME, Setup.getScriptsPath());
         }
 
         if (isLocalMode()) {
@@ -159,12 +158,12 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         commandBus = new CommandBus(COMMAND_BUS_SIZE, COMMAND_BUS_TIME_TO_LIVE){
             @Override
             protected void onCommandStarted(CommandInfo info) {        
-                Interpreter.this.onCommandStarted(info);
+                Sequencer.this.onCommandStarted(info);
             }
 
             @Override
             protected void onCommandFinished(CommandInfo info) { 
-                Interpreter.this.onCommandFinished(info);
+                Sequencer.this.onCommandFinished(info);
             }
         };
 
@@ -440,7 +439,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     //Event Triggering
     protected void triggerShellCommand(final CommandSource source, final String command) {
         if (command != null) {
-            for (InterpreterListener listener : getListeners()) {
+            for (SequencerListener listener : getListeners()) {
                 try {
                     listener.onShellCommand(source, command);
                 } catch (Throwable ex) {
@@ -451,7 +450,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerShellResult(final CommandSource source, Object result) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onShellResult(source, result);
             } catch (Throwable ex) {
@@ -462,7 +461,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     protected void triggerShellStdout(String str) {
         if (str != null) {
-            for (InterpreterListener listener : getListeners()) {
+            for (SequencerListener listener : getListeners()) {
                 try {
                     listener.onShellStdout(str);
                 } catch (Throwable ex) {
@@ -475,7 +474,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     protected void triggerShellStderr(String str) {
         if (str != null) {
-            for (InterpreterListener listener : getListeners()) {
+            for (SequencerListener listener : getListeners()) {
                 try {
                     listener.onShellStderr(str);
                 } catch (Throwable ex) {
@@ -487,7 +486,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
 
     protected void triggerShellStdin(String str) {
         if (str != null) {
-            for (InterpreterListener listener : getListeners()) {
+            for (SequencerListener listener : getListeners()) {
                 try {
                     listener.onShellStdin(str);
                 } catch (Throwable ex) {
@@ -498,7 +497,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerStateChanged(final State state, final State former) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onStateChanged(state, former);
             } catch (Throwable ex) {
@@ -508,7 +507,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerInitialized(int runCount) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onInitialized(runCount);
             } catch (Throwable ex) {
@@ -518,7 +517,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerNewStatement(final Statement statement) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onNewStatement(statement);
             } catch (Throwable ex) {
@@ -528,7 +527,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerExecutingStatement(final Statement statement) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onExecutingStatement(statement);
             } catch (Throwable ex) {
@@ -538,7 +537,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerExecutedStatement(final Statement statement) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onExecutedStatement(statement);
             } catch (Throwable ex) {
@@ -548,7 +547,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerExecutingFile(final String fileName) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onExecutingFile(fileName);
             } catch (Throwable ex) {
@@ -559,7 +558,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerExecutedFile(final String fileName, final Object result) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onExecutedFile(fileName, result);
             } catch (Throwable ex) {
@@ -581,7 +580,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
     
     protected void triggerWillEval(final CommandSource source, final String code) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.willEval(source, code);
             } catch (Throwable ex) {
@@ -591,7 +590,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerWillRun(final CommandSource source, final String fileName, final Object args) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.willRun(source, fileName, args);
             } catch (Throwable ex) {
@@ -630,7 +629,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     protected void triggerPreferenceChange(final ViewPreference preference, final Object value) {
-        for (InterpreterListener listener : getListeners()) {
+        for (SequencerListener listener : getListeners()) {
             try {
                 listener.onPreferenceChange(preference, value);
             } catch (Throwable ex) {
@@ -664,7 +663,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
             addLibraryPath(scriptLibPath);
             return Paths.get(scriptLibPath, Context.getScriptType().getDefaultStartupFile()).toString();
         } catch (Exception ex) {
-            Logger.getLogger(Interpreter.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(Sequencer.class.getName()).log(Level.WARNING, null, ex);
         }
         throw new RuntimeException("Cannot locate startup script");
     }
@@ -803,7 +802,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         return commandBus;
     }
 
-    public ScriptManager getScriptManager() {
+    public Interpreter getScriptManager() {
         return scriptManager;
     }
 
@@ -955,14 +954,14 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 }
             }
             //Remove script listeners
-            ArrayList<InterpreterListener> scriptListeners = new ArrayList();
-            for (InterpreterListener listener : getListeners()) {
-                if (listener.getClass().getName().startsWith(ScriptManager.JYTHON_OBJ_CLASS)) {
+            ArrayList<SequencerListener> scriptListeners = new ArrayList();
+            for (SequencerListener listener : getListeners()) {
+                if (listener.getClass().getName().startsWith(Interpreter.JYTHON_OBJ_CLASS)) {
                     scriptListeners.add(listener);
                 }
                 //TODO: Only removing python listeners
             }
-            for (InterpreterListener listener : scriptListeners) {
+            for (SequencerListener listener : scriptListeners) {
                 removeListener(listener);
             }
 
@@ -1006,7 +1005,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                 runInInterpreterThread(null, (Callable<InterpreterResult>) () -> {
                     String[] libraryPath = Setup.getLibraryPath();                    
                     try {
-                        scriptManager = new ScriptManager(getScriptType(), libraryPath, injections, Context.getScriptFilePermissions(), Setup.getNoBytecodes());
+                        scriptManager = new Interpreter(getScriptType(), libraryPath, injections, Context.getScriptFilePermissions(), Setup.getNoBytecodes());
                         scriptManager.setSessionFilePath((getSaveConsoleSessions() && !isLocalMode()) ? Setup.getConsolePath() : null);
                         setStdioListener(scriptStdioListener);
                         String startupScript = getStartupScript();
@@ -2686,7 +2685,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                             Context.getDataManager().setDataset(location + "/" + key, value);
                         }
                     } catch (Exception ex) {
-                        Logger.getLogger(Interpreter.class.getName()).log(Level.WARNING, null, ex);
+                        Logger.getLogger(Sequencer.class.getName()).log(Level.WARNING, null, ex);
                     }
                 }
             }
@@ -3159,7 +3158,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         return evalFileAsync(getPublicCommandSource(), fileName);
     }
 
-    public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws Interpreter.InterpreterStateException{
+    public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws Sequencer.InterpreterStateException{
         return evalFileAsync(getPublicCommandSource(), fileName, args);
     }
 

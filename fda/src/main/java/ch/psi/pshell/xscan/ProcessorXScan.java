@@ -312,7 +312,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             CommandInfo info = null;
             String msg = "Running " + getFileName();
             try {
-                info = Context.getInterpreter().startExecution(CommandSource.ui, file, null, true);                
+                info = Context.getSequencer().startExecution(CommandSource.ui, file, null, true);                
                 setEnabled(false);
                 setMessage(msg);
                 setProgress(0);
@@ -327,14 +327,14 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                 ex.printStackTrace(); //!!!
                 Context.getApp().sendError(ex.toString());
                 if (Context.getView().getScriptPopupMode() != MainFrame.ScriptPopupMode.None) {
-                    if (!Context.getInterpreter().isAborted()) {
+                    if (!Context.getSequencer().isAborted()) {
                         SwingUtils.showMessage(Context.getView(), "Script Error", ex.getMessage(), -1, JOptionPane.ERROR_MESSAGE);
                     }
                 }
                 throw ex;
             } finally {
                 Context.getApp().sendTaskFinish(msg);
-                Context.getInterpreter().endExecution(info);
+                Context.getSequencer().endExecution(info);
                 setEnabled(true);
             }
         }
@@ -471,10 +471,10 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         }
         open(file, false);
 
-        State initialState = Context.getInterpreter().getState();
+        State initialState = Context.getSequencer().getState();
         CommandInfo info = null;
         if (initialState == State.Ready) {
-            info = Context.getInterpreter().startExecution(CommandSource.terminal, file, null, false);
+            info = Context.getSequencer().startExecution(CommandSource.terminal, file, null, false);
         }
         try {
             doExecution(!Setup.isGui(), vars);
@@ -483,7 +483,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             throw ex;
         } finally {
             if (initialState == State.Ready) {
-                Context.getInterpreter().endExecution(info);
+                Context.getSequencer().endExecution(info);
             }
         }
     }
@@ -580,7 +580,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                 ebus.register(visualizer);
                 setPlots(visualizer.getPlotPanels(), null);
             }
-            if (Context.getInterpreter().getState() == State.Paused) {
+            if (Context.getSequencer().getState() == State.Paused) {
                 acquisition.pause();
             }
             acquisition.execute();
@@ -831,7 +831,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
         try {
             ScriptStdio stdio = new ScriptStdio(engine);
-            Context.getInterpreter().addScriptStdio(stdio);
+            Context.getSequencer().addScriptStdio(stdio);
         } catch (Exception ex) {
             engine.getContext().setWriter(new PrintWriter(System.out));
             engine.getContext().setErrorWriter(new PrintWriter(System.err));
@@ -863,8 +863,8 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         synchronized(interpreterLock){
             if (plottingInterpreter){
                 return getPlottingEngine().eval(script);            
-            } else if (Context.getInterpreter().isInterpreterEnabled()) {
-                return Context.getInterpreter().evalLineBackground(script);
+            } else if (Context.getSequencer().isInterpreterEnabled()) {
+                return Context.getSequencer().evalLineBackground(script);
             } else {
                 return getPrivateEngine().eval(script);
             }
@@ -875,8 +875,8 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         synchronized(interpreterLock){
             if (plottingInterpreter){
                 getPlottingEngine().put(name, value);     
-            } else if (Context.getInterpreter().isInterpreterEnabled()) {
-                Context.getInterpreter().setInterpreterVariable(name, value);
+            } else if (Context.getSequencer().isInterpreterEnabled()) {
+                Context.getSequencer().setInterpreterVariable(name, value);
             } else {
                 getPrivateEngine().put(name, value);
             }
@@ -887,8 +887,8 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         synchronized(interpreterLock){
             if (plottingInterpreter){
                 return getPlottingEngine().get(name);   
-            } else if (Context.hasInterpreter()) {
-                return Context.getInterpreter().getInterpreterVariable(name);
+            } else if (Context.hasSequencer()) {
+                return Context.getSequencer().getInterpreterVariable(name);
             } else {
                 return getPrivateEngine().get(name);
             }

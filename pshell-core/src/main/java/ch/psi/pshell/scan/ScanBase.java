@@ -829,8 +829,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         if (isHidden()) {
             addListener(Context.getDataManager().getScanListener());
         } else{ 
-            if (Context.hasInterpreter()){
-                for (ScanListener listener : Context.getInterpreter().getScanListeners()) {
+            if (Context.hasSequencer()){
+                for (ScanListener listener : Context.getSequencer().getScanListeners()) {
                     addListener(listener);
                 }
             }

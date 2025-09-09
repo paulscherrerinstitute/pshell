@@ -11,7 +11,7 @@ import java.sql.ResultSet as ResultSet
 import java.util.Properties as Properties
 import java.lang.Class as Class
 import os
-from startup import get_interpreter, expand_path
+from startup import get_sequencer, expand_path
 import ch.psi.pshell.sequencer.CommandStatistics as CommandStatistics
 import ch.psi.pshell.sequencer.CommandStatistics.FileRange as CommandStatisticsFileRange
 

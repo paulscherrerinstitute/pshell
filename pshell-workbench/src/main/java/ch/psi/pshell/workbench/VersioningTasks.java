@@ -109,7 +109,7 @@ public abstract class VersioningTasks{
             try {
                 Context.getApp().sendTaskInit(msg);
                 Context.getVersionControl().assertHasRemoteRepo();
-                Context.getInterpreter().setSourceUI(CommandSource.ui); //Ensure authentication dialog comes to local interface
+                Context.getSequencer().setSourceUI(CommandSource.ui); //Ensure authentication dialog comes to local interface
                 Context.getVersionControl().pullFromUpstream();
                 msg = "Success pulling from upstream";
                 Context.getApp().sendOutput(msg);
@@ -151,7 +151,7 @@ public abstract class VersioningTasks{
             try {
                 Context.getApp().sendTaskInit(msg);
                 Context.getVersionControl().assertHasRemoteRepo();
-                Context.getInterpreter().setSourceUI(CommandSource.ui); //Ensure authentication dialog comes to local interface
+                Context.getSequencer().setSourceUI(CommandSource.ui); //Ensure authentication dialog comes to local interface
                 Context.getVersionControl().pushToUpstream(allBranches, force, tags);
                 msg = "Success pushing to upstream";
                 Context.getApp().sendOutput(msg);

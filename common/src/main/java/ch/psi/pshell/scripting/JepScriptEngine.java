@@ -84,7 +84,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                     eval("sys.stdout=__aux__", this.context, this.bindings);
                     eval("CTRL_CMD_PORT="+CTRL_CMD_PORT, this.context, this.bindings);
                 } catch (Exception ex) {
-                    Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Interpreter.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 return null;
             });

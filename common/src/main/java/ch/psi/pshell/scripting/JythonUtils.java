@@ -33,8 +33,8 @@ public class JythonUtils {
     public static String PY_METHOD_UNK_PARS = "...";
 
     public static Class[] REFLECTION_EXCLUDE_CLASSES = new Class[]{org.python.core.PyObject.class, org.python.core.PyInstance.class};
-    //public static String[] REFLECTION_EXCLUDE_NAMES = new String[]{"classDictInit", "clone", "finalize"}; //new String[]{ScriptManager.JYTHON_OBJ_CLASS}
-    public static String[] REFLECTION_EXCLUDE_NAMES = new String[]{ScriptManager.JYTHON_OBJ_CLASS};
+    //public static String[] REFLECTION_EXCLUDE_NAMES = new String[]{"classDictInit", "clone", "finalize"}; //new String[]{Interpreter.JYTHON_OBJ_CLASS}
+    public static String[] REFLECTION_EXCLUDE_NAMES = new String[]{Interpreter.JYTHON_OBJ_CLASS};
 
     public static String getPyMethodSignature(PyObject obj, String method, boolean includeJavaMethods) {
         try {

@@ -15,7 +15,7 @@ import ch.psi.pshell.plugin.PluginManager;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanConfig;
 import ch.psi.pshell.scan.ScanResult;
-import ch.psi.pshell.scripting.ScriptManager;
+import ch.psi.pshell.scripting.Interpreter;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.User;
@@ -23,7 +23,7 @@ import ch.psi.pshell.security.UserAccessException;
 import ch.psi.pshell.security.Security;
 import ch.psi.pshell.sequencer.CommandBus;
 import ch.psi.pshell.sequencer.ExecutionParameters;
-import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.session.Sessions;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.UserInterface;
@@ -159,7 +159,7 @@ public class Context {
     }    
         
     public static void restart() throws Exception {
-        getInterpreter().restart();
+        getSequencer().restart();
     }
     
     public static Class getClassByName(String className) throws ClassNotFoundException {
@@ -206,16 +206,12 @@ public class Context {
         return new File[0];
     }
     
-    public static boolean hasScriptManager(){
-        return ScriptManager.getInstance()!=null;
+    public static boolean hasInterpreter(){
+        return Interpreter.getInstance()!=null;
     }
     
-    public static ScriptManager getScriptManager(){
-        ScriptManager sm = ScriptManager.getInstance();
-        if ( sm== null){
-            throw new RuntimeException("Script Manager not instantiated.");
-        }
-        return sm;
+    public static Interpreter getInterpreter(){
+        return Interpreter.getInstance();
     }    
     
     //Plugins
@@ -310,17 +306,17 @@ public class Context {
         return CrlogicConfig.getConfig();
     }                
     
-    public static boolean hasInterpreter(){
-        return Interpreter.hasInstance();
+    public static boolean hasSequencer(){
+        return Sequencer.hasInstance();
     }
     
     //!!! Interpreter must be singletoin,as no rtr-instatiation is considered when  as listeners are added. Interpreter.restart is used for softy restart.
-    public static Interpreter getInterpreter(){
-        return Interpreter.getInstance();
+    public static Sequencer getSequencer(){
+        return Sequencer.getInstance();
     }
 
     public static CommandBus getCommandBus() {
-        return getInterpreter().getCommandBus();
+        return getSequencer().getCommandBus();
     }
 
     
@@ -493,6 +489,11 @@ public class Context {
         serverCommandsHidden = value;        
     }          
     
+    public static boolean isServerEnabled() {
+        return hasSequencer() ? getSequencer().isServerEnabled() : false;
+    }
+    
+    
     public static void restoreDataFilePermissions() {
         IO.setFolderPermissions(Setup.getDataPath(), null, getDataFilePermissions());
     }    
@@ -528,7 +529,7 @@ public class Context {
     
     //UI   
     public static UserInterface getUI() {
-        return getInterpreter().getUI();
+        return getSequencer().getUI();
     }
 
     //Sequential numbers
@@ -594,10 +595,10 @@ public class Context {
     //Execution Context   
     
     public static ExecutionParameters getExecutionPars() {
-        if (!hasInterpreter()){
+        if (!hasSequencer()){
             return null;
         }
-        return getInterpreter().getExecutionPars();
+        return getSequencer().getExecutionPars();
     }    
     
             
@@ -714,13 +715,13 @@ public class Context {
     
     //Commnands
     public static void abort() throws InterruptedException {      
-        if (hasInterpreter()){
-             getInterpreter().abort();
+        if (hasSequencer()){
+             getSequencer().abort();
         }
     }
     
     public static boolean isAborted(){
-        return hasInterpreter() ? getInterpreter().isAborted() : false;
+        return hasSequencer() ? getSequencer().isAborted() : false;
     }        
     
     public static void triggerStartExecution(final String fileName) {        
@@ -735,8 +736,8 @@ public class Context {
         
     
     public static int getRunCount(){
-        if (hasInterpreter()){
-            return getInterpreter().getRunCount();
+        if (hasSequencer()){
+            return getSequencer().getRunCount();
         }
         return 0;
     }       

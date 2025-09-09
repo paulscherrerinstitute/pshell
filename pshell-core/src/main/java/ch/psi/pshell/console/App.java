@@ -11,11 +11,11 @@ import ch.psi.pshell.notification.Notifier;
 import ch.psi.pshell.pkg.PackageManager;
 import ch.psi.pshell.plugin.PluginManager;
 import ch.psi.pshell.scan.ScanStreamer;
-import ch.psi.pshell.scripting.ScriptManager;
+import ch.psi.pshell.scripting.Interpreter;
 import ch.psi.pshell.security.Security;
 import ch.psi.pshell.sequencer.CommandSource;
-import ch.psi.pshell.sequencer.Interpreter;
-import ch.psi.pshell.sequencer.Interpreter.InterpreterStateException;
+import ch.psi.pshell.sequencer.Sequencer;
+import ch.psi.pshell.sequencer.Sequencer.InterpreterStateException;
 import ch.psi.pshell.session.Sessions;
 import ch.psi.pshell.utils.Config;
 import ch.psi.pshell.utils.Configurable;
@@ -46,7 +46,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     final DataManager dataManager;
     final Sessions sessions;
     VersionControl versionControl;
-    Interpreter interpreter;
+    Sequencer interpreter;
     Notifier notificationManager;
     PackageManager packageManager;
     DevicePool devicePool;    
@@ -101,8 +101,8 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
 
         config.backup();
 
-        if (System.getProperty(ScriptManager.PROPERTY_PYTHON_HOME) == null) {
-            System.setProperty(ScriptManager.PROPERTY_PYTHON_HOME, setup.getScriptsPath());
+        if (System.getProperty(Interpreter.PROPERTY_PYTHON_HOME) == null) {
+            System.setProperty(Interpreter.PROPERTY_PYTHON_HOME, setup.getScriptsPath());
         }
         
         restartLogger();
@@ -115,7 +115,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                 
         dataManager = new DataManager();        
         pluginManager = new PluginManager();
-        interpreter = new Interpreter(config.serverHostName);
+        interpreter = new Sequencer(config.serverHostName);
         security = new Security(null);
         devicePool = new DevicePool();
         sessions = new Sessions();

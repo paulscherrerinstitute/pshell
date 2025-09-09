@@ -15,7 +15,6 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.sequencer.ExecutionParameters;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.IO;
@@ -34,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 
 /**
@@ -128,8 +128,8 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         initialized = false;        
         logger.log(Level.INFO, "Initializing {0}", getClass().getSimpleName());
         Context.setDataManager(this);
-        if (Context.hasInterpreter()){
-            Context.getInterpreter().addScanListener(scanListener);
+        if (Context.hasSequencer()){
+            Context.getSequencer().addScanListener(scanListener);
         }
         closeOutput();
         setCreateLogs(Context.getScanConfig().saveLogs());
@@ -260,8 +260,8 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
 
     public String getScanPath(Scan scan) {
         if (scan == null) {
-            if (Context.hasInterpreter()){
-                if (Context.getInterpreter().getRunningScriptName() == null) {
+            if (Context.hasSequencer()){
+                if (Context.getSequencer().getRunningScriptName() == null) {
                     return null;
                 }
             }
@@ -288,8 +288,8 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
 
     public String getCurrentGroup(Scan scan) {
         if (scan == null) {
-            if (Context.hasInterpreter()){            
-                if (Context.getInterpreter().getRunningScriptName() == null) {
+            if (Context.hasSequencer()){            
+                if (Context.getSequencer().getRunningScriptName() == null) {
                     return null;
                 }
             }
@@ -461,22 +461,22 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     }    
     
 
-    class OutputListener implements InterpreterListener{
+    class OutputListener implements SequencerListener{
         StringBuilder output;
         public void start(){
-            if (Context.hasInterpreter()){
+            if (Context.hasSequencer()){
                 try {
-                    Context.getInterpreter().addListener(this);
+                    Context.getSequencer().addListener(this);
                     createDataset(getLayout().getOutputFilePath(), String.class);
                 } catch (Exception ex){
-                    Context.getInterpreter().removeListener(this);
+                    Context.getSequencer().removeListener(this);
                 }
             }
         }
 
         public void stop() {
-            if (Context.hasInterpreter()){
-                Context.getInterpreter().removeListener(this);
+            if (Context.hasSequencer()){
+                Context.getSequencer().removeListener(this);
             }
         }
         void append(String str){
@@ -935,8 +935,8 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     
     @Override
     public void close() throws IOException {
-        if (Context.hasInterpreter()){
-            Context.getInterpreter().removeScanListener(scanListener);
+        if (Context.hasSequencer()){
+            Context.getSequencer().removeScanListener(scanListener);
         }
         closeOutput();
        

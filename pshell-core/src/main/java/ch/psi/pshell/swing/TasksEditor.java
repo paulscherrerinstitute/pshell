@@ -1,6 +1,6 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.sequencer.Task;
 import ch.psi.pshell.sequencer.TaskManager;
 import ch.psi.pshell.utils.IO;
@@ -66,7 +66,7 @@ public class TasksEditor extends Editor {
     }
 
     void updateTables() {
-        TaskManager taskManager = Interpreter.getInstance().getTaskManager();
+        TaskManager taskManager = Sequencer.getInstance().getTaskManager();
         if (taskManager != null) {
             Task[] tasks = taskManager.getAll();
             if (tasks.length != modelLoaded.getRowCount()) {
@@ -195,13 +195,13 @@ public class TasksEditor extends Editor {
 
     void run(String taskName) throws Exception {
         if (taskName != null) {
-            Task task = Interpreter.getInstance().getTask(taskName);
+            Task task = Sequencer.getInstance().getTask(taskName);
             if (task != null) {
                 task.run();
             } else {
-                task = Interpreter.getInstance().startTask(taskName, 0, -1);
+                task = Sequencer.getInstance().startTask(taskName, 0, -1);
                 task.waitRunning(3000);
-               Interpreter.getInstance().stopTask(taskName, false);
+               Sequencer.getInstance().stopTask(taskName, false);
             }
         }
     }
@@ -449,7 +449,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Interpreter.getInstance().getTaskManager().start(task);
+                Sequencer.getInstance().getTaskManager().start(task);
             }
             updateTables();
         } catch (Exception ex) {
@@ -461,7 +461,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Interpreter.getInstance().getTaskManager().stop(task, true);
+                Sequencer.getInstance().getTaskManager().stop(task, true);
             }
             updateTables();
         } catch (Exception ex) {
@@ -481,7 +481,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Interpreter.getInstance().stopTask(task, true);
+                Sequencer.getInstance().stopTask(task, true);
             }
             updateTables();
         } catch (Exception ex) {
@@ -495,7 +495,7 @@ public class TasksEditor extends Editor {
             if (task != null) {
                 Double delayMillis =(((Number) model.getValueAt(table.getSelectedRow(), 2)).doubleValue() * 1000);
                 Double intervalMillis =(((Number) model.getValueAt(table.getSelectedRow(), 3)).doubleValue() * 1000);
-                Interpreter.getInstance().startTask(task, delayMillis.intValue(),  intervalMillis.intValue());
+                Sequencer.getInstance().startTask(task, delayMillis.intValue(),  intervalMillis.intValue());
             }
             updateTables();
         } catch (Exception ex) {

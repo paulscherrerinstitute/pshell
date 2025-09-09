@@ -3246,7 +3246,7 @@ public class CamServerViewer extends MonitoredPanel {
 
         DataManager dm;
         if (Context.hasDataManager()) {
-            Context.getInterpreter().setExecutionPars(name);
+            Context.getSequencer().setExecutionPars(name);
             dm = Context.getDataManager();
         } else {
             String fileName = Setup.expandPath("{data}/{date}_{time}_") + name + ".h5";

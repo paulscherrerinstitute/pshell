@@ -199,7 +199,7 @@ public class Acquisition {
                     //fprefix = fprefix.replace(Setup.TOKEN_EXEC_NAME, smodel.getData().getFileName()); 
                     Map pars = new HashMap();
                     pars.put("name", smodel.getData().getFileName());
-                    Context.getInterpreter().setExecutionPars(pars);
+                    Context.getSequencer().setExecutionPars(pars);
                 }
                 fprefix = Setup.expandPath(fprefix);
 		// Construct filenames

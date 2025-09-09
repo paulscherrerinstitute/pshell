@@ -7,7 +7,6 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.sequencer.CommandSource;
 import ch.psi.pshell.sequencer.ControlCommand;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.sequencer.InterpreterUtils;
 import ch.psi.pshell.utils.Sys;
 import ch.psi.pshell.utils.Sys.OSFamily;
@@ -27,6 +26,7 @@ import jline.console.KeyMap;
 import jline.console.completer.Completer;
 import jline.console.history.MemoryHistory;
 import jline.internal.NonBlockingInputStream;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  * Implement PShell command-line interface. If Console.run() is called with the advanced parameter
@@ -47,18 +47,18 @@ public class Console implements AutoCloseable{
     }
 
     public void attachInterpreterOutput() {
-        Context.getInterpreter().addListener(interpreterListener);
+        Context.getSequencer().addListener(sequencerListener);
     }
 
     public void detachInterpreterOutput() {
-        Context.getInterpreter().removeListener(interpreterListener);
+        Context.getSequencer().removeListener(sequencerListener);
     }
     
     //Pure Java, no history and headless: suited for server
     void runStandardConsole() throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             while (true) {
-                System.out.print(Context.getInterpreter().getCursor());
+                System.out.print(Context.getSequencer().getCursor());
                 String statement = null;
                 try {
                     statement = reader.readLine();
@@ -69,7 +69,7 @@ public class Console implements AutoCloseable{
                 }
 
                 try {
-                    Object ret = Context.getInterpreter().evalLine(CommandSource.console, statement);
+                    Object ret = Context.getSequencer().evalLine(CommandSource.console, statement);
                     if (ret != null) {
                         System.out.println(ret);
                     }
@@ -86,9 +86,9 @@ public class Console implements AutoCloseable{
     void runAdvancedConsole() throws IOException {
         ConsoleReader console = new ConsoleReader();
         MemoryHistory history = new MemoryHistory();
-        history.setMaxSize(Context.getInterpreter().getHistory().getSize());
+        history.setMaxSize(Context.getSequencer().getHistory().getSize());
         history.setIgnoreDuplicates(true);
-        for (String line : Context.getInterpreter().getHistoryEntries()) {
+        for (String line : Context.getSequencer().getHistoryEntries()) {
             history.add(line);
         }
         console.setHistory(history);
@@ -123,23 +123,23 @@ public class Console implements AutoCloseable{
         }
         try {
             String statement = null;
-            while ((statement = console.readLine(Context.getInterpreter().getCursor())) != null) {
+            while ((statement = console.readLine(Context.getSequencer().getCursor())) != null) {
                 try {
-                    CompletableFuture cf = Context.getInterpreter().evalLineAsync(CommandSource.console, statement);
+                    CompletableFuture cf = Context.getSequencer().evalLineAsync(CommandSource.console, statement);
                     while (!cf.isDone()) {
                         int key = ((NonBlockingInputStream) console.getInput()).read(10);
                         if (key>0){
                             char CTRL_P = '\u0010';
                             if (key == KeyMap.CTRL_X) {
                                 System.out.println("\nControl command: abort");
-                                Context.getInterpreter().abort(CommandSource.console);
+                                Context.getSequencer().abort(CommandSource.console);
                                 break;
                             } else if (key == CTRL_P) {
                                 System.out.println("\nControl command: pause");
-                                Context.getInterpreter().pause(CommandSource.console);
+                                Context.getSequencer().pause(CommandSource.console);
                             } else if (key == KeyMap.CTRL_R) {
                                 System.out.println("\nControl command: resume");
-                                Context.getInterpreter().resume(CommandSource.console);
+                                Context.getSequencer().resume(CommandSource.console);
                             }
                         }
                     }
@@ -185,7 +185,7 @@ public class Console implements AutoCloseable{
         }
     };
 
-    final InterpreterListener interpreterListener = new InterpreterListener() {
+    final SequencerListener sequencerListener = new SequencerListener() {
         @Override
         public void onShellCommand(CommandSource source, String command) {
             if (source.isRemote() && !Context.isServerCommandsHidden()) {
@@ -197,9 +197,9 @@ public class Console implements AutoCloseable{
         public void onShellResult(CommandSource source, Object result) {
             if (source.isRemote() && !Context.isServerCommandsHidden()) {
                 if (result != null) {                    
-                    System.out.println(Context.getInterpreter().interpreterVariableToString(result));
+                    System.out.println(Context.getSequencer().interpreterVariableToString(result));
                 }
-                System.out.print(Context.getInterpreter().getCursor());
+                System.out.print(Context.getSequencer().getCursor());
             }
         }
 
@@ -239,9 +239,9 @@ public class Console implements AutoCloseable{
     public void setPrintScan(boolean value) {
         printScan = value;
         if (value) {
-            Context.getInterpreter().addScanListener(scanListener);
+            Context.getSequencer().addScanListener(scanListener);
         } else {
-            Context.getInterpreter().removeScanListener(scanListener);
+            Context.getSequencer().removeScanListener(scanListener);
         }
     }
 

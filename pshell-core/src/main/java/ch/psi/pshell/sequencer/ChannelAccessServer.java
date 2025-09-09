@@ -98,9 +98,9 @@ public class ChannelAccessServer extends RegisterBase implements RegisterArray {
                 }
              };
             if (background){
-                Context.getInterpreter().evalLineBackgroundAsync(cmd).handle(evalCallback);
+                Context.getSequencer().evalLineBackgroundAsync(cmd).handle(evalCallback);
             } else {
-                Context.getInterpreter().evalLineAsync(cmd).handle(evalCallback);
+                Context.getSequencer().evalLineAsync(cmd).handle(evalCallback);
             }
         } catch (Exception ex){
             val = "EXC: " + ex.getMessage();

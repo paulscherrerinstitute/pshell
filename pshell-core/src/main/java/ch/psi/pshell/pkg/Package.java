@@ -54,9 +54,9 @@ public class Package implements AutoCloseable {
             String devicesConfigPath= devicesPath.toFile().isDirectory() ? devicesPath.toString() : null;
             Context.getDevicePool().initializeExtension(devicePoolPath.toString(), devicesConfigPath);
         }
-        if (Context.hasInterpreter() && Context.getInterpreter().isInterpreterEnabled()) {
+        if (Context.hasSequencer() && Context.getSequencer().isInterpreterEnabled()) {
             if (scriptPath.toFile().isDirectory()){
-                Context.getInterpreter().addLibraryPath(scriptPath.toString());                                
+                Context.getSequencer().addLibraryPath(scriptPath.toString());                                
                 String scriptFile = Setup.getLocalStartupScript();
                 if (scriptFile!=null){
                     Path startupScript = Paths.get(scriptFile);
@@ -64,7 +64,7 @@ public class Package implements AutoCloseable {
                         startupScript = Paths.get(scriptPath.toString(), scriptFile);
                     }
                     if (startupScript.toFile().isFile()){
-                        Context.getInterpreter().getScriptManager().evalFile(startupScript.toString());
+                        Context.getInterpreter().evalFile(startupScript.toString());
                         Logger.getLogger(Package.class.getName()).info("Executed package startup script: " + startupScript);                    
                     } else {
                         Logger.getLogger(Package.class.getName()).warning("Invalud package startup script: " + scriptFile);                    

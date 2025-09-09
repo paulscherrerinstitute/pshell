@@ -32,8 +32,7 @@ import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.security.AccessLevel;
 import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.User;
-import ch.psi.pshell.sequencer.Interpreter;
-import ch.psi.pshell.sequencer.InterpreterListener;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.sequencer.PlotListener;
 import ch.psi.pshell.sequencer.Server;
 import ch.psi.pshell.session.Sessions;
@@ -144,6 +143,7 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import ch.psi.pshell.versioning.VersionControlListener;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  * The main dialog of the Workbench.
@@ -177,7 +177,7 @@ public class View extends MainFrame{
         //loggerPanel.setInverted(true);
         loggerPanel.start();
 
-        Context.getInterpreter().addListener(interpreterListener);
+        Context.getSequencer().addListener(sequencerListener);
         if (Context.hasVersionControl()){
             Context.getVersionControl().addListener(versionControlListener);
         }       
@@ -362,7 +362,7 @@ public class View extends MainFrame{
             App.getInstance().restartLogger();            
         } else if (Setup.TOKEN_SESSIONS.equals(pathId)) {
             if (App.getInstance().getConfig().saveConsoleSessionFiles && !Setup.isLocal()) {
-                Context.getInterpreter().getScriptManager().setSessionFilePath(Setup.getConsolePath());
+                Context.getInterpreter().setSessionFilePath(Setup.getConsolePath());
             }       
         }
     } 
@@ -444,7 +444,7 @@ public class View extends MainFrame{
         boolean busy = (state == State.Busy);
         boolean paused = (state == State.Paused);
 
-        Interpreter interp = Context.getInterpreter();
+        Sequencer interp = Context.getSequencer();
         buttonRun.setEnabled(allowRun && (((ready && (showingExecutor|| Setup.isPlotOnly())) || (paused && !interp.isRunningStatements()))));
         buttonDebug.setEnabled((ready && showingScript && allowRun) || (paused && interp.isRunningStatements()));
         buttonPause.setEnabled(interp.canPause() || ((runningProcessor != null) && (runningProcessor.canPause())));
@@ -560,7 +560,7 @@ public class View extends MainFrame{
         }
         
         if (Setup.getPlotServer() == null ){
-            Context.getInterpreter().setPlotListener(new PlotListener() {            
+            Context.getSequencer().setPlotListener(new PlotListener() {            
                 @Override
                 public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {    
                     return (List<Plot>) SwingUtils.invokeAndWait(() -> {
@@ -644,7 +644,7 @@ public class View extends MainFrame{
         }
     }
     
-    final InterpreterListener interpreterListener = new InterpreterListener() {
+    final SequencerListener sequencerListener = new SequencerListener() {
         @Override
         public void onInitialized(int runCount) {
             if (runCount == 0) {
@@ -3316,7 +3316,7 @@ public class View extends MainFrame{
 
     private void menuStopAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuStopAllActionPerformed
         try {
-            Context.getInterpreter().stopAll();
+            Context.getSequencer().stopAll();
         } catch (Exception ex) {
             showException(ex);
         }
@@ -3354,7 +3354,7 @@ public class View extends MainFrame{
 
     private void menuUpdateAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUpdateAllActionPerformed
         try {
-            Context.getInterpreter().updateAll();
+            Context.getSequencer().updateAll();
         } catch (Exception ex) {
             showException(ex);
         }
@@ -3649,7 +3649,7 @@ public class View extends MainFrame{
             }
                         
 
-            Server server = Context.getInterpreter().getServer();
+            Server server = Context.getSequencer().getServer();
             String[][] entries = new String[][]{
                 {"Process", Sys.getProcessName()},
                 {"User", Sys.getUserName()},
@@ -3677,7 +3677,7 @@ public class View extends MainFrame{
                 {"Context path", Setup.getContextPath()},
                 {"Sessions path", Setup.getSessionsPath()},
                 {"Help path", Setup.getHelpPath()},
-                {"Startup script", Context.getInterpreter().getStartupScript()},
+                {"Startup script", Context.getSequencer().getStartupScript()},
                 {"Config file", Context.getConfig().getFileName()},
                 {"Settings file", Setup.getSettingsFile()},
                 {"Device pool", Setup.getDevicePoolFile()},
@@ -3724,7 +3724,7 @@ public class View extends MainFrame{
     private void menuReinitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuReinitActionPerformed
         try {
             new Thread(() -> {
-                Context.getInterpreter().reinit();
+                Context.getSequencer().reinit();
             }).start();
 
         } catch (Exception ex) {

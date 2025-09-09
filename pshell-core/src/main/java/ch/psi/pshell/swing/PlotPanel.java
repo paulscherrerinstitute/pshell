@@ -21,7 +21,7 @@ import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
-import ch.psi.pshell.sequencer.Interpreter;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.Range;
@@ -47,15 +47,15 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
     
     public void setActive(boolean value) {
         if (value) {
-            Interpreter.getInstance().addScanListener(scanListener);
+            Sequencer.getInstance().addScanListener(scanListener);
         } else {
-            Interpreter.getInstance().removeScanListener(scanListener);
+            Sequencer.getInstance().removeScanListener(scanListener);
         }
     }
 
     public boolean isActive() {
         
-        return Interpreter.getInstance().getScanListeners().contains(scanListener);
+        return Sequencer.getInstance().getScanListeners().contains(scanListener);
     }
 
     
@@ -88,7 +88,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
             writableIndexes.clear();
             currentPass = 1;
             changedScaleX = false;
-            boolean accessDevice = Interpreter.getInstance().getScriptManager().isThreaded();
+            boolean accessDevice = Sequencer.getInstance().getScriptManager().isThreaded();
 
             try {
 
@@ -216,7 +216,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                     scanRecordBuffer.clear();
                     updating.set(false);
                 }
-                if (!Interpreter.getInstance().getScriptManager().isThreaded()){
+                if (!Sequencer.getInstance().getScriptManager().isThreaded()){
                     pars.put("writables", scan.getWritableNames());
                     pars.put("readables", scan.getReadableNames());
                     Map<String,Map> attrs = new HashMap<>();

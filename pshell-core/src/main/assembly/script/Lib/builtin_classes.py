@@ -38,7 +38,7 @@ import ch.psi.pshell.archiver.Inventory as Inventory
 import ch.psi.pshell.archiver.Daqbuf as Daqbuf
 
 import ch.psi.pshell.sequencer.CommandSource as CommandSource
-import ch.psi.pshell.sequencer.InterpreterListener as InterpreterListener
+import ch.psi.pshell.sequencer.SequencerListener as SequencerListener
 import ch.psi.pshell.sequencer.ChannelAccessServer as ChannelAccessServer
 
 import ch.psi.pshell.framework.Context as Context
@@ -317,10 +317,10 @@ def string_to_obj(o):
         o=str(o)
         if "://" in o:
             return InlineDevice(o)
-        ret =  get_interpreter().getInterpreterVariable(o)
+        ret =  get_sequencer().getInterpreterVariable(o)
         if ret is None:
             try:
-                return get_interpreter().getScriptManager().evalBackground(o).result
+                return get_interpreter().evalBackground(o).result
             except:                        
                 return None
         return ret
@@ -505,7 +505,7 @@ def processScanPars(scan, pars):
     scan.setSnaps(to_list(string_to_obj(pars.pop("snaps",None))))
     scan.setDiags(to_list(string_to_obj(pars.pop("diags",None))))
     scan.setMeta(pars.pop("meta",None))
-    get_interpreter().setCommandPars(scan, pars)
+    get_sequencer().setCommandPars(scan, pars)
 
 
 
@@ -727,9 +727,9 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
                                             
             #self.val = cmd      
             if self.background:     
-                get_interpreter().evalLineBackgroundAsync(cmd).handle(eval_callback())
+                get_sequencer().evalLineBackgroundAsync(cmd).handle(eval_callback())
             else:
-                get_interpreter().evalLineAsync(cmd).handle(eval_callback())
+                get_sequencer().evalLineAsync(cmd).handle(eval_callback())
             
         except:
             err=str(sys.exc_info()[1])
@@ -757,11 +757,11 @@ class EpicsServerState(ReadonlyAsyncRegisterBase, RegisterArray):
         else:
             self.cas = CAS(self.channel, self, 'byte')
         if self.state_change_listener is None:
-            class StateChangeListener(InterpreterListener):
+            class StateChangeListener(SequencerListener):
                 def onStateChanged(_self, state, former):  
                     self.set(state)        
             self.state_change_listener = StateChangeListener()   
-            get_interpreter().addListener(self.state_change_listener)
+            get_sequencer().addListener(self.state_change_listener)
                      
     def getSize(self):
         if self.as_string:
@@ -771,7 +771,7 @@ class EpicsServerState(ReadonlyAsyncRegisterBase, RegisterArray):
                         
     def doClose(self):
         if self.state_change_listener:
-            get_interpreter().removeListener(self.state_change_listener)
+            get_sequencer().removeListener(self.state_change_listener)
         if self.cas:
             self.cas.close()
             self.cas = None
@@ -811,7 +811,7 @@ class EpicsServerUrl(ReadonlyRegisterBase, RegisterArray):
         super(EpicsServerURL, self).doClose()        
 
     def doRead(self):
-        url = get_interpreter().server.interfaceURL
+        url = get_sequencer().server.interfaceURL
         if self.as_string:
             return url  
         else:

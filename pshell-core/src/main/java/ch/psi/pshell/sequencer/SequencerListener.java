@@ -7,7 +7,7 @@ import ch.psi.pshell.utils.State;
 /**
  *
  */
-public interface InterpreterListener {
+public interface SequencerListener {
     
     default void onInitialized(int runCount) {}
     

@@ -27,10 +27,10 @@ public class RSync {
                     host,
                     (move ? "True" : "False"));
             if (firstTransfer){
-                Context.getInterpreter().tryEvalLineBackground("from rsync import sync_user_data");
+                Context.getSequencer().tryEvalLineBackground("from rsync import sync_user_data");
                 firstTransfer = false;
             }
-            String ret = Str.toString(Context.getInterpreter().tryEvalLineBackground(cmd));
+            String ret = Str.toString(Context.getSequencer().tryEvalLineBackground(cmd));
             if (!Str.toString(ret).startsWith("Transferred")){
                 throw new  IOException(ret);
             }        
@@ -40,18 +40,18 @@ public class RSync {
     
     public static void authorize(String user, boolean fixPermissions) throws Exception{      
         removeAuthorization();
-        Context.getInterpreter().tryEvalLineBackground("from rsync import authorize_user");
-        Context.getInterpreter().evalLine("authorize_user('" + user + "', fix_permissions=" + (fixPermissions?"True":"False") + ")");
+        Context.getSequencer().tryEvalLineBackground("from rsync import authorize_user");
+        Context.getSequencer().evalLine("authorize_user('" + user + "', fix_permissions=" + (fixPermissions?"True":"False") + ")");
     }
     
     public static void removeAuthorization() throws Exception{             
-        Context.getInterpreter().tryEvalLineBackground("from rsync import remove_user_key");
-        Context.getInterpreter().tryEvalLineBackground("remove_user_key()");
+        Context.getSequencer().tryEvalLineBackground("from rsync import remove_user_key");
+        Context.getSequencer().tryEvalLineBackground("remove_user_key()");
     }
     
     public static boolean isAuthorized() throws Exception{    
-        Context.getInterpreter().tryEvalLineBackground("from rsync import is_authorized");
-        return (Boolean)Context.getInterpreter().tryEvalLineBackground("is_authorized()");
+        Context.getSequencer().tryEvalLineBackground("from rsync import is_authorized");
+        return (Boolean)Context.getSequencer().tryEvalLineBackground("is_authorized()");
     }
         
 }

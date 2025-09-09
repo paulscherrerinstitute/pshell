@@ -129,11 +129,11 @@ public class PythonDialog extends StandardDialog {
     void checkInstall() {
         try {                        
             String prefix = null;
-            if (Context.getInterpreter().getScriptType() == ScriptType.cpy){
-                prefix = (String )Context.getInterpreter().evalLine("sys.prefix");     
+            if (Context.getSequencer().getScriptType() == ScriptType.cpy){
+                prefix = (String )Context.getSequencer().evalLine("sys.prefix");     
             } else {
-                Context.getInterpreter().evalLine("from jeputils import get_jep");
-                prefix = (String )Context.getInterpreter().evalLine("get_jep('sys.prefix')");                                
+                Context.getSequencer().evalLine("from jeputils import get_jep");
+                prefix = (String )Context.getSequencer().evalLine("get_jep('sys.prefix')");                                
             }
             if (textPythonHome.getText().equals(prefix)){
                 showMessage("Success", "CPython correctly installed on path: " + prefix);

@@ -1,15 +1,13 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.sequencer.Interpreter;
-import ch.psi.pshell.sequencer.InterpreterListener;
-import ch.psi.pshell.swing.MonitoredPanel;
-import ch.psi.pshell.swing.SwingUtils;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.utils.State;
 import java.awt.Component;
 import java.util.HashMap;
 import javax.swing.JButton;
 import javax.swing.JSpinner;
 import javax.swing.text.JTextComponent;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  *
@@ -21,23 +19,23 @@ public class ScriptButton extends MonitoredPanel {
         initComponents();
     }
 
-    InterpreterListener interpreterListener;
+    SequencerListener sequencerListener;
 
     @Override
     protected void onShow() {
-        interpreterListener = new InterpreterListener() {
+        sequencerListener = new SequencerListener() {
             @Override
             public void onStateChanged(State state, State former) {
                 button.setEnabled(state.isReady());
             }
         };
-        Interpreter.getInstance().addListener(interpreterListener);
-        button.setEnabled(Interpreter.getInstance().getState().isReady());
+        Sequencer.getInstance().addListener(sequencerListener);
+        button.setEnabled(Sequencer.getInstance().getState().isReady());
     }
 
     @Override
     protected void onHide() {
-        Interpreter.getInstance().addListener(interpreterListener);
+        Sequencer.getInstance().addListener(sequencerListener);
     }
 
     /**
@@ -89,7 +87,7 @@ public class ScriptButton extends MonitoredPanel {
                     args.put(arg, val);
                 }
             }
-            Interpreter.getInstance().evalFileAsync(script, args);
+            Sequencer.getInstance().evalFileAsync(script, args);
         } catch (Exception ex) {
             showException(ex);
         }

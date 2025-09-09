@@ -10,7 +10,6 @@ import ch.psi.pshell.framework.Context.DataTransferMode;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.scan.ScanConfig;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.swing.StandardDialog;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.SwingUtils.OptionType;
@@ -24,6 +23,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  *
@@ -58,7 +58,7 @@ public class DataFileDialog extends StandardDialog {
         buttonUndoActionPerformed(null);
     }
 
-    final InterpreterListener interpreterListener = new InterpreterListener() {
+    final SequencerListener sequencerListener = new SequencerListener() {
         @Override
         public void onStateChanged(State state, State former) {
             if ((dialogTokens != null) && (dialogTokens.isShowing())) {
@@ -83,13 +83,13 @@ public class DataFileDialog extends StandardDialog {
 
     @Override
     protected void onOpened() {
-        Context.getInterpreter().addListener(interpreterListener);
-        interpreterListener.onStateChanged(Context.getState(), null);
+        Context.getSequencer().addListener(sequencerListener);
+        sequencerListener.onStateChanged(Context.getState(), null);
     }
 
     @Override
     protected void onClosed() {
-        Context.getInterpreter().removeListener(interpreterListener);
+        Context.getSequencer().removeListener(sequencerListener);
     }
 
     Object[][] getTokenData() {

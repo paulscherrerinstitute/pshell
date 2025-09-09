@@ -4,7 +4,7 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.scripting.ViewPreference;
-import ch.psi.pshell.sequencer.Interpreter.InterpreterStateException;
+import ch.psi.pshell.sequencer.Sequencer.InterpreterStateException;
 import ch.psi.pshell.utils.State;
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,9 +23,9 @@ public interface Plugin extends ch.psi.pshell.plugin.Plugin{
 
     default Object eval(String str, boolean background) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
         if (background) {
-            return Context.getInterpreter().evalLineBackground(CommandSource.plugin, str);
+            return Context.getSequencer().evalLineBackground(CommandSource.plugin, str);
         } else {
-            return Context.getInterpreter().evalLine(CommandSource.plugin, str);
+            return Context.getSequencer().evalLine(CommandSource.plugin, str);
         }
     }
 
@@ -35,9 +35,9 @@ public interface Plugin extends ch.psi.pshell.plugin.Plugin{
 
     default CompletableFuture<?> evalAsync(String str, boolean background) throws InterpreterStateException {
         if (background) {
-            return Context.getInterpreter().evalLineBackgroundAsync(CommandSource.plugin, str);
+            return Context.getSequencer().evalLineBackgroundAsync(CommandSource.plugin, str);
         } else {
-            return Context.getInterpreter().evalLineAsync(CommandSource.plugin, str);
+            return Context.getSequencer().evalLineAsync(CommandSource.plugin, str);
         }
     }
 
@@ -51,9 +51,9 @@ public interface Plugin extends ch.psi.pshell.plugin.Plugin{
     
     default Object run(String scriptName, Object args, boolean background) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
         if (background){
-            return Context.getInterpreter().evalFileBackground(CommandSource.plugin, scriptName, args);
+            return Context.getSequencer().evalFileBackground(CommandSource.plugin, scriptName, args);
         } else {
-            return Context.getInterpreter().evalFile(CommandSource.plugin, scriptName, args);
+            return Context.getSequencer().evalFile(CommandSource.plugin, scriptName, args);
         }
     }    
 
@@ -67,22 +67,22 @@ public interface Plugin extends ch.psi.pshell.plugin.Plugin{
     
     default CompletableFuture<?> runAsync(String scriptName, Object args, boolean background) throws InterpreterStateException {
         if (background){
-            return Context.getInterpreter().evalFileBackgroundAsync(CommandSource.plugin, scriptName, args);
+            return Context.getSequencer().evalFileBackgroundAsync(CommandSource.plugin, scriptName, args);
         } else {
-            return Context.getInterpreter().evalFileAsync(CommandSource.plugin, scriptName, args);
+            return Context.getSequencer().evalFileAsync(CommandSource.plugin, scriptName, args);
         }
     }    
 
     default CompletableFuture<?> runBackground(String scriptName) throws InterpreterStateException {
-        return Context.getInterpreter().evalFileBackgroundAsync(CommandSource.plugin, scriptName);
+        return Context.getSequencer().evalFileBackgroundAsync(CommandSource.plugin, scriptName);
     }
 
     default Object getGlobalVar(String name) {
-        return Context.getInterpreter().getScriptManager().getVar(name);
+        return Context.getInterpreter().getVar(name);
     }
 
     default void setGlobalVar(String name, Object val){
-        Context.getInterpreter().getScriptManager().setVar(name, val);
+        Context.getInterpreter().setVar(name, val);
     }
 
     default void setGlobalsVars(HashMap<String, Object> vars)  {
@@ -99,38 +99,38 @@ public interface Plugin extends ch.psi.pshell.plugin.Plugin{
     }
 
     default void startTask(String scriptName, int delay, int interval) throws IOException, InterpreterStateException {
-        Context.getInterpreter().startTask(CommandSource.plugin, scriptName, delay, interval);
+        Context.getSequencer().startTask(CommandSource.plugin, scriptName, delay, interval);
     }
 
     /**
      * Stop a background task
      */
     default void stopTask(String scriptName) throws IOException, InterpreterStateException {
-        Context.getInterpreter().stopTask(CommandSource.plugin, scriptName, false);
+        Context.getSequencer().stopTask(CommandSource.plugin, scriptName, false);
     }
 
     default void stopTask(String scriptName, boolean force) throws IOException, InterpreterStateException {
-        Context.getInterpreter().stopTask(CommandSource.plugin, scriptName, force);
+        Context.getSequencer().stopTask(CommandSource.plugin, scriptName, force);
     }
 
     default void abort() throws InterruptedException {
-        Context.getInterpreter().abort(CommandSource.plugin);
+        Context.getSequencer().abort(CommandSource.plugin);
     }
 
     default void updateAll() {
-        Context.getInterpreter().updateAll(CommandSource.plugin);
+        Context.getSequencer().updateAll(CommandSource.plugin);
     }
 
     default void stopAll() {
-        Context.getInterpreter().stopAll(CommandSource.plugin);
+        Context.getSequencer().stopAll(CommandSource.plugin);
     }
 
     default void injectVars() {
-        Context.getInterpreter().injectVars(CommandSource.plugin);
+        Context.getSequencer().injectVars(CommandSource.plugin);
     }
 
     default void setPreference(CommandSource source, ViewPreference name, Object value) {
-        Context.getInterpreter().setPreference(CommandSource.plugin, name, value);
+        Context.getSequencer().setPreference(CommandSource.plugin, name, value);
     }
     
     default void setSetting(String name, Object value) throws IOException{

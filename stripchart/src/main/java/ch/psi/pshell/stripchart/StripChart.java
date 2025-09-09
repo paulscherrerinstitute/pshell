@@ -20,7 +20,6 @@ import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotJFree;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.scan.StripScanExecutor;
-import ch.psi.pshell.sequencer.InterpreterListener;
 import ch.psi.pshell.stripchart.StripChartAlarmEditor.StripChartAlarmConfig;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.PatternFileChooserAuxiliary;
@@ -95,6 +94,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import ch.psi.pshell.sequencer.SequencerListener;
 
 /**
  * Time plotting of a set of devices. Can be used in the workbench or opened
@@ -348,8 +348,8 @@ public class StripChart extends StandardDialog {
         });
         add(buttonSound, 0);
 
-        if (Context.hasInterpreter()) {
-            Context.getInterpreter().addListener(new InterpreterListener() {
+        if (Context.hasSequencer()) {
+            Context.getSequencer().addListener(new SequencerListener() {
                 boolean hasStopped;
 
                 @Override
@@ -1585,7 +1585,7 @@ public class StripChart extends StandardDialog {
                                         }
                                     }
                                     if (device == null) {
-                                        device = (Device) Context.getInterpreter().tryEvalLineBackground(name);
+                                        device = (Device) Context.getSequencer().tryEvalLineBackground(name);
                                     }
                                 }
                             } catch (Exception ex) {
