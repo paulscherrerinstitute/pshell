@@ -165,7 +165,7 @@
         2. In next restart the new folder items can be seen from the Repository Changes dialog.
         3. The new folder can then be added to the repo by executing in the console:
         ```
-        c.getVersioningManager().add("my_folder_name")
+        get_version_control().add("my_folder_name")
         ```
 
  * How often should I call __cleanup_repository()__?

@@ -31,7 +31,7 @@ public abstract class VersioningTasks{
             setProgress(0);
             try {
                 Context.getApp().sendTaskInit(msg);
-                Context.getVersioningManager().addCommitAll(commitMessage, false);
+                Context.getVersionControl().addCommitAll(commitMessage, false);
                 msg = "Success commiting";
                 Context.getApp().sendOutput(msg);
                 setMessage(msg);
@@ -75,9 +75,9 @@ public abstract class VersioningTasks{
                 Context.getApp().sendTaskInit(msg);
 
                 if (branch) {
-                    Context.getVersioningManager().checkoutLocalBranch(name);
+                    Context.getVersionControl().checkoutLocalBranch(name);
                 } else {
-                    Context.getVersioningManager().checkoutTag(name);
+                    Context.getVersionControl().checkoutTag(name);
                 }
 
                 msg = "Success checking out";
@@ -108,9 +108,9 @@ public abstract class VersioningTasks{
             setProgress(0);
             try {
                 Context.getApp().sendTaskInit(msg);
-                Context.getVersioningManager().assertHasRemoteRepo();
+                Context.getVersionControl().assertHasRemoteRepo();
                 Context.getInterpreter().setSourceUI(CommandSource.ui); //Ensure authentication dialog comes to local interface
-                Context.getVersioningManager().pullFromUpstream();
+                Context.getVersionControl().pullFromUpstream();
                 msg = "Success pulling from upstream";
                 Context.getApp().sendOutput(msg);
                 setMessage(msg);
@@ -150,9 +150,9 @@ public abstract class VersioningTasks{
             setProgress(0);
             try {
                 Context.getApp().sendTaskInit(msg);
-                Context.getVersioningManager().assertHasRemoteRepo();
+                Context.getVersionControl().assertHasRemoteRepo();
                 Context.getInterpreter().setSourceUI(CommandSource.ui); //Ensure authentication dialog comes to local interface
-                Context.getVersioningManager().pushToUpstream(allBranches, force, tags);
+                Context.getVersionControl().pushToUpstream(allBranches, force, tags);
                 msg = "Success pushing to upstream";
                 Context.getApp().sendOutput(msg);
                 setMessage(msg);

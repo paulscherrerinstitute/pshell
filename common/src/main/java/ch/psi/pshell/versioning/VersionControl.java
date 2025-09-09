@@ -67,11 +67,11 @@ import org.eclipse.jgit.util.FS;
  * Management of embedded GIT repository
  * and devices.
  */
-public class VersioningManager extends ObservableBase<VersioningListener> implements AutoCloseable {
+public class VersionControl extends ObservableBase<VersionControlListener> implements AutoCloseable {
     
-    static VersioningManager INSTANCE;    
+    static VersionControl INSTANCE;    
     
-    public static VersioningManager getInstance(){
+    public static VersionControl getInstance(){
         if (INSTANCE == null){
             throw new RuntimeException("Versioning Manager not instantiated.");
         }         
@@ -90,7 +90,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
     public static final String LOCAL_TAGS_PREFIX = "refs/tags/";
     
 
-    public final VersioningConfig config;
+    public final VersionControlConfig config;
     final String localPath;
     final String remotePath;
     final String remoteLogin;
@@ -102,10 +102,10 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
     Repository localRepo;
     Git git;
     
-    static final Logger logger = Logger.getLogger(VersioningManager.class.getName());
+    static final Logger logger = Logger.getLogger(VersionControl.class.getName());
     
     
-    public VersioningManager(VersioningConfig config) {
+    public VersionControl(VersionControlConfig config) {
         INSTANCE  = this;
         logger.log(Level.INFO, "Initializing {0}", getClass().getSimpleName());        
         this.config = config;
@@ -296,7 +296,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
     }
 
     //Constructor for process factory
-    VersioningManager(String localPath, String remotePath, String remoteLogin, String keyFile, String secret) throws Exception {
+    VersionControl(String localPath, String remotePath, String remoteLogin, String keyFile, String secret) throws Exception {
         this.config = null;
         this.localPath = localPath;
         this.remotePath = remotePath;
@@ -811,7 +811,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
         if ((remotePath != null) && (!remotePath.trim().isEmpty())
                 && (remoteLogin != null) && (!remoteLogin.isBlank())
                 && (!requiresPassword())) {
-            Process p = ProcessFactory.createProcess(VersioningManager.class, new String[]{localPath, remotePath, remoteLogin,
+            Process p = ProcessFactory.createProcess(VersionControl.class, new String[]{localPath, remotePath, remoteLogin,
                 privateKeyFile, secret, 
                 String.valueOf(allBranches), String.valueOf(force)});
         }
@@ -901,7 +901,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
 
     public void checkoutTag(String tag) throws Exception {
         logger.log(Level.INFO, "Checkout tag: {0}", tag);
-        git.checkout().setName(VersioningManager.LOCAL_TAGS_PREFIX + tag).call();
+        git.checkout().setName(VersionControl.LOCAL_TAGS_PREFIX + tag).call();
         triggerCheckout(tag);
     }
 
@@ -1018,7 +1018,7 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
     }
 
     protected void triggerCheckout(final String branchOrTag) {
-        for (VersioningListener listener : getListeners()) {
+        for (VersionControlListener listener : getListeners()) {
             try {
                 listener.onCheckout(branchOrTag);
             } catch (Throwable ex) {
@@ -1026,6 +1026,55 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
             }
         }
     }
+    
+    //Static Utilities    
+    public static String getFileContents(String fileName, String revisionId) throws IOException, InterruptedException {
+        fileName = Setup.expandPath(fileName);
+        if (IO.isSubPath(fileName, Setup.getHomePath())) {
+            fileName = IO.getRelativePath(fileName, Setup.getHomePath());
+            try {
+                return getInstance().fetch(fileName, revisionId);
+            } catch (IOException | InterruptedException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new IOException(ex.getMessage());
+            }
+        }
+        return null;
+    }
+
+    public static Revision getFileRevision(String fileName) throws IOException, InterruptedException{
+        Revision ret = null;
+        fileName = Setup.expandPath(fileName);
+        if (IO.isSubPath(fileName, Setup.getHomePath())) {
+            fileName = IO.getRelativePath(fileName, Setup.getHomePath());
+            try {
+                ret = getInstance().getRevision(fileName);
+                if (getInstance().getDiff(fileName).length() > 0) {
+                    ret.id += " *";
+                }
+            } catch (IOException | InterruptedException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new IOException(ex.getMessage());
+            }
+        }
+        return ret;
+    }
+    
+    public static String getFileRevisionId(String fileName) throws IOException {
+        if (fileName != null) {
+            try{
+                ch.psi.pshell.versioning.Revision rev =  getFileRevision(fileName);
+                if (rev != null) {
+                    return rev.id;
+                }            
+            } catch (Exception ex) {
+            }
+        }
+        return null;
+    }
+    
         
     
     /**
@@ -1038,10 +1087,10 @@ public class VersioningManager extends ObservableBase<VersioningListener> implem
         //System.setOut(ps);
         //System.setErr(ps);
                 
-        try (VersioningManager vm = new VersioningManager(args[0], args[1], args[2], args[3], args[4])) {
+        try (VersionControl vc = new VersionControl(args[0], args[1], args[2], args[3], args[4])) {
             Boolean allBranches = Boolean.valueOf(args[5]);
             Boolean force = Boolean.valueOf(args[6]);
-            vm.pushToUpstream(allBranches, force);
+            vc .pushToUpstream(allBranches, force);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
             ex.printStackTrace();

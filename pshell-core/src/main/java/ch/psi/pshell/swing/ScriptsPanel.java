@@ -222,7 +222,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         if (script != null) {                            
                             boolean allowRun =  !Context.getRights().denyRun;
                             menuRun.setEnabled(allowRun && (Context.getState().isReady()));
-                            menuRevisionHistory.setEnabled(Context.hasVersioningManager());
+                            menuRevisionHistory.setEnabled(Context.hasVersionControl());
 
                             try{
                                 File file = Paths.get(currentPath, script).toFile();      

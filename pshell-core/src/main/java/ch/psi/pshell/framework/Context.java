@@ -34,7 +34,7 @@ import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.SortedProperties;
 import ch.psi.pshell.utils.State;
-import ch.psi.pshell.versioning.VersioningManager;
+import ch.psi.pshell.versioning.VersionControl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -227,12 +227,12 @@ public class Context {
         return PluginManager.getInstance();
     }
 
-    public static boolean hasVersioningManager(){ 
-        return VersioningManager.hasInstance();
+    public static boolean hasVersionControl(){ 
+        return VersionControl.hasInstance();
     }
     
-    public static VersioningManager getVersioningManager(){
-        return VersioningManager.getInstance();
+    public static VersionControl getVersionControl(){
+        return VersionControl.getInstance();
     }
         
     public static boolean hasLogManager(){
@@ -283,11 +283,11 @@ public class Context {
     static void triggerConfigurationChange(final Configurable obj) {   
          String message = "Configuration change: " + obj.toString();
          Logger.getLogger(Context.class.getName()).info(message);
-         if (hasVersioningManager() && (obj.getConfig()!=null)){
+         if (hasVersionControl() && (obj.getConfig()!=null)){
             try {
                 String fileName = obj.getConfig().getFileName();
                 if (fileName != null) {
-                    getVersioningManager().autoCommit(fileName, message);
+                    getVersionControl().autoCommit(fileName, message);
                 }
             } catch (Throwable ex) {
                 Logger.getLogger(Context.class.getName()).log(Level.WARNING, null, ex);
@@ -724,9 +724,9 @@ public class Context {
     }        
     
     public static void triggerStartExecution(final String fileName) {        
-         if (hasVersioningManager() && (fileName!=null)){
+         if (hasVersionControl() && (fileName!=null)){
             try {
-                getVersioningManager().autoCommit(fileName, "Executing: " + fileName);
+                getVersionControl().autoCommit(fileName, "Executing: " + fileName);
             } catch (Throwable ex) {
                 Logger.getLogger(Context.class.getName()).log(Level.WARNING, null, ex);
             }

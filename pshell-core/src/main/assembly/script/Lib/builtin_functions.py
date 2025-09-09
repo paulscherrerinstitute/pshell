@@ -1257,7 +1257,7 @@ def commit(message, force = False):
     Returns:
         None
     """
-    get_versioning_manager().addCommitAll(message, force)
+    get_version_control().addCommitAll(message, force)
 
 def diff():
     """Return list of changes in the repository
@@ -1268,7 +1268,7 @@ def diff():
     Returns:
         None
     """
-    return get_versioning_manager().diff()
+    return get_version_control().diff()
 
 def checkout_tag(tag):
     """Checkout a tag name.
@@ -1279,7 +1279,7 @@ def checkout_tag(tag):
     Returns:
         None
     """
-    get_versioning_manager().checkoutTag(tag)
+    get_version_control().checkoutTag(tag)
 
 def checkout_branch(tag):
     """Checkout a local branch name.
@@ -1290,13 +1290,13 @@ def checkout_branch(tag):
     Returns:
         None
     """
-    get_versioning_manager().checkoutLocalBranch(tag)
+    get_version_control().checkoutLocalBranch(tag)
 
 def pull_repository():
     """Pull from remote repository.
 
     """
-    get_versioning_manager().pullFromUpstream()
+    get_version_control().pullFromUpstream()
 
 def push_repository(all_branches=True, force=False, push_tags=False):
     """Push to remote repository.
@@ -1309,7 +1309,7 @@ def push_repository(all_branches=True, force=False, push_tags=False):
     Returns:
         None
     """
-    get_versioning_manager().pushToUpstream(all_branches, force, push_tags)
+    get_version_control().pushToUpstream(all_branches, force, push_tags)
 
 def cleanup_repository():
     """Performs a repository cleanup.
@@ -1320,7 +1320,7 @@ def cleanup_repository():
     Returns:
         None
     """
-    get_versioning_manager().cleanupRepository()
+    get_version_control().cleanupRepository()
 
 
 ###################################################################################################

@@ -23,8 +23,8 @@ import ch.psi.pshell.utils.History;
 import ch.psi.pshell.utils.Nameable;
 import ch.psi.pshell.utils.State;
 import ch.psi.pshell.utils.Sys;
-import ch.psi.pshell.versioning.VersioningConfig;
-import ch.psi.pshell.versioning.VersioningManager;
+import ch.psi.pshell.versioning.VersionControlConfig;
+import ch.psi.pshell.versioning.VersionControl;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     final UsersManager usersManager;
     final DataManager dataManager;
     final SessionManager sessionManager;
-    VersioningManager versioningManager;
+    VersionControl versionControl;
     Interpreter interpreter;
     NotificationManager notificationManager;
     PackageManager packageManager;
@@ -172,7 +172,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         sessionManager.setMode(config.sessionHandling);
 
         for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, packageManager, notificationManager,
-            devicePool, versioningManager}) {
+            devicePool, versionControl}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -238,14 +238,14 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             interpreter.restart(); 
             interpreter.setSaveCommandStatistics(config.saveCommandStatistics);
             if (config.isVersioningEnabled()) {        
-                VersioningConfig versioningConfig = new VersioningConfig( 
+                VersionControlConfig versionControlConfig = new VersionControlConfig( 
                     Setup.getHomePath(), 
                     config.versionTrackingRemote, 
                     config.versionTrackingLogin, 
                     !config.isVersioningManual(),
                     new String[] {Setup.getDevicesPath(), Setup.getScriptsPath(), Setup.getConfigPath(), Setup.getPluginsPath()});
-                versioningManager = new VersioningManager(versioningConfig);
-                versioningManager.setUserInterface(Context.getUserInterface());
+                versionControl = new VersionControl(versionControlConfig);
+                versionControl.setUserInterface(Context.getUserInterface());
             }
             if (pluginManager != null) {
                 pluginManager.onInitialize(interpreter.getRunCount());
@@ -266,7 +266,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     @Override
     protected void disable(){
         super.disable();
-        for (AutoCloseable ac : new AutoCloseable[]{ packageManager, devicePool, versioningManager}) {
+        for (AutoCloseable ac : new AutoCloseable[]{ packageManager, devicePool, versionControl}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -281,7 +281,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     @Override
     protected void onExit() {
         super.onExit();
-        for (AutoCloseable ac : new AutoCloseable[]{interpreter, scanStreamer, packageManager,devicePool, versioningManager, pluginManager, dataManager, usersManager}) {
+        for (AutoCloseable ac : new AutoCloseable[]{interpreter, scanStreamer, packageManager,devicePool, versionControl, pluginManager, dataManager, usersManager}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -291,9 +291,9 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             }
         }
         Epics.destroy();
-        if (versioningManager != null) {
+        if (versionControl != null) {
             if (!getConfig().isVersioningManual()) {
-                versioningManager.startPushUpstream(true, false);  //In different process
+                versionControl.startPushUpstream(true, false);  //In different process
             }
         }
     }

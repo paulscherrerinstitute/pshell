@@ -12,7 +12,7 @@ import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Nameable;
 import ch.psi.pshell.utils.Reflection.Hidden;
-import ch.psi.pshell.versioning.Versioning;
+import ch.psi.pshell.versioning.VersionControl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -687,7 +687,7 @@ public class ExecutionParameters {
     public String getScriptVersion() throws IOException {
         File file = getScriptFile();
         if (file != null) {
-            return Versioning.getFileRevisionId(file.toString());
+            return VersionControl.getFileRevisionId(file.toString());
         }
         return null;
     }

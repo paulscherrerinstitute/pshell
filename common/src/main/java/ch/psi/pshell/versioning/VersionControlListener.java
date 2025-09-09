@@ -3,6 +3,6 @@ package ch.psi.pshell.versioning;
 /**
  *
  */
-public interface VersioningListener {
+public interface VersionControlListener {
     default void onCheckout(String branchOrTag) {}
 }

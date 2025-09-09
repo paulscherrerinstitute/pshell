@@ -3,7 +3,7 @@ package ch.psi.pshell.versioning;
 /**
  *
  */
-public record VersioningConfig(
+public record VersionControlConfig(
         String localPath, 
         String remotePath, 
         String remoteLogin, 

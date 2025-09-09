@@ -191,8 +191,8 @@ def get_interpreter():
 def get_data_manager():
     return Context.getDataManager()
 
-def get_versioning_manager():
-    return Context.getVersioningManager()
+def get_version_control():
+    return Context.getVersionControl()
 
 def get_device_pool():
     return Context.getDevicePool()

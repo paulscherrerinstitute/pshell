@@ -14,7 +14,7 @@ import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.logging.LogManager;
 import ch.psi.pshell.utils.Nameable;
 import ch.psi.pshell.utils.State;
-import ch.psi.pshell.versioning.VersioningManager;
+import ch.psi.pshell.versioning.VersionControl;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -221,7 +221,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                         if (getSelectedDevice() != null) {
                             menuStop.setEnabled(getSelectedDevice() instanceof Stoppable);
                             menuConfig.setEnabled(getSelectedDevice().getConfig() != null);
-                            menuRevisionHistory.setEnabled(menuConfig.isEnabled() && VersioningManager.hasInstance());
+                            menuRevisionHistory.setEnabled(menuConfig.isEnabled() && VersionControl.hasInstance());
                             popupMenu.show(e.getComponent(), e.getX(), e.getY());
                             menuHistory.setEnabled(getSelectedDevice() instanceof Device);
                             menuPanel.setEnabled(DevicePanelManager.getInstance().hasControlPanel(getSelectedDevice()));

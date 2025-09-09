@@ -69,8 +69,8 @@ def get_data_manager(){
     return Context.getDataManager()
 }
 
-def get_versioning_manager(){
-    return Context.getVersioningManager()
+def get_version_control(){
+    return Context.getVersionControl()
 }
 
 def get_device_pool(){
@@ -1252,7 +1252,7 @@ def commit(message){
     Returns:
         None
     */
-    get_versioning_manager().commit(message)
+    get_version_control().commit(message)
 }
 
 def add_repository(path){
@@ -1265,7 +1265,7 @@ def add_repository(path){
     Returns:
         None
     */  
-    get_versioning_manager().addRepository(path)
+    get_version_control().addRepository(path)
 }
 
 def diff(){
@@ -1278,7 +1278,7 @@ def diff(){
     Returns:
         None
     */   
-    return get_versioning_manager().diff()
+    return get_version_control().diff()
 }
 
 
@@ -1292,7 +1292,7 @@ def checkout_tag(tag){
     Returns:
         None
     */
-    get_versioning_manager().checkoutTag(tag)
+    get_version_control().checkoutTag(tag)
 }
 
 def checkout_branch(tag){
@@ -1305,7 +1305,7 @@ def checkout_branch(tag){
     Returns:
         None
     */
-    get_versioning_manager().checkoutLocalBranch(tag)
+    get_version_control().checkoutLocalBranch(tag)
 }
 
 def pull_repository(){
@@ -1319,7 +1319,7 @@ def pull_repository(){
     Returns:
         None
     */
-    get_versioning_manager().pullFromUpstream()
+    get_version_control().pullFromUpstream()
 }
 
 def push_repository(all_branches=true, force=false){
@@ -1333,7 +1333,7 @@ def push_repository(all_branches=true, force=false){
     Returns:
         None
     */    
-    get_versioning_manager().pushToUpstream(all_branches, force)
+    get_version_control().pushToUpstream(all_branches, force)
 }
 
 def cleanup_repository(){
@@ -1346,7 +1346,7 @@ def cleanup_repository(){
     Returns:
         None
     */    
-    get_versioning_manager().cleanupRepository()
+    get_version_control().cleanupRepository()
 }
 
 

@@ -21,7 +21,7 @@ import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Range;
 import ch.psi.pshell.utils.Str;
-import ch.psi.pshell.versioning.Versioning;
+import ch.psi.pshell.versioning.VersionControl;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -449,7 +449,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     String revision = (String) dataManager.getAttribute(currentFile.getPath(), "/", Format.INFO_FILE_REVISION);
                     if (revision != null) {
                         try {
-                            String script = Versioning.getFileContents(fileName, revision);
+                            String script = VersionControl.getFileContents(fileName, revision);
                             listener.openScript(script, new File(fileName).getName() + "_" + revision.substring(0, Math.min(8, revision.length())));
                             return;
                         } catch (Exception ex) {

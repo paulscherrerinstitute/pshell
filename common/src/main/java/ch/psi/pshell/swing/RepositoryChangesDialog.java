@@ -1,6 +1,6 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.versioning.VersioningManager;
+import ch.psi.pshell.versioning.VersionControl;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,12 +20,12 @@ public class RepositoryChangesDialog extends StandardDialog {
         super(parent, modal);
         initComponents();
         setCancelledOnEscape(false);
-        VersioningManager.getInstance(); //assert
+        VersionControl.getInstance(); //assert
         setTitle("Repository Changes");
 
         model = ((DefaultTableModel) table.getModel());
 
-        final List<org.eclipse.jgit.diff.DiffEntry> diff = VersioningManager.getInstance().diff();
+        final List<org.eclipse.jgit.diff.DiffEntry> diff = VersionControl.getInstance().diff();
         model.setNumRows(diff.size());
         for (int i = 0; i < diff.size(); i++) {
             model.setValueAt(diff.get(i).getChangeType(), i, 0);
@@ -65,8 +65,8 @@ public class RepositoryChangesDialog extends StandardDialog {
 
     void showFile(String file) {
         try {
-            diff.setText(VersioningManager.getInstance().getDiff(file));
-            text.setText(VersioningManager.getInstance().fetch(file));
+            diff.setText(VersionControl.getInstance().getDiff(file));
+            text.setText(VersionControl.getInstance().fetch(file));
         } catch (Exception ex) {
             text.clear();
             diff.clear();

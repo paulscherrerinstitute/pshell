@@ -5,7 +5,7 @@ import ch.psi.pshell.plugin.PluginManager;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.versioning.Revision;
-import ch.psi.pshell.versioning.VersioningManager;
+import ch.psi.pshell.versioning.VersionControl;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,7 +29,7 @@ public class RevisionHistoryDialog extends StandardDialog {
         this.fileName = IO.getRelativePath(fileName, Setup.getHomePath());
 
         setTitle("Revision History - " + this.fileName);
-        List<Revision> revisions = VersioningManager.getInstance().getHistory(this.fileName, 1000);
+        List<Revision> revisions = VersionControl.getInstance().getHistory(this.fileName, 1000);
 
         model = ((DefaultTableModel) table.getModel());
 
@@ -53,8 +53,8 @@ public class RevisionHistoryDialog extends StandardDialog {
 
     void showRevision(String id) {
         try {
-            diff.setText(VersioningManager.getInstance().getDiff(fileName, id));
-            text.setText(VersioningManager.getInstance().fetch(fileName, id));
+            diff.setText(VersionControl.getInstance().getDiff(fileName, id));
+            text.setText(VersionControl.getInstance().fetch(fileName, id));
         } catch (Exception ex) {
             text.clear();
             diff.clear();

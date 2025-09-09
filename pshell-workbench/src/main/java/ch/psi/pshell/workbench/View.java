@@ -75,8 +75,7 @@ import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.State;
 import ch.psi.pshell.utils.Sys;
 import ch.psi.pshell.utils.Sys.OSFamily;
-import ch.psi.pshell.versioning.VersioningListener;
-import ch.psi.pshell.versioning.VersioningManager;
+import ch.psi.pshell.versioning.VersionControl;
 import ch.psi.pshell.workbench.Preferences.PanelLocation;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -144,6 +143,7 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import ch.psi.pshell.versioning.VersionControlListener;
 
 /**
  * The main dialog of the Workbench.
@@ -178,8 +178,8 @@ public class View extends MainFrame{
         loggerPanel.start();
 
         Context.getInterpreter().addListener(interpreterListener);
-        if (Context.hasVersioningManager()){
-            Context.getVersioningManager().addListener(versioningListener);
+        if (Context.hasVersionControl()){
+            Context.getVersionControl().addListener(versionControlListener);
         }       
         MainFrame.setPersistenceFilesPermissions(Context.getContextFilePermissions());
         
@@ -681,7 +681,7 @@ public class View extends MainFrame{
         }
     };
     
-    final VersioningListener versioningListener = new VersioningListener() {
+    final VersionControlListener versionControlListener = new VersionControlListener() {
         @Override
         public void onCheckout(String branch) {
             for (ScriptEditor se : getScriptEditors()) {
@@ -3384,8 +3384,8 @@ public class View extends MainFrame{
 
     private void menuSetCurrentBranchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSetCurrentBranchActionPerformed
         try {
-            List<String> branches = Context.getVersioningManager().getLocalBranches();
-            String current = Context.getVersioningManager().getCurrentBranch();
+            List<String> branches = Context.getVersionControl().getLocalBranches();
+            String current = Context.getVersionControl().getCurrentBranch();
             String branch = getString("Select working branch:", branches.toArray(new String[0]), current);
             if ((branch != null) && (!branch.equals(current))) {
                 Context.getApp().startTask(new VersioningTasks.Checkout(true, branch));
@@ -3399,7 +3399,7 @@ public class View extends MainFrame{
         try {
             String branch = getString("Enter branch name:", null);
             if (branch != null) {
-                Context.getVersioningManager().createBranch(branch);
+                Context.getVersionControl().createBranch(branch);
             }
         } catch (Exception ex) {
             showException(ex);
@@ -3408,13 +3408,13 @@ public class View extends MainFrame{
 
     private void menuDeleteBranchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuDeleteBranchActionPerformed
         try {
-            List<String> branches = Context.getVersioningManager().getLocalBranches();
-            String current = Context.getVersioningManager().getCurrentBranch();
-            branches.remove(VersioningManager.MASTER_BRANCH);
+            List<String> branches = Context.getVersionControl().getLocalBranches();
+            String current = Context.getVersionControl().getCurrentBranch();
+            branches.remove(VersionControl.MASTER_BRANCH);
             //branches.remove(current);
             String ret = getString("Select branch to be deleted:", branches.toArray(new String[0]), null);
             if (ret != null) {
-                Context.getVersioningManager().deleteBranch(ret);
+                Context.getVersionControl().deleteBranch(ret);
             }
         } catch (Exception ex) {
             showException(ex);
@@ -3423,7 +3423,7 @@ public class View extends MainFrame{
 
     private void menuPullActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuPullActionPerformed
         try {
-            Context.getVersioningManager(); //assert
+            Context.getVersionControl(); //assert
             Context.getApp().startTask(new VersioningTasks.PullUpstream());
         } catch (Exception ex) {
             showException(ex);
@@ -3513,7 +3513,7 @@ public class View extends MainFrame{
 
             if (showOption("Create Tag", panel, OptionType.OkCancel) == OptionResult.Yes) {
                 if (name.getText().length() > 0) {
-                    Context.getVersioningManager().createTag(name.getText(), message.getText().isEmpty() ? null : message.getText());
+                    Context.getVersionControl().createTag(name.getText(), message.getText().isEmpty() ? null : message.getText());
                 } else {
                     throw new Exception("Invalid tag name");
                 }
@@ -3525,10 +3525,10 @@ public class View extends MainFrame{
 
     private void menuDeleteTagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuDeleteTagActionPerformed
         try {
-            List<String> tags = Context.getVersioningManager().getTags();
+            List<String> tags = Context.getVersionControl().getTags();
             String ret = getString("Select tag to be deleted:", tags.toArray(new String[0]), null);
             if (ret != null) {
-                Context.getVersioningManager().deleteTag(ret);
+                Context.getVersionControl().deleteTag(ret);
             }
         } catch (Exception ex) {
             showException(ex);
@@ -3537,7 +3537,7 @@ public class View extends MainFrame{
 
     private void menuSetCurrentBranch1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSetCurrentBranch1ActionPerformed
         try {
-            List<String> tags = Context.getVersioningManager().getTags();
+            List<String> tags = Context.getVersionControl().getTags();
             String tag = getString("Select tag to checkout:", tags.toArray(new String[0]), null);
             if (tag != null) {
                 Context.getApp().startTask(new VersioningTasks.Checkout(false, tag));
@@ -3938,7 +3938,7 @@ public class View extends MainFrame{
                 repositoryChangesDialog.setVisible(false);
                 repositoryChangesDialog = null;
             }
-            final List<org.eclipse.jgit.diff.DiffEntry> diff = Context.getVersioningManager().diff();
+            final List<org.eclipse.jgit.diff.DiffEntry> diff = Context.getVersionControl().diff();
             if (diff.size() == 0) {
                 showMessage("Repository Changes", "No changes in repository");
             } else {
