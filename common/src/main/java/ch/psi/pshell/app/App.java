@@ -4,7 +4,7 @@ import ch.psi.pshell.app.MainFrame.LookAndFeelType;
 import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plot.Plot.Quality;
 import ch.psi.pshell.plot.PlotPanel;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.IO;
@@ -637,7 +637,7 @@ public abstract class App extends ObservableBase<AppListener> {
     static void appendLibraryPath() {
         for (String path : Setup.getAddedLibraryPath()) {
             try {
-                PluginManager.addToLibraryPath(new File(path));
+                Extensions.addToLibraryPath(new File(path));
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, null, ex);
             }            
@@ -647,7 +647,7 @@ public abstract class App extends ObservableBase<AppListener> {
     static void appendClassPath() {        
         for (String path : Setup.getAddedClassPath()) {
             try {
-                PluginManager.addToClassPath(new File(path));
+                Extensions.addToClassPath(new File(path));
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, null, ex);
             }

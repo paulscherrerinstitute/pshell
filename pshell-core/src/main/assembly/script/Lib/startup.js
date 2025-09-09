@@ -139,8 +139,8 @@ function get_sessions(){
     return Context.getSessions()
 }
 
-function get_plugin_manager(){
-    return Context.getPluginManager()
+function get_extensions(){
+    return Context.getExtensions()
 }
 
 function get_state(){

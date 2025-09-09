@@ -59,7 +59,7 @@ public class Stdio extends ch.psi.pshell.app.Stdio{
                 break;
             case "plugins":
                 sb = new StringBuilder();
-                for (ch.psi.pshell.plugin.Plugin p : Context.getPlugins()) {
+                for (ch.psi.pshell.extension.Plugin p : Context.getPlugins()) {
                     sb.append("Name: ").append(p.toString()).append(" Started: ").append(p.isStarted()).append(" Class: ").append(p.getClass().getName());
                 }
                 System.out.println(sb.toString());

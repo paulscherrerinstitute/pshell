@@ -5,7 +5,7 @@ import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.plot.LinePlot.Style;
 import ch.psi.pshell.plot.Plot.Quality;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.utils.Arr;
@@ -200,7 +200,7 @@ public class PlotPanel extends MonitoredPanel {
                 }
             }
             if (plotType instanceof String str) {                  
-                plotType = PluginManager.getClass(str);
+                plotType = Extensions.getClass(str);
             }
             if (plotType instanceof Class cls) {
                 return cls;

@@ -8,8 +8,8 @@ import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.notification.Notifier;
-import ch.psi.pshell.pkg.PackageManager;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.PackageLoader;
+import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.scan.ScanStreamer;
 import ch.psi.pshell.scripting.Interpreter;
 import ch.psi.pshell.security.Security;
@@ -41,14 +41,14 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     
     Setup setup;
     final Configuration config;    
-    final PluginManager pluginManager;
+    final Extensions extensions;
     final Security security;
     final DataManager dataManager;
     final Sessions sessions;
     VersionControl versionControl;
     Sequencer interpreter;
-    Notifier notificationManager;
-    PackageManager packageManager;
+    Notifier notifier;
+    PackageLoader packageLoader;
     DevicePool devicePool;    
     ScanStreamer scanStreamer;
     DataServer dataStreamer;
@@ -114,7 +114,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         logger.log(Level.INFO, "Host: {0}", Sys.getLocalHost());
                 
         dataManager = new DataManager();        
-        pluginManager = new PluginManager();
+        extensions = new Extensions();
         interpreter = new Sequencer(config.serverHostName);
         security = new Security(null);
         devicePool = new DevicePool();
@@ -122,7 +122,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         sessions.setMode(config.sessionHandling);
         var packages =  getPackageArgs();
         if ((packages != null) && (packages.size()>0)) {            
-            packageManager = new PackageManager(packages.toArray(new File[0]));
+            packageLoader = new PackageLoader(packages.toArray(new File[0]));
         }        
         logger.info("Created application");
     }        
@@ -171,7 +171,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         interpreter.setServerLight(!Setup.isServerMode());
         sessions.setMode(config.sessionHandling);
 
-        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, packageManager, notificationManager,
+        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, packageLoader, notifier,
             devicePool, versionControl}) {
             try {
                 if (ac != null) {
@@ -218,9 +218,9 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             if ((!firstRun) || (!dataManager.isInitialized())) {
                 initializeData();
             }
-            notificationManager = new Notifier();
+            notifier = new Notifier();
             
-            notificationManager.initialize();
+            notifier.initialize();
             interpreter.setNotificationLevel(config.notificationLevel);
             interpreter.setNotifiedTasks(config.getNotifiedTasks());
             
@@ -247,12 +247,12 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                 versionControl = new VersionControl(versionControlConfig);
                 versionControl.setUserInterface(Context.getUserInterface());
             }
-            if (pluginManager != null) {
-                pluginManager.onInitialize(interpreter.getRunCount());
+            if (extensions != null) {
+                extensions.onInitialize(interpreter.getRunCount());
             }
             //Only instantiate it if state goes ready
-            if (packageManager != null) {
-                packageManager.initialize();
+            if (packageLoader != null) {
+                packageLoader.initialize();
             }
         } catch (Throwable ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -266,7 +266,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     @Override
     protected void disable(){
         super.disable();
-        for (AutoCloseable ac : new AutoCloseable[]{ packageManager, devicePool, versionControl}) {
+        for (AutoCloseable ac : new AutoCloseable[]{ packageLoader, devicePool, versionControl}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -281,7 +281,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     @Override
     protected void onExit() {
         super.onExit();
-        for (AutoCloseable ac : new AutoCloseable[]{interpreter, scanStreamer, packageManager,devicePool, versionControl, pluginManager, dataManager, security}) {
+        for (AutoCloseable ac : new AutoCloseable[]{interpreter, scanStreamer, packageLoader,devicePool, versionControl, extensions, dataManager, security}) {
             try {
                 if (ac != null) {
                     ac.close();

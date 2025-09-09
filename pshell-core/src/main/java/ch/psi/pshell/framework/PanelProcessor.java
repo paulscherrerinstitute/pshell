@@ -98,7 +98,7 @@ public abstract class PanelProcessor extends Panel implements Processor{
         super.onUnloaded();
         if (this.isDetached()) {
             if (detachedQueueProcessor != null) {
-                Context.getPluginManager().unloadPlugin(detachedQueueProcessor);
+                Context.getExtensions().unloadPlugin(detachedQueueProcessor);
                 getApp().exit(this);
             }
         }
@@ -109,8 +109,8 @@ public abstract class PanelProcessor extends Panel implements Processor{
         if (this.isDetached()) {
             if ((detachedQueueProcessor == null) || !detachedQueueProcessor.isLoaded()) {
                 detachedQueueProcessor = new QueueProcessor();
-                Context.getPluginManager().loadPlugin(detachedQueueProcessor, "Queue");
-                Context.getPluginManager().startPlugin(detachedQueueProcessor);
+                Context.getExtensions().loadPlugin(detachedQueueProcessor, "Queue");
+                Context.getExtensions().startPlugin(detachedQueueProcessor);
             }
             tq = detachedQueueProcessor;
             tq.requestFocus();

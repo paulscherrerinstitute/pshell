@@ -4,7 +4,7 @@ import ch.psi.pshell.device.AccessType;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DeviceAttributes;
 import ch.psi.pshell.devices.DevicePool;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Extensions;
 import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Frame;
@@ -307,8 +307,8 @@ public class DevicePoolEditor extends Editor {
                 ch.psi.pshell.imaging.RegisterMatrixSource.class.getName(),
                 ch.psi.pshell.imaging.Webcam.class.getName(),
             }));
-            if (PluginManager.hasInstance()){
-                for (Class type : PluginManager.getInstance().getDynamicClasses(GenericDevice.class)) {
+            if (Extensions.hasInstance()){
+                for (Class type : Extensions.getInstance().getDynamicClasses(GenericDevice.class)) {
                     knownClasses.add(type.getName());
                 }
             }

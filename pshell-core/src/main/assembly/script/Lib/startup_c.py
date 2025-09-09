@@ -88,8 +88,8 @@ def get_device_pool():
 def get_sessions():
     return Context.getSessions()
 
-def get_plugin_manager():
-    return Context.getPluginManager()
+def get_extensions():
+    return Context.getExtensions()
 
 def get_state():
     return Context.getState()

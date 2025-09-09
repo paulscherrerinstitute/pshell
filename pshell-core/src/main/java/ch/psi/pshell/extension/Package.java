@@ -1,8 +1,8 @@
-package ch.psi.pshell.pkg;
+package ch.psi.pshell.extension;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.pkg.Package;
+import ch.psi.pshell.extension.Package;
 import ch.psi.pshell.utils.IO;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class Package implements AutoCloseable {
     final Path devicesPath;    
     final Path devicePoolPath;  
     
-    final List<ch.psi.pshell.plugin.Plugin> plugins;
+    final List<ch.psi.pshell.extension.Plugin> plugins;
 
     Package(String path) throws IOException {
         File file = new File(Setup.expandPath(path));
@@ -44,7 +44,7 @@ public class Package implements AutoCloseable {
 
     public void loadExtensionsFolder() {
         if (extensionPath.toFile().isDirectory()){
-            Context.getPluginManager().loadExtensionsFolder(extensionPath.toString());
+            Context.getExtensions().loadExtensionsFolder(extensionPath.toString());
         }        
     }
 
@@ -74,16 +74,16 @@ public class Package implements AutoCloseable {
         }                   
         if (pluginPath.toFile().isDirectory()){
             for (File plugin : IO.listFiles(pluginPath.toFile(), new String[]{"java", "py", "groovy", "jar"})){
-                plugins.add(Context.getPluginManager().loadInitializePlugin(plugin));
+                plugins.add(Context.getExtensions().loadInitializePlugin(plugin));
             }
         }
     }
 
     @Override
     public void close() throws Exception {
-        for (ch.psi.pshell.plugin.Plugin p:plugins){
+        for (ch.psi.pshell.extension.Plugin p:plugins){
             try{
-                Context.getPluginManager().unloadPlugin(p);
+                Context.getExtensions().unloadPlugin(p);
             } catch (Exception ex){                
             }
         }

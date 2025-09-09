@@ -1,7 +1,7 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.app.Setup;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.versioning.Revision;
@@ -25,7 +25,7 @@ public class RevisionHistoryDialog extends StandardDialog {
         super(parent, modal);
         initComponents();
         setCancelledOnEscape(false);
-        PluginManager.getInstance(); //asserting
+        Extensions.getInstance(); //asserting
         this.fileName = IO.getRelativePath(fileName, Setup.getHomePath());
 
         setTitle("Revision History - " + this.fileName);

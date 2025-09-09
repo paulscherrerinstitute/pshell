@@ -3067,7 +3067,7 @@ public class View extends MainFrame{
     private void tabDocStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabDocStateChanged
         updateViewState();
         Component c = tabDoc.getSelectedComponent();
-        for (ch.psi.pshell.plugin.Plugin plugin : Context.getPlugins()) {
+        for (ch.psi.pshell.extension.Plugin plugin : Context.getPlugins()) {
             try{
                 if (plugin instanceof Panel panel) {
                     if (panel == c) {
@@ -3566,7 +3566,7 @@ public class View extends MainFrame{
     private void menuViewPanelsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuViewPanelsStateChanged
         menuViewPanels.removeAll();
         if (menuViewPanels.isSelected()) {
-            for (ch.psi.pshell.plugin.Plugin plugin : Context.getPlugins()) {
+            for (ch.psi.pshell.extension.Plugin plugin : Context.getPlugins()) {
                 try{
                     if (plugin instanceof Panel panel) {
                         JCheckBoxMenuItem item = new JCheckBoxMenuItem(panel.getPluginName(), panel.isLoaded());
@@ -3635,7 +3635,7 @@ public class View extends MainFrame{
     private void menuSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSetupActionPerformed
         try {
             ArrayList<String> plugins = new ArrayList<>();
-            for (ch.psi.pshell.plugin.Plugin p : Context.getPlugins()) {
+            for (ch.psi.pshell.extension.Plugin p : Context.getPlugins()) {
                 try{
                     plugins.add(p.getPluginName());
                 } catch (Exception ex){
@@ -3644,7 +3644,7 @@ public class View extends MainFrame{
             }
 
             ArrayList<String> extensions = new ArrayList<>();
-            for (File f : Context.getExtensions()) {
+            for (File f : Context.getExtensionLibraries()) {
                 extensions.add(f.getName());
             }
                         
@@ -3661,7 +3661,7 @@ public class View extends MainFrame{
                 {"Arguments", String.join(" ", App.getCommandLineArguments())},
                 {"Plugins", String.join("; ", plugins)},                
                 {"Extensions", String.join("; ", extensions)},
-                {"Packages", Context.hasPackageManager() ? String.join("; ", Context.getPackageManager().getPackagePaths()) : ""},                
+                {"Packages", Context.hasPackageLoader() ? String.join("; ", Context.getPackageLoader().getPackagePaths()) : ""},                
                 {"Current folder", new File(".").getCanonicalPath()},
                 {"Home path", Setup.getHomePath()},
                 {"Output path", Setup.getOutputPath()},

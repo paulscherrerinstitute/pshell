@@ -2,8 +2,8 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.plugin.Plugin;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Plugin;
+import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.IO;
 import java.io.File;
@@ -72,12 +72,12 @@ public class PluginsEditor extends Editor {
     private void updateLoaded() {
         loadedPlugins.clear();
         ((DefaultTableModel) loaded.getModel()).setNumRows(0);
-        if (PluginManager.hasInstance()){
-            for (Plugin p : PluginManager.getInstance().getLoadedPlugins()) {
+        if (Extensions.hasInstance()){
+            for (Plugin p : Extensions.getInstance().getLoadedPlugins()) {
                 ((DefaultTableModel) loaded.getModel()).addRow(new Object[]{p.getPluginName(), p.getClass().getName(), Boolean.valueOf(p.isStarted())});
                 loadedPlugins.add(p);
             }
-            for (Class cls : PluginManager.getInstance().getDynamicClasses()) {
+            for (Class cls : Extensions.getInstance().getDynamicClasses()) {
                 ((DefaultTableModel) loaded.getModel()).addRow(new Object[]{"", cls.getName(), Boolean.FALSE});
             }
         }
@@ -106,7 +106,7 @@ public class PluginsEditor extends Editor {
         buttonUp.setEnabled((!isReadOnly()) && (rows > 0) && (cur > 0));
         buttonDown.setEnabled((!isReadOnly()) && (rows > 0) && (cur >= 0) && (cur < (rows - 1)));
         String ext = IO.getExtension(getSelectedPlugin());
-        buttonLoad.setEnabled((!isReadOnly()) && (listener != null) && (rows > 0) && (cur >= 0) && !PluginManager.getInstance().isLoaded(String.valueOf(table.getValueAt(cur, 1))));
+        buttonLoad.setEnabled((!isReadOnly()) && (listener != null) && (rows > 0) && (cur >= 0) && !Extensions.getInstance().isLoaded(String.valueOf(table.getValueAt(cur, 1))));
         buttonEdit.setEnabled((!isReadOnly()) && (listener != null) && (rows > 0) && (cur >= 0) && (!"jar".equals(ext)));
     }
 
@@ -139,7 +139,7 @@ public class PluginsEditor extends Editor {
             } catch (Exception ex) {
             }
 
-            File[] pluginFiles = PluginManager.getInstance().getPluginFolderContents();
+            File[] pluginFiles = Extensions.getInstance().getPluginFolderContents();
             //New files
             for (File file : pluginFiles) {
                 String name = file.getName();
@@ -683,7 +683,7 @@ public class PluginsEditor extends Editor {
         buttonReloadAll.repaint();
         new Thread(() -> {
             try {
-                PluginManager.getInstance().reloadPlugins();
+                Extensions.getInstance().reloadPlugins();
             } catch (Exception ex) {
                 showException(ex);
             }
@@ -723,7 +723,7 @@ public class PluginsEditor extends Editor {
         try {
             String pluginsFolder = Setup.getPluginsPath();
             File file = Paths.get(pluginsFolder, getSelectedPlugin()).toFile();
-            PluginManager.getInstance().loadInitializePlugin(file);
+            Extensions.getInstance().loadInitializePlugin(file);
         } catch (Exception ex) {
             showException(ex);
         } finally {
@@ -737,7 +737,7 @@ public class PluginsEditor extends Editor {
             Plugin p = getLoadedTableSelected();
             if (p != null) {
                 int row = loaded.getSelectedRow();
-                Plugin plugin = PluginManager.getInstance().reloadPlugin(p);
+                Plugin plugin = Extensions.getInstance().reloadPlugin(p);
                 if (plugin != null) {
                     loadedPlugins.set(row, plugin);
                     loaded.setValueAt(Boolean.valueOf(p.isStarted()), row, 2);
@@ -757,7 +757,7 @@ public class PluginsEditor extends Editor {
         try {
             Plugin p = getLoadedTableSelected();
             if (p != null) {
-                PluginManager.getInstance().unloadPlugin(p);
+                Extensions.getInstance().unloadPlugin(p);
                 updateLoaded();
                 updateButtons();
             }
@@ -771,7 +771,7 @@ public class PluginsEditor extends Editor {
         try {
             Plugin p = getLoadedTableSelected();
             if (p != null) {
-                PluginManager.getInstance().stopPlugin(p);
+                Extensions.getInstance().stopPlugin(p);
                 updateLoadedButtons();
                 loaded.setValueAt(Boolean.valueOf(p.isStarted()), loaded.getSelectedRow(), 2);
             }
@@ -785,7 +785,7 @@ public class PluginsEditor extends Editor {
         try {
             Plugin p = getLoadedTableSelected();
             if (p != null) {
-                PluginManager.getInstance().startPlugin(p);
+                Extensions.getInstance().startPlugin(p);
                 updateLoadedButtons();
                 loaded.setValueAt(Boolean.valueOf(p.isStarted()), loaded.getSelectedRow(), 2);
             }

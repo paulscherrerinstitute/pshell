@@ -9,9 +9,9 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.notification.Notifier;
-import ch.psi.pshell.pkg.PackageManager;
+import ch.psi.pshell.extension.PackageLoader;
 import ch.psi.pshell.plot.Plot;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanConfig;
 import ch.psi.pshell.scan.ScanResult;
@@ -163,7 +163,7 @@ public class Context {
     }
     
     public static Class getClassByName(String className) throws ClassNotFoundException {
-        return PluginManager.getClass(className);
+        return Extensions.getClass(className);
     }               
     
     public static ScriptType getScriptType() {                
@@ -180,17 +180,16 @@ public class Context {
         return new ScanConfig();
     }     
     
-    public static ch.psi.pshell.plugin.Plugin[] getPlugins() {
-        PluginManager pluginManager  = getPluginManager();
-        if (pluginManager != null) {
-            return pluginManager.getLoadedPlugins();
+    public static ch.psi.pshell.extension.Plugin[] getPlugins() {
+        Extensions extensions  = getExtensions();
+        if (extensions != null) {
+            return extensions.getLoadedPlugins();
         }
-        return new ch.psi.pshell.plugin.Plugin[0];
+        return new ch.psi.pshell.extension.Plugin[0];
     }
 
-    public static ch.psi.pshell.plugin.Plugin getPlugin(String name) {
-        PluginManager pluginManager  = getPluginManager();
-        for (ch.psi.pshell.plugin.Plugin p : getPlugins()) {
+    public static ch.psi.pshell.extension.Plugin getPlugin(String name) {
+        for (ch.psi.pshell.extension.Plugin p : getPlugins()) {
             if (IO.getPrefix(p.getPluginName()).equals(name)) {
                 return p;
             }
@@ -198,10 +197,10 @@ public class Context {
         return null;
     }
 
-    public static  File[] getExtensions() {
-        PluginManager pluginManager  = getPluginManager();
-        if (pluginManager != null) {
-            return pluginManager.getExtensions().toArray(new File[0]);
+    public static  File[] getExtensionLibraries() {
+        Extensions extensions  = getExtensions();
+        if (extensions != null) {
+            return extensions.getExtensionLibraries().toArray(new File[0]);
         }
         return new File[0];
     }
@@ -215,12 +214,12 @@ public class Context {
     }    
     
     //Plugins
-    public static boolean hasPluginManager(){
-        return PluginManager.hasInstance();
+    public static boolean hasExtensions(){
+        return Extensions.hasInstance();
     }
         
-    public static PluginManager getPluginManager(){
-        return PluginManager.getInstance();
+    public static Extensions getExtensions(){
+        return Extensions.getInstance();
     }
 
     public static boolean hasVersionControl(){ 
@@ -340,12 +339,12 @@ public class Context {
         return Notifier.getInstance();
     }
     
-    public static boolean hasPackageManager(){
-        return PackageManager.hasInstance();
+    public static boolean hasPackageLoader(){
+        return PackageLoader.hasInstance();
     }
     
-    public static PackageManager getPackageManager(){
-        return PackageManager.getInstance();
+    public static PackageLoader getPackageLoader(){
+        return PackageLoader.getInstance();
     }    
     
     public static boolean hasSecurity(){

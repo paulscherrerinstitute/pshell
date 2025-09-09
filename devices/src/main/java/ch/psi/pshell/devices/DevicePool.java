@@ -3,7 +3,7 @@ package ch.psi.pshell.devices;
 import ch.psi.pshell.device.*;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.logging.Logging;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.Config;
@@ -216,7 +216,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                     if (Setup.isSimulation()) {
                         attr.simulated = true;
                     }
-                    Class cls = PluginManager.getClass(attr.className);
+                    Class cls = Extensions.getClass(attr.className);
                     String[] arguments = Arr.copy(attr.arguments);
                     GenericDevice device;
                     AdjustedConstructor adjustedConstructor = getAdjustedConstructor(cls, arguments);
@@ -696,9 +696,9 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 dev.request();
             }
         }
-        if (PluginManager.hasInstance()){
+        if (Extensions.hasInstance()){
             new Thread(() -> {
-                PluginManager.getInstance().onUpdatedDevices();
+                Extensions.getInstance().onUpdatedDevices();
             }, "Update all notification thread").start();
         }
     }
@@ -707,9 +707,9 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         for (final GenericDevice dev : getAllDevices()) {
             stop(dev);
         }
-        if (PluginManager.hasInstance()){
+        if (Extensions.hasInstance()){
             new Thread(() -> {
-                PluginManager.getInstance().onStoppedDevices();
+                Extensions.getInstance().onStoppedDevices();
             }, "Stop all notification thread").start();
         }
 

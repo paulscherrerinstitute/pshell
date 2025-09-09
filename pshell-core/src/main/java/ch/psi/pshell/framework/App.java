@@ -106,11 +106,11 @@ public class App extends ch.psi.pshell.devices.App {
     @Override
     protected void onStart() {
         logger.log(Level.INFO, "Version: {0}", getApplicationBuildInfo());
-        if (Context.hasPluginManager()) {
-            Context.getPluginManager().loadExtensionsFolder();
+        if (Context.hasExtensions()) {
+            Context.getExtensions().loadExtensionsFolder();
         }
-        if (Context.hasPackageManager()) {
-            Context.getPackageManager().loadExtensionsFolders();
+        if (Context.hasPackageLoader()) {
+            Context.getPackageLoader().loadExtensionsFolders();
         }        
         
         Context.getSequencer().addListener(new SequencerListener() {
@@ -526,18 +526,18 @@ public class App extends ch.psi.pshell.devices.App {
     
     //Acceps multiple -p options or plugin names can be separetate by ','
     void loadCommandLinePlugins() {
-        if (Context.hasPluginManager()) {
+        if (Context.hasExtensions()) {
             for (String arg : Setup.getPluginArgs()) {
                 for (String pluginName : arg.split(",")) {                    
                     if (new File(pluginName).exists()) {
-                        Context.getPluginManager().loadPlugin(pluginName);
+                        Context.getExtensions().loadPlugin(pluginName);
                     } else if (new File(Setup.expandPath(pluginName)).exists()) {
-                        Context.getPluginManager().loadPlugin(Setup.expandPath(pluginName));
+                        Context.getExtensions().loadPlugin(Setup.expandPath(pluginName));
                     } else if (Paths.get(Setup.getPluginsPath(), pluginName).toFile().exists()) {
-                        Context.getPluginManager().loadPlugin(Paths.get(Setup.getPluginsPath(), pluginName).toString());
+                        Context.getExtensions().loadPlugin(Paths.get(Setup.getPluginsPath(), pluginName).toString());
                     } else {
                         //Try class name
-                        Context.getPluginManager().loadPluginClass(pluginName);
+                        Context.getExtensions().loadPluginClass(pluginName);
                     }
                 }
             }

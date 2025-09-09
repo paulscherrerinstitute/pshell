@@ -11,7 +11,7 @@ import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.framework.Setup.LockMode;
 import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.plot.Plot;
-import ch.psi.pshell.plugin.Plugin;
+import ch.psi.pshell.extension.Plugin;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanBase;
@@ -285,8 +285,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             Context.setState(state);
             logger.fine("State: " + state);
             triggerStateChanged(state, former);
-            if (Context.hasPluginManager()) {
-                Context.getPluginManager().onStateChange(state, former);
+            if (Context.hasExtensions()) {
+                Context.getExtensions().onStateChange(state, former);
             }
             if (!state.isProcessing()) {
                 runningScript = null;
@@ -565,8 +565,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 logger.log(Level.WARNING, null, ex);
             }
         }
-        if (Context.hasPluginManager()) {
-            Context.getPluginManager().onExecutedFile(fileName, result);
+        if (Context.hasExtensions()) {
+            Context.getExtensions().onExecutedFile(fileName, result);
         }        
                 
         try {
@@ -2876,15 +2876,15 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             logger.warning("Generic mode: local startup script is not executed");
         }
 
-        if (Context.hasPluginManager()) {
+        if (Context.hasExtensions()) {
             if (Setup.isBare()) {
                 logger.warning("Bare mode: plugins folder is not loaded");
             } else {                
                 //Load  plugins
-                Context.getPluginManager().loadPluginFolder(Setup.getPluginsConfigurationFile());
+                Context.getExtensions().loadPluginFolder(Setup.getPluginsConfigurationFile());
             }
             //Even if isBareMode because plugins may be loaded by command line        
-            Context.getPluginManager().startPlugins();
+            Context.getExtensions().startPlugins();
         }
         
         
@@ -3000,20 +3000,20 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     void reloadPlugins(CommandSource source) {
         onCommand(Command.reloadPlugins, null, source);
-        if (Context.hasPluginManager()) {
+        if (Context.hasExtensions()) {
             if (Setup.isBare()) {
-                for (ch.psi.pshell.plugin.Plugin p : Context.getPluginManager().getLoadedPlugins()) {
-                    Context.getPluginManager().reloadPlugin(p);
+                for (ch.psi.pshell.extension.Plugin p : Context.getExtensions().getLoadedPlugins()) {
+                    Context.getExtensions().reloadPlugin(p);
                 }
             } else {
-                Context.getPluginManager().reloadPlugins();
+                Context.getExtensions().reloadPlugins();
             }
         }
     }
 
     public Plugin[] getPlugins() {
-        if (Context.hasPluginManager()) {
-            return  Context.getPluginManager().getLoadedPlugins();
+        if (Context.hasExtensions()) {
+            return  Context.getExtensions().getLoadedPlugins();
         }
         return new Plugin[0];
     }
@@ -3028,8 +3028,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     public File[] getExtensions() {
-        if (Context.hasPluginManager()) {
-            return  Context.getPluginManager().getExtensions().toArray(new File[0]);
+        if (Context.hasExtensions()) {
+            return  Context.getExtensions().getExtensionLibraries().toArray(new File[0]);
         }
         return new File[0];
     }
@@ -3041,12 +3041,12 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         try {
             return Class.forName(className, true, Sys.getDynamicClassLoader());
         } catch (ClassNotFoundException ex) {
-            if (Context.hasPluginManager()) {
-                Class cls = Context.getPluginManager().getDynamicClass(className);
+            if (Context.hasExtensions()) {
+                Class cls = Context.getExtensions().getDynamicClass(className);
                 if (cls != null) {
                     return cls;
                 }
-                for (Plugin p : Context.getPluginManager().getLoadedPlugins()) {
+                for (Plugin p : Context.getExtensions().getLoadedPlugins()) {
                     if (p.getClass().getName().equals(className)) {
                         return p.getClass();
                     }

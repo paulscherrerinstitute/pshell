@@ -1,6 +1,5 @@
-package ch.psi.pshell.pkg;
+package ch.psi.pshell.extension;
 
-import ch.psi.pshell.pkg.Package;
 import ch.psi.pshell.utils.Convert;
 import java.io.File;
 import java.io.IOException;
@@ -12,10 +11,10 @@ import java.util.logging.Logger;
 /**
  *
  */
-public class PackageManager implements AutoCloseable{
-    public static  PackageManager INSTANCE; 
+public class PackageLoader implements AutoCloseable{
+    public static  PackageLoader INSTANCE; 
     
-    public static PackageManager getInstance(){
+    public static PackageLoader getInstance(){
         if (INSTANCE == null){
             throw new RuntimeException("Package Manager not instantiated.");
         }        
@@ -28,18 +27,18 @@ public class PackageManager implements AutoCloseable{
         
     final List<Package> packages;
         
-    public PackageManager(File[] packagePaths){
+    public PackageLoader(File[] packagePaths){
         this(Convert.toStringArray(packagePaths));
     }
     
-    public PackageManager(String[] packagePaths){
+    public PackageLoader(String[] packagePaths){
         INSTANCE = this;
         packages = new ArrayList<>();                
         for (String path: packagePaths){
             try {
                 packages.add(new Package(path));
             } catch (IOException ex) {
-                Logger.getLogger(PackageManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(PackageLoader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -61,7 +60,7 @@ public class PackageManager implements AutoCloseable{
             try {
                 p.loadExtensionsFolder();
             } catch (Exception ex) {
-                Logger.getLogger(PackageManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(PackageLoader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }        
     }
@@ -71,7 +70,7 @@ public class PackageManager implements AutoCloseable{
             try {
                 p.open();
             } catch (Exception ex) {
-                Logger.getLogger(PackageManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(PackageLoader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -82,7 +81,7 @@ public class PackageManager implements AutoCloseable{
             try {
                 p.close();
             } catch (Exception ex) {
-                Logger.getLogger(PackageManager.class.getName()).log(Level.WARNING, null, ex);
+                Logger.getLogger(PackageLoader.class.getName()).log(Level.WARNING, null, ex);
             }
         }        
     }

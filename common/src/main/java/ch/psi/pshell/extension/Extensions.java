@@ -1,4 +1,4 @@
-package ch.psi.pshell.plugin;
+package ch.psi.pshell.extension;
 
 import ch.psi.pshell.app.App;
 import ch.psi.pshell.app.Setup;
@@ -25,18 +25,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Manages the loading of plugins, both dynamic (.java files) and compiled
- * (.class or .jar). Source or binary files should contain an implementation of
- * the Plugin interface.
+ * Manages the loading of extentions:
+ * - Plugins: dynamic (.java files) and compiled (.class or .jar). 
+ *            Source or binary files should contain an implementation of the Plugin interface.
+ * - Dynamic classes: Java files dynamic compiled. 
+ * - 
  */
-public class PluginManager implements AutoCloseable {
+public class Extensions implements AutoCloseable {
 
-    static  PluginManager INSTANCE;    
+    static  Extensions INSTANCE;    
     static  int runCount = -1;
     
-    public static PluginManager getInstance(){
-        if (PluginManager.INSTANCE == null){
-            throw new RuntimeException("Plugin Manager not instantiated.");
+    public static Extensions getInstance(){
+        if (Extensions.INSTANCE == null){
+            throw new RuntimeException("Extensions not instantiated.");
         }        
         return INSTANCE;
     }
@@ -45,13 +47,13 @@ public class PluginManager implements AutoCloseable {
         return INSTANCE!=null;
     }
 
-    public PluginManager(){        
+    public Extensions(){        
         INSTANCE  = this;
         runCount++;
         loadExtensionsFolder();
     }
     
-    static final Logger logger = Logger.getLogger(PluginManager.class.getName());
+    static final Logger logger = Logger.getLogger(Extensions.class.getName());
     final ArrayList<Plugin> plugins = new ArrayList<>();
     final ArrayList<Class> dynamicClasses = new ArrayList<>();
 
@@ -264,10 +266,10 @@ public class PluginManager implements AutoCloseable {
         return getFolderJarContents(pluginFolder);
     }
 
-    static final ArrayList<File> extensions = new ArrayList<>();
+    static final ArrayList<File> extensionLibraries = new ArrayList<>();
 
-    static public List<File> getExtensions() {
-        return (List<File>) extensions.clone();
+    static public List<File> getExtensionLibraries() {
+        return (List<File>) extensionLibraries.clone();
     }
         
     
@@ -323,8 +325,8 @@ public class PluginManager implements AutoCloseable {
         try {
             String path =  file.getCanonicalPath();
             Sys.addToClassPath(path);                        
-            if (!extensions.contains(file)) {
-                extensions.add(file);
+            if (!extensionLibraries.contains(file)) {
+                extensionLibraries.add(file);
             }
             if (file.isDirectory()){
                 for (File f : getFolderJarContents(file)) {

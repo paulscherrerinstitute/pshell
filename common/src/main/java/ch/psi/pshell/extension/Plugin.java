@@ -1,4 +1,4 @@
-package ch.psi.pshell.plugin;
+package ch.psi.pshell.extension;
 
 import ch.psi.pshell.app.Setup;
 import ch.psi.pshell.utils.State;
@@ -8,21 +8,21 @@ import java.util.logging.Logger;
 /**
  * Interface to be implemented by extension classes. Default methods are used to implement the
  * functionality. State inheritance is possible with the assumption that no more than one instance
- * of a plugin is loaded, and using the static PluginManager.getProperties(Plugin),
+ * of a plugin is loaded, and using the static Extensions.getProperties(Plugin),
  */
 public interface Plugin {
 
     //Properties
     default String getPluginName() {
-        return PluginManager.getProperties(this).name;
+        return Extensions.getProperties(this).name;
     }
 
     default boolean isStarted() {
-        return PluginManager.getProperties(this).started;
+        return Extensions.getProperties(this).started;
     }
 
     default File getPluginFile() {
-        return PluginManager.getProperties(this).file;
+        return Extensions.getProperties(this).file;
     }
 
     //Overridable callbacks

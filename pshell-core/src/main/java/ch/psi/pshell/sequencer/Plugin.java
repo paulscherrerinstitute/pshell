@@ -14,7 +14,7 @@ import javax.script.ScriptException;
 
 /**
  */
-public interface Plugin extends ch.psi.pshell.plugin.Plugin{
+public interface Plugin extends ch.psi.pshell.extension.Plugin{
     
 
     default Object eval(String str) throws ScriptException, IOException, InterpreterStateException, InterruptedException {

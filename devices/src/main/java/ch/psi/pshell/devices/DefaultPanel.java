@@ -1,7 +1,7 @@
 
 package ch.psi.pshell.devices;
 
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Extensions;
 import java.beans.Transient;
 import java.io.Serializable;
 
@@ -24,11 +24,11 @@ public class DefaultPanel implements Serializable {
 
     @Transient
     public Class getDeviceClass() throws ClassNotFoundException {
-        return PluginManager.getClass(deviceClassName);
+        return Extensions.getClass(deviceClassName);
     }
 
     @Transient
     public Class getPanelClass() throws ClassNotFoundException {
-        return PluginManager.getClass(panelClassName);
+        return Extensions.getClass(panelClassName);
     }
 }

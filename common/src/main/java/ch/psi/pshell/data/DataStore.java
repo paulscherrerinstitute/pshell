@@ -1,7 +1,7 @@
 package ch.psi.pshell.data;
 
 import ch.psi.pshell.logging.Logging;
-import ch.psi.pshell.plugin.PluginManager;
+import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.scripting.JepUtils;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
@@ -124,7 +124,7 @@ public class DataStore implements AutoCloseable {
         }
         formatClass = formatClasses.get(name);
         if (formatClass==null){
-            formatClass = PluginManager.getClass(name);            
+            formatClass = Extensions.getClass(name);            
         }                
         return formatClass;
     }
