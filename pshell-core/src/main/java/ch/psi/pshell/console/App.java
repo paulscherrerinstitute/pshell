@@ -15,7 +15,7 @@ import ch.psi.pshell.scripting.Interpreter;
 import ch.psi.pshell.security.Security;
 import ch.psi.pshell.sequencer.CommandSource;
 import ch.psi.pshell.sequencer.Sequencer;
-import ch.psi.pshell.sequencer.Sequencer.InterpreterStateException;
+import ch.psi.pshell.sequencer.Sequencer.StateException;
 import ch.psi.pshell.session.Sessions;
 import ch.psi.pshell.utils.Config;
 import ch.psi.pshell.utils.Configurable;
@@ -151,7 +151,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     }
     
     @Override
-    protected void onRestart() throws InterpreterStateException {
+    protected void onRestart() throws StateException {
         //A new file for each session
         boolean firstRun = (Context.getState() == State.Invalid);
         Config.setDefaultPermissions(config.filePermissionsConfig);

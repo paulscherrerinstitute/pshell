@@ -4,7 +4,7 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.scripting.ViewPreference;
-import ch.psi.pshell.sequencer.Sequencer.InterpreterStateException;
+import ch.psi.pshell.sequencer.Sequencer.StateException;
 import ch.psi.pshell.utils.State;
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,11 +17,11 @@ import javax.script.ScriptException;
 public interface Plugin extends ch.psi.pshell.extension.Plugin{
     
 
-    default Object eval(String str) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    default Object eval(String str) throws ScriptException, IOException, StateException, InterruptedException {
         return eval(str, false);
     }
 
-    default Object eval(String str, boolean background) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    default Object eval(String str, boolean background) throws ScriptException, IOException, StateException, InterruptedException {
         if (background) {
             return Context.getSequencer().evalLineBackground(CommandSource.plugin, str);
         } else {
@@ -29,11 +29,11 @@ public interface Plugin extends ch.psi.pshell.extension.Plugin{
         }
     }
 
-    default CompletableFuture<?> evalAsync(String str) throws InterpreterStateException {
+    default CompletableFuture<?> evalAsync(String str) throws StateException {
         return evalAsync(str, false);
     }
 
-    default CompletableFuture<?> evalAsync(String str, boolean background) throws InterpreterStateException {
+    default CompletableFuture<?> evalAsync(String str, boolean background) throws StateException {
         if (background) {
             return Context.getSequencer().evalLineBackgroundAsync(CommandSource.plugin, str);
         } else {
@@ -41,15 +41,15 @@ public interface Plugin extends ch.psi.pshell.extension.Plugin{
         }
     }
 
-    default Object run(String scriptName) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    default Object run(String scriptName) throws ScriptException, IOException, StateException, InterruptedException {
         return run(scriptName, null);
     }
 
-    default Object run(String scriptName, Object args) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    default Object run(String scriptName, Object args) throws ScriptException, IOException, StateException, InterruptedException {
         return run(scriptName, args, false);
     }
     
-    default Object run(String scriptName, Object args, boolean background) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    default Object run(String scriptName, Object args, boolean background) throws ScriptException, IOException, StateException, InterruptedException {
         if (background){
             return Context.getSequencer().evalFileBackground(CommandSource.plugin, scriptName, args);
         } else {
@@ -57,15 +57,15 @@ public interface Plugin extends ch.psi.pshell.extension.Plugin{
         }
     }    
 
-    default CompletableFuture<?> runAsync(String scriptName) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    default CompletableFuture<?> runAsync(String scriptName) throws ScriptException, IOException, StateException, InterruptedException {
         return runAsync(scriptName, null);
     }
 
-    default CompletableFuture<?> runAsync(String scriptName, Object args) throws InterpreterStateException {
+    default CompletableFuture<?> runAsync(String scriptName, Object args) throws StateException {
         return runAsync(scriptName, args, false);
     }
     
-    default CompletableFuture<?> runAsync(String scriptName, Object args, boolean background) throws InterpreterStateException {
+    default CompletableFuture<?> runAsync(String scriptName, Object args, boolean background) throws StateException {
         if (background){
             return Context.getSequencer().evalFileBackgroundAsync(CommandSource.plugin, scriptName, args);
         } else {
@@ -73,7 +73,7 @@ public interface Plugin extends ch.psi.pshell.extension.Plugin{
         }
     }    
 
-    default CompletableFuture<?> runBackground(String scriptName) throws InterpreterStateException {
+    default CompletableFuture<?> runBackground(String scriptName) throws StateException {
         return Context.getSequencer().evalFileBackgroundAsync(CommandSource.plugin, scriptName);
     }
 
@@ -94,22 +94,22 @@ public interface Plugin extends ch.psi.pshell.extension.Plugin{
     /**
      * Start a background task
      */
-    default void startTask(String scriptName, int delay) throws IOException, InterpreterStateException {
+    default void startTask(String scriptName, int delay) throws IOException, StateException {
         startTask(scriptName, delay, -1);
     }
 
-    default void startTask(String scriptName, int delay, int interval) throws IOException, InterpreterStateException {
+    default void startTask(String scriptName, int delay, int interval) throws IOException, StateException {
         Context.getSequencer().startTask(CommandSource.plugin, scriptName, delay, interval);
     }
 
     /**
      * Stop a background task
      */
-    default void stopTask(String scriptName) throws IOException, InterpreterStateException {
+    default void stopTask(String scriptName) throws IOException, StateException {
         Context.getSequencer().stopTask(CommandSource.plugin, scriptName, false);
     }
 
-    default void stopTask(String scriptName, boolean force) throws IOException, InterpreterStateException {
+    default void stopTask(String scriptName, boolean force) throws IOException, StateException {
         Context.getSequencer().stopTask(CommandSource.plugin, scriptName, force);
     }
 

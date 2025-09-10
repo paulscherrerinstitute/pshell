@@ -255,20 +255,20 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
     
     //State
-    public class InterpreterStateException extends Exception {
+    public class StateException extends Exception {
 
-        InterpreterStateException() {
+        StateException() {
             super("Invalid state: " + getState());
         }
 
-        InterpreterStateException(State state) {
+        StateException(State state) {
             super("Invalid state transition: " + getState() + " to " + state);
         }
     }
 
     volatile State state = State.Invalid;
 
-    protected void setState(State state) throws InterpreterStateException {
+    protected void setState(State state) throws StateException {
         if (this.state != state) {
             if ((this.state == State.Closing)
                     || //disposed is definitive
@@ -278,7 +278,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                     || //Can pause
                     ((this.state == State.Fault) && (state != State.Initializing)) //To quit Fault state must restart
                     ) {
-                throw new InterpreterStateException(state);
+                throw new StateException(state);
             }
             State former = this.state;
             this.state = state;
@@ -295,35 +295,35 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     @Hidden
-    public void assertReady() throws InterpreterStateException {
+    public void assertReady() throws StateException {
         assertState(State.Ready);
     }
 
     @Hidden
-    public void assertStarted() throws InterpreterStateException {
+    public void assertStarted() throws StateException {
         assertNotState(State.Initializing);
         if (!state.isActive()) {
-            throw new InterpreterStateException();
+            throw new StateException();
         }
     }
 
     @Hidden
-    public void assertNotRunning() throws InterpreterStateException {
+    public void assertNotRunning() throws StateException {
         assertNotState(State.Busy);
         assertNotState(State.Paused);
     }
 
     @Hidden
-    public void assertState(State state) throws InterpreterStateException {
+    public void assertState(State state) throws StateException {
         if (this.state != state) {
-            throw new InterpreterStateException();
+            throw new StateException();
         }
     }
 
     @Hidden
-    public void assertNotState(State state) throws InterpreterStateException {
+    public void assertNotState(State state) throws StateException {
         if (this.state == state) {
-            throw new InterpreterStateException();
+            throw new StateException();
         }
     }
 
@@ -877,7 +877,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         System.exit(0);
     }
 
-    public void restart(final CommandSource source) throws InterpreterStateException {
+    public void restart(final CommandSource source) throws StateException {
         onCommand(Command.restart, null, source);
         boolean firstRun = (getState() == State.Invalid);
         
@@ -1168,7 +1168,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         }
     }
 
-    public Object evalLine(final CommandSource source, final String command) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalLine(final CommandSource source, final String command) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
         synchronized (stdinInput) {
             if (stdinInput.waiting) {
@@ -1252,7 +1252,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
          return Threading.getVolatileThreadFuture(supplier);
     }
 
-    public CompletableFuture<?> evalLineAsync(final CommandSource source, final String line) throws InterpreterStateException {
+    public CompletableFuture<?> evalLineAsync(final CommandSource source, final String line) throws StateException {
         if (ControlCommand.isBackground(line)){
             return getBackgroundFuture(() -> evalLine(source, line));
         } else {
@@ -1261,20 +1261,20 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         }
     }
 
-    public CompletableFuture<?> evalFileAsync(final CommandSource source, final String fileName) throws InterpreterStateException {
+    public CompletableFuture<?> evalFileAsync(final CommandSource source, final String fileName) throws StateException {
         return evalFileAsync(source, fileName, null);
     }
 
-    public CompletableFuture<?> evalFileAsync(final CommandSource source, final String fileName, final Object args) throws InterpreterStateException {
+    public CompletableFuture<?> evalFileAsync(final CommandSource source, final String fileName, final Object args) throws StateException {
         assertReady();  //TODO: This is not strict, state can change before the thread starts
         return getInterpreterFuture(() -> evalFile(source, fileName, args));
     }
 
-    public Object evalFileBackground(final CommandSource source, final String fileName) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalFileBackground(final CommandSource source, final String fileName) throws ScriptException, IOException, StateException, InterruptedException {
         return evalFileBackground(source, fileName, null);
     }
 
-    public Object evalFileBackground(final CommandSource source, final String fileName, final Object args) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalFileBackground(final CommandSource source, final String fileName, final Object args) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
         if (fileName == null) {
             return null;
@@ -1319,7 +1319,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return getBackgroundFuture(() -> evalFileBackground(source, fileName, args));
     }
     
-    public Object evalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
         triggerWillEval(source, line);
 
@@ -1349,7 +1349,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
     
 
-    Object tryEvalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    Object tryEvalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, StateException, InterruptedException {
         if (interpreter.isThreaded()) {
             return evalLineBackground(source, line);
         } else {
@@ -1357,7 +1357,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         }
     }
 
-    public Task startTask(final CommandSource source, String script, int delay, int interval) throws IOException, InterpreterStateException {
+    public Task startTask(final CommandSource source, String script, int delay, int interval) throws IOException, StateException {
         assertInterpreterEnabled();
         assertStarted();
         onCommand(Command.startTask, new Object[]{script, delay, interval}, source);
@@ -1366,7 +1366,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return task;
     }
 
-    public Task startTask(final CommandSource source, Task task) throws IOException, InterpreterStateException {
+    public Task startTask(final CommandSource source, Task task) throws IOException, StateException {
         assertInterpreterEnabled();
         assertStarted();
         onCommand(Command.startTask, new Object[]{task}, source);
@@ -1375,27 +1375,27 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return task;
     }
 
-    public void stopTask(final CommandSource source, String script, boolean abort) throws IOException, InterpreterStateException {
+    public void stopTask(final CommandSource source, String script, boolean abort) throws IOException, StateException {
         assertInterpreterEnabled();
         assertStarted();
         onCommand(Command.stopTask, new Object[]{script, abort}, source);
         taskScheduler.remove(script, abort);
     }
 
-    public void stopTask(final CommandSource source, Task task, boolean abort) throws IOException, InterpreterStateException {
+    public void stopTask(final CommandSource source, Task task, boolean abort) throws IOException, StateException {
         assertInterpreterEnabled();
         assertStarted();
         onCommand(Command.stopTask, new Object[]{task, abort}, source);
         taskScheduler.remove(task, abort);
     }
 
-    public Task getTask(String name) throws IOException, InterpreterStateException {
+    public Task getTask(String name) throws IOException, StateException {
         assertInterpreterEnabled();
         assertStarted();
         return getTaskScheduler().get(name);
     }
 
-    public Task[] getTasks() throws IOException, InterpreterStateException {
+    public Task[] getTasks() throws IOException, StateException {
         assertInterpreterEnabled();
         assertStarted();
         return taskScheduler.getAll();
@@ -1564,11 +1564,11 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return ret;
     }
 
-    public Object evalFile(final CommandSource source, final String fileName, final Object args) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalFile(final CommandSource source, final String fileName, final Object args) throws ScriptException, IOException, StateException, InterruptedException {
         return evalFile(source, fileName, args, true);
     }
 
-    public Object evalFile(final CommandSource source, final String fileName, final Object args, final boolean batch) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalFile(final CommandSource source, final String fileName, final Object args, final boolean batch) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
         if (fileName == null) {
             return null;
@@ -1620,14 +1620,14 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         }
     }
 
-    public Object evalStatement(final CommandSource source, final Statement statement) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalStatement(final CommandSource source, final Statement statement) throws ScriptException, IOException, StateException, InterruptedException {
         if (statement == null) {
             return null;
         }
         return evalStatements(source, new Statement[]{statement}, false, null);
     }
 
-    public Object evalStatements(final CommandSource source, final Statement[] statements, final boolean pauseOnStart, final Object args) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalStatements(final CommandSource source, final Statement[] statements, final boolean pauseOnStart, final Object args) throws ScriptException, IOException, StateException, InterruptedException {
         String fileName = null;
         if ((statements != null) && (statements.length > 0)) {
             fileName = statements[0].fileName;
@@ -1635,7 +1635,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return evalStatements(source, statements, pauseOnStart, fileName, args);
     }
 
-    public Object evalStatements(final CommandSource source, final Statement[] statements, final boolean pauseOnStart, final String fileName, final Object args) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalStatements(final CommandSource source, final Statement[] statements, final boolean pauseOnStart, final String fileName, final Object args) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
         if (statements == null) {
             return null;
@@ -1853,7 +1853,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         if (getState() == State.Busy) {
             try {
                 setState(State.Paused);
-            } catch (InterpreterStateException ex) {
+            } catch (StateException ex) {
             }
         }
         if (isRunningStatements()) {
@@ -1869,7 +1869,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         if (getState() == State.Paused) {
             try {
                 setState(State.Busy);
-            } catch (InterpreterStateException ex) {
+            } catch (StateException ex) {
             }
         }
         if (isRunningStatements()) {
@@ -1897,20 +1897,20 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     //These methods are made public in order to plugins control state
     //Start execution in interpreter thread (foreground task)
     @Hidden
-    public void startExecution(final CommandSource source, String fileName, String command, Object args, boolean background) throws InterpreterStateException {
+    public void startExecution(final CommandSource source, String fileName, String command, Object args, boolean background) throws StateException {
         CommandInfo info = new CommandInfo(source, fileName, command, args, background);
         startExecution(source, fileName, info);
     }
 
     @Hidden
-    public CommandInfo startExecution(final CommandSource source, String fileName, Object args, boolean background) throws InterpreterStateException {
+    public CommandInfo startExecution(final CommandSource source, String fileName, Object args, boolean background) throws StateException {
         CommandInfo info = new CommandInfo(source, fileName, null, args, background);
         startExecution(source, fileName, info);
         return info;
     }
 
     @Hidden
-    public void startExecution(final CommandSource source, String fileName, CommandInfo info) throws InterpreterStateException {
+    public void startExecution(final CommandSource source, String fileName, CommandInfo info) throws StateException {
         assertReady();
         commandBus.commandStarted(info);
         if (fileName != null) {
@@ -1926,12 +1926,12 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     @Hidden
-    public void clearAborted() throws InterpreterStateException {
+    public void clearAborted() throws StateException {
         assertReady();
         aborted = false;
     }
 
-    Object evalNextStage(CommandInfo currentInfo, final String command) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    Object evalNextStage(CommandInfo currentInfo, final String command) throws ScriptException, IOException, StateException, InterruptedException {
         onCommand(Command.then, new Object[]{command}, currentInfo.source);
         triggerShellCommand(currentInfo.source, "Then: " + command);
         CommandInfo info = new CommandInfo(currentInfo.source, null, command, null, false);
@@ -1955,17 +1955,17 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     @Hidden
-    public void endExecution() throws InterpreterStateException {
+    public void endExecution() throws StateException {
         endExecution(null);
     }
 
     @Hidden
-    public void endExecution(CommandInfo info) throws InterpreterStateException {
+    public void endExecution(CommandInfo info) throws StateException {
         endExecution(info, null);
     }
 
     @Hidden
-    public void endExecution(CommandInfo info, Object result) throws InterpreterStateException {
+    public void endExecution(CommandInfo info, Object result) throws StateException {
         if (info != null) {
             if (info.isRunning()) {
                 commandBus.commandFinished(info, result);
@@ -2503,7 +2503,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     }
 
-    String processControlCommand(final CommandSource source, final ControlCommand command, final String parameters) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    String processControlCommand(final CommandSource source, final ControlCommand command, final String parameters) throws ScriptException, IOException, StateException, InterruptedException {
 
         final String[] args = parameters.isEmpty() ? new String[0] : parameters.split(" ");
 
@@ -3115,11 +3115,11 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         }
     }
 
-    public void restart() throws InterpreterStateException {
+    public void restart() throws StateException {
         restart(getPublicCommandSource());
     }
 
-    public void startRestart() throws InterpreterStateException {
+    public void startRestart() throws StateException {
         new Thread(() -> {
             try {
                 restart();
@@ -3130,19 +3130,19 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     }
 
-    public Object evalLine(String line) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalLine(String line) throws ScriptException, IOException, StateException, InterruptedException {
         return evalLine(getPublicCommandSource(), line);
     }
 
-    public CompletableFuture<?> evalLineAsync(final String line) throws InterpreterStateException {
+    public CompletableFuture<?> evalLineAsync(final String line) throws StateException {
         return evalLineAsync(getPublicCommandSource(), line);
     }
 
-    public Object evalLineBackground(String line) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalLineBackground(String line) throws ScriptException, IOException, StateException, InterruptedException {
         return evalLineBackground(getPublicCommandSource(), line);
     }
 
-    public Object tryEvalLineBackground(String line) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object tryEvalLineBackground(String line) throws ScriptException, IOException, StateException, InterruptedException {
         return tryEvalLineBackground(getPublicCommandSource(), line);
     }
 
@@ -3150,23 +3150,23 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return evalLineBackgroundAsync(getPublicCommandSource(), line);
     }
 
-    public Object evalFile(String fileName, Object args) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalFile(String fileName, Object args) throws ScriptException, IOException, StateException, InterruptedException {
         return evalFile(getPublicCommandSource(), fileName, args);
     }
 
-    public CompletableFuture<?> evalFileAsync(final String fileName) throws InterpreterStateException {
+    public CompletableFuture<?> evalFileAsync(final String fileName) throws StateException {
         return evalFileAsync(getPublicCommandSource(), fileName);
     }
 
-    public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws Sequencer.InterpreterStateException{
+    public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws Sequencer.StateException{
         return evalFileAsync(getPublicCommandSource(), fileName, args);
     }
 
-    public Object evalFileBackground(final String fileName) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalFileBackground(final String fileName) throws ScriptException, IOException, StateException, InterruptedException {
         return evalFileBackground(getPublicCommandSource(), fileName);
     }
 
-    public Object evalFileBackground(final String fileName, final Object args) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalFileBackground(final String fileName, final Object args) throws ScriptException, IOException, StateException, InterruptedException {
         return evalFileBackground(getPublicCommandSource(), fileName, args);
     }
 
@@ -3178,27 +3178,27 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return evalFileBackgroundAsync(getPublicCommandSource(), fileName, args);
     }
 
-    public Object evalStatement(Statement statement) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalStatement(Statement statement) throws ScriptException, IOException, StateException, InterruptedException {
         return evalStatement(getPublicCommandSource(), statement);
     }
 
-    public Object evalStatements(Statement[] statements, boolean pauseOnStart, String fileName, Object args) throws ScriptException, IOException, InterpreterStateException, InterruptedException {
+    public Object evalStatements(Statement[] statements, boolean pauseOnStart, String fileName, Object args) throws ScriptException, IOException, StateException, InterruptedException {
         return evalStatements(getPublicCommandSource(), statements, pauseOnStart, fileName, args);
     }
 
-    public Task startTask(String script, int delay, int interval) throws IOException, InterpreterStateException {
+    public Task startTask(String script, int delay, int interval) throws IOException, StateException {
         return startTask(getPublicCommandSource(), script, delay, interval);
     }
 
-    public Task startTask(Task task) throws IOException, InterpreterStateException {
+    public Task startTask(Task task) throws IOException, StateException {
         return startTask(getPublicCommandSource(), task);
     }
 
-    public void stopTask(String script, boolean abort) throws IOException, InterpreterStateException {
+    public void stopTask(String script, boolean abort) throws IOException, StateException {
         stopTask(getPublicCommandSource(), script, abort);
     }
 
-    public void stopTask(Task task, boolean abort) throws IOException, InterpreterStateException {
+    public void stopTask(Task task, boolean abort) throws IOException, StateException {
         stopTask(getPublicCommandSource(), task, abort);
     }
 
@@ -3325,7 +3325,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public void close() {
         try {
             setState(State.Closing);
-        } catch (InterpreterStateException ex) {
+        } catch (StateException ex) {
             //Does not happen
         }
 
