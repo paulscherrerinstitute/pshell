@@ -55,9 +55,9 @@ plot( Convert.reshape(b.getData(),b.getDimensions()),title="Transposed")
 
 
 #More calculations calling numpy
-a = call_jep("numpy", "ones", [[400,200],'d'])
+a = call_py("numpy", "ones", False, [400,200],'d') #Automatically convert arrays and listes to NumPy arrays
 for i in range (100):
-    b = call_jep("numpy", "ones", [[400,200],'d'])
+    b = call_jep("numpy", "ones", [to_array([400,200]),'d'])
     a = call_jep("numpy", "add", [a,b])
     s = call_jep("numpy", "sum", [a,])
     print a.getData()[0], s

@@ -37,7 +37,7 @@ import java.util.Collections
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 import ch.psi.pshell.framework.Setup as Setup
 
-from startup import to_array, get_sequencer, _get_caller, Convert, Arr
+from startup import to_array, get_sequencer, get_interpreter, _get_caller, Convert, Arr
 
 __jep = {}
 

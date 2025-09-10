@@ -152,8 +152,8 @@ def to_list(obj):
         return None
     if isinstance(obj,tuple) or isinstance(obj,java.util.List) :
         return list(obj)
-    #if isinstance(obj,PyArray):
-    #    return obj.tolist()
+    if isinstance(obj,PyArray):
+        return obj.tolist()
     if not isinstance(obj,list):
         return [obj,]
     return obj

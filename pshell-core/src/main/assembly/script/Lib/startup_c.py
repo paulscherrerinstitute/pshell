@@ -223,8 +223,8 @@ def to_list(obj):
         return None
     if isinstance(obj,tuple) or isinstance(obj,List) :
         return list(obj)
-    #if is_array(obj):
-    #    return obj.tolist()
+    if is_array(obj):
+        return list(obj)
     if not isinstance(obj,list):
         return [obj,]
     return obj
