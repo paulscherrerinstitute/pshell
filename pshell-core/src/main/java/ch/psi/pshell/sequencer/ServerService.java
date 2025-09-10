@@ -84,6 +84,16 @@ public class ServerService {
                     entity(cause.getMessage()).type("text/plain").build());
         }
     }
+    
+    static Level commandLogLevel = Level.FINEST;
+    
+    public static void setCommandLogLevel(Level level) {
+        commandLogLevel = level;
+    }
+    
+    public static Level getCommandLogLevel() {
+        return commandLogLevel;
+    }
 
     @GET
     @Path("version")
@@ -178,8 +188,9 @@ public class ServerService {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
     public String eval(@PathParam("statement") final String statement) throws ExecutionException {
-        try {
+        try {            
             String cmd = formatIncomingText(statement);
+            logger.log(getCommandLogLevel(), "eval: {0}", cmd);
             Object ret = sequencer.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
             return (ret == null) ? "" : ret.toString();
         } catch (Exception ex) {
@@ -192,8 +203,9 @@ public class ServerService {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
     public long evalAsync(@PathParam("statement") final String statement) throws ExecutionException {
-        try {
+        try {            
             String cmd = formatIncomingText(statement);
+            logger.log(getCommandLogLevel(), "evalAsync: {0}", cmd);
             CompletableFuture cf = sequencer.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
             long id = sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
             return id;
@@ -207,8 +219,9 @@ public class ServerService {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     public String evalJson(@PathParam("statement") final String statement) throws ExecutionException {
-        try {
+        try {            
             String cmd = formatIncomingText(statement);
+            logger.log(getCommandLogLevel(), "evalJson: {0}", cmd);
             Object ret = sequencer.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd);
             return mapper.writeValueAsString(ret);
         } catch (Exception ex) {
@@ -221,6 +234,7 @@ public class ServerService {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setVariable(final Map contents) throws ExecutionException {
         try {
+            logger.log(getCommandLogLevel(), "setVariable: {0}", Str.toString(contents));
             String name = (String) contents.get("name");
             Object value = contents.get("value");
             sequencer.setInterpreterVariable(name, value);
@@ -590,8 +604,10 @@ public class ServerService {
                 }
             }
             if (background) {
+                logger.log(getCommandLogLevel(), "runb : {0}({1})", new Object[]{script, Str.toString(argList)});
                 return String.valueOf(sequencer.evalFileBackground(CommandSource.server, script, argList));
             } else {
+                logger.log(getCommandLogLevel(), "run : {0}({1})", new Object[]{script, Str.toString(argList)});
                 return String.valueOf(sequencer.evalFile(CommandSource.server, script, argList));
             }
         } catch (Exception ex) {
@@ -613,16 +629,20 @@ public class ServerService {
             CompletableFuture cf = null;
             if (async) {
                 if (background) {
+                    logger.log(getCommandLogLevel(), "runb async: {0}({1})", new Object[]{script, Str.toString(pars)});
                     cf = sequencer.evalFileBackgroundAsync(CommandSource.server, script, pars);
 
                 } else {
+                    logger.log(getCommandLogLevel(), "run async: {0}({1})", new Object[]{script, Str.toString(pars)});
                     cf = sequencer.evalFileAsync(CommandSource.server, script, pars);
                 }
                 return sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
             } else {
                 if (background) {
+                    logger.log(getCommandLogLevel(), "runb: {0}({1})", new Object[]{script, Str.toString(pars)});
                     ret = sequencer.evalFileBackground(CommandSource.server, script, pars);
                 } else {
+                    logger.log(getCommandLogLevel(), "run: {0}({1})", new Object[]{script, Str.toString(pars)});
                     ret = sequencer.evalFile(CommandSource.server, script, pars);
                 }
             }
@@ -639,6 +659,7 @@ public class ServerService {
     public String evalScript(@PathParam("contents") final String contents) throws ExecutionException {
         try {
             Statement[] statements = sequencer.parseString(formatIncomingText(contents), "Unknown");
+            logger.log(getCommandLogLevel(), "evalScript: {0}", contents);
             return String.valueOf(sequencer.evalStatements(CommandSource.server, statements, false, "Unknown", null));
         } catch (Exception ex) {
             throw new ExecutionException(ex);

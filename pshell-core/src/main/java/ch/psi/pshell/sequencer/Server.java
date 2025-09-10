@@ -92,6 +92,9 @@ public class Server implements AutoCloseable {
         server.getServerConfiguration().addHttpHandler(new StaticHttpHandler(home), "/static");
         String msg = String.format("Interface available at %s", getStaticURL());
         logger.info(msg);
+        if (Setup.isDebug()){
+            ServerService.setCommandLogLevel(Level.INFO);
+        }
         System.out.println(msg);
     }
 

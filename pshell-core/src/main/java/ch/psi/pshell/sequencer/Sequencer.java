@@ -330,7 +330,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public State getState() {
         return state;
     }
-
+     
     public void waitState(State state, int timeout) throws IOException, InterruptedException {
         Chrono chrono = new Chrono();
         try {
@@ -681,8 +681,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     
     boolean scriptCallbacksEnabled=true;
     
-    public boolean getScriptCallbacksEnabled(){
-        return scriptCallbacksEnabled;
+    public boolean isScriptCallbacksEnabled(){
+        return scriptCallbacksEnabled && (interpreter != null) && getState().isInitialized();
     }
 
     public void setScriptCallbacksEnabled(boolean value){
@@ -1170,6 +1170,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     public Object evalLine(final CommandSource source, final String command) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
+        assertStarted();
         synchronized (stdinInput) {
             if (stdinInput.waiting) {
                 stdinInput.waiting = false;
@@ -1276,6 +1277,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     public Object evalFileBackground(final CommandSource source, final String fileName, final Object args) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
+        assertStarted();
         if (fileName == null) {
             return null;
         }
@@ -1321,6 +1323,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     
     public Object evalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
+        assertStarted();
         triggerWillEval(source, line);
 
         Object result = null;
@@ -1570,6 +1573,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     public Object evalFile(final CommandSource source, final String fileName, final Object args, final boolean batch) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
+        assertStarted();
         if (fileName == null) {
             return null;
         }
@@ -1637,6 +1641,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     public Object evalStatements(final CommandSource source, final Statement[] statements, final boolean pauseOnStart, final String fileName, final Object args) throws ScriptException, IOException, StateException, InterruptedException {
         assertInterpreterEnabled();
+        assertStarted();
         if (statements == null) {
             return null;
         }
@@ -2058,7 +2063,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     
    //Script callbacks
     protected void onCommandStarted(CommandInfo info) {        
-        if (scriptCallbacksEnabled &&(interpreter != null)){
+        if (isScriptCallbacksEnabled()){
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
                 if (interpreter.isThreaded()) {
@@ -2072,7 +2077,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     protected void onCommandFinished(CommandInfo info) {
-        if (scriptCallbacksEnabled && (interpreter != null)){
+        if (isScriptCallbacksEnabled()){
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
                 if (interpreter.isThreaded()) {
@@ -2093,7 +2098,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     void onChangeDataPath(File dataPath) {
-        if (scriptCallbacksEnabled  && (interpreter != null)){
+        if (isScriptCallbacksEnabled()){
             try {
                 String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
                 if (interpreter.isThreaded()) {
@@ -2106,7 +2111,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     public void onSessionStarted(int id) {
-        if (scriptCallbacksEnabled  && (interpreter != null)){
+        if (isScriptCallbacksEnabled()){
             try {
                 if (interpreter.isThreaded()) {
                     interpreter.getEngine().eval("on_session_started(" + id + ")");
@@ -2118,7 +2123,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     public void onSessionFinished(int id) {
-        if (scriptCallbacksEnabled && (interpreter != null)){
+        if (isScriptCallbacksEnabled()){
             try {
                 if (interpreter.isThreaded()) {
                     interpreter.getEngine().eval("on_session_finished(" + id + ")");
