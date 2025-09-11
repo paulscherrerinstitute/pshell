@@ -173,7 +173,7 @@ public class App extends ch.psi.pshell.workbench.App{
     
     static public void main(String[] args) {
         addOptions(args);
-        init(args, COMMAND_LINE_COMMANDS);            
+        init(args, COMMAND_LINE_COMMANDS, false);            
        try {            
             createInstance().start();            
         } catch (Exception ex) {

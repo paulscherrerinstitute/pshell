@@ -20,6 +20,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.jar.Attributes;
@@ -37,6 +40,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
+
 
 /**
  * base class for application singleton
@@ -172,9 +176,52 @@ public abstract class App extends ObservableBase<AppListener> {
         System.out.println(getHeaderMessage());        
         ch.psi.pshell.app.Options.addBasic();
         App.args = args;
+        if (commands!=null){
+            String[] posargs = getPositionalArguments(App.args);
+            args = Arr.getSubArray(args, posargs.length);
+        }
         CommandLineParser parser = new DefaultParser();
         try {
-            commandLine = parser.parse(options, args, !strict);            
+            if (strict) {
+                commandLine = parser.parse(options, args, false);            
+            } else {
+                List<String> known = new ArrayList<>();
+                List<String> unknown = new ArrayList<>();
+
+                List<String> tokens = new ArrayList<>(Arrays.asList(args));
+                Iterator<String> it = tokens.iterator();
+
+                while (it.hasNext()) {
+                    String token = it.next();
+
+                    if (token.startsWith("-")) {
+                        // Check if it's a declared option
+                        String optName = stripDashes(token);
+                        Option opt = options.getOption(optName);
+
+                        if (opt == null) {
+                            // Unknown option → collect it + its argument if present
+                            unknown.add(token);
+                            if (it.hasNext() && !it.next().startsWith("-")) {
+                                String argVal = tokens.get(tokens.indexOf(token) + 1);
+                                unknown.add(argVal);
+                                it.remove(); // remove consumed arg
+                            }
+                        } else {
+                            known.add(token);
+                            if (opt.hasArg() && it.hasNext()) {
+                                String argVal = it.next();
+                                known.add(argVal);
+                            }
+                        }
+                    } else {
+                        // Plain positional arg
+                        known.add(token);
+                    }
+                }
+                // Parse only known tokens with Commons CLI
+                commandLine= parser.parse(options, known.toArray(new String[0]), false);
+            }
             
         } catch (ParseException ex) {
             ex.printStackTrace();
@@ -182,7 +229,7 @@ public abstract class App extends ObservableBase<AppListener> {
         }                
                         
         if (commandLine.hasOption(Options.HELP.toArgument())) {            
-            HelpFormatter formatter = new org.apache.commons.cli.HelpFormatter();
+            HelpFormatter formatter = new HelpFormatter();
             formatter.setWidth(120);
             formatter.setOptionComparator(null);
             //formatter.setArgName("");
@@ -226,7 +273,13 @@ public abstract class App extends ObservableBase<AppListener> {
             System.setProperty(PlotPanel.PROPERTY_PLOT_QUALITY, quality.toString());
         }
         applyLookAndFeel();
-    }
+    }    
+
+    private static String stripDashes(String token) {
+        if (token.startsWith("--")) return token.substring(2);
+        if (token.startsWith("-")) return token.substring(1);
+        return token;
+    }    
         
     //Arguments
     static public String[] getAdditionalArguments(){
