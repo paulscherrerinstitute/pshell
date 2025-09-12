@@ -6,6 +6,7 @@ import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Threading;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.io.FileInfo;
 import ij.io.FileSaver;
 import ij.io.Opener;
 import ij.process.ByteProcessor;
@@ -79,6 +80,7 @@ public class Tiff {
             metadata = new HashMap<>();
         }
         metadata.put("type", type.toString());
+        //metadata.put("stack", "false");
         String info = "";
         for (Object key : metadata.keySet()) {
             if (info.length() > 0) {
@@ -101,6 +103,37 @@ public class Tiff {
         }
     }
     
+    public static int getStackSize(String filename) throws IOException{
+        try{
+            FileInfo fileInfo = Opener.getTiffFileInfo(filename)[0];
+            /*
+            Opener opener = new Opener();
+            ImagePlus ip = opener.openTiff(filename,0);      
+            String info = (String) ip.getProperty("Info");
+            if ((info!=null) && !info.isBlank()){            
+                for (String row : info.split("\n")){
+                    int i = row.indexOf(": ");
+                    String key = row.substring(0, i);                
+                    if (key.equals("stack")){
+                        String value = row.substring(i+2);
+                        if (!value.equalsIgnoreCase("true")){
+                            return -1; //No stack
+                        }
+                    }
+                }            
+            }
+            */
+            // When saving single images (2d), sliceLabels are not set
+            if ((fileInfo.nImages==1) && (fileInfo.sliceLabels==null)){
+                return -1; //No stack
+            }
+            return fileInfo.nImages;
+        } catch (Exception es){            
+        }
+        return -1;
+    }
+    
+        
     
     public static Object load(String filename) throws IOException{
         return load(filename, 0);
@@ -185,7 +218,6 @@ public class Tiff {
         Class type = Arr.getComponentType(array);
         int[] shape = Arr.getShape(array);        
         int images = shape[0];
-        int size = shape[1];        
         for (int i=0; i<images; i++){
             Object arr = Array.get(array, i);
             if (type == byte.class) {
@@ -216,6 +248,7 @@ public class Tiff {
             metadata = new HashMap<>();
         }
         metadata.put("type", type.toString());
+        //metadata.put("stack", "true");
         String info = "";
         for (Object key : metadata.keySet()) {
             if (info.length() > 0) {

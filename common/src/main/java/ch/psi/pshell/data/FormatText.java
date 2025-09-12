@@ -391,6 +391,13 @@ public class FormatText implements Format {
 
     @Override
     public Map<String, Object> getInfo(String root, String path) throws IOException {
+        synchronized (openFiles) {
+            OutputFile openFile = openFiles.get(path);
+            if (openFile!=null){
+                openFile.out.flush();
+            }
+        }        
+        
         HashMap<String, Object> ret = new HashMap<>();
         Path filePath = getFilePath(root, path);
         File file = filePath.toFile();
