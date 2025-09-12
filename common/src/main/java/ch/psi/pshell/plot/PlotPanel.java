@@ -48,7 +48,6 @@ public class PlotPanel extends MonitoredPanel {
     protected PlotPreferences prefs;
     protected boolean changedScaleX;
     final protected ArrayList<Plot> plots;
-    DataStore dataManager;
 
     public PlotPanel() {
         initComponents();
@@ -692,16 +691,21 @@ public class PlotPanel extends MonitoredPanel {
                     });
                 } else {
                     series.setListener((SlicePlotSeries series1, int page) -> {
-                        try {
-                            DataStore dm = new DataStore("h5"); //Test!!! Assume only h5 can cope with 4d data
-                            DataSlice slice = dm.getData(descriptor.root, descriptor.path, page);   
-                            Object data1 = slice.sliceData;
-                            if (slice.unsigned) {
-                                data1 = Convert.toUnsigned(data1);
-                            }
-                            series1.setData((double[][]) Convert.toDouble(data1));
-                        } catch (Exception ex) {
-                            Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
+                        for (String fmt: DataStore.getFormatIds()){
+                            try {                            
+                                DataSlice slice = new DataStore(fmt).getData(descriptor.root, descriptor.path, page);   
+                                try{
+                                    Object data1 = slice.sliceData;
+                                    if (slice.unsigned) {
+                                        data1 = Convert.toUnsigned(data1);
+                                    }
+                                    series1.setData((double[][]) Convert.toDouble(data1));
+                                } catch (Exception ex) {
+                                    Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
+                                }
+                                return;
+                            }catch (Exception ex){                                    
+                            }                        
                         }
                     });
                 }
