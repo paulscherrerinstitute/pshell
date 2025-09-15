@@ -3,13 +3,13 @@ package ch.psi.pshell.data;
 /**
  *
  */
-public class FormatTextDetachedAttrs  extends FormatText{
+public class FormatTextEmbeddedAttrs  extends FormatText{
     @Override
     public String getId() {
-        return "txtd";
+        return "txte";
     }
     
     protected boolean getEmbeddedAttributes(){
-        return false;
+        return true;
     }            
 }

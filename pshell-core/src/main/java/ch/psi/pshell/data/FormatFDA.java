@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  *
  */
-public class FormatFDA extends FormatTextDetachedAttrs{
+public class FormatFDA extends FormatText{
     public static final String ITEM_SEPARATOR = "\t";
     public static final String INFO_FIELD_DIMENSIONS= "Field Dimensions";
     public static boolean ADD_ATTRIBUTE_FILE_TIMESTAMP = true;

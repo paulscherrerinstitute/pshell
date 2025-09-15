@@ -2,6 +2,7 @@ package ch.psi.pshell.data;
 
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
+import ch.psi.pshell.utils.EncoderJson;
 import ch.psi.pshell.utils.IO;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,6 +14,7 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -69,6 +71,16 @@ public class FormatText implements Format {
     static String ARRAY_SEPARATOR;
     static String LINE_SEPARATOR;
 
+    static boolean JSON_ATTRS =true;
+
+    public static void setJsonAttrs(boolean str) {
+        JSON_ATTRS = str;
+    }
+
+    public static boolean getJsonAttrs() {
+        return JSON_ATTRS;
+    }
+    
     static String NULL_VALUE = " ";
 
     public static void setNullValue(String str) {
@@ -191,7 +203,7 @@ public class FormatText implements Format {
     }
 
     protected boolean getEmbeddedAttributes(){
-        return true;
+        return false;
     }
     
     @Override
@@ -507,22 +519,31 @@ public class FormatText implements Format {
     }
 
     protected Path getAttributePath(String root, String path) throws IOException {
+        String attrFileName = ATTR_FILE;
+        if (JSON_ATTRS){
+            attrFileName+=".json";
+        }
         return isGroup(root, path)
-                ? Paths.get(root, path, ATTR_FILE)
-                : Paths.get(root, path + "." + ATTR_FILE);
+                ? Paths.get(root, path, attrFileName)
+                : Paths.get(root, path + "." + attrFileName);
     }
 
     @Override
     public Map<String, Object> getAttributes(String root, String path) throws IOException {
-        HashMap<String, Object> ret = new HashMap<>();
+        Map<String, Object> ret = new HashMap<>();
         Path filePath = getAttributePath(root, path);
         File file = filePath.toFile();
         //attr file
         if ((file.exists()) && (file.isFile())) {
-            String line;
-            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                while ((line = br.readLine()) != null) {
-                    parseAttr(line, ret);
+            if (JSON_ATTRS){
+                String json = new String(Files.readAllBytes(file.toPath()));
+                ret = (Map<String, Object>) EncoderJson.decode(json, Map.class);
+            } else {
+                String line;
+                try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                    while ((line = br.readLine()) != null) {
+                        parseAttr(line, ret);
+                    }
                 }
             }
         } else {
@@ -554,7 +575,7 @@ public class FormatText implements Format {
         return ret;
     }
 
-    private void parseAttr(String line, HashMap<String, Object> ret) {
+    private void parseAttr(String line,Map<String, Object> ret) {
         String[] tokens = line.split(ATTR_VALUE_MARKER);
         if (line.contains(ATTR_VALUE_MARKER)) {
             if (tokens.length == 2) {
@@ -832,11 +853,19 @@ public class FormatText implements Format {
             }
         } else {
             synchronized (attributesLock) {
-                try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(getAttributePath(root, path).toString(), true)))) {
-                    writer.print(name + ATTR_VALUE_MARKER);
-                    writeElement(writer, value);
-                    writer.print(ATTR_CLASS_MARKER + type.getName());
-                    writer.print(getLineSeparator());
+                Path attrPath = getAttributePath(root, path);
+                if (JSON_ATTRS){
+                     Map<String, Object> attrs = getAttributes(root, path);
+                     attrs.put(name, value);
+                     String json = EncoderJson.encode(attrs, true);
+                     Files.write(attrPath, json.getBytes());                     
+                } else {
+                    try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(attrPath.toString(), true)))) {
+                        writer.print(name + ATTR_VALUE_MARKER);
+                        writeElement(writer, value);
+                        writer.print(ATTR_CLASS_MARKER + type.getName());
+                        writer.print(getLineSeparator());
+                    }
                 }
             }
         }
