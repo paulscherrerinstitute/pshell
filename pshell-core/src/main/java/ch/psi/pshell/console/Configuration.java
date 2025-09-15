@@ -7,6 +7,7 @@ import ch.psi.pshell.logging.LogLevel;
 import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.scan.ScanConfig;
 import ch.psi.pshell.sequencer.CommandBus;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.session.Sessions.SessionHandling;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.Str;
@@ -63,6 +64,8 @@ public class Configuration extends Config {
     public boolean versionTrackingManual;
     public String versionTrackingRemote = "";
     public String versionTrackingLogin = "";        
+    public int sequencerCommandBusSize  = Sequencer.DEFAULT_COMMAND_BUS_SIZE;      
+    public int sequencerCommandBusTimeToLive  = Sequencer.DEFAULT_COMMAND_BUS_TIME_TO_LIVE;      
     public boolean serverEnabled;    
     public boolean serverCommandsHidden = false;
     public String serverHostName  = "";        

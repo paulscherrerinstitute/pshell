@@ -28,7 +28,7 @@ public class CommandBus implements AutoCloseable {
     boolean alive = true;
 
     public CommandBus(int size, int timeToLive) {
-        this.queue = new LinkedBlockingDeque<>(size);
+        this.queue =  (size>0) ? new LinkedBlockingDeque<>(size) : new LinkedBlockingDeque<>();
         //this.queue = new ArrayBlockingQueue<>(size);
         this.size = size;
         this.timeToLive = timeToLive;
@@ -92,7 +92,8 @@ public class CommandBus implements AutoCloseable {
                 info.result = result;
                 info.end = System.currentTimeMillis();
 
-                if (queue.size() >= (size * 0.9)) {
+                int threshold = (int) ((size>0) ? (size * 0.9) : 100);
+                if (queue.size() >= threshold) {
                     dropOlderThan(timeToLive); 
                 }        
 
@@ -288,6 +289,14 @@ public class CommandBus implements AutoCloseable {
                     .toList(); 
     }
     
+    public List<CommandInfo> getCurrentCommands(long runningTime) {
+        return queue.stream()
+                .filter(CommandInfo::isRunning)
+                .filter(ci->ci.getRunningTime()>runningTime)                
+                .toList(); 
+    }    
+    
+    
     public boolean abort(final CommandSource source, long id) throws InterruptedException {
         boolean aborted = false;
         for (CommandInfo ci : getQueue()) {
@@ -335,11 +344,14 @@ public class CommandBus implements AutoCloseable {
         }
     }
     
-    public int getCommandQueueSize(){
+    public int getSize(){
         return queue.size();
     }
-    
-    
+        
+    public int getMaxSize(){
+        return size;
+    }
+
     public Map getResult(long id) throws Exception {
         CommandInfo cmd;
         if (id < 0) {
@@ -396,4 +408,6 @@ public class CommandBus implements AutoCloseable {
     
     protected void onCommandFinished(CommandInfo info) { 
     }
+    
+    
 }

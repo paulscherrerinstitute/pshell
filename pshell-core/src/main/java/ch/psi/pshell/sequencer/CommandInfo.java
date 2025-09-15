@@ -108,6 +108,14 @@ public class CommandInfo {
         }
         return System.currentTimeMillis() - end;
     }
+
+    public long getRunningTime() {
+        if (end == 0) {
+            return System.currentTimeMillis() - start;
+        }
+        return end - start;
+    }
+
     
     @Override
     public String toString() {

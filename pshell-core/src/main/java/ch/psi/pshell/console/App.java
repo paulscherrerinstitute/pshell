@@ -115,7 +115,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                 
         dataManager = new DataManager();        
         extensions = new Extensions();
-        interpreter = new Sequencer(config.serverHostName);
+        interpreter = new Sequencer(config.serverHostName, config.sequencerCommandBusSize, config.sequencerCommandBusTimeToLive);
         security = new Security(null);
         devicePool = new DevicePool();
         sessions = new Sessions();

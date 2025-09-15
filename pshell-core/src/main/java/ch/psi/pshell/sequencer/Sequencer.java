@@ -83,8 +83,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     static final Logger logger = Logger.getLogger(Sequencer.class.getName());
 
-    public static final int COMMAND_BUS_SIZE = 1000;              //Tries cleanup when contains 100 command records
-    public static final int COMMAND_BUS_TIME_TO_LIVE = 600000;   //Cleanup commands older than 10 minutes 
+    public static final int DEFAULT_COMMAND_BUS_SIZE = -1;              //Maximum bus size (-1 for illimited)
+    public static final int DEFAULT_COMMAND_BUS_TIME_TO_LIVE = 600000;   //Cleanup commands older than 10 minutes 
     
     Server server;
     final History history;
@@ -113,10 +113,10 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public static final String INTERPRETER_THREAD = "MainThread";    
 
     public Sequencer() {
-        this(null);
+        this(null,DEFAULT_COMMAND_BUS_SIZE,DEFAULT_COMMAND_BUS_TIME_TO_LIVE);
     }
     
-    public Sequencer(String hostName) {
+    public Sequencer(String hostName, int commandBusSize, int commandBusTimeToLive) {
         instance = this;        
 
         if ((hostName != null) && (!hostName.trim().isEmpty()) && (!hostName.equalsIgnoreCase("null"))) {
@@ -155,7 +155,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             history = new History(getCommandHistoryFile(), 1000, true);
         }
 
-        commandBus = new CommandBus(COMMAND_BUS_SIZE, COMMAND_BUS_TIME_TO_LIVE){
+        commandBus = new CommandBus(commandBusSize, commandBusTimeToLive){
             @Override
             protected void onCommandStarted(CommandInfo info) {        
                 Sequencer.this.onCommandStarted(info);
