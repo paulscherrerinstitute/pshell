@@ -99,7 +99,7 @@ public class FormatTIFF extends FormatText {
             ret.put(INFO_TYPE, INFO_VAL_TYPE_DATASET);
             ret.put(INFO_DIMENSIONS, new int[] {numImages, shape[0], shape[1]});
             ret.put(INFO_RANK, 3);
-            addClassInfo(Arr.getComponentType(array), ret);
+            addClassInfo(Arr.getComponentType(array), false, ret);
             return ret;
         } else if (single.exists()) {    
             int numImages = Tiff.getStackSize(single.toString());
@@ -113,7 +113,7 @@ public class FormatTIFF extends FormatText {
                 ret.put(INFO_DIMENSIONS, new int[] {numImages, shape[0], shape[1]});
                 ret.put(INFO_RANK, 3);
             }            
-            addClassInfo(Arr.getComponentType(array), ret);
+            addClassInfo(Arr.getComponentType(array), false, ret);
             return ret;            
         } else {
             return super.getInfo(root, path);

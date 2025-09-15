@@ -85,8 +85,6 @@ public class FormatCSV extends FormatText {
         }
 
         Map<String, Object> info = getInfo(root, path);
-
-        Class type = getClass((String) info.get(INFO_CLASS));
         int[] dimensions = (int[]) info.get(INFO_DIMENSIONS);
         //If not null assumes is heterogeneous table (compound type)       
         Integer fields = (Integer) info.get(INFO_FIELDS);
@@ -100,7 +98,7 @@ public class FormatCSV extends FormatText {
         String[] typeNames = getAttributes(root, path).get(INFO_FIELD_TYPES).toString().split(separator);
         int[] lengths = new int[typeNames.length];
         parseFieldTypes(typeNames, lengths);       
-        Class[] fieldTypes = getFieldTypes(typeNames);
+        Class[] fieldTypes = getFieldTypes(typeNames, lengths);
         Path filePath = getFilePath(root, path);
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {

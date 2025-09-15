@@ -42,6 +42,40 @@ public enum Type implements Serializable {
    public boolean isUnsigned() {
       return unsigned;
    }   
+   
+   public Class toClass(){
+       return switch (this){
+           case Bool -> Boolean.class;       
+           case Int8 -> Byte.class;       
+           case UInt8 -> Byte.class;       
+           case Int16 -> Short.class;       
+           case UInt16 -> Short.class;       
+           case Int32 -> Integer.class;       
+           case UInt32 -> Integer.class;       
+           case Int64 -> Long.class;       
+           case UInt64 -> Long.class;       
+           case Float32 -> Float.class;       
+           case Float64 -> Double.class;       
+           case String -> String.class;                                         
+       };   
+   }
+   
+   public Class toPrimitiveArrayClass(){
+       return switch (this){
+           case Bool -> boolean[].class;       
+           case Int8 -> byte[].class;     
+           case UInt8 -> byte[].class;     
+           case Int16 -> short[].class;     
+           case UInt16 -> short[].class;        
+           case Int32 -> int[].class;       
+           case UInt32 -> int[].class;          
+           case Int64 -> long[].class;     
+           case UInt64 -> long[].class;      
+           case Float32 -> float[].class;      
+           case Float64 -> double[].class;        
+           case String -> boolean[].class;                                          
+       };   
+   }   
 
    
    public static Type fromClass(Class cls){
