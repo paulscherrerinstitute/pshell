@@ -606,11 +606,18 @@ public class Context {
         return null;
     }
         
+    public static String DEFAULT_SCAN_TAG = "scan_{index}%d";
+    
+    static String defaultScanTag = DEFAULT_SCAN_TAG;
            
-    public static String getScanTag() {
-        //!!! TODO
-        //return (scanTag == null) ? "scan {index}%d" : scanTag;
-        return "scan {index}%d";
+    public static void  setDefaultScanTag(String tag){
+        if (tag==null){
+            tag = DEFAULT_SCAN_TAG;
+        }
+    }
+           
+    public static String getDefaultScanTag() {
+        return defaultScanTag;
     }    
        
     public static String getApplicationName() {    

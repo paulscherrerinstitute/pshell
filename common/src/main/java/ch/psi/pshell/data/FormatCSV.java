@@ -76,6 +76,7 @@ public class FormatCSV extends FormatText {
 
         return ret;
     }
+        
 
     @Override
     public DataSlice getData(String root, String path, int index) throws IOException {
@@ -95,9 +96,21 @@ public class FormatCSV extends FormatText {
         }
         
         
-        String[] typeNames = getAttributes(root, path).get(INFO_FIELD_TYPES).toString().split(separator);
-        int[] lengths = new int[typeNames.length];
-        parseFieldTypes(typeNames, lengths);       
+        //String[] typeNames = getAttributes(root, path).get(INFO_FIELD_TYPES).toString().split(separator);
+        //int[] lengths = new int[typeNames.length];
+        //parseFieldTypes(typeNames, lengths);       
+        
+        String[] columns = getAttributes(root, path).get(INFO_FIELD_TYPES).toString().split(separator);                    
+        String[] names = new String[columns.length];
+        String[] typeNames =  new String[columns.length];
+        int[] lengths = new int[columns.length];
+        for (int i=0; i<columns.length; i++){
+            Attr attr = parseAttrStr(columns[i]);
+            names[i] = attr.name();
+            typeNames[i] = attr.type();
+            lengths[i] = attr.dimensions()==null ? 0 : attr.dimensions()[0];
+        }                  
+        
         Class[] fieldTypes = getFieldTypes(typeNames, lengths);
         Path filePath = getFilePath(root, path);
 
@@ -130,38 +143,40 @@ public class FormatCSV extends FormatText {
             createDataset(path, new String[]{"Value"}, new Class[]{type}, dimensions, features);
             return;
         }
-        throw new UnsupportedOperationException("CSV format only support one dimensional datasets");
+        throw new UnsupportedOperationException("CSV format only support one dimensional datasets: " + path);
     }
 
     @Override
     public void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
-        Path filePath = getFilePath(path);
-        PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
-        OutputFile of;
-        synchronized (openFiles) {
-            of = openFiles.get(path);
-            if (of == null) {
-                of = new OutputFile(out);
-                openFiles.put(path, of);
-            }
+        super.createDataset(path, names, types, lengths, features);
+        if (HEADER_VERSION==1){
+            StringJoiner sj = new StringJoiner(getItemSeparator(), "", getLineSeparator());
+            for (int i = 0; i < types.length; i++) {
+                String type = types[i].getName();
+                if (lengths[i] > 0) {
+                    type += LENGTH_SEPARATOR + String.valueOf(lengths[i]);
+                }
+                sj.add(type);                
+            }      
+            setAttribute(path, INFO_FIELD_TYPES, sj.toString().trim(), String.class, false);
+        } else {
+            var header = new ArrayList<String>();
+            for (int i = 0; i < types.length; i++) {
+                int[] dims = lengths[i]>0 ? new int[]{lengths[i]} : null;
+                header.add(createAttrStr(names[i], getTypeName(types[i], false), dims, null));
+            }        
+            setAttribute(path, INFO_FIELD_TYPES, String.join(getItemSeparator(), header), String.class, false);
         }
-        synchronized (of) {
-            of.composite = true;
-            out.print(String.join(getItemSeparator(), names));
-            if (getFinalSeparator() &&  (names.length > 0)) {
-                out.append(getItemSeparator());
-            }
-            out.append(getLineSeparator());
+        
+    }
+    
+    @Override
+    protected void writeCompositeDatasetHeader(PrintWriter out,  String[] names, Class[] types, int[] lengths) throws IOException{        
+        out.print(String.join(getItemSeparator(), names));
+        if (getFinalSeparator() &&  (names.length > 0)) {
+            out.append(getItemSeparator());
         }
-        StringJoiner sj = new StringJoiner(getItemSeparator(), "", getLineSeparator());
-        for (int i = 0; i < types.length; i++) {
-            String type = types[i].getName();
-            if (lengths[i] > 0) {
-                type += LENGTH_SEPARATOR + String.valueOf(lengths[i]);
-            }
-            sj.add(type);
-        }      
-        setAttribute(path, INFO_FIELD_TYPES, sj.toString().trim(), String.class, false);
+        out.append(getLineSeparator());        
     }
 
     @Override

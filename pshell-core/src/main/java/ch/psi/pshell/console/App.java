@@ -89,8 +89,8 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         Context.setConfigFilePermissions(config.filePermissionsConfig);
         Context.setDataFilePermissions(config.filePermissionsData);
         Context.setLogFilePermissions(config.filePermissionsLogs);
-        Context.setScriptFilePermissions(config.filePermissionsScripts);
-        //!!!
+        Context.setScriptFilePermissions(config.filePermissionsScripts);        
+        Context.setDefaultScanTag(config.getDataScanDefaultTag());
         Config.setDefaultPermissions(config.filePermissionsConfig);
         History.setDefaultPermissions(config.filePermissionsConfig);
               

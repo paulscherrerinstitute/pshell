@@ -1,6 +1,7 @@
 package ch.psi.pshell.console;
 
 import ch.psi.pshell.framework.Config;
+import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Context.DataTransferMode;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.logging.LogLevel;
@@ -45,6 +46,7 @@ public class Configuration extends Config {
     public boolean dataScanLazyTableCreation = false;
     public int dataScanStreamerPort = -1;
     public boolean dataScanSaveLogs = true;
+    public String dataScanDefaultTag = Context.DEFAULT_SCAN_TAG;
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
     public String dataTransferPath = "";
     public String dataTransferUser = "";
@@ -237,5 +239,12 @@ public class Configuration extends Config {
             return DEFAULT_DATA_PATH;
         }
         return dataPath;        
+    }
+    
+    public String getDataScanDefaultTag(){
+        if (dataScanDefaultTag==null){
+            return Context.DEFAULT_SCAN_TAG;
+        }
+        return dataScanDefaultTag;
     }
 }

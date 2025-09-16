@@ -344,6 +344,17 @@ public class Arr {
         }
         return null;
     }
+
+    public static Class getClassComponentType(Class type) {
+        if (type != null) {
+            while (type.isArray()) {
+                type = type.getComponentType();
+            }
+            return type;
+        }
+        return null;
+    }
+
     
     public static String getTypeName(Object obj) {
         if (obj==null){

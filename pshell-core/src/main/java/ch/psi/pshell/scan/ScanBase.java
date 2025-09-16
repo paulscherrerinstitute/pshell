@@ -819,7 +819,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     void updateTag(){
         String val = Context.getExecutionPars().getTag();
-        val = Setup.expandPath((val == null) ? Context.getScanTag() : val);
+        val = Setup.expandPath((val == null) ? Context.getDefaultScanTag() : val);
         tag = val;
     }
     

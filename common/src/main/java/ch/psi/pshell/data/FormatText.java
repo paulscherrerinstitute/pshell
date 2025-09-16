@@ -2,8 +2,8 @@ package ch.psi.pshell.data;
 
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
-import ch.psi.pshell.utils.EncoderJson;
 import ch.psi.pshell.utils.IO;
+import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Type;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -15,7 +15,6 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -26,6 +25,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -60,28 +60,36 @@ public class FormatText implements Format {
 
     public static final String COMMENT_MARKER = "#";
     public static final String PAGE_MARKER = "page: ";
-    public static final String TYPE_MARKER = "type ";
-    public static final String DIMS_MARKER = "dims ";
-    public static final String LENGTH_SEPARATOR = " * ";
 
     public static final String ATTR_FILE = "attrs";
     public static final String ATTR_CLASS_MARKER = " # ";
     public static final String ATTR_VALUE_MARKER = " = ";
+    
+    //V1 header
+    public static final String TYPE_MARKER = "type ";
+    public static final String DIMS_MARKER = "dims ";
+    public static final String LENGTH_SEPARATOR = " * ";
+    
+    //V2 header
+    public static final String ARRAY_MARKER = "array ";
+    public static final String COMPOSITE_MARKER = "columns ";
+    public static final String SIMPLE_DATASET_VAR = "value";
 
     static String ITEM_SEPARATOR;
     static String ARRAY_SEPARATOR;
     static String LINE_SEPARATOR;
 
-    static boolean JSON_ATTRS =true;
-
-    public static void setJsonAttrs(boolean str) {
-        JSON_ATTRS = str;
-    }
-
-    public static boolean getJsonAttrs() {
-        return JSON_ATTRS;
-    }
     
+    static int HEADER_VERSION = 2;
+
+    public static void setHeaderVersion(int version) {
+        HEADER_VERSION = version;
+    }
+
+    public static int getHeaderVersion() {
+        return HEADER_VERSION;
+    }        
+
     static String NULL_VALUE = " ";
 
     public static void setNullValue(String str) {
@@ -181,6 +189,13 @@ public class FormatText implements Format {
 
     public String getLineSeparator() {
         return lineSeparator;
+    }
+    
+    public int getHeaderSize(){
+        if (HEADER_VERSION==1){
+            return 2;
+        }
+        return 1;
     }
 
     @Override
@@ -351,25 +366,26 @@ public class FormatText implements Format {
         return ret.toArray(new String[0]);
     }
 
-    void addClassInfo(String typeName, HashMap<String, Object> ret)  {
+    void addClassInfo(String typeName, Map<String, Object> ret)  {
         boolean unsigned = false;
-        Class type;
+        Class cls;
         try{
-            type = getType(typeName).toClass();
-            unsigned =getType(typeName).isUnsigned();                    
+            Type type = Type.fromKey(typeName);            
+            cls = type.toClass();
+            unsigned = type.isUnsigned();                    
         } catch (Exception ex){
             try {
-                type = Class.forName(typeName);
+                cls = Class.forName(typeName);
             } catch (ClassNotFoundException ex1) {
                 Logger.getLogger(FormatText.class.getName()).warning("Invalid dataset type, setting to Double: " + typeName);
-                type = Double.class;
+                cls = Double.class;
             }
         }       
-        addClassInfo(type, unsigned, ret);
+        addClassInfo(cls, unsigned, ret);
     }
     
     
-    void addClassInfo(Class type, boolean unsigned, HashMap<String, Object> ret)  {
+    void addClassInfo(Class type, boolean unsigned, Map<String, Object> ret)  {
         Integer size = null;        
         
         ret.put(INFO_CLASS, type.getName());
@@ -412,15 +428,28 @@ public class FormatText implements Format {
     }
 
     protected String getItemSeparator(String line) {
-        String separator = getItemSeparator();
-        try {
-            String[] tokens = line.split("[A-Za-z0-9.:$\\-_]");
-            String sep = tokens[tokens.length - 1];
-            if (!sep.isEmpty()) {
-                separator = sep;
-            }
-        } catch (Exception ex) {
+        String separator = getItemSeparator(); // default fallback
+
+        // Match sequences of non-alphanumeric, non-bracket, non-dot, non-colon chars
+        // Basically "separators"
+        Pattern p = Pattern.compile("[^A-Za-z0-9.:$_\\[\\]-]+");
+        Matcher m = p.matcher(line);
+
+        java.util.Map<String, Integer> counts = new java.util.HashMap<>();
+
+        while (m.find()) {
+            String sep = m.group();
+            counts.merge(sep, 1, Integer::sum);
         }
+
+        if (!counts.isEmpty()) {
+            // Pick separator with max frequency
+            separator = counts.entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .get()
+                .getKey();
+        }
+
         return separator;
     }
 
@@ -434,6 +463,8 @@ public class FormatText implements Format {
         }        
         
         HashMap<String, Object> ret = new HashMap<>();
+        List<String> header = new ArrayList<>();
+        boolean parsingHeader = true;
         Path filePath = getFilePath(root, path);
         File file = filePath.toFile();
         if (!file.exists()) {
@@ -443,19 +474,13 @@ public class FormatText implements Format {
             String line;
             try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
                 int index = 0;
-                boolean composite = false;
-                String separator = getItemSeparator();
                 while ((line = br.readLine()) != null) {
                     //line = line.trim();
                     if (!line.isEmpty()) {
                         if (!line.startsWith(COMMENT_MARKER)) {
-                            if (!ret.containsKey(INFO_CLASS)) {
-                                //If no type record assumes Double                                
-                                addClassInfo(Double.class, false, ret);
-                            }
-                            if (!ret.containsKey(INFO_DIMENSIONS)) {
-                                ret.put(INFO_DIMENSIONS, new int[]{0});
-                                ret.put(INFO_RANK, 1);
+                            if (parsingHeader == true){
+                                parsingHeader = false;
+                                processFileHeader(header, ret);
                             }
                             if ((Integer) ret.get(INFO_RANK) != 3) {
                                 break;
@@ -463,61 +488,37 @@ public class FormatText implements Format {
 
                         } else {
                             line = line.substring(1);
-                            //In a table dataset first line is the column names                        
-                            if (index == 0) {
-                                if (line.startsWith(TYPE_MARKER)) {
-                                    composite = false;
-                                    String dataType = line.substring(TYPE_MARKER.length());                                    
-                                    addClassInfo(dataType, ret);
-                                } else {
-                                    composite = true;
-                                    separator = getItemSeparator(line);
-                                    ret.put(INFO_ITEM_SEPARATOR, separator);
-                                    String[] tokens = line.split(separator);
-                                    ret.put(INFO_FIELD_NAMES, tokens);
-                                    ret.put(INFO_FIELDS, tokens.length);
+                            if (parsingHeader == true){                                
+                                if ((index==0) || !line.contains(ATTR_VALUE_MARKER)){
+                                    header.add(line);
                                 }
-                            }
-                            //In a table dataset second line is the column types
-                            if ((index == 1) && composite) {
-                                
-                                ret.put(INFO_DIMENSIONS, new int[]{0});
-                                ret.put(INFO_RANK, 1);
-                                ret.put(INFO_CLASS, Object.class.getName());
-                                ret.put(INFO_DATA_TYPE, INFO_VAL_DATA_TYPE_COMPOUND);
-                                String[] types = line.split(separator);
-                                int[] lengths = new int[types.length];
-                                parseFieldTypes(types, lengths);
-                                ret.put(INFO_FIELD_TYPES, types);
-                                ret.put(INFO_FIELD_LENGTHS, lengths);
-                            } else if (line.startsWith(DIMS_MARKER)) {
-                                try{
-                                    String aux = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
-                                    int[] dimensions = new int[0];
-                                    if (!aux.isEmpty()) {
-                                        String[] tokens = aux.split(",");
-                                        dimensions = new int[tokens.length];
-                                        for (int i = 0; i < dimensions.length; i++) {
-                                            dimensions[i] = Integer.valueOf(tokens[i].trim());
-                                        }
+                            } else {
+                                if (line.startsWith(PAGE_MARKER)) {
+                                    Integer page = Integer.valueOf(line.substring(PAGE_MARKER.length()));
+                                    if (ret.containsKey(INFO_DIMENSIONS)) {
+                                        int[] dimensions = (int[]) ret.get(INFO_DIMENSIONS);
+                                        dimensions[getDepthDimension()] = page + 1;
+                                        ret.put(INFO_DIMENSIONS, dimensions);
                                     }
-                                    ret.put(INFO_DIMENSIONS, dimensions);
-                                    ret.put(INFO_RANK, dimensions.length);
-                                } catch (Exception ex){
-                                     //XScan dims attribute
-                                }
-                            } else if (line.startsWith(PAGE_MARKER)) {
-                                Integer page = Integer.valueOf(line.substring(PAGE_MARKER.length()));
-                                if (ret.containsKey(INFO_DIMENSIONS)) {
-                                    int[] dimensions = (int[]) ret.get(INFO_DIMENSIONS);
-                                    dimensions[getDepthDimension()] = page + 1;
-                                    ret.put(INFO_DIMENSIONS, dimensions);
-                                }
+                                }                                
                             }
                         }
                         index++;
                     }
-                    int[] dimensions = (int[]) ret.getOrDefault(INFO_DIMENSIONS, new int[0]);
+                }
+                if (header.size()>0){
+                    if (parsingHeader == true){
+                        processFileHeader(header, ret);
+                    }                    
+                    if (!ret.containsKey(INFO_CLASS)) {
+                        //If no type record assumes Double                                
+                        addClassInfo(Double.class, false, ret);
+                    }
+                    if (!ret.containsKey(INFO_DIMENSIONS)) {
+                        ret.put(INFO_DIMENSIONS, new int[]{0});
+                        ret.put(INFO_RANK, 1);
+                    }                    
+                    int[] dimensions = (int[]) ret.get(INFO_DIMENSIONS);
                     long elements = 0;
                     if (dimensions.length>0){
                         elements = 1;
@@ -526,7 +527,7 @@ public class FormatText implements Format {
                         }
                     }
                     ret.put(INFO_ELEMENTS, elements);
-                }
+                }                
             }
         } else {
             if (!IO.isSamePath(filePath.toString(), root)) {
@@ -535,12 +536,30 @@ public class FormatText implements Format {
         }
         return ret;
     }
+    
+    protected void addSimpleDatasetInfo(String dataType, int[] dimensions, Map<String, Object> info){
+        addClassInfo(dataType, info);
+        if (dimensions!=null){
+            info.put(INFO_DIMENSIONS, dimensions);
+            info.put(INFO_RANK, dimensions.length);        
+        }
+    }
+    
+    protected void addCompositeDatasetInfo(String[] names, String[] types, int[] lenghts, String separator, Map<String, Object> info){
+            info.put(INFO_FIELD_NAMES, names);
+            info.put(INFO_FIELDS, names.length);        
+            info.put(INFO_DIMENSIONS, new int[]{0});
+            info.put(INFO_RANK, 1);
+            info.put(INFO_CLASS, Object.class.getName());
+            info.put(INFO_DATA_TYPE, INFO_VAL_DATA_TYPE_COMPOUND);
+            info.put(INFO_FIELD_TYPES, types);
+            info.put(INFO_FIELD_LENGTHS, lenghts);        
+            info.put(INFO_ITEM_SEPARATOR, separator);
+    }
+
 
     protected Path getAttributePath(String root, String path) throws IOException {
         String attrFileName = ATTR_FILE;
-        if (JSON_ATTRS){
-            attrFileName+=".json";
-        }
         return isGroup(root, path)
                 ? Paths.get(root, path, attrFileName)
                 : Paths.get(root, path + "." + attrFileName);
@@ -552,16 +571,11 @@ public class FormatText implements Format {
         Path filePath = getAttributePath(root, path);
         File file = filePath.toFile();
         //attr file
-        if ((file.exists()) && (file.isFile())) {
-            if (JSON_ATTRS){
-                String json = new String(Files.readAllBytes(file.toPath()));
-                ret = (Map<String, Object>) EncoderJson.decode(json, Map.class);
-            } else {
-                String line;
-                try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                    while ((line = br.readLine()) != null) {
-                        parseAttr(line, ret);
-                    }
+        if ((file.exists()) && (file.isFile())) {            
+            String line;
+            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                while ((line = br.readLine()) != null) {
+                    parseAttribute(line, ret);
                 }
             }
         } else {
@@ -580,9 +594,9 @@ public class FormatText implements Format {
                                     break;
                                 }
                             }
-                            if ((index >= 2) && (line.startsWith(COMMENT_MARKER))) {
+                            if ((index >= getHeaderSize()) && (line.startsWith(COMMENT_MARKER))) {
                                 line = line.substring(1);
-                                parseAttr(line, ret);
+                                parseAttribute(line, ret);
                             }
                             index++;
                         }
@@ -592,59 +606,44 @@ public class FormatText implements Format {
         }
         return ret;
     }
-
-    private void parseAttr(String line,Map<String, Object> ret) {
-        String[] tokens = line.split(ATTR_VALUE_MARKER);
-        if (line.contains(ATTR_VALUE_MARKER)) {
-            if (tokens.length == 2) {
-                String[] val = tokens[1].split(ATTR_CLASS_MARKER);
-                if (val.length == 2) {
-                    Object data = val[0];
-                    Class type = String.class;
-                    try {
-                        type = Class.forName(val[1]);
-                        if (type.isPrimitive()) {
-                            type = Convert.getWrapperClass(type);
-                        }
-                        if (type == String.class) {
-                            data = val[0];
-                        } else if (type == Double.class) {
-                            data = Double.valueOf(val[0]);
-                        } else if (type == Float.class) {
-                            data = Float.valueOf(val[0]);
-                        } else if (type == Long.class) {
-                            data = Long.valueOf(val[0]);
-                        } else if (type == Integer.class) {
-                            data = Integer.valueOf(val[0]);
-                        } else if (type == Short.class) {
-                            data = Short.valueOf(val[0]);
-                        } else if (type == Byte.class) {
-                            data = Byte.valueOf(val[0]);
-                        } else if (type == BigInteger.class) {
-                            data = new BigInteger(val[0]);
-                        } else if (type == Boolean.class) {
-                            data = Boolean.valueOf(val[0]);
-                        } else if (type.isArray()) {
-                            Class componentType = type.getComponentType();
-                            if (type == String[].class) {
-                                data = val[0].split(getArraySeparator());
-                            } else {
-                                if (Convert.isWrapperClass(componentType)) {
-                                    componentType = Convert.getPrimitiveClass(type);
-                                }
-                                if (componentType.isPrimitive()) {
-                                    data = Convert.toPrimitiveArray(val[0], getArraySeparator(), componentType);
-                                }
-                            }
-                        }
-                    } catch (Exception ex) {
-                        data = val[0];
+    
+    protected Object getAttrVal(Class type, String attr){
+            if (type.isPrimitive()) {
+                type = Convert.getWrapperClass(type);
+            }
+            if (type == String.class) {
+                return attr;
+            } else if (type == Double.class) {
+                return  Double.valueOf(attr);
+            } else if (type == Float.class) {
+                return  Float.valueOf(attr);
+            } else if (type == Long.class) {
+                return  Long.valueOf(attr);
+            } else if (type == Integer.class) {
+                return  Integer.valueOf(attr);
+            } else if (type == Short.class) {
+                return  Short.valueOf(attr);
+            } else if (type == Byte.class) {
+                return  Byte.valueOf(attr);
+            } else if (type == BigInteger.class) {
+                return  new BigInteger(attr);
+            } else if (type == Boolean.class) {
+                return  Boolean.valueOf(attr);
+            } else if (type.isArray()) {
+                Class componentType = type.getComponentType();
+                if (type == String[].class) {
+                    return  attr.split(getArraySeparator());
+                } else {
+                    if (Convert.isWrapperClass(componentType)) {
+                        componentType = Convert.getPrimitiveClass(type);
                     }
-                    ret.put(tokens[0].trim(), data);
+                    if (componentType.isPrimitive()) {
+                        return  Convert.toPrimitiveArray(attr, getArraySeparator(), componentType);
+                    }
                 }
             }
-        }
-    }
+            return attr;
+    }    
     
     
     @Override
@@ -785,7 +784,7 @@ public class FormatText implements Format {
                 } else {
                     fieldTypes[i] = getTypeArrayClass(typeNames[i]);
                 }
-                
+
             }
         }
         return fieldTypes;
@@ -830,14 +829,13 @@ public class FormatText implements Format {
                 of = openFiles.get(path);
             }
             if (of == null) {
-                throw new IOException("Output file not opened");
+                throw new IOException("Output file not opened: " + filePath);
             }
             synchronized (of) {
                 PrintWriter out = of.out;
                 StringBuffer sb = new StringBuffer();
-                sb.append(COMMENT_MARKER + name + ATTR_VALUE_MARKER);
-                writeElement(sb, value);
-                sb.append(ATTR_CLASS_MARKER + type.getName());
+                sb.append(COMMENT_MARKER);
+                writeAttribute(name, value, type, unsigned, sb);
                 sb.append(getLineSeparator());
 
                 if (!getOrderedAtributes() || of.header) {
@@ -861,18 +859,9 @@ public class FormatText implements Format {
         } else {
             synchronized (attributesLock) {
                 Path attrPath = getAttributePath(root, path);
-                if (JSON_ATTRS){
-                     Map<String, Object> attrs = getAttributes(root, path);
-                     attrs.put(name, value);
-                     String json = EncoderJson.encode(attrs, true);
-                     Files.write(attrPath, json.getBytes());                     
-                } else {
-                    try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(attrPath.toString(), true)))) {
-                        writer.print(name + ATTR_VALUE_MARKER);
-                        writeElement(writer, value);
-                        writer.print(ATTR_CLASS_MARKER + type.getName());
-                        writer.print(getLineSeparator());
-                    }
+                try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(attrPath.toString(), true)))) {
+                    writeAttribute(name, value, type, unsigned, writer);
+                    writer.print(getLineSeparator());
                 }
             }
         }
@@ -929,24 +918,18 @@ public class FormatText implements Format {
     
     public String getTypeName( Class type, boolean unsigned){        
         try{
-            return Type.fromClass(type, unsigned).getKey();
+            String ret = Type.toKey(type, unsigned);
+            return ret;
+            
         } catch (Exception ex){
             return type.getName();
         }        
     }
 
-    public Type getType(String name){        
-        try{
-            return Type.fromKey(name);
-        } catch (Exception ex){
-            return null;
-        }        
-    }
-    
     public Class getTypeClass(String name){        
         Class type = null;
         try{
-            type = Type.fromKey(name).toClass();
+            type = Type.toClass(name);
         } catch (Exception ex){
             try {
                 type = Class.forName(name);
@@ -974,32 +957,234 @@ public class FormatText implements Format {
         return type;
     }
     
+    protected String createAttrStr(String name, String type, int[] dimensions, Object value) throws IOException{
+        StringBuilder sb = new StringBuilder();
+        sb.append(name);
+        if (type!=null){
+            sb.append(":");
+            if (dimensions!=null){              
+                type = Type.toComponentTypeKey(type);
+            }
+            sb.append(type);
+            if (dimensions!=null){              
+                sb.append(Str.toString(dimensions));
+            }
+        }
+        if (value!=null){
+            sb.append("=");
+            writeElement(sb, value);
+
+        }
+        return sb.toString();
+    }
     
-    protected void writeSingleDatasetHeader(PrintWriter out,  Class type, int[] dimensions, boolean unsigned){
-        out.print(COMMENT_MARKER + TYPE_MARKER + getTypeName(type, unsigned));
-        out.print(getLineSeparator());
-        out.print(COMMENT_MARKER + DIMS_MARKER + Arrays.toString(dimensions));
+    
+    protected record Attr(String name, String type, int[] dimensions, String value) {}
+   
+    protected static Attr parseAttrStr(String s) {
+        if (s == null) throw new IllegalArgumentException("Input is null");
+        String line = s.trim();
+        if (line.isEmpty()) throw new IllegalArgumentException("Input is empty");
+
+        // split off value if present (first '=')
+        int eq = line.indexOf('=');
+        String left = (eq >= 0) ? line.substring(0, eq).trim() : line;
+        String value = (eq >= 0) ? line.substring(eq + 1) : null;
+        if (value != null) value = value.trim(); // may be empty string
+
+        // look for ':' separating name and type
+        int colon = left.indexOf(':');
+        String name;
+        String type = null;
+        int[] dims = null;
+
+        if (colon < 0) {
+            // only name (no type/dims)
+            name = left.trim();
+        } else {
+            name = left.substring(0, colon).trim();
+            String rest = left.substring(colon + 1).trim();
+            if (rest.isEmpty()) {
+                // colon present but nothing after it -> treat as no type
+                type = null;
+                dims = null;
+            } else {
+                // check for '[' for dimensions
+                int brOpen = rest.indexOf('[');
+                if (brOpen >= 0) {
+                    int brClose = rest.indexOf(']', brOpen);
+                    if (brClose < 0) {
+                        throw new IllegalArgumentException("Missing closing ']' in: " + s);
+                    }
+                    type = rest.substring(0, brOpen).trim();
+                    String inner = rest.substring(brOpen + 1, brClose).trim();
+                    if (inner.isEmpty()) {
+                        // explicit empty brackets -> dimension [0]
+                        dims = new int[]{0};
+                    } else {
+                        // comma separated integers
+                        String[] parts = inner.split(",");
+                        dims = new int[parts.length];
+                        for (int i = 0; i < parts.length; i++) {
+                            String p = parts[i].trim();
+                            if (p.isEmpty()) {
+                                throw new IllegalArgumentException("Empty dimension entry in: " + s);
+                            }
+                            try {
+                                dims[i] = Integer.parseInt(p);
+                            } catch (NumberFormatException ex) {
+                                throw new IllegalArgumentException("Invalid integer in dimensions: '" + p + "' in: " + s, ex);
+                            }
+                        }
+                    }
+                    // ignore anything after ']' (should be just whitespace)
+                } else {
+                    // no brackets: just a type name
+                    type = rest.isEmpty() ? null : rest;
+                    dims = null;
+                }
+            }
+        }
+
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Empty name in: " + s);
+        }
+
+        return new Attr(name, type, dims, value);
+    }
+
+    protected void writeSingleDatasetHeader(PrintWriter out,  Class type, int[] dimensions, boolean unsigned) throws IOException{
+        if (HEADER_VERSION==1.0){
+            out.print(COMMENT_MARKER + TYPE_MARKER + getTypeName(type, unsigned));        
+            out.print(getLineSeparator());
+            out.print(COMMENT_MARKER + DIMS_MARKER + Arrays.toString(dimensions));            
+        } else {
+            out.print(COMMENT_MARKER + ARRAY_MARKER + createAttrStr(SIMPLE_DATASET_VAR, getTypeName(type, unsigned), dimensions, null));        
+        }
         out.print(getLineSeparator());        
     }
     
-    protected void writeCompositeDatasetHeader(PrintWriter out,  String[] names, Class[] types, int[] lengths){
-        out.print(COMMENT_MARKER);
-        out.print(String.join(getItemSeparator(), names));
-        if (getFinalSeparator() &&  (names.length > 0)) {
-            out.append(getItemSeparator());
-        }
-        out.append(getLineSeparator());
-
-        StringJoiner sj = new StringJoiner(getItemSeparator(), COMMENT_MARKER, getLineSeparator());
-        for (int i = 0; i < types.length; i++) {
-            String type = getTypeName(types[i], false);
-            if (lengths[i] > 0) {
-                type += LENGTH_SEPARATOR + String.valueOf(lengths[i]);
+    protected void writeCompositeDatasetHeader(PrintWriter out,  String[] names, Class[] types, int[] lengths) throws IOException{        
+        if (HEADER_VERSION==1.0){
+            out.print(COMMENT_MARKER);
+            out.print(String.join(getItemSeparator(), names));
+            if (getFinalSeparator() &&  (names.length > 0)) {
+                out.append(getItemSeparator());
             }
-            sj.add(type);
+            out.append(getLineSeparator());
+            StringJoiner sj = new StringJoiner(getItemSeparator(), COMMENT_MARKER, getLineSeparator());
+            for (int i = 0; i < types.length; i++) {
+                String type = getTypeName(types[i], false);
+                if (lengths[i] > 0) {
+                    type += LENGTH_SEPARATOR + String.valueOf(lengths[i]);
+                }
+                sj.add(type);
+            }
+            out.append(sj.toString());        
+        } else {
+            out.print(COMMENT_MARKER + COMPOSITE_MARKER);
+            var header = new ArrayList<String>();
+            for (int i = 0; i < types.length; i++) {
+                int[] dims = lengths[i]>0 ? new int[]{lengths[i]} : null;
+                header.add(createAttrStr(names[i], getTypeName(types[i], false), dims, null));
+            }
+            out.print(String.join(getItemSeparator(), header));
         }
-        out.append(sj.toString());        
+        out.print(getLineSeparator());
     }
+    
+    protected void writeAttribute(String name, Object value, Class type, boolean unsigned, Appendable buffer) throws IOException{
+        if (HEADER_VERSION==1.0){
+            buffer.append(name + ATTR_VALUE_MARKER);
+            writeElement(buffer, value);
+            buffer.append(ATTR_CLASS_MARKER + getTypeName(type, unsigned));                        
+        } else {
+            int[] dimensions = ((value != null) && (value.getClass().isArray())) ? new int[]{Array.getLength(value)} : null;
+            buffer.append(createAttrStr(name, getTypeName(type, unsigned), dimensions, value));            
+        }
+    }
+        
+    private void parseAttribute(String line,Map<String, Object> ret) {        
+        if (line.contains(ATTR_VALUE_MARKER)) { 
+            //HEADER_VERSION==1.0
+            String[] tokens = line.split(ATTR_VALUE_MARKER);
+            if (tokens.length == 2) {
+                String[] val = tokens[1].split(ATTR_CLASS_MARKER);
+                if (val.length == 2) {
+                    Object data = val[0];
+                    Class type = String.class;
+                    try {
+                        type = getTypeClass(val[1]);
+                        data = getAttrVal(type, val[0]);
+                    } catch (Exception ex) {
+                    }                    
+                    ret.put(tokens[0].trim(), data);
+                }
+            }
+        } else {
+            Attr attr = parseAttrStr(line);
+            Class type = (attr.dimensions != null) ? getTypeArrayClass(attr.type) : getTypeClass(attr.type);
+            ret.put(attr.name, getAttrVal(type, attr.value));            
+        }
+    }
+    
+    
+    protected void processFileHeader(List<String> header, Map<String, Object> info){        
+        if (header.size()==0){
+            return;
+        }
+        String separator = getItemSeparator(header.get(0));
+        
+        boolean v2 = ((header.size()==1) || 
+                     header.get(0).startsWith(ARRAY_MARKER) || 
+                     header.get(0).startsWith(COMPOSITE_MARKER));        
+        if (v2){       
+            if (header.get(0).startsWith(ARRAY_MARKER)){ //Simple
+                String array = header.get(0).substring(ARRAY_MARKER.length());     
+                Attr attr = parseAttrStr(array);
+                addSimpleDatasetInfo(attr.type, attr.dimensions, info);
+            } else if (header.get(0).startsWith(COMPOSITE_MARKER)){ //Composite   
+                String[] columns = header.get(0).substring(COMPOSITE_MARKER.length()).split(separator);                     
+                String[] names = new String[columns.length];
+                String[] types =  new String[columns.length];
+                int[] lengths = new int[columns.length];
+                for (int i=0; i<columns.length; i++){
+                    Attr attr = parseAttrStr(columns[i]);
+                    names[i] = attr.name;
+                    types[i] = attr.type;
+                    lengths[i] = attr.dimensions==null ? 0 : attr.dimensions[0];
+                }                
+                addCompositeDatasetInfo(names, types, lengths, separator, info);                
+            }         
+        } else {            
+            if (header.get(0).startsWith(TYPE_MARKER)){ //Simple
+                String dataType = header.get(0).substring(TYPE_MARKER.length());     
+                int[] dimensions = new int[0];
+                try{
+                    String line = header.get(1);
+                    String aux = line.substring(line.indexOf("[") + 1, line.indexOf("]"));                
+                    if (!aux.isEmpty()) {
+                        String[] tokens = aux.split(",");
+                        dimensions = new int[tokens.length];
+                        for (int i = 0; i < dimensions.length; i++) {
+                            dimensions[i] = Integer.valueOf(tokens[i].trim());
+                        }
+                    }                
+                } catch (Exception ex){
+                     //XScan dims attribute
+                }
+                addSimpleDatasetInfo(dataType, dimensions, info);
+
+            } else { //Composite                             
+                String[] names = header.get(0).split(separator);
+                String[] types = header.get(1).split(separator);
+                int[] lengths = new int[types.length];
+                parseFieldTypes(types, lengths);
+                addCompositeDatasetInfo(names, types, lengths, separator, info);
+            }            
+        }
+    }
+    
     
 
     void writeElement(Appendable out, Object value) throws IOException {
@@ -1034,7 +1219,7 @@ public class FormatText implements Format {
             of = openFiles.get(path);
         }
         if (of == null) {
-            throw new IOException("Output file not opened");
+            throw new IOException("Output file not opened: " + path);
         }
         synchronized (of) {
             PrintWriter out = of.out;
@@ -1067,5 +1252,5 @@ public class FormatText implements Format {
             }
             out.print(getLineSeparator());
         }
-    }
+    }    
 }

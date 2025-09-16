@@ -198,14 +198,13 @@ public class FormatTIFF extends FormatText {
         
         //Composite
         if (rank==1 && type==Object[].class){
+            Map<String, Object> info = getInfo(this.root, path);
+            String[] names = (String[]) info.get(INFO_FIELD_NAMES);
             for (int i=0; i< shape[0]; i++){
                 Object value = Array.get(data, i);
                 if (Arr.getRank(value) == 2){
-                    Map<String, Object> info = getInfo(this.root, path);
-                    String[] names = (String[]) info.get(INFO_FIELD_NAMES);
-                    String name = names[i];
-                    Path prefix = getFilePath(path, false).getParent();
-                    String filename = prefix.toString() + "/" + name + String.format(IMAGE_LIST_SUFFIX, index);
+                    Path prefix = getFilePath(path, false);
+                    String filename = prefix.toString() + "_" + names[i] + String.format(IMAGE_LIST_SUFFIX, index);
                     Tiff.save(value, filename, isParallelWriting(path), getMetadata());                    
                     Array.set(data, i, new File(filename).getName());
                 }
