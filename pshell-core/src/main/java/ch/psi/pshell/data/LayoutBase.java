@@ -315,8 +315,7 @@ public abstract class LayoutBase implements Layout {
         synchronized(scanFiles){
             scanFiles.remove(scan);
         }        
-    }            
-    
+    }                
     
     public void writeDeviceMetadataAttrs(String dataset, Object dev) throws IOException{
         if (dev instanceof Device device){    

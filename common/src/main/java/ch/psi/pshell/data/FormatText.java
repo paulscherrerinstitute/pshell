@@ -82,11 +82,11 @@ public class FormatText implements Format {
     
     static int HEADER_VERSION = 2;
 
-    public static void setHeaderVersion(int version) {
+    public static void setDefaultHeaderVersion(int version) {
         HEADER_VERSION = version;
     }
 
-    public static int getHeaderVersion() {
+    public static int getDefautHeaderVersion() {
         return HEADER_VERSION;
     }        
 
@@ -191,8 +191,18 @@ public class FormatText implements Format {
         return lineSeparator;
     }
     
+    static int headerVersion = HEADER_VERSION;
+
+    public void setHeaderVersion(int version) {
+        headerVersion = version;
+    }
+
+    public int getHeaderVersion() {
+        return headerVersion;
+    }         
+    
     public int getHeaderSize(){
-        if (HEADER_VERSION==1){
+        if (headerVersion==1){
             return 2;
         }
         return 1;
@@ -426,9 +436,17 @@ public class FormatText implements Format {
             ret.put(INFO_ELEMENT_SIZE, size);
         }
     }
+    
+    public static  String getItemSeparator(String line) {
+        return getSeparator(line, getDefaultItemSeparator());
+    }
 
-    protected String getItemSeparator(String line) {
-        String separator = getItemSeparator(); // default fallback
+    public static  String getArraySeparator(String line) {
+        return getSeparator(line, getDefaultArraySeparator());
+    }    
+    
+    public static  String getSeparator(String line, String defaultFallback) {
+        String separator = defaultFallback;         
 
         // Match sequences of non-alphanumeric, non-bracket, non-dot, non-colon chars
         // Basically "separators"
@@ -631,14 +649,15 @@ public class FormatText implements Format {
                 return  Boolean.valueOf(attr);
             } else if (type.isArray()) {
                 Class componentType = type.getComponentType();
+                String arrSeparator = getSeparator(attr, getArraySeparator());
                 if (type == String[].class) {
-                    return  attr.split(getArraySeparator());
+                    return  attr.split(arrSeparator);
                 } else {
                     if (Convert.isWrapperClass(componentType)) {
                         componentType = Convert.getPrimitiveClass(type);
                     }
                     if (componentType.isPrimitive()) {
-                        return  Convert.toPrimitiveArray(attr, getArraySeparator(), componentType);
+                        return  Convert.toPrimitiveArray(attr, arrSeparator, componentType);
                     }
                 }
             }
@@ -673,6 +692,7 @@ public class FormatText implements Format {
             }
             ArrayList data = new ArrayList();
             String line;
+            String arrSeparator = null;            
             while ((line = br.readLine()) != null) {
                 if (!line.isEmpty()) {
                     if (!line.startsWith(COMMENT_MARKER)) {
@@ -683,7 +703,11 @@ public class FormatText implements Format {
                                 if ((sep instanceof String s) && !s.isBlank()) {
                                     separator = s;
                                 }
-                                Object[] record = getRecord(line, separator, fieldTypes);
+                                if (data.isEmpty() && (arrSeparator==null)){
+                                     //Try to search for separator only once 
+                                     arrSeparator = getRecordArraySeparator(line, separator, fieldTypes);
+                                }
+                                Object[] record = getRecord(line, separator, fieldTypes, arrSeparator);
                                 data.add(record);
                             } else {
                                 switch (rank) {
@@ -694,7 +718,10 @@ public class FormatText implements Format {
                                         data.add(Number.class.isAssignableFrom(type) ? Convert.stringToNumber(line, type) : line);
                                         break;
                                     default:
-                                        String[] vals = line.split(getArraySeparator());
+                                        if (arrSeparator==null){
+                                            arrSeparator = getSeparator(line, getArraySeparator());
+                                        }
+                                        String[] vals = line.split(arrSeparator);
                                         Class arrayType = Convert.getPrimitiveClass(type);
                                         data.add((arrayType != null)
                                                 ? Convert.toPrimitiveArray(vals, arrayType)
@@ -736,8 +763,25 @@ public class FormatText implements Format {
         }
         return ret;
     }
-
+    
+    protected String getRecordArraySeparator(String line, String separator, Class[] fieldTypes) {
+        String[] vals = line.split(separator);
+        for (int i = 0; i < vals.length; i++) {
+            if (fieldTypes[i].isArray()) {
+                Class compType = fieldTypes[i].getComponentType();
+                if (!compType.isArray() && !vals[i].isEmpty()) {
+                    return getSeparator(vals[i], getArraySeparator());                    
+                }
+            }
+        }
+        return null;
+    }    
+    
     protected Object[] getRecord(String line, String separator, Class[] fieldTypes) {
+        return getRecord(line, separator, fieldTypes, null);
+    }
+    
+    protected Object[] getRecord(String line, String separator, Class[] fieldTypes, String arrSeparator) {
         String[] vals = line.split(separator);
         Object[] record = new Object[vals.length];
         for (int i = 0; i < vals.length; i++) {
@@ -748,8 +792,11 @@ public class FormatText implements Format {
                 if (compType.isArray() || vals[i].isEmpty()) {
                     record[i] = null;
                 } else {
+                    if (arrSeparator==null){
+                        arrSeparator = getSeparator(vals[i], getArraySeparator());
+                    }
                     record[i] = compType.isPrimitive()
-                            ? Convert.toPrimitiveArray(vals[i], getArraySeparator(), compType)
+                            ? Convert.toPrimitiveArray(vals[i], arrSeparator, compType)
                             : vals[i];
                 }
             } else {
@@ -971,14 +1018,13 @@ public class FormatText implements Format {
    
     protected static Attr parseAttrStr(String s) {
         if (s == null) throw new IllegalArgumentException("Input is null");
-        String line = s.trim();
-        if (line.isEmpty()) throw new IllegalArgumentException("Input is empty");
+        String line = Str.trimLeft(s); //Preserve value blank characters in the end
+        if (line.isBlank()) throw new IllegalArgumentException("Input is empty");
 
         // split off value if present (first '=')
         int eq = line.indexOf('=');
         String left = (eq >= 0) ? line.substring(0, eq).trim() : line;
-        String value = (eq >= 0) ? line.substring(eq + 1) : null;
-        if (value != null) value = value.trim(); // may be empty string
+        String value = (eq >= 0) ? line.substring(eq + 1) : null;        
 
         // look for ':' separating name and type
         int colon = left.indexOf(':');
@@ -1030,11 +1076,12 @@ public class FormatText implements Format {
                     // no brackets: just a type name
                     type = rest.isEmpty() ? null : rest;
                     dims = null;
+                    if (value != null) value = value.trim(); // may be empty string, but now trimming for arrays because can break final separator
                 }
             }
         }
 
-        if (name == null || name.isEmpty()) {
+        if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Empty name in: " + s);
         }
 
@@ -1042,8 +1089,8 @@ public class FormatText implements Format {
     }
 
     protected void writeSingleDatasetHeader(PrintWriter out,  Class type, int[] dimensions, boolean unsigned) throws IOException{
-        if (HEADER_VERSION==1.0){
-            out.print(COMMENT_MARKER + TYPE_MARKER + getTypeName(type, unsigned));        
+        if (getHeaderVersion()==1.0){
+            out.print(COMMENT_MARKER + TYPE_MARKER + type.getName());        
             out.print(getLineSeparator());
             out.print(COMMENT_MARKER + DIMS_MARKER + Arrays.toString(dimensions));            
         } else {
@@ -1053,7 +1100,7 @@ public class FormatText implements Format {
     }
     
     protected void writeCompositeDatasetHeader(PrintWriter out,  String[] names, Class[] types, int[] lengths) throws IOException{        
-        if (HEADER_VERSION==1.0){
+        if (getHeaderVersion()==1.0){
             out.print(COMMENT_MARKER);
             out.print(String.join(getItemSeparator(), names));
             if (getFinalSeparator() &&  (names.length > 0)) {
@@ -1062,13 +1109,13 @@ public class FormatText implements Format {
             out.append(getLineSeparator());
             StringJoiner sj = new StringJoiner(getItemSeparator(), COMMENT_MARKER, getLineSeparator());
             for (int i = 0; i < types.length; i++) {
-                String type = getTypeName(types[i], false);
+                String type =  types[i].getName();
                 if (lengths[i] > 0) {
                     type += LENGTH_SEPARATOR + String.valueOf(lengths[i]);
                 }
                 sj.add(type);
-            }
-            out.append(sj.toString());        
+            }             
+            out.append(sj.toString());
         } else {
             out.print(COMMENT_MARKER + COMPOSITE_MARKER);
             var header = new ArrayList<String>();
@@ -1080,12 +1127,12 @@ public class FormatText implements Format {
             if (getFinalSeparator() &&  (names.length > 0)) {
                 out.append(getItemSeparator());
             }            
-        }
-        out.print(getLineSeparator());
+            out.print(getLineSeparator());
+        }        
     }
     
     protected void writeAttribute(String name, Object value, Class type, boolean unsigned, Appendable buffer) throws IOException{
-        if (HEADER_VERSION==1.0){
+        if (getHeaderVersion()==1.0){
             buffer.append(name + ATTR_VALUE_MARKER);
             writeElement(buffer, value);
             buffer.append(ATTR_CLASS_MARKER + getTypeName(type, unsigned));                        
@@ -1097,7 +1144,7 @@ public class FormatText implements Format {
         
     private void parseAttribute(String line,Map<String, Object> ret) {        
         if (line.contains(ATTR_VALUE_MARKER)) { 
-            //HEADER_VERSION==1.0
+            //Header Version ==1.0
             String[] tokens = line.split(ATTR_VALUE_MARKER);
             if (tokens.length == 2) {
                 String[] val = tokens[1].split(ATTR_CLASS_MARKER);
@@ -1123,9 +1170,7 @@ public class FormatText implements Format {
     protected void processFileHeader(List<String> header, Map<String, Object> info){        
         if (header.size()==0){
             return;
-        }
-        String separator = getItemSeparator(header.get(0));
-        
+        }                
         boolean v2 = ((header.size()==1) || 
                      header.get(0).startsWith(ARRAY_MARKER) || 
                      header.get(0).startsWith(COMPOSITE_MARKER));        
@@ -1135,7 +1180,9 @@ public class FormatText implements Format {
                 Attr attr = parseAttrStr(array);
                 addSimpleDatasetInfo(attr.type, attr.dimensions, info);
             } else if (header.get(0).startsWith(COMPOSITE_MARKER)){ //Composite   
-                String[] columns = header.get(0).substring(COMPOSITE_MARKER.length()).split(separator);                     
+                String line = header.get(0).substring(COMPOSITE_MARKER.length());
+                String separator = getSeparator(line, getItemSeparator());
+                String[] columns = line.split(separator);                     
                 String[] names = new String[columns.length];
                 String[] types =  new String[columns.length];
                 int[] lengths = new int[columns.length];
@@ -1147,7 +1194,7 @@ public class FormatText implements Format {
                 }                
                 addCompositeDatasetInfo(names, types, lengths, separator, info);                
             }         
-        } else {            
+        } else {                       
             if (header.get(0).startsWith(TYPE_MARKER)){ //Simple
                 String dataType = header.get(0).substring(TYPE_MARKER.length());     
                 int[] dimensions = new int[0];
@@ -1166,7 +1213,8 @@ public class FormatText implements Format {
                 }
                 addSimpleDatasetInfo(dataType, dimensions, info);
 
-            } else { //Composite                             
+            } else { //Composite                           
+                String separator = getSeparator(header.get(0), getItemSeparator());
                 String[] names = header.get(0).split(separator);
                 String[] types = header.get(1).split(separator);
                 int[] lengths = new int[types.length];

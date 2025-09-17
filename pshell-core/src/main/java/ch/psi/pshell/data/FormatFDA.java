@@ -30,11 +30,12 @@ public class FormatFDA extends FormatText{
     
     public FormatFDA(){
         super();
+        this.setHeaderVersion(1);
         this.setItemSeparator(getDefaultItemSeparator());
     }
     @Override
     protected Path getAttributePath(String root, String path) throws IOException {
-        if (ADD_ATTRIBUTE_FILE_TIMESTAMP && LayoutFDA.isFlatStorage()){
+        if (ADD_ATTRIBUTE_FILE_TIMESTAMP && Layout.isFlatStorage()){
             ExecutionParameters pars = Context.getExecutionPars();
             if (pars != null) {
                 if (isGroup(root, path)) {
@@ -48,7 +49,7 @@ public class FormatFDA extends FormatText{
         
     @Override
     public DataSlice getData(String root, String path, int page) throws IOException {
-        if (!LayoutFDA.isFdaDataFile( root, path, null, this)){
+        if (!matches( root, path, null, this)){
             return super.getData(root, path, page);
         } 
         
@@ -96,7 +97,7 @@ public class FormatFDA extends FormatText{
     @Override
     public Map<String, Object> getInfo(String root, String path) throws IOException {
         Map<String, Object> ret = super.getInfo(root, path);
-        if (!LayoutFDA.isFdaDataFile( root, path, null, this)){
+        if (!matches( root, path, null, this)){
             return ret;
         } 
         
@@ -144,4 +145,60 @@ public class FormatFDA extends FormatText{
         }
         return ret;
     }
+    
+    
+    public static boolean matches(Path filePath) {
+        return FormatFDA.matches(filePath, null);
+    }
+    
+    public static boolean matches(Path filePath, Format p) {
+        String separator = (p==null) ? ITEM_SEPARATOR: ((FormatText)p).getItemSeparator();
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
+            String first = br.readLine(); 
+            String second = br.readLine();
+            String third = br.readLine();
+            if ((first.startsWith("#")) && (second.startsWith("#")) && (!third.startsWith("#"))){
+                try{
+                    //FDA serialization
+                    for (String token: second.substring(1).split(separator)){
+                        Integer.valueOf(token.trim());
+                    }
+                    return true;
+                } catch (Exception ex){
+                    //FDA layout
+                    separator = FormatText.getItemSeparator(second);
+                    //Header V1
+                    for (String token: second.substring(1).split(separator)){                        
+                        if (!token.startsWith("[")){ //If not an array
+                            Class.forName(token.trim());    //Must be a class name
+                        }
+                    }
+                    return true;
+                }
+            }
+        } catch (Exception ex) {            
+        }
+        return false;
+    }
+    
+    public static boolean matches(String root, String path) throws IOException {
+        return matches(root, path, Context.getDataManager(), null);
+    }
+    
+    static boolean matches(String root, String path, DataManager dm, Format p) throws IOException {
+        if (dm!=null){
+            if (!dm.isDataset(root, path)) {
+                return false;
+            }        
+            if (p==null){
+                p = dm.getFormat();
+            } 
+        }       
+        if (p instanceof FormatText providerText){
+            Path filePath = providerText.getFilePath(root, path);
+            return FormatFDA.matches(filePath, p);
+        }
+        return false;
+    }    
+    
 }

@@ -16,18 +16,15 @@ public class Config extends ch.psi.pshell.utils.Config{
     public int moveTimeout = 600; // 10 Minutes maximum move time 
     public boolean appendSuffix = true;
     public boolean continuousUpdate;
-    public boolean fdaSerialization;
+    public boolean txtSerialization;
     public int channelCreationRetries = 1;
-    @Defaults(values = {"h5", "txt", "txtd","csv", "fda", "tiff"})
+    @Defaults(values = {"h5", "txte", "txtd","csv", "fda", "tiff"})
     public String dataFormat = "h5";
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
     public String dataPath = Setup.TOKEN_DATA + "/" + Setup.TOKEN_YEAR + "_" + Setup.TOKEN_MONTH + "/" + 
                     Setup.TOKEN_DATE + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME + "_" + Setup.TOKEN_EXEC_NAME;
     
-    
-    
-
     static Config config;
 
     public static Config getConfig(){
@@ -51,7 +48,7 @@ public class Config extends ch.psi.pshell.utils.Config{
     
     public static String getDataFilePattern() {
         String ret = Context.getDataFilePattern();
-        if (isFdaSerialization()) {
+        if (isTxtSerialization()) {
             ret = ret.replaceAll("./$", "");
             return ret + "/" + LayoutFDA.getFilePrefix();
         }
@@ -62,18 +59,12 @@ public class Config extends ch.psi.pshell.utils.Config{
         if (App.hasAdditionalArgumentValue("xscan.move.timeout")){
             return Integer.valueOf(App.getAdditionalArgumentValue("xscan.move.timeout"));
         }
-        if (App.hasAdditionalArgumentValue("move.timeout")) {
-            return Integer.valueOf(App.getAdditionalArgumentValue("move.timeout"));
-        }
         return getConfig().moveTimeout;
     }
-
+    
     public static boolean getAppendSuffix() {
         if (App.hasAdditionalArgumentValue("xscan.suffix")){
             return App.getBoolAdditionalArgumentValue("xscan.suffix");
-        }
-        if (App.hasAdditionalArgumentValue("fdanosuffix")) {
-            return false;
         }
         return getConfig().appendSuffix;
     }
@@ -85,11 +76,11 @@ public class Config extends ch.psi.pshell.utils.Config{
         return getConfig().channelCreationRetries;
     }
     
-    public static boolean isFdaSerialization() {
-        if (App.hasAdditionalArgumentValue("xscan.fda.serialization")){
-            return App.getBoolAdditionalArgumentValue("xscan.fda.serialization");
+    public static boolean isTxtSerialization() {
+        if (App.hasAdditionalArgumentValue("xscan.txt.serialization")){
+            return App.getBoolAdditionalArgumentValue("xscan.txt.serialization");
         }
-        return getConfig().fdaSerialization;
+        return getConfig().txtSerialization;
     }
     
     public String getDataFormat() {

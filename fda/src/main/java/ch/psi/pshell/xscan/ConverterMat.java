@@ -3,7 +3,6 @@ package ch.psi.pshell.xscan;
 import ch.psi.pshell.data.Converter;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataSlice;
-import ch.psi.pshell.data.LayoutFDA;
 import ch.psi.pshell.utils.IO;
 import com.jmatio.io.MatFileWriter;
 import com.jmatio.types.MLArray;
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import ch.psi.pshell.data.Format;
+import ch.psi.pshell.data.FormatFDA;
 
 public class ConverterMat implements Converter {
 
@@ -40,7 +40,7 @@ public class ConverterMat implements Converter {
     @Override
     public boolean canConvert(File file){
         try{
-             return IO.getExtension(file).equals("txt") && LayoutFDA.isFdaDataFile(file.toPath());
+             return IO.getExtension(file).equals("txt") && FormatFDA.matches(file.toPath());
         } catch (Exception ex){
             return false;
         }

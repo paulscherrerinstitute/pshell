@@ -2,11 +2,15 @@ package ch.psi.pshell.xscan;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.utils.EventBusListener;
+import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Message;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,6 +37,8 @@ public class SerializerTXT implements EventBusListener{
 	private StringBuffer b;
 	private StringBuffer b1;
 	private boolean showDimensionHeader = true;
+        
+        public static final String ITEM_SEPARATOR = "\t";
 
 	public SerializerTXT(File file) {
 		this.file = file;
@@ -82,10 +88,10 @@ public class SerializerTXT implements EventBusListener{
 					for (Metadata c : dataMessage.getMetadata()) {
 
 						b.append(c.getId());
-						b.append("\t");
+						b.append(ITEM_SEPARATOR);
 
 						b1.append(c.getDimension());
-						b1.append("\t");
+						b1.append(ITEM_SEPARATOR);
 					}
 					b.setCharAt(b.length() - 1, '\n');
 					b1.setCharAt(b1.length() - 1, '\n');
@@ -126,7 +132,7 @@ public class SerializerTXT implements EventBusListener{
 								buffer.append(" "); // Use space instead of tab
 							}
                                                         // Replace last space with tab
-							buffer.replace(buffer.length() - 1, buffer.length() - 1, "\t"); 
+							buffer.replace(buffer.length() - 1, buffer.length() - 1, ITEM_SEPARATOR); 
 						}
 						else if (o instanceof Object[] oa) {
 							for (Object o1 : oa) {
@@ -134,7 +140,7 @@ public class SerializerTXT implements EventBusListener{
 								buffer.append(" "); // Use space instead of tab
 							}
                                                         // Replace last space with tab
-							buffer.replace(buffer.length() - 1, buffer.length() - 1, "\t");	
+							buffer.replace(buffer.length() - 1, buffer.length() - 1, ITEM_SEPARATOR);	
                                                 }
 						else {
 							buffer.append("-"); // Not supported
@@ -142,7 +148,7 @@ public class SerializerTXT implements EventBusListener{
 					}
 					else {
 						buffer.append(o);
-						buffer.append("\t");
+						buffer.append(ITEM_SEPARATOR);
 					}
 				}
 
@@ -194,4 +200,26 @@ public class SerializerTXT implements EventBusListener{
 	public void setShowDimensionHeader(boolean showDimensionHeader) {
 		this.showDimensionHeader = showDimensionHeader;
 	}
+        
+    public static boolean matches(Path filePath) {
+        File f = filePath.toFile();
+        if ((f.isFile()) && ("txt".equals(IO.getExtension(f)))){
+           try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+                String first = br.readLine(); 
+                String second = br.readLine();
+                String third = br.readLine();
+                if ((first.startsWith("#")) && (second.startsWith("#")) && (!third.startsWith("#"))){
+                    //FDA serialization
+                    for (String token: second.substring(1).split(ITEM_SEPARATOR)){
+                        Integer.valueOf(token.trim());
+                    }
+                    return true;
+                }
+            } catch (Exception ex) {            
+            }
+        }
+        return false;
+    }
+    
+        
 }

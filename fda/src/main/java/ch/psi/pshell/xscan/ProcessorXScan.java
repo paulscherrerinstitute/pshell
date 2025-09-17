@@ -673,14 +673,9 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     public void plotDataFile(File file, String path, DataManager dm) {        
         // Try to determine configuration file from data file name
         // 
-        //boolean deserializerTXT = (path == null);
         Map<String, Object> info = dm.getInfo(file.toString(), path);
-        boolean deserializerTXT = info.containsKey(FormatFDA.INFO_FIELD_DIMENSIONS); // File generated with XScan persistence
-        deserializerTXT = false;
         Path fullPath = (path == null) ? file.toPath() : Paths.get(file.toString(), path+".txt");
-        if (LayoutFDA.isFdaSerialization(fullPath)){
-            deserializerTXT = true;
-        }
+        boolean deserializerTXT = SerializerTXT.matches(fullPath);
         File dir = file.getParentFile();
         String name = file.getName();
         name = name.replaceAll("_[0-9]*.txt$", "");

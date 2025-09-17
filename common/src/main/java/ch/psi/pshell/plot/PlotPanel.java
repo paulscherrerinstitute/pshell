@@ -462,9 +462,9 @@ public class PlotPanel extends MonitoredPanel {
 
     Object validatePlotDataType(Object data) {
         try {
-            data = Convert.toDouble(data);
-            if (data != null) {
-                return data;
+            Object ret = Convert.toDouble(data);
+            if (ret != null) {
+                return ret;
             }
         } catch (Exception ex) {
         }

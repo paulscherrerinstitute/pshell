@@ -9,6 +9,7 @@ import ch.psi.jcae.util.ComparatorOR;
 import ch.psi.jcae.util.ComparatorREGEX;
 import ch.psi.pshell.crlogic.CrlogicConfig;
 import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.LayoutFDA;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.devices.InlineDevice;
@@ -208,7 +209,7 @@ public class Acquisition {
 		// Create required directories
                 DataManager dm = Context.getDataManager();
                 
-                if (Config.isFdaSerialization()){
+                if (Config.isTxtSerialization()){
                     //Priority to Type field
                     datafile = new File(fprefix+".txt");
                     executionParameters = Context.getExecutionPars();
@@ -219,7 +220,7 @@ public class Acquisition {
                     this.serializer = new SerializerPShell(fprefix);
                     datafile = new File(Context.getDataManager().getRootFileName());
                     if (dm.getLayout() instanceof LayoutFDA layoutFDA){
-                        if (LayoutFDA.isFlatStorage()){
+                        if (Layout.isFlatStorage()){
                             fprefix = Setup.expandPath(configuration.getDataFilePattern() + "/" + layoutFDA.getFilePrefix(), Context.getExecutionPars().getStart());
                             xmlfile = new File(fprefix+".xml");
                         }
@@ -234,7 +235,7 @@ public class Acquisition {
                             Logger.getLogger("ch.psi.pshell.xscan").removeHandler(logHandler);
 			}
 			
-			if (Config.isFdaSerialization()){
+			if (Config.isTxtSerialization()){
                             File logfile = new File(fprefix+".log");
                             logHandler = new FileHandler(logfile.getAbsolutePath());
                             logHandler.setFormatter(Logging.formatter);

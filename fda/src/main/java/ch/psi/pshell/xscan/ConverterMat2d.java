@@ -44,7 +44,7 @@ public class ConverterMat2d implements Converter {
     @Override
     public boolean canConvert(File file){
         try{
-             return IO.getExtension(file).equals("txt") && LayoutFDA.isFdaDataFile(file.toPath());
+             return IO.getExtension(file).equals("txt") && FormatFDA.matches(file.toPath());
         } catch (Exception ex){
             return false;
         }

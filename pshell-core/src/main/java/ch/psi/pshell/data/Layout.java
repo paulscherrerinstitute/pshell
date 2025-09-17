@@ -395,4 +395,15 @@ public interface Layout {
     String getDiagsPath();
 
     String getOutputFilePath();
+    
+    //Flat storage ehrn name pattern won'ty insure a new root for each run,
+    public static boolean isFlatStorage(){
+        String dataPath = Context.getDataFilePattern();
+        return !dataPath.contains("{name}") 
+                && !dataPath.contains("{time}") 
+                && !dataPath.contains("{sec}") 
+                && !dataPath.contains("{seq}") 
+                && !dataPath.contains("{dseq}") ;
+    }    
+    
 }

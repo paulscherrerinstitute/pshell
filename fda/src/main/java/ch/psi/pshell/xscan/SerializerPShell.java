@@ -94,7 +94,7 @@ public class SerializerPShell implements EventBusListener {
                 }
                 if (table) {
                     if (dm.getLayout() instanceof LayoutFDA layoutFDA){
-                        if (LayoutFDA.isFlatStorage()){
+                        if (Layout.isFlatStorage()){
                             String filePrefix = Setup.expandPath(layoutFDA.getFilePrefix(), Context.getExecutionPars().getStart());
                             dataset = String.format("%s_%04d", filePrefix, icount-1);                          
                         }

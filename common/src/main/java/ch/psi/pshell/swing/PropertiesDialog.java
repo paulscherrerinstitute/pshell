@@ -191,18 +191,16 @@ public class PropertiesDialog extends StandardDialog {
             rowRenderer = new RowRenderer(table, changed, this);
 
             int height = (new JComboBox()).getPreferredSize().height;
-            if (numberOfRows > 0) {
-                for (int i = 0; i < numberOfRows; i++) {
-                    String key = keys[i];
-                    model.setValueAt(getDisplayName(key), i, 0);
-                    model.setValueAt(getPropertyValue(key), i, 1);
-                    DefaultCellEditor editor = getPropertyEditor(key);    
-                    rowEditor.setEditorAt(i, editor);
-                    if (Arr.containsEqual(disabledKeys, key)){
-                        editor.getComponent().setEnabled(false);                        
-                    }
-                    height = Math.max(height, editor.getComponent().getPreferredSize().height);
+            for (int i = 0; i < numberOfRows; i++) {
+                String key = keys[i];
+                model.setValueAt(getDisplayName(key), i, 0);
+                model.setValueAt(getPropertyValue(key), i, 1);
+                DefaultCellEditor editor = getPropertyEditor(key);    
+                rowEditor.setEditorAt(i, editor);
+                if (Arr.containsEqual(disabledKeys, key)){
+                    editor.getComponent().setEnabled(false);                        
                 }
+                height = Math.max(height, editor.getComponent().getPreferredSize().height);
             }
             table.setModel(model);
             table.getColumn("Name").setCellRenderer(rowRenderer);
@@ -211,7 +209,7 @@ public class PropertiesDialog extends StandardDialog {
             setReadOnly(readOnly);
             table.setRowHeight(height);
         }
-
+                
         protected Object getPropertyType(String key) {
             return String.class;
         }

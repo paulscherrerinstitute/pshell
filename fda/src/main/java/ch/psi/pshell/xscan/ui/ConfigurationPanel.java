@@ -49,7 +49,7 @@ public class ConfigurationPanel extends EditablePanel<Configuration> {
         bindEditor(jComboBoxFormat, configuration.getData(), "format");
         
         try{
-            if (!Config.isFdaSerialization()){
+            if (!Config.isTxtSerialization()){
                 jComboBoxFormat.setVisible(false);
                 labelFormat.setVisible(false);
             }
