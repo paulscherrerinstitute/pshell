@@ -620,6 +620,20 @@ public class Context {
         return defaultScanTag;
     }    
        
+    public static String getDefaultScanTag(int index) {
+        String ret = null;
+        if (defaultScanTag.contains("{index}")){
+            if (defaultScanTag.contains("{index}%")){
+                ret = String.format(defaultScanTag.replace("{index}", ""), index);
+            } else {
+                ret  = String.format(defaultScanTag.replace("{index}", "%d"), index);                
+            }
+        } else { 
+            ret =String.format(defaultScanTag + "_%d", index);
+        }
+        return Setup.expandPath(ret);
+    }    
+
     public static String getApplicationName() {    
         return App.getApplicationTitle();
     }

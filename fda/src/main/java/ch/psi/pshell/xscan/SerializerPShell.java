@@ -7,7 +7,6 @@ import ch.psi.pshell.data.LayoutTable;
 import ch.psi.pshell.device.DescStatsDouble;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.sequencer.ExecutionParameters;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.EventBusListener;
@@ -62,7 +61,7 @@ public class SerializerPShell implements EventBusListener {
             DataMessage m = dataMessage;
             List data = m.getData();
             if (newfile) {
-                dataset = String.format("/scan %d", icount);
+                dataset = "/" + Context.getDefaultScanTag(icount);
                 dm.appendLog(String.format("XScan execution started: %s", dataset));
                 names = new ArrayList<>();
                 types = new ArrayList<>();

@@ -2,10 +2,8 @@ package ch.psi.pshell.data;
 
 import ch.psi.pshell.utils.Arr;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
@@ -94,11 +92,6 @@ public class FormatCSV extends FormatText {
         if ((sep instanceof String s) && ! s.trim().isEmpty()){
             separator = s;
         }
-        
-        
-        //String[] typeNames = getAttributes(root, path).get(INFO_FIELD_TYPES).toString().split(separator);
-        //int[] lengths = new int[typeNames.length];
-        //parseFieldTypes(typeNames, lengths);       
         
         String[] columns = getAttributes(root, path).get(INFO_FIELD_TYPES).toString().split(separator);                    
         String[] names = new String[columns.length];

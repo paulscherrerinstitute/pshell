@@ -72,7 +72,7 @@ public class FormatText implements Format {
     
     //V2 header
     public static final String ARRAY_MARKER = "array ";
-    public static final String COMPOSITE_MARKER = "columns ";
+    public static final String COMPOSITE_MARKER = "table ";
     public static final String SIMPLE_DATASET_VAR = "value";
 
     static String ITEM_SEPARATOR;
@@ -788,19 +788,7 @@ public class FormatText implements Format {
             }
         }
         return fieldTypes;
-    }
-    
-    protected void parseFieldTypes(String[] types, int[] lengths) {      
-        for (int i = 0; i < types.length; i++) {
-            if (types[i].contains(LENGTH_SEPARATOR)) {
-                String[] aux = types[i].split(Pattern.quote(LENGTH_SEPARATOR));
-                types[i] = aux[0];
-                lengths[i] = Integer.valueOf(aux[1].trim());
-            }
-            types[i] = types[i].trim();
-        }    
-    }    
-        
+    }            
 
     @Override
     public boolean isDataset(String root, String path) throws IOException {
@@ -1084,11 +1072,14 @@ public class FormatText implements Format {
         } else {
             out.print(COMMENT_MARKER + COMPOSITE_MARKER);
             var header = new ArrayList<String>();
-            for (int i = 0; i < types.length; i++) {
+            for (int i = 0; i < names.length; i++) {
                 int[] dims = lengths[i]>0 ? new int[]{lengths[i]} : null;
                 header.add(createAttrStr(names[i], getTypeName(types[i], false), dims, null));
             }
             out.print(String.join(getItemSeparator(), header));
+            if (getFinalSeparator() &&  (names.length > 0)) {
+                out.append(getItemSeparator());
+            }            
         }
         out.print(getLineSeparator());
     }
@@ -1179,13 +1170,18 @@ public class FormatText implements Format {
                 String[] names = header.get(0).split(separator);
                 String[] types = header.get(1).split(separator);
                 int[] lengths = new int[types.length];
-                parseFieldTypes(types, lengths);
+                for (int i = 0; i < types.length; i++) {
+                    if (types[i].contains(LENGTH_SEPARATOR)) {
+                        String[] aux = types[i].split(Pattern.quote(LENGTH_SEPARATOR));
+                        types[i] = aux[0];
+                        lengths[i] = Integer.valueOf(aux[1].trim());
+                    }
+                    types[i] = types[i].trim();
+                }                    
                 addCompositeDatasetInfo(names, types, lengths, separator, info);
             }            
         }
-    }
-    
-    
+    }    
 
     void writeElement(Appendable out, Object value) throws IOException {
         if (value == null) {

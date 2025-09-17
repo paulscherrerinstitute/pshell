@@ -66,7 +66,7 @@ public class LayoutFDA extends LayoutTable {
     protected String getDatasetName(Scan scan) {        
         ExecutionParameters pars =Context.getExecutionPars();
         if (!isFlatStorage()){
-             return  String.format("/scan %d", pars.getCount());
+             return  "/" + Context.getDefaultScanTag(pars.getCount()); 
         }
         return  Setup.expandPath(getFilePrefix()+ "_" + String.format("%04d",(pars.getCount()-1)), pars.getStart());                        
     }    
