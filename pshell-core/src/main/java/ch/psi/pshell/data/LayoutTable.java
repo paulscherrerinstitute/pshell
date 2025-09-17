@@ -97,9 +97,9 @@ public class LayoutTable extends LayoutBase {
                 fieldTypes[index] = type;
             }
             fieldNames[index++] = readable.getAlias();
-        }
-
-        getDataManager().createDataset(path, fieldNames, fieldTypes, fieldLength);
+        }        
+        Map features =  getDataManager().getStorageFeatures(null);
+        getDataManager().createDataset(path, fieldNames, fieldTypes, fieldLength, features);
         getDataManager().setAttribute(path, ATTR_SCAN_WRITABLE_DIMS, (writableDims.length > 0) ? writableDims : new int[]{-1});
 
         super.onStart(scan);

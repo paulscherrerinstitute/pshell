@@ -7,32 +7,40 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+
 /**
  * Format implementation storing 2D data as TIFF file (txt otherwise).
  * Write can be speed up paralellizing seting dataset feature {"parallel":True}.
- * Default value for parallelization is False, can be cahnged with setParallelWriting.
+ * Default value for parallelization is False, can be changed with setParallelWriting.
  * Parallelization can break appending logic (index determination) and read back.
+ * In scans, file lists can be transformed in a TIFF stack with the feature: stack=True.
  */
 public class FormatTIFF extends FormatText {
     public static final String IMAGE_FILE_TYPE = "tiff";
-    static String IMAGE_LIST_SUFFIX = "_%04d." + IMAGE_FILE_TYPE;
-    public static int SINGLE_FILE = -2;
+    public static final int SINGLE_FILE = -2;    
     static String FILE_SUFFIX = "." + IMAGE_FILE_TYPE;
-    static boolean PARALLEL_WRITING = false;    
+    static boolean PARALLEL_WRITING = false; 
+    static String IMAGE_LIST_SUFFIX = "_%04d." + IMAGE_FILE_TYPE;    
+    static Pattern IMAGE_LIST_PATTERN = Pattern.compile("^(.*)_(\\d+)\\.tiff$");
     
-
     @Override
     public String getId() {
         return "tiff";
@@ -54,6 +62,15 @@ public class FormatTIFF extends FormatText {
         return IMAGE_LIST_SUFFIX;
     }    
     
+    public static void setImageListPattern(String regex) {
+        IMAGE_LIST_PATTERN = Pattern.compile(regex);
+    }
+
+    public static Pattern getImageListPattern() {
+        return IMAGE_LIST_PATTERN;
+    }    
+ 
+    
     static Map metadata;
     public static void setMetadata(Map value){
         metadata = value;
@@ -69,6 +86,22 @@ public class FormatTIFF extends FormatText {
         super.openOutput(root);
         datasets.clear();
     }
+    
+    @Override
+    public void closeOutput() throws IOException {
+        if (root != null){
+            for (String dataset: datasets.keySet()){
+                try{
+                    if (isStack(dataset)){
+                        stack(dataset);
+                    }
+                }catch (Exception ex){     
+                     Logger.getLogger(FormatTIFF.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        super.closeOutput();
+    }    
     
     @Override
     public Map<String, Object> getInfo(String root, String path) throws IOException {        
@@ -190,6 +223,19 @@ public class FormatTIFF extends FormatText {
         }
         return PARALLEL_WRITING;
     }
+
+    public boolean isStack(String path){
+        Map features = datasets.get(path);        
+        if (features != null){
+            Object stack =  features.get("stack");
+            if (stack != null){
+                if (Str.toString(stack).equalsIgnoreCase(Boolean.TRUE.toString())){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     
     @Override
     public void setItem(String path, Object data, Class type, int index) throws IOException {
@@ -250,6 +296,82 @@ public class FormatTIFF extends FormatText {
         return maxIndex + 1;
     }
     
+            
+    public static Set<String> getImageListPrefixes(Path dir) throws IOException {        
+        Set<String> prefixes = new HashSet<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.tiff")) {
+            for (Path file : stream) {
+                String name = file.getFileName().toString();
+                Matcher m = getImageListPattern().matcher(name);
+                if (m.matches()) {
+                    prefixes.add(m.group(1)); // prefix before "_<NUMERIC_INDEX>"
+                }
+            }
+        }
+        return prefixes;
+    }
+    
+    private static class FileEntry {
+        int index;
+        String name;
+        FileEntry(int index, String name) {
+            this.index = index;
+            this.name = name;
+        }
+    }    
+
+    public static List<String> getFilesForPrefix(Path dir, String prefix) throws IOException {
+        List<FileEntry> matches = new ArrayList<>();
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, prefix + "_*.tiff")) {
+            for (Path file : stream) {
+                String name = file.getFileName().toString();
+                Matcher m = getImageListPattern().matcher(name);
+                if (m.matches() && m.group(1).equals(prefix)) {
+                    int index = Integer.parseInt(m.group(2));
+                    matches.add(new FileEntry(index, name));
+                }
+            }
+        }
+        // sort by numeric index
+        matches.sort(Comparator.comparingInt(f -> f.index));
+        // return just filenames
+        List<String> result = new ArrayList<>();
+        for (FileEntry f : matches) {
+            result.add(f.name);
+        }
+        return result;
+    }
+    
+    public void stack(String path) throws IOException{
+        Path dir = getFilePath(path, false).getParent();
+        Set<String> prefixes = getImageListPrefixes(dir);
+        for (var prefix:prefixes){
+            List<String> files = getFilesForPrefix(dir, prefix);
+            List data = new ArrayList();
+            for (var file:files){
+                data.add(Tiff.load(Paths.get(dir.toString(),file ).toString()));
+            }            
+            if (!data.isEmpty()) {
+                Logger.getLogger(FormatTIFF.class.getName()).info("Creating stack of: " + prefix);
+                int depth = data.size();
+                int height = Array.getLength(data.get(0));
+                int width = Array.getLength(Array.get(data.get(0), 0));
+                Class type = Arr.getComponentType(data.get(0));
+                Object stack = Array.newInstance(type, depth, height, width);
+                for (int z = 0; z < depth; z++) {
+                    Array.set(stack, z, data.get(z));
+                }
+                String stackFile = Paths.get(dir.toString(), prefix + ".tiff").toString();
+                Tiff.saveStack(stack, stackFile);
+                for (var file:files){
+                    Files.delete(Paths.get(dir.toString(), file ));
+                }            
+                Logger.getLogger(FormatTIFF.class.getName()).info("Success creating stack: " + stackFile);
+            }
+        }
+    }
+    
     
     @Override
     public String[] getChildren(String root, String path) throws IOException {
@@ -298,10 +420,11 @@ public class FormatTIFF extends FormatText {
                     contents.add(IO.getPrefix(content));
                 } else  if (ext.equals(IMAGE_FILE_TYPE)){
                     String dataset = content.getName();
-                    if (dataset.contains("_")){
-                        dataset = dataset.substring(0, dataset.lastIndexOf("_"));
-                        if (!contents.contains(dataset)){
-                            contents.add(dataset);
+                    Matcher matcher = getImageListPattern().matcher(dataset);
+                    if  (matcher.matches()){
+                        String prefix = matcher.group(1);
+                        if (!contents.contains(prefix)){
+                            contents.add(prefix);
                         }
                     } else {
                         contents.add(IO.getPrefix(dataset));
