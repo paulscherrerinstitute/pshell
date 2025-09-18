@@ -2,6 +2,7 @@ package ch.psi.pshell.console;
 
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataServer;
+import ch.psi.pshell.data.FormatText;
 import ch.psi.pshell.device.Interlock;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.epics.Epics;
@@ -130,8 +131,8 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     
     void initializeData() throws Exception{
         Context.setDataFilePattern(config.getDataPath()); 
-        dataManager.setDefaultDepthDimension(config.dataDepthDimension);
-        dataManager.initialize(config.getDataFormat(), config.getDataLayout());                                
+        FormatText.setDefaultEmbeddedAttributes(config.dataEmbeddedAttributes);
+        dataManager.initialize(config.getDataFormat(), config.getDataLayout(), config.dataEmbeddedAttributes);                                
     }
         
      

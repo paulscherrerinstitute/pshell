@@ -262,6 +262,7 @@
                           <Component id="jLabel7" linkSize="3" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel8" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel16" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel10" alignment="1" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -270,6 +271,7 @@
                           <Component id="comboFormat" alignment="0" min="-2" pref="182" max="-2" attributes="0"/>
                           <Component id="checkDataLogs" min="-2" max="-2" attributes="0"/>
                           <Component id="comboPermissions" alignment="0" min="-2" pref="182" max="-2" attributes="0"/>
+                          <Component id="checkEmbeddedAttributes" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
@@ -299,11 +301,16 @@
                           <Component id="checkDataLogs" alignment="2" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="2" attributes="0">
+                          <Component id="jLabel10" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="checkEmbeddedAttributes" alignment="2" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="spinnerDepthDim" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="83" max="32767" attributes="0"/>
+                      <EmptySpace pref="58" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -373,7 +380,7 @@
             <Component class="javax.swing.JLabel" name="jLabel16">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="File Permissions"/>
+                <Property name="text" type="java.lang.String" value="File permissions"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JComboBox" name="comboPermissions">
@@ -386,6 +393,17 @@
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
               </AuxValues>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel10">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Embedded attributes"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="checkEmbeddedAttributes">
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkEmbeddedAttributesActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
@@ -725,7 +743,7 @@
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" attributes="0">
                                       <Component id="comboNotification" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace min="0" pref="243" max="32767" attributes="0"/>
+                                      <EmptySpace min="0" pref="277" max="32767" attributes="0"/>
                                   </Group>
                                   <Component id="textRecipients" max="32767" attributes="0"/>
                               </Group>
@@ -802,7 +820,7 @@
             <Component class="javax.swing.JLabel" name="jLabel15">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Notified Tasks:"/>
+                <Property name="text" type="java.lang.String" value="Notified tasks:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="textTasks">

@@ -23,6 +23,11 @@ public class FormatFDA extends FormatText{
     public String getId() {
         return "fda";
     }    
+
+    @Override
+    public boolean getEmbeddedAttributes(){
+        return false;
+    }       
      
     public static String getDefaultItemSeparator() {
         return ITEM_SEPARATOR;

@@ -67,7 +67,7 @@ public class App extends ch.psi.pshell.framework.App {
     
     void initializeData() throws Exception {
         Context.setDataFilePattern(Config.getConfig().dataPath); 
-        dataManager.initialize(Config.getConfig().getDataFormat(), Config.getConfig().getDataLayout());        
+        dataManager.initialize(Config.getConfig().getDataFormat(), Config.getConfig().getDataLayout(), Config.getConfig().dataEmbeddedAttributes);        
     }
     
     @Override

@@ -18,10 +18,11 @@ public class Config extends ch.psi.pshell.utils.Config{
     public boolean continuousUpdate;
     public boolean txtSerialization;
     public int channelCreationRetries = 1;
-    @Defaults(values = {"h5", "txte", "txtd","csv", "fda", "tiff"})
+    @Defaults(values = {"h5", "txt","csv", "fda", "tiff"})
     public String dataFormat = "h5";
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
+    public boolean dataEmbeddedAttributes = false;
     public String dataPath = Setup.TOKEN_DATA + "/" + Setup.TOKEN_YEAR + "_" + Setup.TOKEN_MONTH + "/" + 
                     Setup.TOKEN_DATE + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME + "_" + Setup.TOKEN_EXEC_NAME;
     

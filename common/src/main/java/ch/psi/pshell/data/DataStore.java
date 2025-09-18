@@ -58,7 +58,7 @@ public class DataStore implements AutoCloseable {
     }
     
     public static String[] getFormatIds(){
-         return  new String[] {"h5", "txt", "txtd","csv", "tiff"};
+         return  new String[] {"h5", "txt","csv", "tiff"};
     }
     
 
@@ -113,7 +113,6 @@ public class DataStore implements AutoCloseable {
         formatClasses.put("txt", FormatText.class);
         formatClasses.put("csv", FormatCSV.class);
         formatClasses.put("tiff", FormatTIFF.class);
-        formatClasses.put("txte", FormatTextEmbeddedAttrs.class);
     }
         
     public static Class getFormatClass(String name) throws ClassNotFoundException {

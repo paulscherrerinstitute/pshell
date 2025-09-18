@@ -7,7 +7,6 @@ import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.logging.LogLevel;
 import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.scan.ScanConfig;
-import ch.psi.pshell.sequencer.CommandBus;
 import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.session.Sessions.SessionHandling;
 import ch.psi.pshell.utils.IO.FilePermissions;
@@ -30,10 +29,11 @@ public class Configuration extends Config {
     
 
     public String dataPath = DEFAULT_DATA_PATH;
-    @Defaults(values = {"h5", "txt", "txtd","csv", "fda", "tiff"})
+    @Defaults(values = {"h5", "txt","csv", "fda", "tiff"})
     public String dataFormat = "h5";
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
+    public boolean dataEmbeddedAttributes = false;
     public int dataDepthDimension = 0;    
     public boolean dataScanAutoSave = true;
     public boolean dataScanFlushRecords = false;

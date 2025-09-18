@@ -79,6 +79,16 @@ public class FormatText implements Format {
     static String ARRAY_SEPARATOR;
     static String LINE_SEPARATOR;
 
+
+    static boolean EMBEDDED_ATTRIBUTES = false;
+
+    public static void setDefaultEmbeddedAttributes(boolean value) {
+        EMBEDDED_ATTRIBUTES = value;
+    }
+
+    public static boolean getDefaultEmbeddedAttributes() {
+        return EMBEDDED_ATTRIBUTES;
+    }   
     
     static int HEADER_VERSION = 2;
 
@@ -146,6 +156,17 @@ public class FormatText implements Format {
     String itemSeparator = getDefaultItemSeparator();
     String arraySeparator = getDefaultArraySeparator();
     String lineSeparator = getDefaultLineSeparator();
+    
+    
+    boolean embeddedAtributes = EMBEDDED_ATTRIBUTES;
+
+    public void setEmbeddedAttributes(boolean value) {
+        embeddedAtributes = value;
+    }
+
+    public boolean getEmbeddedAttributes() {
+        return embeddedAtributes;
+    }   
     
     boolean orderedAtributes = true;
 
@@ -226,10 +247,6 @@ public class FormatText implements Format {
             ext = "";
         }
         return ext;
-    }
-
-    protected boolean getEmbeddedAttributes(){
-        return false;
     }
     
     @Override

@@ -4400,7 +4400,7 @@ public class View extends MainFrame{
     private void menuXscanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuXscanActionPerformed
         try{
             ConfigDialog dlg = new ConfigDialog(this, true);
-            dlg.setDisabledKeys(new String[]{"dataFormat", "dataLayout", "dataPath"});
+            dlg.setDisabledKeys(new String[]{"dataFormat", "dataLayout", "dataPath", "dataEmbeddedAttributes"});
             dlg.setTitle("XScan");
             dlg.setConfig(ch.psi.pshell.xscan.Config.getConfig());
             dlg.setReadOnly(Context.getRights().denyConfig);

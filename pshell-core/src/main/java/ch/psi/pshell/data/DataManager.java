@@ -123,8 +123,11 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     /**
      * Configures the application data manager for scan persistence
      */
-          
     public void initialize(String format, String layout) throws Exception {
+        initialize(format, layout, null);
+    }
+    
+    public void initialize(String format, String layout, Boolean embeddedAttributes) throws Exception {
         initialized = false;        
         logger.log(Level.INFO, "Initializing {0}", getClass().getSimpleName());
         Context.setDataManager(this);
@@ -133,6 +136,12 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         }
         closeOutput();
         setCreateLogs(Context.getScanConfig().saveLogs());
+        if (embeddedAttributes != null){            
+            if (embeddedAttributes != FormatText.getDefaultEmbeddedAttributes()){                
+                FormatText.setDefaultEmbeddedAttributes(embeddedAttributes);
+                this.format = null; //Forces re-creation
+            }
+        }
         setFormat(format);
         setLayout(layout);
         dataRootDepth = Paths.get(IO.getRelativePath(getExecutionPars().getPath(), getDataFolder())).getNameCount();

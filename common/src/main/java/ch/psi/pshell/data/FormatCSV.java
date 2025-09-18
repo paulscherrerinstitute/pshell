@@ -44,6 +44,11 @@ public class FormatCSV extends FormatText {
     public String getFileType() {
         return "csv";
     }    
+    
+    @Override
+    public boolean getEmbeddedAttributes(){
+        return false;
+    }    
 
     @Override
     public Map<String, Object> getInfo(String root, String path) throws IOException {
