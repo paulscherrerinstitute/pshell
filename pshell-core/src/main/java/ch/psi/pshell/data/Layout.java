@@ -27,8 +27,8 @@ import jep.NDArray;
  */
 public interface Layout {
     //Common attributes
-    public static final String ATTR_FILE = Format.INFO_FILE_NAME;
-    public static final String ATTR_VERSION = Format.INFO_FILE_REVISION;
+    public static final String ATTR_SOURCE_NAME = "Source";
+    public static final String ATTR_SOURCE_REVISION = "Revision";
     public static final String ATTR_TYPE = "Type";
     public static final String ATTR_NAME = "Name";
     public static final String ATTR_COMMAND = "Command";

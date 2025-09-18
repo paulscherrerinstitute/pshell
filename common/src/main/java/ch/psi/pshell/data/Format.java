@@ -42,8 +42,6 @@ public interface Format {
     public static final String INFO_VAL_DATA_TYPE_BOOLEAN = "BOOLEAN";
     public static final String INFO_VAL_DATA_TYPE_BITFIELD = "BITFIELD";
 
-    public static final String INFO_FILE_NAME = "File";
-    public static final String INFO_FILE_REVISION = "Version";
     public static final String PATH_META= "meta/"; 
 
 

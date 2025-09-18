@@ -47,7 +47,7 @@ public class SerializerPShell implements EventBusListener {
                 Context.getSequencer().setExecutionPar("path", basename);
             }
             dm.openOutput();
-            dm.setAttribute("/", Layout.ATTR_FILE, basename + ".xml");
+            dm.setAttribute("/", Layout.ATTR_SOURCE_NAME, basename + ".xml");
             table = LayoutTable.class.isAssignableFrom(dm.getLayout().getClass());
         } catch (Exception ex) {
             Logger.getLogger(SerializerPShell.class.getName()).log(Level.SEVERE, null, ex);

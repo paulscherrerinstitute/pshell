@@ -8,6 +8,7 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Format;
 import ch.psi.pshell.data.DataStore;
+import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.framework.Processor;
 import ch.psi.pshell.plot.Plot;
@@ -444,18 +445,17 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         menuOpenScript.addActionListener((ActionEvent e) -> {
             if (listener != null) {
                 try {
-
-                    String fileName = (String) dataManager.getAttribute(currentFile.getPath(), "/", Format.INFO_FILE_NAME);
-                    String revision = (String) dataManager.getAttribute(currentFile.getPath(), "/", Format.INFO_FILE_REVISION);
-                    if (revision != null) {
+                    String sourceName = (String) dataManager.getAttribute(currentFile.getPath(), "/", Layout.ATTR_SOURCE_NAME);
+                    String sourceRevision = (String) dataManager.getAttribute(currentFile.getPath(), "/", Layout.ATTR_SOURCE_REVISION);
+                    if (sourceRevision != null) {
                         try {
-                            String script = VersionControl.getFileContents(fileName, revision);
-                            listener.openScript(script, new File(fileName).getName() + "_" + revision.substring(0, Math.min(8, revision.length())));
+                            String script = VersionControl.getFileContents(sourceName, sourceRevision);
+                            listener.openScript(script, new File(sourceName).getName() + "_" + sourceRevision.substring(0, Math.min(8, sourceRevision.length())));
                             return;
                         } catch (Exception ex) {
                         }
-                    }
-                    listener.openFile(fileName);
+                    }  
+                    listener.openFile(sourceName);
                 } catch (Exception ex) {
                     showException(ex);
                 }
@@ -595,7 +595,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 }
                             }
                         }
-                        menuOpenScript.setVisible((info != null) && "/".equals(dataPath) && (dataManager.getAttribute(currentFile.getPath(), dataPath, Format.INFO_FILE_NAME) != null));
+                        menuOpenScript.setVisible((info != null) && "/".equals(dataPath) && (dataManager.getAttribute(currentFile.getPath(), dataPath, Layout.ATTR_SOURCE_NAME) != null));
                         menuPlotDataSeparator.setVisible(menuPlotData.isVisible());
                         menuConvertSeparator.setVisible(menuConvert.isVisible());
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());

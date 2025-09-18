@@ -274,7 +274,7 @@ public abstract class LayoutBase implements Layout {
         File file = pars.getScriptFile();
         if (file != null) {
             String fileName = file.getPath();
-            getDataManager().setAttribute("/", ATTR_FILE, fileName);
+            getDataManager().setAttribute("/", ATTR_SOURCE_NAME, fileName);
         } else {
             String command = pars.getStatement();
             if (command!=null){
@@ -286,7 +286,7 @@ public abstract class LayoutBase implements Layout {
     protected void setScriptVersionAttibute() throws IOException {
         String version = getDataManager().getExecutionPars().getScriptVersion();
         if (version != null) {
-            getDataManager().setAttribute("/", ATTR_VERSION, version);
+            getDataManager().setAttribute("/", ATTR_SOURCE_REVISION, version);
         }
     }
     
