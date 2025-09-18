@@ -610,7 +610,7 @@ public class FormatText implements Format {
             String line;
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 while ((line = br.readLine()) != null) {
-                    parseAttribute(line, ret);
+                    parseAttribute(line, ret, true); //Last more recent
                 }
             }
         } else {
@@ -631,7 +631,7 @@ public class FormatText implements Format {
                             }
                             if ((index >= getHeaderSize()) && (line.startsWith(COMMENT_MARKER))) {
                                 line = line.substring(1);
-                                parseAttribute(line, ret);
+                                parseAttribute(line, ret, false); //First more recent
                             }
                             index++;
                         }
@@ -1164,7 +1164,7 @@ public class FormatText implements Format {
         }
     }
         
-    private void parseAttribute(String line,Map<String, Object> ret) {        
+    private void parseAttribute(String line, Map<String, Object> ret, boolean overwrite) {        
         if (line.contains(ATTR_VALUE_MARKER)) { 
             //Header Version ==1.0
             String[] tokens = line.split(ATTR_VALUE_MARKER);
@@ -1177,14 +1177,19 @@ public class FormatText implements Format {
                         type = getTypeClass(val[1]);
                         data = getAttrVal(type, val[0]);
                     } catch (Exception ex) {
-                    }                    
-                    ret.put(tokens[0].trim(), data);
+                    }         
+                    String name = tokens[0].trim();
+                    if (overwrite || ! ret.containsKey(name)){
+                        ret.put(name, data);
+                    }
                 }
             }
         } else {
             Attr attr = parseAttrStr(line);
             Class type = (attr.dimensions != null) ? getTypeArrayClass(attr.type) : getTypeClass(attr.type);
-            ret.put(attr.name, getAttrVal(type, attr.value));            
+            if (overwrite || ! ret.containsKey(attr.name)){
+                ret.put(attr.name, getAttrVal(type, attr.value));            
+            }
         }
     }
     
