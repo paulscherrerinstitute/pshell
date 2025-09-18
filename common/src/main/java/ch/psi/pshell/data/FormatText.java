@@ -896,8 +896,13 @@ public class FormatText implements Format {
                     out.close();
                     int index = 0;
                     try (RandomAccessFile r = new RandomAccessFile(filePath.toFile(), "r")) {
-                        if ((r.readLine() != null) && (r.readLine() != null)) { //Read 2 Info lines
-                            index = (int) r.getFilePointer();
+                        for (int i=0; i< getHeaderSize(); i++){
+                            if (r.readLine() == null){
+                                break;
+                            }
+                            if (i==getHeaderSize()-1){
+                                index = (int) r.getFilePointer();
+                            }
                         }
                     } catch (Exception ex) {
                     }
