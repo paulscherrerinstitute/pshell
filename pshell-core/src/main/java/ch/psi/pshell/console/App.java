@@ -91,7 +91,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         Context.setDataFilePermissions(config.filePermissionsData);
         Context.setLogFilePermissions(config.filePermissionsLogs);
         Context.setScriptFilePermissions(config.filePermissionsScripts);        
-        Context.setDefaultScanTag(config.getDataScanDefaultTag());
+        Context.setDefaultScanTag(config.getDefaultScanTag());
         Config.setDefaultPermissions(config.filePermissionsConfig);
         History.setDefaultPermissions(config.filePermissionsConfig);
               
@@ -116,7 +116,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                 
         dataManager = new DataManager();        
         extensions = new Extensions();
-        interpreter = new Sequencer(config.serverHostName, config.sequencerCommandBusSize, config.sequencerCommandBusTimeToLive);
+        interpreter = new Sequencer(config.serverHostName, config.commandQueueSize, config.commandTimeToLive);
         security = new Security(null);
         devicePool = new DevicePool();
         sessions = new Sessions();
@@ -196,7 +196,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         try {
             if (!Setup.isLocal()) {
                 if (config.isScanStreamerEnabled()) {
-                    scanStreamer = new ScanStreamer(config.dataScanStreamerPort);
+                    scanStreamer = new ScanStreamer(config.scanStreamerPort);
                 }
                 if (config.isDataStreamerEnabled()) {
                     dataStreamer = new DataServer(config.dataServerPort);
@@ -237,7 +237,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             
             //interpreter.restart(source); //!!! TODO: Solve source crap
             interpreter.restart(); 
-            interpreter.setSaveCommandStatistics(config.saveCommandStatistics);
+            interpreter.setSaveCommandStatistics(config.commandStatistics);
             if (config.isVersioningEnabled()) {        
                 VersionControlConfig versionControlConfig = new VersionControlConfig( 
                     Setup.getHomePath(), 

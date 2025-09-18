@@ -1006,7 +1006,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                     String[] libraryPath = Setup.getLibraryPath();                    
                     try {
                         interpreter = new Interpreter(getScriptType(), libraryPath, injections, Context.getScriptFilePermissions(), Setup.getNoBytecodes());
-                        interpreter.setSessionFilePath((getSaveConsoleSessions() && !isLocalMode()) ? Setup.getConsolePath() : null);
+                        interpreter.setConsoleJournalFilePath((getSaveConsoleSessions() && !isLocalMode()) ? Setup.getConsolePath() : null);
                         setStdioListener(scriptStdioListener);
                         String startupScript = getStartupScript();
                         if (startupScript != null) {

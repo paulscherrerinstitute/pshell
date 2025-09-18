@@ -21,7 +21,7 @@ import java.util.logging.Level;
  */
 public class Configuration extends Config {
     
-    public boolean saveConsoleSessionFiles;
+    public boolean consoleJournal;
     public static String DEFAULT_LOG_PATH = Setup.TOKEN_LOGS + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME + "." + 
                     Setup.TOKEN_MODE;
     public static String DEFAULT_DATA_PATH = Setup.TOKEN_DATA + "/" + Setup.TOKEN_YEAR + "_" + Setup.TOKEN_MONTH + "/" + 
@@ -35,18 +35,6 @@ public class Configuration extends Config {
     public String dataLayout = "default";
     public boolean dataEmbeddedAttributes = false;
     public int dataDepthDimension = 0;    
-    public boolean dataScanAutoSave = true;
-    public boolean dataScanFlushRecords = false;
-    public boolean dataScanReleaseRecords = false;
-    public boolean dataScanPreserveTypes = false;
-    public boolean dataScanSaveOutput = false;
-    public boolean dataScanSaveScript = false;
-    public boolean dataScanSaveSetpoints = false;
-    public boolean dataScanSaveTimestamps = false;
-    public boolean dataScanLazyTableCreation = false;
-    public int dataScanStreamerPort = -1;
-    public boolean dataScanSaveLogs = true;
-    public String dataScanDefaultTag = Context.DEFAULT_SCAN_TAG;
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
     public String dataTransferPath = "";
     public String dataTransferUser = "";
@@ -62,12 +50,25 @@ public class Configuration extends Config {
     public NotificationLevel notificationLevel = NotificationLevel.Off;
     public String notificationTasks = "";
     public String pythonHome= "";
+    public boolean scanAutoSave = true;
+    public boolean scanFlushRecords = false;
+    public boolean scanReleaseRecords = false;
+    public boolean scanPreserveTypes = false;
+    public boolean scanSaveOutput = false;
+    public boolean scanSaveScript = false;
+    public boolean scanSaveSetpoints = false;
+    public boolean scanSaveTimestamps = false;
+    public boolean scanLazyTableCreation = false;
+    public int scanStreamerPort = -1;
+    public boolean scanSaveLogs = true;
+    public String scanDefaultTag = Context.DEFAULT_SCAN_TAG;    
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
     public String versionTrackingRemote = "";
     public String versionTrackingLogin = "";        
-    public int sequencerCommandBusSize  = Sequencer.DEFAULT_COMMAND_BUS_SIZE;      
-    public int sequencerCommandBusTimeToLive  = Sequencer.DEFAULT_COMMAND_BUS_TIME_TO_LIVE;      
+    public int commandQueueSize  = Sequencer.DEFAULT_COMMAND_BUS_SIZE;      
+    public int commandTimeToLive  = Sequencer.DEFAULT_COMMAND_BUS_TIME_TO_LIVE; 
+    public boolean commandStatistics;
     public boolean serverEnabled;    
     public boolean serverCommandsHidden = false;
     public String serverHostName  = "";        
@@ -76,8 +77,7 @@ public class Configuration extends Config {
     public int terminalPort = 3579;
     public boolean userManagement;
     public String userAuthenticator = "";
-    public String instanceName = "";
-    public boolean saveCommandStatistics;
+    public String instanceName = "";    
 
     //Set fields mising from config file (backward compatibility)
     @Override
@@ -171,16 +171,16 @@ public class Configuration extends Config {
     private ScanConfig scanConfig;
     private void updateScanConfig(){
         scanConfig = new ScanConfig(
-            dataScanAutoSave,
-            dataScanFlushRecords,
-            dataScanReleaseRecords,
-            dataScanPreserveTypes,
-            dataScanSaveOutput,
-            dataScanSaveScript,
-            dataScanSaveSetpoints,
-            dataScanSaveTimestamps,
-            dataScanSaveLogs,
-            dataScanLazyTableCreation);        
+            scanAutoSave,
+            scanFlushRecords,
+            scanReleaseRecords,
+            scanPreserveTypes,
+            scanSaveOutput,
+            scanSaveScript,
+            scanSaveSetpoints,
+            scanSaveTimestamps,
+            scanSaveLogs,
+            scanLazyTableCreation);        
     }
     
     
@@ -202,7 +202,7 @@ public class Configuration extends Config {
     }
 
     public boolean isScanStreamerEnabled() {
-        return /*(serverMode || config.serverEnabled) && */ (dataScanStreamerPort > 0) && !Setup.isLocal();
+        return /*(serverMode || config.serverEnabled) && */ (scanStreamerPort > 0) && !Setup.isLocal();
     }
 
     public boolean isDataStreamerEnabled() {
@@ -241,10 +241,10 @@ public class Configuration extends Config {
         return dataPath;        
     }
     
-    public String getDataScanDefaultTag(){
-        if (dataScanDefaultTag==null){
+    public String getDefaultScanTag(){
+        if (scanDefaultTag==null){
             return Context.DEFAULT_SCAN_TAG;
         }
-        return dataScanDefaultTag;
+        return scanDefaultTag;
     }
 }

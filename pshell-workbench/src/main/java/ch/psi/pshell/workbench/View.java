@@ -361,8 +361,8 @@ public class View extends MainFrame{
             logger.log(Level.INFO, "New user: restarting logger");
             App.getInstance().restartLogger();            
         } else if (Setup.TOKEN_SESSIONS.equals(pathId)) {
-            if (App.getInstance().getConfig().saveConsoleSessionFiles && !Setup.isLocal()) {
-                Context.getInterpreter().setSessionFilePath(Setup.getConsolePath());
+            if (App.getInstance().getConfig().consoleJournal && !Setup.isLocal()) {
+                Context.getInterpreter().setConsoleJournalFilePath(Setup.getConsolePath());
             }       
         }
     } 

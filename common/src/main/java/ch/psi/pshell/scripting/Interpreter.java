@@ -68,8 +68,8 @@ public class Interpreter implements AutoCloseable {
     final Library lib;
     final FilePermissions scriptFilePermissions;
     String[] libraryPath;
-    String sessionFilePath;
-    PrintWriter sessionOut;
+    String consoleJournalFilePath;
+    PrintWriter consoleJournalWriter;
     Object lastResult;
     Object lastScriptResult;
     final Map<Thread, Object> results;
@@ -165,15 +165,15 @@ public class Interpreter implements AutoCloseable {
         return results.get(thread);
     }
 
-    public void setSessionFilePath(String sessionFilePath) {
-        this.sessionFilePath = sessionFilePath;
-        if (sessionOut != null) {
-            sessionOut.close();
+    public void setConsoleJournalFilePath(String filePath) {
+        this.consoleJournalFilePath = filePath;
+        if (consoleJournalWriter != null) {
+            consoleJournalWriter.close();
         }
-        if ((sessionFilePath != null) && (!sessionFilePath.isEmpty())) {
+        if ((filePath != null) && (!filePath.isEmpty())) {
             try {
-                File file = new File(sessionFilePath, Chrono.getTimeStr(System.currentTimeMillis(), "YYMMdd_HHmmss") + "." + type.getExtension());
-                sessionOut = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
+                File file = new File(filePath, Chrono.getTimeStr(System.currentTimeMillis(), "YYMMdd_HHmmss") + "." + type.getExtension());
+                consoleJournalWriter = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
                 if (Logging.hasInstance()){
                     IO.setFilePermissions(file, Logging.getInstance().getFilePermissions());
                 }
@@ -183,8 +183,8 @@ public class Interpreter implements AutoCloseable {
         }
     }
     
-    public String getSessionFilePath(){
-        return sessionFilePath;
+    public String getConsoleJournalFilePath(){
+        return consoleJournalFilePath;
     }
 
     public void injectVars() {
@@ -317,7 +317,7 @@ public class Interpreter implements AutoCloseable {
                 ret = results.get(evalThread);
             }
             lastScriptResult = ret;
-            saveStatement("\n#Eval file:  " + script + "\n");
+            writeJournal("\n#Eval file:  " + script + "\n");
             return ret;
         } catch (Exception ex) {
             lastScriptResult = ex;
@@ -342,7 +342,7 @@ public class Interpreter implements AutoCloseable {
                 results.remove(Thread.currentThread());
             }
             //In Jython, the output of last statement is not returned so we have to use a return variable
-            saveStatement("\n#Eval file background:  " + script + "\n");
+            writeJournal("\n#Eval file background:  " + script + "\n");
             return ret;
         } finally {
             afterEval(true);
@@ -451,7 +451,7 @@ public class Interpreter implements AutoCloseable {
                         setVar(LAST_RESULT_VARIABLE, lastResult);
                         results.put(evalThread, lastResult);
                     }
-                    saveStatement(statement.text);
+                    writeJournal(statement.text);
                 }
 
                 if (listener != null) {
@@ -496,7 +496,7 @@ public class Interpreter implements AutoCloseable {
                     setVar(LAST_RESULT_VARIABLE, lastResult);
                     results.put(evalThread, lastResult);
                 }
-                saveStatement(line);
+                writeJournal(line);
             }
             return ret;
         } finally {
@@ -521,7 +521,7 @@ public class Interpreter implements AutoCloseable {
                     setVar(LAST_RESULT_VARIABLE, lastResult);
                     results.put(evalThread, lastResult);
                 }
-                saveStatement(statement.text);
+                writeJournal(statement.text);
             }
             return ret;
         } finally {
@@ -551,7 +551,7 @@ public class Interpreter implements AutoCloseable {
         } catch (ScriptException ex) {
             ret.exception = ex;
         }
-        saveStatement("\n#Eval background:  " + statement + "\n");
+        writeJournal("\n#Eval background:  " + statement + "\n");
         afterEval(true);
         return ret;
     }
@@ -763,16 +763,16 @@ public class Interpreter implements AutoCloseable {
         return true;
     }
 
-    void saveStatement(String statement) {
+    void writeJournal(String statement) {
         //Save statement to history
         try {
-            if (sessionOut != null) {
-                sessionOut.println(statement);
-                sessionOut.flush();
+            if (consoleJournalWriter != null) {
+                consoleJournalWriter.println(statement);
+                consoleJournalWriter.flush();
             }
         } catch (Exception e) {
-            sessionOut = null;
-            logger.warning("Error writing to session file");
+            consoleJournalWriter = null;
+            logger.warning("Error writing to journal file");
         }
     }
 
@@ -789,7 +789,7 @@ public class Interpreter implements AutoCloseable {
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
         }            
-        for (AutoCloseable ac : new AutoCloseable[]{sessionOut, jythonClassFilePermissionMonitor}) {
+        for (AutoCloseable ac : new AutoCloseable[]{consoleJournalWriter, jythonClassFilePermissionMonitor}) {
             try {
                 if (ac != null) {
                     ac.close();

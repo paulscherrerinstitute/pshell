@@ -145,27 +145,27 @@ public class DataFileDialog extends StandardDialog {
     }    
   
     boolean changedDataLogs() {
-        return  (checkDataLogs.isSelected() != config.dataScanSaveLogs) ;
+        return  (checkDataLogs.isSelected() != config.scanSaveLogs) ;
     }    
 
     boolean changedData() {
         return (changedFormat() || changedLayout() || changedDataLogs() 
-                || (checkDataLogs.isSelected() != config.dataScanSaveLogs) 
+                || (checkDataLogs.isSelected() != config.scanSaveLogs) 
                 || (checkEmbeddedAttributes.isSelected() != config.dataEmbeddedAttributes)                 
                 || !spinnerDepthDim.getValue().equals(config.dataDepthDimension));
 
     }
 
     boolean changedScans() {
-        return (ckAutoSave.isSelected() != config.dataScanAutoSave)
-                || (ckFlush.isSelected() != config.dataScanFlushRecords)
-                || (ckKeep.isSelected() == config.dataScanReleaseRecords)
-                || (ckSaveConsole.isSelected() != config.dataScanSaveOutput)
-                || (ckSaveScript.isSelected() != config.dataScanSaveScript)
-                || (ckSaveSetpoints.isSelected() != config.dataScanSaveSetpoints)
-                || (ckSaveTimestamps.isSelected() != config.dataScanSaveTimestamps)
-                || (ckScanLazy.isSelected() != config.dataScanLazyTableCreation)
-                || (ckConvert.isSelected() == config.dataScanPreserveTypes);
+        return (ckAutoSave.isSelected() != config.scanAutoSave)
+                || (ckFlush.isSelected() != config.scanFlushRecords)
+                || (ckKeep.isSelected() == config.scanReleaseRecords)
+                || (ckSaveConsole.isSelected() != config.scanSaveOutput)
+                || (ckSaveScript.isSelected() != config.scanSaveScript)
+                || (ckSaveSetpoints.isSelected() != config.scanSaveSetpoints)
+                || (ckSaveTimestamps.isSelected() != config.scanSaveTimestamps)
+                || (ckScanLazy.isSelected() != config.scanLazyTableCreation)
+                || (ckConvert.isSelected() == config.scanPreserveTypes);
 
     }
 
@@ -1016,17 +1016,17 @@ public class DataFileDialog extends StandardDialog {
                 config.dataLayout = String.valueOf(comboLayout.getSelectedItem()).trim();
                 config.dataEmbeddedAttributes = checkEmbeddedAttributes.isSelected();
                 config.filePermissionsData= (FilePermissions)comboPermissions.getSelectedItem();
-                config.dataScanAutoSave = ckAutoSave.isSelected();
-                config.dataScanPreserveTypes = !ckConvert.isSelected();
-                config.dataScanFlushRecords = ckFlush.isSelected();
-                config.dataScanReleaseRecords = !ckKeep.isSelected();
-                config.dataScanLazyTableCreation = ckScanLazy.isSelected();
-                config.dataScanSaveOutput = ckSaveConsole.isSelected();
-                config.dataScanSaveScript = ckSaveScript.isSelected();
-                config.dataScanSaveSetpoints = ckSaveSetpoints.isSelected();
-                config.dataScanSaveTimestamps = ckSaveTimestamps.isSelected();
+                config.scanAutoSave = ckAutoSave.isSelected();
+                config.scanPreserveTypes = !ckConvert.isSelected();
+                config.scanFlushRecords = ckFlush.isSelected();
+                config.scanReleaseRecords = !ckKeep.isSelected();
+                config.scanLazyTableCreation = ckScanLazy.isSelected();
+                config.scanSaveOutput = ckSaveConsole.isSelected();
+                config.scanSaveScript = ckSaveScript.isSelected();
+                config.scanSaveSetpoints = ckSaveSetpoints.isSelected();
+                config.scanSaveTimestamps = ckSaveTimestamps.isSelected();
                 config.dataDepthDimension = (Integer) spinnerDepthDim.getValue();
-                config.dataScanSaveLogs = checkDataLogs.isSelected();
+                config.scanSaveLogs = checkDataLogs.isSelected();
                 config.dataTransferMode = (DataTransferMode) comboTransferMode.getSelectedItem();
                 config.dataTransferPath = textTransferPath.getText().trim();
                 config.dataTransferUser = textTransferUser.getText().trim();
