@@ -1,8 +1,6 @@
 package ch.psi.pshell.device;
 
 import ch.psi.pshell.device.Cacheable.CacheReadable;
-import ch.psi.pshell.device.Readable;
-import ch.psi.pshell.device.Record;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.Reflection.Hidden;
