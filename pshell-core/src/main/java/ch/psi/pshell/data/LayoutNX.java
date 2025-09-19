@@ -156,7 +156,7 @@ public static final String ATTR_Z = "z";
         getDataManager().setAttribute(plotPath, ATTR_CLASS, NEXUS_CLASS_DATA);
         
         for (Nameable dev : scan.getDevices()){
-            getDataManager().createLink(plotPath + dev.getAlias(), getPath(scan,dev.getAlias()));
+            getDataManager().createLink(plotPath + dev.getAlias(), getDataPath(scan,dev.getAlias()));
         }
 
         String[] readables = scan.getReadableNames();
@@ -172,8 +172,8 @@ public static final String ATTR_Z = "z";
         if (writables.length>0){
             getDataManager().setAttribute(plotPath, ATTR_AXIS, writables);
             for (String writable: writables){
-                Object dim = getDataManager().getAttribute(getPath(scan, writable), ATTR_WRITABLE_DIMENSION);
-                Object index = getDataManager().getAttribute(getPath(scan, writable),ATTR_WRITABLE_INDEX);
+                Object dim = getDataManager().getAttribute(getDataPath(scan, writable), ATTR_WRITABLE_DIMENSION);
+                Object index = getDataManager().getAttribute(getDataPath(scan, writable),ATTR_WRITABLE_INDEX);
                 if ((dim!=null) && (((Number)dim).intValue()>0)){
                     getDataManager().setAttribute(plotPath, String.format(ATTR_AXISNAME_INDICES, writable), ((Number)dim).intValue() - 1);
                 }
@@ -186,7 +186,7 @@ public static final String ATTR_Z = "z";
     public List<PlotDescriptor> getScanPlots(String root, String path, DataManager dm) throws IOException {
         dm = (dm == null) ? getDataManager() : dm;
         if (NEXUS_CLASS_ENTRY.equals(getDataManager().getAttribute(root, path, ATTR_CLASS))){
-            path = path + "plot/";
+            path = path + "/plot/";
         }
         return super.getScanPlots(root, path, dm);
     }

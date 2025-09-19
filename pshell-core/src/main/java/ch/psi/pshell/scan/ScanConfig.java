@@ -9,14 +9,12 @@ public record ScanConfig (
     boolean flushRecords,
     boolean releaseRecords,
     boolean preserveTypes,
-    boolean saveOutput,
-    boolean saveScript,
-    boolean saveSetpoints,
+    boolean saveMeta,
     boolean saveTimestamps,
     boolean saveLogs,
     boolean lazyTableCreation) {
-        public ScanConfig() {       
-                this(true, true, false, true, false, false, true, true, true, false);
-       }    
-    }
+    public ScanConfig() {       
+        this(true, false, false, false, true, false, true, false);
+    }    
+}
 

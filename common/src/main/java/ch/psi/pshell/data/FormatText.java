@@ -517,11 +517,12 @@ public class FormatText implements Format {
                                 parsingHeader = false;
                                 processFileHeader(header, ret);
                             }
+                            //TODO:Must also resolve size for rank 1 and 2 if size = (0...
                             if ((Integer) ret.get(INFO_RANK) != 3) {
                                 break;
                             }
 
-                        } else {
+                        } else {                            
                             line = line.substring(1);
                             if (parsingHeader == true){                                
                                 if ((index==0) || !line.contains(ATTR_VALUE_MARKER)){

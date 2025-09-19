@@ -216,18 +216,7 @@ public class DataStore implements AutoCloseable {
     
     public boolean isRoot(String path) {
         return new File(path).equals(path);
-    }
-    
-
-    boolean createLogs = true;
-
-    public boolean getCreateLogs() {
-        return createLogs;
-    }
-
-    public void setCreateLogs(boolean value) {
-        createLogs = value;
-    }
+    }    
     
     public String getDataFileType() {
         return getFormat().getFileType();

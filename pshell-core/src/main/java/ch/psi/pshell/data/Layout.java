@@ -109,11 +109,11 @@ public interface Layout {
     }
 
     default String getSnapPathName(Scan scan, String name) {
-        return Layout.this.getSnapsPathName(scan)+ name;
+        return getSnapsPathName(scan)+ name;
     }    
 
     default String getSnapPathName(Scan scan, Readable snap) {
-        return Layout.this.getSnapPathName(scan, scan.getDeviceName(snap));
+        return getSnapPathName(scan, scan.getDeviceName(snap));
     }
     
     default String getDiagsPathName(Scan scan) {
@@ -178,7 +178,7 @@ public interface Layout {
     default Object getSnap(Scan scan, String name, DataManager dm) {
         try{
             DataAddress scanPath = DataManager.getAddress(scan.getPath());
-            String path = Layout.this.getSnapPathName(scan, name);
+            String path = getSnapPathName(scan, name);
             dm = (dm == null) ? getDataManager() : dm;
             Object sliceData = dm.getData(scanPath.root, path).sliceData;  
             return sliceData;
@@ -362,8 +362,11 @@ public interface Layout {
     default public void appendLog(String log) throws IOException {
     }
 
-    default public void saveScript(String name, String contents) throws IOException {
+    default public void appendOutput(String str) throws IOException {
     }
+
+    default public void onRunStarted(File script) throws IOException {
+    }       
         
     default public void writeSessionMetadata() throws IOException {        
     }    
@@ -377,14 +380,20 @@ public interface Layout {
     }
 
     default public boolean getCreateLogs() {
-        return true;
+        return getDataManager().getExecutionPars().getSaveLogs() && (getLogsPath() != null);
+    }
+    
+    default public boolean getCreateMeta() {
+        return getDataManager().getExecutionPars().getSaveMeta();
     }
 
+    default public boolean getCreateTimestamps() {
+        return getDataManager().getExecutionPars().getSaveTimestamps();
+    }
+    
     String getMetaPath();
     
     String getLogsPath();
-
-    String getScriptsPath();
 
     String getLogFilePath();
 
@@ -393,7 +402,7 @@ public interface Layout {
     String getSnapsPath();
 
     String getDiagsPath();
-
+        
     String getOutputFilePath();
     
     //Flat storage ehrn name pattern won'ty insure a new root for each run,

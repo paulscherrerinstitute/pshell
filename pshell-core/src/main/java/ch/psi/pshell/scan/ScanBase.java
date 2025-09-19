@@ -843,6 +843,18 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             scanIndex = execPars.getIndex(this);
             keep = execPars.getKeep();
             lazy = execPars.getLazy();
+            Map<String, Object> meta = execPars.getAdditionalMeta();
+            if (meta!=null){                
+                try {
+                    if (this.meta==null){
+                        setMeta(meta);
+                    } else {
+                        addMeta(meta);
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(ScanBase.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
 
         executionThread = Thread.currentThread();

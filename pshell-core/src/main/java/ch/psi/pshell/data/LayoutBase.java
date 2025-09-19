@@ -26,42 +26,26 @@ import java.util.logging.Logger;
  */
 public abstract class LayoutBase implements Layout {
     //Default groups
+    public static String PATH_META = "meta/";   
     public static String PATH_MONITORS = "monitors/";
-    public static String PATH_SNAPS = "snaps/";
-    public static String PATH_DIAGS = "diags/";
+    public static String PATH_SNAPS = "snapshots/";
+    public static String PATH_DIAGS = "diagnostics/";
     public static String PATH_LOGS = "logs/";   
-    public static String PATH_META = Format.PATH_META;   
+    
+    public static final String SETPOINTS_DATASET_SUFFIX = "_setpoint";
 
-    Boolean persistSetpoints;
-    Boolean persistTimestamps;
     boolean writeSessionMetadata=true;
     String sessionMetadataPath="/";
     boolean sessionMetadataAttributes=true;
 
-    public boolean getPersistSetpoints() {
-        return (persistSetpoints == null) ? getDataManager().getExecutionPars().getSaveSetpoints() : persistSetpoints;
+    boolean saveSource = false;
+
+    public boolean getSaveSource() {
+        return saveSource;
     }
 
-    boolean createLogs = true;
-
-    public boolean getCreateLogs() {
-        return createLogs;
-    }
-
-    public boolean getPersistTimestamps() {
-        return (persistTimestamps == null) ? getDataManager().getExecutionPars().getSaveTimestamps() : persistTimestamps;
-    }
-
-    public void setCreateLogs(boolean value) {
-        createLogs = value;
-    }
-
-    public void setPersistSetpoints(boolean value) {
-        persistSetpoints = value;
-    }
-    
-    public void setPersistTimestamps(boolean value) {
-        persistTimestamps = value;
+    public void setSaveSource(boolean value) {
+        saveSource = value;
     }    
     
     public void setWriteSessionMetadata(boolean value, String path, boolean attributes) {
@@ -104,39 +88,53 @@ public abstract class LayoutBase implements Layout {
     public String getOutputFilePath() {
         return getLogsPath() + "output";
     }
-
-    @Override
-    public void appendLog(String log) throws IOException {
+    
+    public String getSourceFilePath() {
+        return getLogsPath() + "source/";
+    }        
+    
+    protected String checkLogFile() throws IOException{        
         DataManager dataManager = getDataManager();
         String logFile = getLogFilePath();
         if (logFile != null) {
-            dataManager.checkLogFile(logFile);
-            String time = Chrono.getTimeStr(System.currentTimeMillis(), "dd/MM/YY HH:mm:ss.SSS - ");
-            dataManager.appendItem(logFile, time + log);
+            logFile=dataManager.adjustPath(logFile);
+            if (!dataManager.exists(logFile)) {
+                dataManager.createDataset(logFile, String.class);
+                dataManager.getFormat().checkLogFile(logFile);
+            }                 
+        }
+        return logFile;
+    }
+    
+    @Override
+    public void appendLog(String log) throws IOException {        
+        if (getCreateLogs()){
+            String logFile = checkLogFile();
+            if (logFile!=null){
+                DataManager dataManager = getDataManager();
+                String time = Chrono.getTimeStr(System.currentTimeMillis(), "dd/MM/YY HH:mm:ss.SSS - ");
+                dataManager.appendItem(logFile, time + log);
+            }
         }
     }
 
-    @Override
-    public String getScriptsPath() {
-        return "scripts/";
-    }
-
-    @Override
-    public void saveScript(String name, String contents) throws IOException {
+    public void saveFile(File file, String destination) throws IOException {
+        String contents = new String(Files.readAllBytes(file.toPath()));
         DataManager dataManager = getDataManager();
-        String scriptsPath = getScriptsPath();
-        if (scriptsPath != null) {
-            String filename = scriptsPath + name;
+        if (destination != null) {
+            if (destination.endsWith("/")){
+                destination += file.getName();
+            }
             if (dataManager.getFormat() instanceof FormatText providerText){
-                Path path = providerText.getFilePath(filename, false);
+                Path path = providerText.getFilePath(destination, false);
                 path.toFile().getParentFile().mkdirs();
                 Files.writeString(path, contents);
                 IO.setFilePermissions(path.toFile(), Context.getDataFilePermissions());
             } else {
-                dataManager.setDataset(filename, contents);
+                dataManager.setDataset(destination, contents);
             }
         }
-    }
+    }    
 
     protected void writeSessionMetadata(Map<String, Object> metadata, String location, boolean attributes) throws IOException {
         if (location == null) {

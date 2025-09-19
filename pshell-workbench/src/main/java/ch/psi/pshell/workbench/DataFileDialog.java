@@ -144,13 +144,8 @@ public class DataFileDialog extends StandardDialog {
         return !comboPermissions.getSelectedItem().equals(config.filePermissionsData);
     }    
   
-    boolean changedDataLogs() {
-        return  (checkDataLogs.isSelected() != config.scanSaveLogs) ;
-    }    
-
     boolean changedData() {
-        return (changedFormat() || changedLayout() || changedDataLogs() 
-                || (checkDataLogs.isSelected() != config.scanSaveLogs) 
+        return (changedFormat() || changedLayout()
                 || (checkEmbeddedAttributes.isSelected() != config.dataEmbeddedAttributes)                 
                 || !spinnerDepthDim.getValue().equals(config.dataDepthDimension));
 
@@ -160,9 +155,8 @@ public class DataFileDialog extends StandardDialog {
         return (ckAutoSave.isSelected() != config.scanAutoSave)
                 || (ckFlush.isSelected() != config.scanFlushRecords)
                 || (ckKeep.isSelected() == config.scanReleaseRecords)
-                || (ckSaveConsole.isSelected() != config.scanSaveOutput)
-                || (ckSaveScript.isSelected() != config.scanSaveScript)
-                || (ckSaveSetpoints.isSelected() != config.scanSaveSetpoints)
+                || (ckSaveLogs.isSelected() != config.scanSaveLogs)
+                || (ckSaveMetadata.isSelected() != config.scanSaveMeta)
                 || (ckSaveTimestamps.isSelected() != config.scanSaveTimestamps)
                 || (ckScanLazy.isSelected() != config.scanLazyTableCreation)
                 || (ckConvert.isSelected() == config.scanPreserveTypes);
@@ -209,8 +203,6 @@ public class DataFileDialog extends StandardDialog {
 
     }
 
-    boolean updatingControls;
-
     void update() {
         updateButtons();
         try {
@@ -240,11 +232,9 @@ public class DataFileDialog extends StandardDialog {
         ckFlush.setSelected(config.flushRecords());
         ckKeep.setSelected(!config.releaseRecords());
         ckScanLazy.setSelected(config.lazyTableCreation());
-        ckSaveConsole.setSelected(config.saveOutput());
-        ckSaveScript.setSelected(config.saveScript());
-        ckSaveSetpoints.setSelected(config.saveSetpoints());
+        ckSaveLogs.setSelected(config.saveLogs());
+        ckSaveMetadata.setSelected(config.saveMeta());
         ckSaveTimestamps.setSelected(config.saveTimestamps());
-        checkDataLogs.setSelected(config.saveLogs());        
         int depthDimension = this.config.dataDepthDimension;
         spinnerDepthDim.setValue((depthDimension > 2) ? 0 : Math.max(depthDimension, 0));
         
@@ -351,8 +341,6 @@ public class DataFileDialog extends StandardDialog {
         comboLayout = new javax.swing.JComboBox<>();
         jLabel7 = new javax.swing.JLabel();
         spinnerDepthDim = new javax.swing.JSpinner();
-        jLabel8 = new javax.swing.JLabel();
-        checkDataLogs = new javax.swing.JCheckBox();
         jLabel16 = new javax.swing.JLabel();
         comboPermissions = new javax.swing.JComboBox<>();
         jLabel10 = new javax.swing.JLabel();
@@ -361,10 +349,9 @@ public class DataFileDialog extends StandardDialog {
         ckAutoSave = new javax.swing.JCheckBox();
         ckConvert = new javax.swing.JCheckBox();
         ckKeep = new javax.swing.JCheckBox();
-        ckSaveConsole = new javax.swing.JCheckBox();
+        ckSaveLogs = new javax.swing.JCheckBox();
         ckFlush = new javax.swing.JCheckBox();
-        ckSaveSetpoints = new javax.swing.JCheckBox();
-        ckSaveScript = new javax.swing.JCheckBox();
+        ckSaveMetadata = new javax.swing.JCheckBox();
         ckScanLazy = new javax.swing.JCheckBox();
         ckSaveTimestamps = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
@@ -483,7 +470,7 @@ public class DataFileDialog extends StandardDialog {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(buttonTokens)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 174, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 193, Short.MAX_VALUE)
                         .addComponent(buttonPathDefault))
                     .addComponent(textPathExpansion)
                     .addComponent(textPathConfig)
@@ -563,15 +550,6 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
-        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel8.setText("Create data logs:");
-
-        checkDataLogs.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkDataLogsActionPerformed(evt);
-            }
-        });
-
         jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel16.setText("File permissions");
 
@@ -583,7 +561,7 @@ public class DataFileDialog extends StandardDialog {
         });
 
         jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel10.setText("Embedded attributes");
+        jLabel10.setText("Embedded attributes:");
 
         checkEmbeddedAttributes.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -596,21 +574,19 @@ public class DataFileDialog extends StandardDialog {
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(27, 27, 27)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel16, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addGap(23, 23, 23)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel4)
+                    .addComponent(jLabel7)
+                    .addComponent(jLabel16)
+                    .addComponent(jLabel10))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(checkDataLogs)
                     .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(checkEmbeddedAttributes))
                 .addContainerGap())
         );
@@ -633,18 +609,14 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(jLabel16)
                     .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel8)
-                    .addComponent(checkDataLogs))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel10)
-                    .addComponent(checkEmbeddedAttributes))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
                     .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(58, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(checkEmbeddedAttributes)
+                    .addComponent(jLabel10))
+                .addContainerGap(83, Short.MAX_VALUE))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {comboFormat, comboLayout});
@@ -658,7 +630,7 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
-        ckConvert.setText("Sensors with undefined type have datasets set to double");
+        ckConvert.setText("Sensors with undefined type set to double");
         ckConvert.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ckAutoSaveActionPerformed(evt);
@@ -672,8 +644,8 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
-        ckSaveConsole.setText("Save console output to data file");
-        ckSaveConsole.addActionListener(new java.awt.event.ActionListener() {
+        ckSaveLogs.setText("Save logs");
+        ckSaveLogs.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ckAutoSaveActionPerformed(evt);
             }
@@ -686,15 +658,8 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
-        ckSaveSetpoints.setText("Save positioner setpoints (in addition to readbacks)");
-        ckSaveSetpoints.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ckAutoSaveActionPerformed(evt);
-            }
-        });
-
-        ckSaveScript.setText("Save script to data file");
-        ckSaveScript.addActionListener(new java.awt.event.ActionListener() {
+        ckSaveMetadata.setText("Save metadata");
+        ckSaveMetadata.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ckAutoSaveActionPerformed(evt);
             }
@@ -721,16 +686,15 @@ public class DataFileDialog extends StandardDialog {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addGap(40, 40, 40)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(ckSaveScript)
+                    .addComponent(ckSaveMetadata)
                     .addComponent(ckConvert)
                     .addComponent(ckKeep)
-                    .addComponent(ckSaveConsole)
+                    .addComponent(ckSaveLogs)
                     .addComponent(ckFlush)
-                    .addComponent(ckSaveSetpoints)
                     .addComponent(ckAutoSave)
                     .addComponent(ckScanLazy)
                     .addComponent(ckSaveTimestamps))
-                .addContainerGap(54, Short.MAX_VALUE))
+                .addContainerGap(91, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -744,16 +708,14 @@ public class DataFileDialog extends StandardDialog {
                 .addGap(0, 0, 0)
                 .addComponent(ckConvert)
                 .addGap(0, 0, 0)
-                .addComponent(ckSaveScript)
+                .addComponent(ckSaveMetadata)
                 .addGap(0, 0, 0)
-                .addComponent(ckSaveConsole)
-                .addGap(0, 0, 0)
-                .addComponent(ckSaveSetpoints)
+                .addComponent(ckSaveLogs)
                 .addGap(0, 0, 0)
                 .addComponent(ckSaveTimestamps)
                 .addGap(0, 0, 0)
                 .addComponent(ckScanLazy)
-                .addContainerGap(30, Short.MAX_VALUE))
+                .addContainerGap(51, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Scans", jPanel4);
@@ -856,7 +818,7 @@ public class DataFileDialog extends StandardDialog {
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel18)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textTransferPath, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE))
+                        .addComponent(textTransferPath, javax.swing.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel19)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -926,7 +888,7 @@ public class DataFileDialog extends StandardDialog {
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addComponent(comboNotification, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 277, Short.MAX_VALUE))
+                                .addGap(0, 265, Short.MAX_VALUE))
                             .addComponent(textRecipients)))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(jLabel15)
@@ -968,17 +930,21 @@ public class DataFileDialog extends StandardDialog {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonCancel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonUndo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonApply)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonOk)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addComponent(jTabbedPane1)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 61, Short.MAX_VALUE)
+                        .addComponent(buttonCancel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buttonUndo)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buttonApply)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buttonOk)
+                        .addGap(0, 73, Short.MAX_VALUE))
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonApply, buttonCancel, buttonOk, buttonUndo});
@@ -1021,12 +987,10 @@ public class DataFileDialog extends StandardDialog {
                 config.scanFlushRecords = ckFlush.isSelected();
                 config.scanReleaseRecords = !ckKeep.isSelected();
                 config.scanLazyTableCreation = ckScanLazy.isSelected();
-                config.scanSaveOutput = ckSaveConsole.isSelected();
-                config.scanSaveScript = ckSaveScript.isSelected();
-                config.scanSaveSetpoints = ckSaveSetpoints.isSelected();
+                config.scanSaveMeta = ckSaveMetadata.isSelected();
+                config.scanSaveLogs = ckSaveLogs.isSelected();
                 config.scanSaveTimestamps = ckSaveTimestamps.isSelected();
-                config.dataDepthDimension = (Integer) spinnerDepthDim.getValue();
-                config.scanSaveLogs = checkDataLogs.isSelected();
+                config.dataDepthDimension = (Integer) spinnerDepthDim.getValue();                
                 config.dataTransferMode = (DataTransferMode) comboTransferMode.getSelectedItem();
                 config.dataTransferPath = textTransferPath.getText().trim();
                 config.dataTransferUser = textTransferUser.getText().trim();
@@ -1180,10 +1144,6 @@ public class DataFileDialog extends StandardDialog {
         update();
     }//GEN-LAST:event_comboNotificationActionPerformed
 
-    private void checkDataLogsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkDataLogsActionPerformed
-       update();
-    }//GEN-LAST:event_checkDataLogsActionPerformed
-
     private void comboPermissionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboPermissionsActionPerformed
         update();
     }//GEN-LAST:event_comboPermissionsActionPerformed
@@ -1202,16 +1162,14 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JButton buttonResetSeq;
     private javax.swing.JButton buttonTokens;
     private javax.swing.JButton buttonUndo;
-    private javax.swing.JCheckBox checkDataLogs;
     private javax.swing.JCheckBox checkEmbeddedAttributes;
     private javax.swing.JCheckBox checkRSyncAuthorized;
     private javax.swing.JCheckBox ckAutoSave;
     private javax.swing.JCheckBox ckConvert;
     private javax.swing.JCheckBox ckFlush;
     private javax.swing.JCheckBox ckKeep;
-    private javax.swing.JCheckBox ckSaveConsole;
-    private javax.swing.JCheckBox ckSaveScript;
-    private javax.swing.JCheckBox ckSaveSetpoints;
+    private javax.swing.JCheckBox ckSaveLogs;
+    private javax.swing.JCheckBox ckSaveMetadata;
     private javax.swing.JCheckBox ckSaveTimestamps;
     private javax.swing.JCheckBox ckScanLazy;
     private javax.swing.JComboBox<String> comboFormat;
@@ -1234,7 +1192,6 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

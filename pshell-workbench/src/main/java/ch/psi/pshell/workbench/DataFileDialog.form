@@ -23,18 +23,24 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" alignment="1" attributes="0">
-              <EmptySpace max="32767" attributes="0"/>
-              <Component id="buttonCancel" linkSize="9" min="-2" max="-2" attributes="0"/>
+          <Group type="102" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="buttonUndo" linkSize="9" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace min="0" pref="61" max="32767" attributes="0"/>
+                      <Component id="buttonCancel" linkSize="9" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="buttonUndo" linkSize="9" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="buttonApply" linkSize="9" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="buttonOk" linkSize="9" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="0" pref="73" max="32767" attributes="0"/>
+                  </Group>
+                  <Component id="jTabbedPane1" alignment="0" pref="440" max="32767" attributes="0"/>
+              </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="buttonApply" linkSize="9" min="-2" max="-2" attributes="0"/>
-              <EmptySpace max="-2" attributes="0"/>
-              <Component id="buttonOk" linkSize="9" min="-2" max="-2" attributes="0"/>
-              <EmptySpace max="32767" attributes="0"/>
           </Group>
-          <Component id="jTabbedPane1" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -106,7 +112,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Component id="buttonTokens" linkSize="11" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="174" max="32767" attributes="0"/>
+                              <EmptySpace pref="193" max="32767" attributes="0"/>
                               <Component id="buttonPathDefault" linkSize="1" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Component id="textPathExpansion" max="32767" attributes="0"/>
@@ -255,23 +261,21 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
-                      <EmptySpace min="-2" pref="27" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
+                      <EmptySpace min="-2" pref="23" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="1" attributes="0">
                           <Component id="jLabel3" linkSize="3" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel4" linkSize="3" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel7" linkSize="3" alignment="1" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel8" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel16" alignment="1" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel10" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel10" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="spinnerDepthDim" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="comboLayout" alignment="0" min="-2" pref="182" max="-2" attributes="0"/>
                           <Component id="comboFormat" alignment="0" min="-2" pref="182" max="-2" attributes="0"/>
-                          <Component id="checkDataLogs" min="-2" max="-2" attributes="0"/>
                           <Component id="comboPermissions" alignment="0" min="-2" pref="182" max="-2" attributes="0"/>
-                          <Component id="checkEmbeddedAttributes" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerDepthDim" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="checkEmbeddedAttributes" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
@@ -296,21 +300,16 @@
                           <Component id="comboPermissions" alignment="2" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="2" attributes="0">
-                          <Component id="jLabel8" alignment="2" min="-2" max="-2" attributes="0"/>
-                          <Component id="checkDataLogs" alignment="2" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="2" attributes="0">
-                          <Component id="jLabel10" alignment="2" min="-2" max="-2" attributes="0"/>
-                          <Component id="checkEmbeddedAttributes" alignment="2" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="spinnerDepthDim" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="58" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="checkEmbeddedAttributes" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel10" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace pref="83" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -366,17 +365,6 @@
                 <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="spinnerDepthDimStateChanged"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JLabel" name="jLabel8">
-              <Properties>
-                <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Create data logs:"/>
-              </Properties>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="checkDataLogs">
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkDataLogsActionPerformed"/>
-              </Events>
-            </Component>
             <Component class="javax.swing.JLabel" name="jLabel16">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
@@ -397,7 +385,7 @@
             <Component class="javax.swing.JLabel" name="jLabel10">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Embedded attributes"/>
+                <Property name="text" type="java.lang.String" value="Embedded attributes:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JCheckBox" name="checkEmbeddedAttributes">
@@ -422,17 +410,16 @@
                   <Group type="102" alignment="1" attributes="0">
                       <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="ckSaveScript" min="-2" max="-2" attributes="0"/>
+                          <Component id="ckSaveMetadata" min="-2" max="-2" attributes="0"/>
                           <Component id="ckConvert" min="-2" max="-2" attributes="0"/>
                           <Component id="ckKeep" min="-2" max="-2" attributes="0"/>
-                          <Component id="ckSaveConsole" min="-2" max="-2" attributes="0"/>
+                          <Component id="ckSaveLogs" min="-2" max="-2" attributes="0"/>
                           <Component id="ckFlush" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="ckSaveSetpoints" min="-2" max="-2" attributes="0"/>
                           <Component id="ckAutoSave" min="-2" max="-2" attributes="0"/>
                           <Component id="ckScanLazy" min="-2" max="-2" attributes="0"/>
                           <Component id="ckSaveTimestamps" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="54" max="32767" attributes="0"/>
+                      <EmptySpace pref="91" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -448,16 +435,14 @@
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Component id="ckConvert" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                      <Component id="ckSaveScript" min="-2" max="-2" attributes="0"/>
+                      <Component id="ckSaveMetadata" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                      <Component id="ckSaveConsole" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                      <Component id="ckSaveSetpoints" min="-2" max="-2" attributes="0"/>
+                      <Component id="ckSaveLogs" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Component id="ckSaveTimestamps" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Component id="ckScanLazy" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="30" max="32767" attributes="0"/>
+                      <EmptySpace pref="51" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -473,7 +458,7 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="ckConvert">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Sensors with undefined type have datasets set to double"/>
+                <Property name="text" type="java.lang.String" value="Sensors with undefined type set to double"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
@@ -487,9 +472,9 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JCheckBox" name="ckSaveConsole">
+            <Component class="javax.swing.JCheckBox" name="ckSaveLogs">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Save console output to data file"/>
+                <Property name="text" type="java.lang.String" value="Save logs"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
@@ -503,17 +488,9 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JCheckBox" name="ckSaveSetpoints">
+            <Component class="javax.swing.JCheckBox" name="ckSaveMetadata">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Save positioner setpoints (in addition to readbacks)"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
-              </Events>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="ckSaveScript">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Save script to data file"/>
+                <Property name="text" type="java.lang.String" value="Save metadata"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
@@ -555,7 +532,7 @@
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel18" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="-2" max="-2" attributes="0"/>
-                              <Component id="textTransferPath" pref="404" max="32767" attributes="0"/>
+                              <Component id="textTransferPath" pref="392" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
@@ -743,7 +720,7 @@
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" attributes="0">
                                       <Component id="comboNotification" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace min="0" pref="277" max="32767" attributes="0"/>
+                                      <EmptySpace min="0" pref="265" max="32767" attributes="0"/>
                                   </Group>
                                   <Component id="textRecipients" max="32767" attributes="0"/>
                               </Group>

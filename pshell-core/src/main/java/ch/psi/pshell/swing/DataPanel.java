@@ -9,6 +9,7 @@ import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Format;
 import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.Layout;
+import ch.psi.pshell.data.LayoutBase;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.framework.Processor;
 import ch.psi.pshell.plot.Plot;
@@ -525,11 +526,22 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         if (info != null) {
                             String type = String.valueOf(info.get(Format.INFO_TYPE));
                             if ((type.equals(Format.INFO_VAL_TYPE_GROUP))) {
-                                for (String child : dataManager.getChildren(currentFile.getPath(), dataPath)) {
+                                for (String child : dataManager.getChildren(currentFile.getPath(), dataPath)) {                                    
                                     info = dataManager.getInfo(currentFile.getPath(), child);
                                     if (dataManager.isDisplayablePlot(info)) {
                                         menuPlotData.setVisible(true);
                                         break;
+                                    }
+                                }
+                                //Nexus plots
+                                if (!menuPlotData.isVisible()){
+                                    String defaultChild =  dataManager.getAttributes(currentFile.getPath(), dataPath).getOrDefault("default", "").toString();
+                                    if (defaultChild!=null){
+                                        Map<String, Object> defaultInfo = dataManager.getInfo(currentFile.getPath(), dataPath+ "/" + defaultChild);
+                                        String defaultType = String.valueOf(info.get(Format.INFO_TYPE));
+                                        if ((type.equals(Format.INFO_VAL_TYPE_GROUP))) {
+                                            menuPlotData.setVisible(true);                                        
+                                        }
                                     }
                                 }
                             } else if (type.equals(Format.INFO_VAL_TYPE_DATASET) || type.equals(Format.INFO_VAL_TYPE_SOFTLINK)) {
@@ -563,7 +575,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                             String self = path.getLastPathComponent().toString();
                                             String parentPath = getDataPath(path.getParentPath());
                                             String[] siblings = dataManager.getChildren(currentFile.getPath(), parentPath);
-                                            siblings = Arr.append(siblings, dataManager.getChildren(currentFile.getPath(), parentPath+"/"+Format.PATH_META));
+                                            siblings = Arr.append(siblings, dataManager.getChildren(currentFile.getPath(), parentPath+"/"+LayoutBase.PATH_META));
                                             for (String sibling : siblings) {
                                                 String name = getShortName(sibling);
                                                 if (!name.equals(self)){

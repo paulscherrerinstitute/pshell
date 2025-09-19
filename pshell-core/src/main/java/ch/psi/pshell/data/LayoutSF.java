@@ -172,7 +172,11 @@ public class LayoutSF extends LayoutBase {
         dataManager.setDataset(ATTR_DATASET_PROCESS, new String[]{Sys.getProcessName()});
         dataManager.setDataset(ATTR_DATASET_APP_NAME, new String[]{Context.getApplicationName()});
         dataManager.setDataset(ATTR_DATASET_APP_VERSION, new String[]{Context.getApplicationVersion()});
-        dataManager.setDataset(ATTR_DATASET_INSTRUMENT, new String[]{Context.getInstanceName()});
+        String instrument = Context.getInstanceName();
+        if (instrument==null){
+            instrument = "";
+        }
+        dataManager.setDataset(ATTR_DATASET_INSTRUMENT, new String[]{instrument});
         dataManager.setDataset(ATTR_DATASET_AUTHOR, new String[]{Sys.getUserName()});
         String script = Context.getExecutionPars().getScript();
         dataManager.setDataset(ATTR_DATASET_COMMAND, new String[]{(script==null) ? String.valueOf(Context.getExecutionPars().getStatement()): script});
@@ -212,7 +216,7 @@ public class LayoutSF extends LayoutBase {
     }
     
     @Override
-    public void appendLog(String log) throws IOException {
+    public void appendLog(String log) throws IOException {        
         dataManager.appendItem(ATTR_DATASET_LOG_TIMESTAMP, System.currentTimeMillis());
         dataManager.appendItem(ATTR_DATASET_LOG_DESCRIPTION, log);
     }

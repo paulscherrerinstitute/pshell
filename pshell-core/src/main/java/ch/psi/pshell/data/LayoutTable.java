@@ -55,6 +55,16 @@ public class LayoutTable extends LayoutBase {
     protected String getLogFileName() {
         return "logs";
     }
+    
+    public String getDiagsPathName(Scan scan) {
+        return getScanPathName(scan) + "_" + getDiagsPath();
+    }
+    public String getMonitorsPathName(Scan scan) {
+        return getScanPathName(scan) + "_" +  getMonitorsPath();
+    }
+    public String getSnapsPathName(Scan scan) {
+        return getScanPathName(scan) + "_" +  getSnapsPath();
+    }    
 
     protected String getDatasetName(Scan scan) {
         return scan.getTag();
@@ -66,7 +76,7 @@ public class LayoutTable extends LayoutBase {
         String path = getScanPath(scan);
 
         int fields = scan.getWritables().length + scan.getReadables().length;
-        if (getPersistTimestamps()) {
+        if (getCreateTimestamps()) {
             fields +=  scan.getReadables().length;
         }
         String[] fieldNames = new String[fields];
@@ -82,7 +92,7 @@ public class LayoutTable extends LayoutBase {
             fieldNames[index++] = writable.getAlias();
         }
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
-            if (getPersistTimestamps()) {
+            if (getCreateTimestamps()) {
                 fieldTypes[index] = Long.TYPE;
                 fieldNames[index++] = readable.getAlias() + " timestamp";
             }
@@ -112,7 +122,7 @@ public class LayoutTable extends LayoutBase {
         Number[] positions = record.getPositions();
         Object[] values = record.getReadables();
         int fields = scan.getWritables().length + scan.getReadables().length;
-        if (getPersistTimestamps()) {
+        if (getCreateTimestamps()) {
             fields +=  scan.getReadables().length;
         }
         
@@ -124,7 +134,7 @@ public class LayoutTable extends LayoutBase {
 
         deviceIndex = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
-            if (getPersistTimestamps()) {
+            if (getCreateTimestamps()) {
                 Long timestamp = record.getTimestamp();
                 if (values[deviceIndex] instanceof  TimestampedValue timestampedValue){
                     timestamp = timestampedValue.getTimestamp();

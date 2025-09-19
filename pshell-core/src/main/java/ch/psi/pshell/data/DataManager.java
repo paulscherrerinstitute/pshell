@@ -56,7 +56,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
      */
     public DataManager(){
         outputFile = null;
-        ExecutionParameters ep= Context.getExecutionPars();
+        ExecutionParameters ep= getExecutionPars();
         if (ep==null){
             dataRootDepth = 0;
         } else {
@@ -135,7 +135,6 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             Context.getSequencer().addScanListener(scanListener);
         }
         closeOutput();
-        setCreateLogs(Context.getScanConfig().saveLogs());
         if (embeddedAttributes != null){            
             if (embeddedAttributes != FormatText.getDefaultEmbeddedAttributes()){                
                 FormatText.setDefaultEmbeddedAttributes(embeddedAttributes);
@@ -461,24 +460,27 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     
 
     public void appendOutputFile(String str){
-        if (isOpen()){
-            try {
-                appendItem(getLayout().getOutputFilePath(),str);
-            } catch (IOException e) {
+       if (getLayout().getCreateLogs()){
+            if (isOpen()){
+                try {
+                    getLayout().appendOutput(str);                
+                } catch (IOException e) {
+                }
             }
-        }
+       }
     }    
     
 
     class OutputListener implements SequencerListener{
         StringBuilder output;
         public void start(){
-            if (Context.hasSequencer()){
-                try {
-                    Context.getSequencer().addListener(this);
-                    createDataset(getLayout().getOutputFilePath(), String.class);
-                } catch (Exception ex){
-                    Context.getSequencer().removeListener(this);
+            if (getLayout().getCreateLogs()){
+                if (Context.hasSequencer()){
+                    try {
+                        Context.getSequencer().addListener(this);                        
+                    } catch (Exception ex){
+                        Context.getSequencer().removeListener(this);
+                    }
                 }
             }
         }
@@ -537,18 +539,16 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             getLayout().onOpened(getExecutionPars().getOutputFile());
             if (getExecutionPars().getSave()) {
                 appendLog("Open persistence context: " + getExecutionPars().getOutputFile());
-            }
-            if (getExecutionPars().getSaveScripts()){
-                try{
-                    File script = getExecutionPars().getScriptFile();
-                    if (script != null){
-                        getLayout().saveScript(script.getName(), new String(Files.readAllBytes(script.toPath())));
-                    }
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, null, ex);
+            }            
+            try{
+                File script = getExecutionPars().getScriptFile();
+                if (script != null){
+                    getLayout().onRunStarted(script);
                 }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
             }
-            if (getExecutionPars().getSaveOutput()) {
+            if (getExecutionPars().getSaveLogs()) {
                 outputListener.start();
             }
             if (Context.isHandlingSessions()){
@@ -562,7 +562,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     public void closeOutput() {
         ExecutionParameters ep = getExecutionPars();
         if (ep!=null){
-            if (ep.getSaveOutput()) {
+            if (ep.getSaveLogs()) {
                 outputListener.stop();
             }
         }
@@ -672,7 +672,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     }
 
     public void appendLog(String log) throws IOException {
-        if (getCreateLogs() && getLayout().getCreateLogs() && getLayout().getLogsPath()!=null) {
+        if (getLayout().getCreateLogs()) {
             openOutput();
             if (isOpen()) {
                 getLayout().appendLog(log);
@@ -801,14 +801,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         }
         return ret;
     }
-    
-    void checkLogFile(String logFile) throws IOException {
-        logFile=adjustPath(logFile);
-        if (!exists(logFile)) {
-            createDataset(logFile, String.class);
-        } 
-        getFormat().checkLogFile(logFile);
-    }
+   
 
     public List<PlotDescriptor> getScanPlots(String root, String path) throws Exception {
         try{

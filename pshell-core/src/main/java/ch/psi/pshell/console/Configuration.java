@@ -54,13 +54,11 @@ public class Configuration extends Config {
     public boolean scanFlushRecords = false;
     public boolean scanReleaseRecords = false;
     public boolean scanPreserveTypes = false;
-    public boolean scanSaveOutput = false;
-    public boolean scanSaveScript = false;
-    public boolean scanSaveSetpoints = false;
-    public boolean scanSaveTimestamps = false;
-    public boolean scanLazyTableCreation = false;
-    public int scanStreamerPort = -1;
+    public boolean scanSaveMeta = true;
     public boolean scanSaveLogs = true;
+    public boolean scanSaveTimestamps = false;
+    public boolean scanLazyTableCreation = false;    
+    public int scanStreamerPort = -1;    
     public String scanDefaultTag = Context.DEFAULT_SCAN_TAG;    
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
@@ -175,9 +173,7 @@ public class Configuration extends Config {
             scanFlushRecords,
             scanReleaseRecords,
             scanPreserveTypes,
-            scanSaveOutput,
-            scanSaveScript,
-            scanSaveSetpoints,
+            scanSaveMeta,
             scanSaveTimestamps,
             scanSaveLogs,
             scanLazyTableCreation);        

@@ -30,8 +30,8 @@ public class ExecutionParameters {
     static final Logger logger = Logger.getLogger(ExecutionParameters.class.getName());
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag", "seq", "split",
-        "layout", "format", "save", "flush", "preserve", "keep", "lazy", "setpoints", "timestamps", 
-        "verbose", "depth_dim", "compression", "shuffle", "contiguous", "parallel", "stack", "then", "then_exception", "then_success"};
+        "layout", "format", "save", "flush", "preserve", "keep", "lazy", "meta", "logs", "timestamps",
+        "depth_dim", "compression", "shuffle", "contiguous", "parallel", "stack", "then", "then_exception", "then_success"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
         "plot_types", "print_scan", "auto_range", "manual_range", "manual_range_y", "domain_axis", "status"};
@@ -592,27 +592,26 @@ public class ExecutionParameters {
         return (option != null) ? (Boolean) option : Context.getScanConfig().lazyTableCreation();
     }
     
-    public Boolean getSaveSetpoints() {
-        Object option = getOption("setpoints");
-        return (option != null) ? (Boolean) option : Context.getScanConfig().saveSetpoints();
+    public Boolean getSaveLogs() {
+        Object option = getOption("logs");
+        return (option != null) ? (Boolean) option : Context.getScanConfig().saveLogs();
+    }
+
+    public Boolean getSaveMeta() {
+        Object option = getOption("meta");
+        return (option != null) ? !Boolean.FALSE.equals(option) : Context.getScanConfig().saveMeta();
     }
     
+    public Map<String, Object> getAdditionalMeta() {
+        Object option = getOption("meta");
+        return ((option != null) && (option instanceof Map map)) ? map : null;
+    }
+
     public Boolean getSaveTimestamps() {
         Object option = getOption("timestamps");
         return (option != null) ? (Boolean) option : Context.getScanConfig().saveTimestamps();
     }
     
-
-    public Boolean getSaveOutput() {
-        Object option = getOption("verbose");
-        return (option != null) ? (Boolean) option : Context.getScanConfig().saveOutput();
-    }
-
-    public Boolean getSaveScripts() {
-        Object option = getOption("verbose");
-        return (option != null) ? (Boolean) option : Context.getScanConfig().saveScript();
-    }
-
     boolean isOptionForDevice(Object option, Nameable device) {
         if ((option != null) && (device != null)) {
             if (option == device) {
