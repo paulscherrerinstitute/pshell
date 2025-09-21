@@ -239,17 +239,19 @@ public class LayoutDefault extends LayoutBase {
 
     @Override
     public void onFinish(Scan scan) throws IOException {
+        DataManager dataManager = getDataManager();
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             if (Averager.isAverager(readable)) {
-                if (getCreateMeta()){
-                    try {
-                        getDataManager().flush();
-                        String name = readable.getAlias();
-                        double[] stdev = (double[]) getDataManager().getData(getStatisticsPath(scan, name, DEVICE_STDEV_SUFFIX)).sliceData;
-                        getDataManager().setAttribute(getDataPath(scan, name), ATTR_ERROR_VECTOR, stdev);
-                    } catch (Exception ex) {
-                        Logger.getLogger(LayoutDefault.class.getName()).log(Level.WARNING, null, ex);
+                try {
+                    String name = readable.getAlias();
+                    String path = getStatisticsPath(scan, name, DEVICE_STDEV_SUFFIX);
+                    if (dataManager.isDataset(path)){
+                        dataManager.flush();
+                        double[] stdev = (double[]) dataManager.getData(path).sliceData;
+                        dataManager.setAttribute(getDataPath(scan, name), ATTR_ERROR_VECTOR, stdev);
                     }
+                } catch (Exception ex) {
+                    Logger.getLogger(LayoutDefault.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         }

@@ -160,26 +160,24 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     @Override
     public void setMeta(Map meta){
-        this.meta = meta;
-        if (isStarted()){
+        if (this.meta==null){
+            this.meta=new HashMap(meta);
+        } else {
+            this.meta.putAll(meta);
+        }
+        if (getDataLayout() != null){
             try{
-                getDataLayout().onMeta(this, meta);
+                getDataLayout().onMeta(this, this.meta);
             } catch(Exception ex){
                 logger.log(Level.WARNING, null, ex);
-            }
+            }        
         }
     }
+    
     
     @Override
     public Map getMeta(){
         return meta;
-    }
-
-    public void addMeta(Map<String, Object> meta) throws IOException{
-        if (getDataLayout()!=null) {
-            getDataLayout().onMeta(this, meta);
-        }        
-        this.meta.putAll(meta);
     }
 
     
@@ -844,16 +842,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             keep = execPars.getKeep();
             lazy = execPars.getLazy();
             Map<String, Object> meta = execPars.getAdditionalMeta();
-            if (meta!=null){                
-                try {
-                    if (this.meta==null){
-                        setMeta(meta);
-                    } else {
-                        addMeta(meta);
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(ScanBase.class.getName()).log(Level.SEVERE, null, ex);
+            if (meta!=null){ 
+                meta = new HashMap(meta);
+                if (this.meta!=null){
+                    meta.keySet().removeAll(this.meta.keySet()); //Priority to command keys over script keys
                 }
+                setMeta(meta);
             }
         }
 

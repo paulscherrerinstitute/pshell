@@ -862,10 +862,12 @@ def processScanPars(scan, pars):
     scan.setMonitors(to_list(string_to_obj(pars.pop("monitors",None))))
     scan.setSnaps(to_list(string_to_obj(pars.pop("snaps",None))))
     scan.setDiags(to_list(string_to_obj(pars.pop("diags",None))))
-    meta = pars.get("meta",None)
-    if type(meta) == dict:        
-        scan.setMeta(meta)
-        pars["meta"] = True
+    meta = pars.pop("meta",None)
+    if meta is not None:
+        if type(meta) == dict:        
+            scan.setMeta(meta)
+        else:
+            pars["meta"] = meta
     get_sequencer().setCommandPars(scan, pars)
 
 
