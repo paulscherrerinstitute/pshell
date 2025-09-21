@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -40,17 +41,23 @@ public class FormatText implements Format {
     
     class OutputFile {
 
-        OutputFile(PrintWriter out) {
-            this(out, true);
+        OutputFile(Path path, PrintWriter out) {
+            this(path, out, true);
         }
 
-        OutputFile(PrintWriter out, boolean header) {
+        OutputFile(Path path, PrintWriter out, boolean header) {
             this.out = out;
             this.header = header;
+            this.records = 0;
+            this.path = path;
         }
+        Path path;
         PrintWriter out;
         boolean header;
         boolean composite;
+        int records;
+        int[] dimensions;
+        boolean indeterminateSize;
     }
 
     String root;
@@ -74,7 +81,8 @@ public class FormatText implements Format {
     public static final String ARRAY_MARKER = "array ";
     public static final String COMPOSITE_MARKER = "table ";
     public static final String SIMPLE_DATASET_VAR = "value";
-
+    public static final String INDETERMINATE_SIZE_PLACEHOLDER = "          ";
+    
     static String ITEM_SEPARATOR;
     static String ARRAY_SEPARATOR;
     static String LINE_SEPARATOR;
@@ -308,11 +316,25 @@ public class FormatText implements Format {
     @Override
     public void closeOutput() throws IOException {
         synchronized (openFiles) {
-            for (String key : openFiles.keySet()) {
+            for (OutputFile of : openFiles.values()) {
                 try {
-                    openFiles.get(key).out.close();
+                    of.out.close();
                 } catch (Exception ex) {
                     Logger.getLogger(FormatText.class.getName()).log(Level.WARNING, null, ex);
+                }
+                if (getHeaderVersion()!=1.0){
+                    if(of.indeterminateSize && (of.records>0) && (of.dimensions!=null) && (of.dimensions.length>0)){
+                        //Update dimensions
+                        try (RandomAccessFile raf = new RandomAccessFile(of.path.toFile(), "rw")) {
+                            String firstLine = raf.readLine();  // read and discard to know length
+                            long offset = firstLine.indexOf("[0"); 
+                            if (offset >= 0) {
+                                of.dimensions[0] = of.records;
+                                raf.seek(offset);  
+                                raf.write(Str.toString(of.dimensions).getBytes(StandardCharsets.UTF_8));  
+                            }
+                        }                        
+                    }
                 }
             }
             openFiles.clear();
@@ -320,6 +342,7 @@ public class FormatText implements Format {
         root = null;
     }
 
+   
     @Override
     public void checkLogFile(String path) throws IOException {
         if (!openFiles.containsKey(path)) {
@@ -330,7 +353,7 @@ public class FormatText implements Format {
                     Logger.getLogger(FormatText.class.getName()).info("Reopening log file: " + path);
                     Path filePath = getFilePath(path);    
                     PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
-                    of = new OutputFile(out);                    
+                    of = new OutputFile(filePath, out);                    
                     openFiles.put(path, of);
                 }
             }
@@ -515,11 +538,15 @@ public class FormatText implements Format {
                         if (!line.startsWith(COMMENT_MARKER)) {
                             if (parsingHeader == true){
                                 parsingHeader = false;
-                                processFileHeader(header, ret);
-                            }
-                            //TODO:Must also resolve size for rank 1 and 2 if size = (0...
-                            if ((Integer) ret.get(INFO_RANK) != 3) {
-                                break;
+                                processFileHeader(header, ret);                                
+                                if ((Integer) ret.get(INFO_RANK) != 3) {
+                                    break;
+                                }
+                                int[] dims = (int[]) ret.get(INFO_DIMENSIONS);
+                                if ((dims==null)  || (dims.length==0) || (dims[0]>0)){
+                                    break;
+                                }
+                                //Header Version1: Parse number of images
                             }
 
                         } else {                            
@@ -529,6 +556,7 @@ public class FormatText implements Format {
                                     header.add(line);
                                 }
                             } else {
+                                //Header Version1: Parse number of images
                                 if (line.startsWith(PAGE_MARKER)) {
                                     Integer page = Integer.valueOf(line.substring(PAGE_MARKER.length()));
                                     if (ret.containsKey(INFO_DIMENSIONS)) {
@@ -910,7 +938,7 @@ public class FormatText implements Format {
                     IO.insert(filePath.toString(), index, sb.toString().getBytes());
                     out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
                     synchronized (openFiles) {
-                        openFiles.put(path, new OutputFile(out, false));
+                        openFiles.put(path, new OutputFile(filePath, out, false));
                     }
                 }
             }
@@ -946,13 +974,15 @@ public class FormatText implements Format {
         synchronized (openFiles) {
             of = openFiles.get(path);
             if (of == null) {
-                of = new OutputFile(out);
+                of = new OutputFile(filePath, out);
                 openFiles.put(path, of);
             }
         }
         synchronized (of) {
             of.composite = false;
-            writeSingleDatasetHeader(out, type, dimensions, unsigned);
+            of.dimensions = dimensions;
+            of.indeterminateSize = ((dimensions!=null) && (dimensions[0]==0));
+            writeSingleDatasetHeader(out, type, dimensions, unsigned, of.indeterminateSize);
         }
     }
     
@@ -964,7 +994,7 @@ public class FormatText implements Format {
         synchronized (openFiles) {
             of = openFiles.get(path);
             if (of == null) {
-                of = new OutputFile(out);
+                of = new OutputFile(filePath, out);
                 openFiles.put(path, of);
             }
         }
@@ -1111,13 +1141,16 @@ public class FormatText implements Format {
         return new Attr(name, type, dims, value);
     }
 
-    protected void writeSingleDatasetHeader(PrintWriter out,  Class type, int[] dimensions, boolean unsigned) throws IOException{
+    protected void writeSingleDatasetHeader(PrintWriter out,  Class type, int[] dimensions, boolean unsigned, boolean indeterminateSize) throws IOException{
         if (getHeaderVersion()==1.0){
             out.print(COMMENT_MARKER + TYPE_MARKER + type.getName());        
             out.print(getLineSeparator());
             out.print(COMMENT_MARKER + DIMS_MARKER + Arrays.toString(dimensions));            
         } else {
             out.print(COMMENT_MARKER + ARRAY_MARKER + createAttrStr(SIMPLE_DATASET_VAR, getTypeName(type, unsigned), dimensions, null));        
+            if (indeterminateSize){
+                out.print(INDETERMINATE_SIZE_PLACEHOLDER);
+            }
         }
         out.print(getLineSeparator());        
     }
@@ -1204,7 +1237,7 @@ public class FormatText implements Format {
                      header.get(0).startsWith(COMPOSITE_MARKER));        
         if (v2){       
             if (header.get(0).startsWith(ARRAY_MARKER)){ //Simple
-                String array = header.get(0).substring(ARRAY_MARKER.length());     
+                String array = header.get(0).substring(ARRAY_MARKER.length()).trim();     
                 Attr attr = parseAttrStr(array);
                 addSimpleDatasetInfo(attr.type, attr.dimensions, info);
             } else if (header.get(0).startsWith(COMPOSITE_MARKER)){ //Composite   
@@ -1323,6 +1356,7 @@ public class FormatText implements Format {
                 }
             }
             out.print(getLineSeparator());
+            of.records++;
         }
     }    
 }
