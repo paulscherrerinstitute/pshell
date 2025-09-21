@@ -316,7 +316,10 @@ public class LinePlotErrorSeries extends LinePlotSeries {
 
     public void setData(double[] x, double[] y, double[] error, double[] errorY) {
         if (getPlot() != null) {
-            int length = Math.min(x.length, y.length);
+            int length = y.length;
+            if (x!=null){
+                length = Math.min(length, x.length);
+            }
             if (error!=null){
                 length = Math.min(length, error.length);
             }
