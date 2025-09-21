@@ -124,7 +124,7 @@ public class FormatHDF5 implements Format {
             throw new IllegalStateException("HDF5 writer not opened");
         }
     }
-
+    
     @Override
     public void flush() {
         writer.file().flush();

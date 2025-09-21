@@ -264,7 +264,7 @@ public class DataStore implements AutoCloseable {
         return features;
     }
     
-
+    
     static int defaultDepthDimension = DataSlice.DEFAULT_DEPTH_DIMENSION;
     public static void setDefaultDepthDimension(int depthDimension)  {
         defaultDepthDimension = depthDimension;

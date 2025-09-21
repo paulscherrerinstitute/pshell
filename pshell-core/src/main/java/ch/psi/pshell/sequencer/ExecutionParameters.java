@@ -1,7 +1,6 @@
 package ch.psi.pshell.sequencer;
 
 import ch.psi.pshell.data.DataManager;
-import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Format;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.framework.Context;
@@ -529,13 +528,13 @@ public class ExecutionParameters {
         return (option != null) ? (Boolean) option : Context.getScanConfig().autoSave();
     }
 
-    public int getDepthDimension() {
-        int depthDimension = DataSlice.DEFAULT_DEPTH_DIMENSION;
+    public Integer getDepthDimension() {
         Object option = getOption("depth_dim");
         if (option instanceof Number number) {
-            depthDimension = number.intValue();
-        }
-        return (((depthDimension < 0) || (depthDimension > 2)) ? 0 : depthDimension);
+            int depthDimension = number.intValue();
+            return (((depthDimension < 0) || (depthDimension > 2)) ? 0 : depthDimension);
+        }       
+        return null;
     }
 
     public Boolean getFlush() {

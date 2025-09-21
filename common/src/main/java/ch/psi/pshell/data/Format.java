@@ -151,6 +151,10 @@ public interface Format {
     }            
 
     default int getDepthDimension(){
+        DataStore dataStore = DataStore.getGlobal();
+        if (dataStore!=null){
+            return dataStore.getDepthDimension(); 
+        }
         return DataStore.getDefaultDepthDimension(); 
     }
 

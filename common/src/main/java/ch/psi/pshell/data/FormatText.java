@@ -561,7 +561,7 @@ public class FormatText implements Format {
                                     Integer page = Integer.valueOf(line.substring(PAGE_MARKER.length()));
                                     if (ret.containsKey(INFO_DIMENSIONS)) {
                                         int[] dimensions = (int[]) ret.get(INFO_DIMENSIONS);
-                                        dimensions[getDepthDimension()] = page + 1;
+                                        dimensions[0] = page + 1;
                                         ret.put(INFO_DIMENSIONS, dimensions);
                                     }
                                 }                                

@@ -2,8 +2,8 @@ package ch.psi.pshell.workbench;
 
 import ch.psi.pshell.console.Configuration;
 import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.Format;
-import ch.psi.pshell.data.FormatText;
 import ch.psi.pshell.data.RSync;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Context.DataTransferConfig;
@@ -234,10 +234,7 @@ public class DataFileDialog extends StandardDialog {
         ckScanLazy.setSelected(config.lazyTableCreation());
         ckSaveLogs.setSelected(config.saveLogs());
         ckSaveMetadata.setSelected(config.saveMeta());
-        ckSaveTimestamps.setSelected(config.saveTimestamps());
-        int depthDimension = this.config.dataDepthDimension;
-        spinnerDepthDim.setValue((depthDimension > 2) ? 0 : Math.max(depthDimension, 0));
-        
+        ckSaveTimestamps.setSelected(config.saveTimestamps());        
     }
 
     void updateTransfer() {
@@ -934,7 +931,7 @@ public class DataFileDialog extends StandardDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 61, Short.MAX_VALUE)
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonCancel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonUndo)
@@ -942,8 +939,8 @@ public class DataFileDialog extends StandardDialog {
                         .addComponent(buttonApply)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonOk)
-                        .addGap(0, 73, Short.MAX_VALUE))
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jTabbedPane1))
                 .addContainerGap())
         );
 
@@ -998,7 +995,7 @@ public class DataFileDialog extends StandardDialog {
                 config.notificationTasks = textTasks.getText().trim();               
                 config.save();
                 
-                Context.getDataManager().setDefaultDepthDimension(config.dataDepthDimension);
+                DataStore.setDefaultDepthDimension(config.dataDepthDimension);
                 Context.setDataFilePattern(config.getDataPath());                 
                 if (changedData) {
                     Context.getDataManager().initialize(config.getDataFormat(), config.getDataLayout(), config.dataEmbeddedAttributes);
@@ -1034,6 +1031,8 @@ public class DataFileDialog extends StandardDialog {
         checkEmbeddedAttributes.setSelected(config.dataEmbeddedAttributes);
         comboPermissions.setSelectedItem(config.filePermissionsData);
         spinnerSeq.setValue(Context.getFileSequentialNumber());
+        int depthDimension = this.config.dataDepthDimension;
+        spinnerDepthDim.setValue((depthDimension > 2) ? 0 : Math.max(depthDimension, 0));
         updateScans();
         updateTransfer();
         updateNotify();

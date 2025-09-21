@@ -24,7 +24,6 @@ import ch.psi.pshell.utils.Reflection.Hidden;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -395,7 +394,10 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         ExecutionParameters ep = getExecutionPars();
         if (ep!=null){
             if (Context.getState().isProcessing()) {
-                return ep.getDepthDimension();
+                Integer  depthDimension = ep.getDepthDimension();
+                if (depthDimension!=null){
+                    return depthDimension;
+                }
             }
         }
         return super.getDepthDimension();

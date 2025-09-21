@@ -2,6 +2,7 @@ package ch.psi.pshell.console;
 
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataServer;
+import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.FormatText;
 import ch.psi.pshell.device.Interlock;
 import ch.psi.pshell.devices.DevicePool;
@@ -133,6 +134,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
         Context.setDataFilePattern(config.getDataPath()); 
         FormatText.setDefaultEmbeddedAttributes(config.dataEmbeddedAttributes);
         dataManager.initialize(config.getDataFormat(), config.getDataLayout(), config.dataEmbeddedAttributes);                                
+        DataStore.setDefaultDepthDimension(config.getDepthDim());
     }
         
      
