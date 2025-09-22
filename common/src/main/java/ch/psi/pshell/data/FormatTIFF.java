@@ -347,27 +347,30 @@ public class FormatTIFF extends FormatText {
         Path dir = getFilePath(path, false).getParent();
         Set<String> prefixes = getImageListPrefixes(dir);
         for (var prefix:prefixes){
-            List<String> files = getFilesForPrefix(dir, prefix);
-            List data = new ArrayList();
-            for (var file:files){
-                data.add(Tiff.load(Paths.get(dir.toString(),file ).toString()));
-            }            
-            if (!data.isEmpty()) {
-                Logger.getLogger(FormatTIFF.class.getName()).info("Creating stack of: " + prefix);
-                int depth = data.size();
-                int height = Array.getLength(data.get(0));
-                int width = Array.getLength(Array.get(data.get(0), 0));
-                Class type = Arr.getComponentType(data.get(0));
-                Object stack = Array.newInstance(type, depth, height, width);
-                for (int z = 0; z < depth; z++) {
-                    Array.set(stack, z, data.get(z));
-                }
-                String stackFile = Paths.get(dir.toString(), prefix + ".tiff").toString();
-                Tiff.saveStack(stack, stackFile);
+            String dataset = path.replaceAll("^/+|/+$", "");
+            if (prefix.startsWith(dataset)){
+                List<String> files = getFilesForPrefix(dir, prefix);
+                List data = new ArrayList();
                 for (var file:files){
-                    Files.delete(Paths.get(dir.toString(), file ));
+                    data.add(Tiff.load(Paths.get(dir.toString(),file ).toString()));
                 }            
-                Logger.getLogger(FormatTIFF.class.getName()).info("Success creating stack: " + stackFile);
+                if (!data.isEmpty()) {
+                    Logger.getLogger(FormatTIFF.class.getName()).info("Creating stack of: " + prefix);
+                    int depth = data.size();
+                    int height = Array.getLength(data.get(0));
+                    int width = Array.getLength(Array.get(data.get(0), 0));
+                    Class type = Arr.getComponentType(data.get(0));
+                    Object stack = Array.newInstance(type, depth, height, width);
+                    for (int z = 0; z < depth; z++) {
+                        Array.set(stack, z, data.get(z));
+                    }
+                    String stackFile = Paths.get(dir.toString(), prefix + ".tiff").toString();
+                    Tiff.saveStack(stack, stackFile);
+                    for (var file:files){
+                        Files.delete(Paths.get(dir.toString(), file ));
+                    }            
+                    Logger.getLogger(FormatTIFF.class.getName()).info("Success creating stack: " + stackFile);
+                }
             }
         }
     }
