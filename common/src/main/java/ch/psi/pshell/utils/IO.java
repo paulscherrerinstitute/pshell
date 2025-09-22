@@ -22,6 +22,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -434,6 +435,10 @@ public class IO {
     public static void orderByModified(File[] files) {
         Arrays.sort(files, (a, b) -> Long.compare(a.lastModified(), b.lastModified()));
     }
+    
+    public static void orderByModifiedAndName(File[] files) {
+        Arrays.sort(files, Comparator.comparingLong(File::lastModified).thenComparing(File::getName));
+    }    
 
     static public void deleteRecursive(File file) throws IOException {
         deleteRecursive(file.toPath());

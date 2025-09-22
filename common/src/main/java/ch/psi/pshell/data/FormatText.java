@@ -386,7 +386,7 @@ public class FormatText implements Format {
         File file = Paths.get(root).toFile();
         contents.add(file.getName());
         File[] files = IO.listFiles(file);
-        IO.orderByModified(files);
+        IO.orderByModifiedAndName(files);
         for (File content : files) {
             if (content.isDirectory()) {
                 folders.add(getStructure(content.getPath()));
