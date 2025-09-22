@@ -571,7 +571,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                     try{
                                         Integer rank = ((Number) info.getOrDefault(Format.INFO_RANK, 0)).intValue();
                                         Long elements = ((Number) info.getOrDefault(Format.INFO_ELEMENTS, -1)).longValue();
-                                        if ((rank == 1) && (elements>0)){
+                                        boolean compound = info.getOrDefault(Format.INFO_DATA_TYPE, Format.INFO_VAL_DATA_TYPE_COMPOUND) == Format.INFO_VAL_DATA_TYPE_COMPOUND;
+                                        if ((rank == 1) && (elements>0) && ! compound){
                                             String self = path.getLastPathComponent().toString();
                                             String parentPath = getDataPath(path.getParentPath());
                                             String[] siblings = dataManager.getChildren(currentFile.getPath(), parentPath);
@@ -581,20 +582,22 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                                 if (!name.equals(self)){
                                                     Map siblingInfo = dataManager.getInfo(currentFile.getPath(), sibling);
                                                     if (dataManager.isDisplayablePlot(info)) {
-                                                        if (siblingInfo.getOrDefault(Format.INFO_RANK, 0) == Integer.valueOf(1)){
-                                                            if (elements.equals(((Number)siblingInfo.getOrDefault(Format.INFO_ELEMENTS, -1)).longValue())){                                                            
-                                                                JMenuItem item = new JMenuItem(name);
-                                                                item.addActionListener((ActionEvent ae) -> {
-                                                                    try{
-                                                                        Object array = dataManager.getData(currentFile.getPath(), dataPath).sliceData;                                                                
-                                                                        double[] x = (double[]) Convert.toDouble(dataManager.getData(currentFile.getPath(), sibling).sliceData);
-                                                                        listener.plotData(array, null, self + " (X axis: " + name + ")", x);
-                                                                    } catch (Exception ex){
-                                                                        showException(ex);
-                                                                    }
-                                                                });
-                                                                menuPlotAgainst.add(item);
-                                                                menuPlotAgainst.setVisible(true);
+                                                        if (siblingInfo.getOrDefault(Format.INFO_DATA_TYPE, Format.INFO_VAL_DATA_TYPE_COMPOUND) != Format.INFO_VAL_DATA_TYPE_COMPOUND) {
+                                                            if (siblingInfo.getOrDefault(Format.INFO_RANK, 0) == Integer.valueOf(1)){
+                                                                if (elements.equals(((Number)siblingInfo.getOrDefault(Format.INFO_ELEMENTS, -1)).longValue())){                                                            
+                                                                    JMenuItem item = new JMenuItem(name);
+                                                                    item.addActionListener((ActionEvent ae) -> {
+                                                                        try{
+                                                                            Object array = dataManager.getData(currentFile.getPath(), dataPath).sliceData;                                                                
+                                                                            double[] x = (double[]) Convert.toDouble(dataManager.getData(currentFile.getPath(), sibling).sliceData);
+                                                                            listener.plotData(array, null, self + " (X axis: " + name + ")", x);
+                                                                        } catch (Exception ex){
+                                                                            showException(ex);
+                                                                        }
+                                                                    });
+                                                                    menuPlotAgainst.add(item);
+                                                                    menuPlotAgainst.setVisible(true);
+                                                                }
                                                             }
                                                         }                                                    
                                                     }
