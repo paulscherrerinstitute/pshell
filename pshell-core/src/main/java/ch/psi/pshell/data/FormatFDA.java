@@ -171,7 +171,7 @@ public class FormatFDA extends FormatText{
                     return true;
                 } catch (Exception ex){
                     //FDA layout
-                    separator = FormatText.getItemSeparator(second);
+                    separator = FormatText.getSeparator(second, ITEM_SEPARATOR, null);
                     //Header V1
                     for (String token: second.substring(1).split(separator)){                        
                         if (!token.startsWith("[")){ //If not an array

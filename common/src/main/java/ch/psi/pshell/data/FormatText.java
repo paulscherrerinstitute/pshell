@@ -20,9 +20,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -484,15 +486,11 @@ public class FormatText implements Format {
         }
     }
     
-    public static  String getItemSeparator(String line) {
-        return getSeparator(line, getDefaultItemSeparator());
-    }
-
-    public static  String getArraySeparator(String line) {
-        return getSeparator(line, getDefaultArraySeparator());
-    }    
+    public  String getItemSeparator(String line) {
+        return getSeparator(line, getItemSeparator(), getArraySeparator());
+    }  
     
-    public static  String getSeparator(String line, String defaultFallback) {
+    public static  String getSeparator(String line, String defaultFallback, String forbidden) {
         String separator = defaultFallback;         
 
         // Match sequences of non-alphanumeric, non-bracket, non-dot, non-colon chars
@@ -501,18 +499,47 @@ public class FormatText implements Format {
         Matcher m = p.matcher(line);
 
         java.util.Map<String, Integer> counts = new java.util.HashMap<>();
-
+        
         while (m.find()) {
             String sep = m.group();
+            if (forbidden != null && sep.equals(forbidden)) {
+                continue;
+            }            
             counts.merge(sep, 1, Integer::sum);
         }
 
         if (!counts.isEmpty()) {
-            // Pick separator with max frequency
+            Comparator<Entry<String,Integer>> cmp = (e1, e2) -> {
+                // 1) by descending count
+                int c = Integer.compare(e2.getValue(), e1.getValue());
+                if (c != 0) return c;
+
+                String s1 = e1.getKey();
+                String s2 = e2.getKey();
+                
+                // 2) prefer defaultFallback if one of them matches it
+                boolean d1 = s1.equals(defaultFallback);
+                boolean d2 = s2.equals(defaultFallback);
+                if (d1 != d2) return d1 ? -1 : 1;
+
+                // 3) prefer separators containing non-whitespace characters
+                boolean nonWS1 = s1.chars().anyMatch(ch -> !Character.isWhitespace(ch));
+                boolean nonWS2 = s2.chars().anyMatch(ch -> !Character.isWhitespace(ch));
+                if (nonWS1 != nonWS2) return nonWS1 ? -1 : 1;
+
+                // 4) prefer longer separator
+                int lenComp = Integer.compare(s2.length(), s1.length());
+                if (lenComp != 0) return lenComp;
+
+                // 6) stable fallback
+                return s1.compareTo(s2);
+            };
+            
             separator = counts.entrySet().stream()
-                .max(java.util.Map.Entry.comparingByValue())
-                .get()
-                .getKey();
+                       .sorted(cmp)
+                       .findFirst()
+                       .get()
+                       .getKey();            
         }
 
         return separator;
@@ -702,7 +729,7 @@ public class FormatText implements Format {
                 return  Boolean.valueOf(attr);
             } else if (type.isArray()) {
                 Class componentType = type.getComponentType();
-                String arrSeparator = getSeparator(attr, getArraySeparator());
+                String arrSeparator = getArraySeparator();
                 if (type == String[].class) {
                     return  attr.split(arrSeparator);
                 } else {
@@ -745,7 +772,6 @@ public class FormatText implements Format {
             }
             ArrayList data = new ArrayList();
             String line;
-            String arrSeparator = null;            
             while ((line = br.readLine()) != null) {
                 if (!line.isEmpty()) {
                     if (!line.startsWith(COMMENT_MARKER)) {
@@ -755,12 +781,8 @@ public class FormatText implements Format {
                                 Object sep = info.get(INFO_ITEM_SEPARATOR);
                                 if ((sep instanceof String s) && !s.isBlank()) {
                                     separator = s;
-                                }
-                                if (data.isEmpty() && (arrSeparator==null)){
-                                     //Try to search for separator only once 
-                                     arrSeparator = getRecordArraySeparator(line, separator, fieldTypes);
-                                }
-                                Object[] record = getRecord(line, separator, fieldTypes, arrSeparator);
+                                }                     
+                                Object[] record = getRecord(line, separator, fieldTypes);
                                 data.add(record);
                             } else {
                                 switch (rank) {
@@ -771,10 +793,7 @@ public class FormatText implements Format {
                                         data.add(Number.class.isAssignableFrom(type) ? Convert.stringToNumber(line, type) : line);
                                         break;
                                     default:
-                                        if (arrSeparator==null){
-                                            arrSeparator = getSeparator(line, getArraySeparator());
-                                        }
-                                        String[] vals = line.split(arrSeparator);
+                                        String[] vals = line.split(getArraySeparator());
                                         Class arrayType = Convert.getPrimitiveClass(type);
                                         data.add((arrayType != null)
                                                 ? Convert.toPrimitiveArray(vals, arrayType)
@@ -817,24 +836,7 @@ public class FormatText implements Format {
         return ret;
     }
     
-    protected String getRecordArraySeparator(String line, String separator, Class[] fieldTypes) {
-        String[] vals = line.split(separator);
-        for (int i = 0; i < vals.length; i++) {
-            if (fieldTypes[i].isArray()) {
-                Class compType = fieldTypes[i].getComponentType();
-                if (!compType.isArray() && !vals[i].isEmpty()) {
-                    return getSeparator(vals[i], getArraySeparator());                    
-                }
-            }
-        }
-        return null;
-    }    
-    
     protected Object[] getRecord(String line, String separator, Class[] fieldTypes) {
-        return getRecord(line, separator, fieldTypes, null);
-    }
-    
-    protected Object[] getRecord(String line, String separator, Class[] fieldTypes, String arrSeparator) {
         String[] vals = line.split(separator);
         Object[] record = new Object[vals.length];
         for (int i = 0; i < vals.length; i++) {
@@ -845,11 +847,8 @@ public class FormatText implements Format {
                 if (compType.isArray() || vals[i].isEmpty()) {
                     record[i] = null;
                 } else {
-                    if (arrSeparator==null){
-                        arrSeparator = getSeparator(vals[i], getArraySeparator());
-                    }
                     record[i] = compType.isPrimitive()
-                            ? Convert.toPrimitiveArray(vals[i], arrSeparator, compType)
+                            ? Convert.toPrimitiveArray(vals[i],  getArraySeparator(), compType)
                             : vals[i];
                 }
             } else {
@@ -1254,7 +1253,7 @@ public class FormatText implements Format {
                     //Empty table
                     addCompositeDatasetInfo(new String[0], new String[0], new int[0], 0, getItemSeparator(), info); 
                 } else {
-                    String separator = getSeparator(line, getItemSeparator());
+                    String separator = getItemSeparator(line);
                     String[] columns = line.split(separator);                     
                     String[] names = new String[columns.length];
                     String[] types =  new String[columns.length];
@@ -1290,7 +1289,7 @@ public class FormatText implements Format {
                 addSimpleDatasetInfo(dataType, dimensions, info);
 
             } else { //Composite                           
-                String separator = getSeparator(header.get(0), getItemSeparator());
+                String separator = getItemSeparator(header.get(0));
                 String[] names = header.get(0).split(separator);
                 String[] types = header.get(1).split(separator);
                 int[] lengths = new int[types.length];
