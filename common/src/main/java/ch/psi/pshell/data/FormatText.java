@@ -78,10 +78,9 @@ public class FormatText implements Format {
     public static final String LENGTH_SEPARATOR = " * ";
     
     //V2 header
-    public static final String ARRAY_MARKER = "array ";
-    public static final String COMPOSITE_MARKER = "table ";
-    public static final String SIMPLE_DATASET_VAR = "value";
-    public static final String INDETERMINATE_SIZE_PLACEHOLDER = "          ";
+    public static final String ARRAY_MARKER = "array";
+    public static final String COMPOSITE_MARKER = "table";
+    public static final String INDETERMINATE_SIZE_PLACEHOLDER = "         "; //Max 1G records
     
     static String ITEM_SEPARATOR;
     static String ARRAY_SEPARATOR;
@@ -186,7 +185,7 @@ public class FormatText implements Format {
         orderedAtributes = value;
     }
     
-    boolean finalSeparator = true;
+    boolean finalSeparator = false;
 
     public boolean getFinalSeparator() {
         return finalSeparator;
@@ -245,6 +244,14 @@ public class FormatText implements Format {
     @Override
     public boolean isPacked() {
         return false;
+    }
+    
+    String compositePrefix;
+    protected String getCompositePrefix(){
+        if (compositePrefix==null){
+           compositePrefix = createAttrStr(COMPOSITE_MARKER, null, new int[]{0}, null) + INDETERMINATE_SIZE_PLACEHOLDER;
+        }
+        return compositePrefix;
     }
 
     protected String getFileExtension(String path) {
@@ -609,10 +616,10 @@ public class FormatText implements Format {
         }
     }
     
-    protected void addCompositeDatasetInfo(String[] names, String[] types, int[] lenghts, String separator, Map<String, Object> info){
+    protected void addCompositeDatasetInfo(String[] names, String[] types, int[] lenghts, int records, String separator, Map<String, Object> info){
             info.put(INFO_FIELD_NAMES, names);
             info.put(INFO_FIELDS, names.length);        
-            info.put(INFO_DIMENSIONS, new int[]{0});
+            info.put(INFO_DIMENSIONS, new int[]{records});
             info.put(INFO_RANK, 1);
             info.put(INFO_CLASS, Object.class.getName());
             info.put(INFO_DATA_TYPE, INFO_VAL_DATA_TYPE_COMPOUND);
@@ -1000,6 +1007,8 @@ public class FormatText implements Format {
         }
         synchronized (of) {
             of.composite = true;
+            of.dimensions = new int[]{0};
+            of.indeterminateSize = true;            
             writeCompositeDatasetHeader(out, names, types, lengths);
         }
     }
@@ -1045,7 +1054,7 @@ public class FormatText implements Format {
         return type;
     }
     
-    protected String createAttrStr(String name, String type, int[] dimensions, Object value) throws IOException{
+    protected String createAttrStr(String name, String type, int[] dimensions, Object value) {
         StringBuilder sb = new StringBuilder();
         sb.append(name);
         if (type!=null){
@@ -1054,13 +1063,17 @@ public class FormatText implements Format {
                 type = Type.toComponentTypeKey(type);
             }
             sb.append(type);
-            if (dimensions!=null){              
-                sb.append(Str.toString(dimensions));
-            }
         }
+        if (dimensions!=null){              
+            sb.append(Str.toString(dimensions));
+        }        
         if (value!=null){
             sb.append("=");
-            writeElement(sb, value);
+            try{
+                writeElement(sb, value);
+            } catch (IOException ex){
+                sb.append(String.valueOf(value));
+            }
 
         }
         return sb.toString();
@@ -1071,66 +1084,40 @@ public class FormatText implements Format {
    
     protected static Attr parseAttrStr(String s) {
         if (s == null) throw new IllegalArgumentException("Input is null");
-        String line = Str.trimLeft(s); //Preserve value blank characters in the end
+        String line = Str.trimLeft(s); //Preserve trailing spaces in value
         if (line.isBlank()) throw new IllegalArgumentException("Input is empty");
 
         // split off value if present (first '=')
         int eq = line.indexOf('=');
-        String left = (eq >= 0) ? line.substring(0, eq).trim() : line;
-        String value = (eq >= 0) ? line.substring(eq + 1) : null;        
+        String left = (eq >= 0) ? line.substring(0, eq).trim() : line.trim();
+        String value = (eq >= 0) ? line.substring(eq + 1) : null;
 
-        // look for ':' separating name and type
-        int colon = left.indexOf(':');
         String name;
         String type = null;
         int[] dims = null;
 
-        if (colon < 0) {
-            // only name (no type/dims)
-            name = left.trim();
-        } else {
+        // check for colon (type separator)
+        int colon = left.indexOf(':');
+        if (colon >= 0) {
             name = left.substring(0, colon).trim();
             String rest = left.substring(colon + 1).trim();
-            if (rest.isEmpty()) {
-                // colon present but nothing after it -> treat as no type
-                type = null;
-                dims = null;
+
+            // does rest contain dimensions?
+            int brOpen = rest.indexOf('[');
+            if (brOpen >= 0) {
+                type = rest.substring(0, brOpen).trim();
+                dims = parseDims(rest, brOpen, s);
             } else {
-                // check for '[' for dimensions
-                int brOpen = rest.indexOf('[');
-                if (brOpen >= 0) {
-                    int brClose = rest.indexOf(']', brOpen);
-                    if (brClose < 0) {
-                        throw new IllegalArgumentException("Missing closing ']' in: " + s);
-                    }
-                    type = rest.substring(0, brOpen).trim();
-                    String inner = rest.substring(brOpen + 1, brClose).trim();
-                    if (inner.isEmpty()) {
-                        // explicit empty brackets -> dimension [0]
-                        dims = new int[]{0};
-                    } else {
-                        // comma separated integers
-                        String[] parts = inner.split(",");
-                        dims = new int[parts.length];
-                        for (int i = 0; i < parts.length; i++) {
-                            String p = parts[i].trim();
-                            if (p.isEmpty()) {
-                                throw new IllegalArgumentException("Empty dimension entry in: " + s);
-                            }
-                            try {
-                                dims[i] = Integer.parseInt(p);
-                            } catch (NumberFormatException ex) {
-                                throw new IllegalArgumentException("Invalid integer in dimensions: '" + p + "' in: " + s, ex);
-                            }
-                        }
-                    }
-                    // ignore anything after ']' (should be just whitespace)
-                } else {
-                    // no brackets: just a type name
-                    type = rest.isEmpty() ? null : rest;
-                    dims = null;
-                    if (value != null) value = value.trim(); // may be empty string, but now trimming for arrays because can break final separator
-                }
+                type = rest.isEmpty() ? null : rest;
+            }
+        } else {
+            // no type marker, check for dims directly
+            int brOpen = left.indexOf('[');
+            if (brOpen >= 0) {
+                name = left.substring(0, brOpen).trim();
+                dims = parseDims(left, brOpen, s);
+            } else {
+                name = left.trim();
             }
         }
 
@@ -1140,6 +1127,27 @@ public class FormatText implements Format {
 
         return new Attr(name, type, dims, value);
     }
+    
+    private static int[] parseDims(String str, int brOpen, String original) {
+        int brClose = str.indexOf(']', brOpen);
+        if (brClose < 0) {
+            throw new IllegalArgumentException("Missing closing ']' in: " + original);
+        }
+        String inner = str.substring(brOpen + 1, brClose).trim();
+        if (inner.isEmpty()) {
+            return new int[]{0}; // treat [] as [0]
+        }
+        String[] parts = inner.split(",");
+        int[] dims = new int[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            try {
+                dims[i] = Integer.parseInt(parts[i].trim());
+            } catch (NumberFormatException ex) {
+                throw new IllegalArgumentException("Invalid integer in dimensions: '" + parts[i] + "' in: " + original, ex);
+            }
+        }
+        return dims;
+    }    
 
     protected void writeSingleDatasetHeader(PrintWriter out,  Class type, int[] dimensions, boolean unsigned, boolean indeterminateSize) throws IOException{
         if (getHeaderVersion()==1.0){
@@ -1147,7 +1155,7 @@ public class FormatText implements Format {
             out.print(getLineSeparator());
             out.print(COMMENT_MARKER + DIMS_MARKER + Arrays.toString(dimensions));            
         } else {
-            out.print(COMMENT_MARKER + ARRAY_MARKER + createAttrStr(SIMPLE_DATASET_VAR, getTypeName(type, unsigned), dimensions, null));        
+            out.print(COMMENT_MARKER + createAttrStr(ARRAY_MARKER, getTypeName(type, unsigned), dimensions, null));        
             if (indeterminateSize){
                 out.print(INDETERMINATE_SIZE_PLACEHOLDER);
             }
@@ -1173,7 +1181,7 @@ public class FormatText implements Format {
             }             
             out.append(sj.toString());
         } else {
-            out.print(COMMENT_MARKER + COMPOSITE_MARKER);
+            out.print(COMMENT_MARKER + getCompositePrefix());
             var header = new ArrayList<String>();
             for (int i = 0; i < names.length; i++) {
                 int[] dims = lengths[i]>0 ? new int[]{lengths[i]} : null;
@@ -1237,11 +1245,11 @@ public class FormatText implements Format {
                      header.get(0).startsWith(COMPOSITE_MARKER));        
         if (v2){       
             if (header.get(0).startsWith(ARRAY_MARKER)){ //Simple
-                String array = header.get(0).substring(ARRAY_MARKER.length()).trim();     
-                Attr attr = parseAttrStr(array);
+                String array = header.get(0).trim();     
+                Attr attr = parseAttrStr(array.trim());
                 addSimpleDatasetInfo(attr.type, attr.dimensions, info);
             } else if (header.get(0).startsWith(COMPOSITE_MARKER)){ //Composite   
-                String line = header.get(0).substring(COMPOSITE_MARKER.length());
+                String line = header.get(0).substring(getCompositePrefix().length());
                 String separator = getSeparator(line, getItemSeparator());
                 String[] columns = line.split(separator);                     
                 String[] names = new String[columns.length];
@@ -1253,7 +1261,9 @@ public class FormatText implements Format {
                     types[i] = attr.type;
                     lengths[i] = attr.dimensions==null ? 0 : attr.dimensions[0];
                 }                
-                addCompositeDatasetInfo(names, types, lengths, separator, info);                
+                String compositePrefix = header.get(0).substring(0, getCompositePrefix().length());
+                Attr attr = parseAttrStr(compositePrefix.trim());
+                addCompositeDatasetInfo(names, types, lengths, attr.dimensions==null ? 0 : attr.dimensions[0], separator, info);                
             }         
         } else {                       
             if (header.get(0).startsWith(TYPE_MARKER)){ //Simple
@@ -1287,7 +1297,7 @@ public class FormatText implements Format {
                     }
                     types[i] = types[i].trim();
                 }                    
-                addCompositeDatasetInfo(names, types, lengths, separator, info);
+                addCompositeDatasetInfo(names, types, lengths, 0, separator, info);
             }            
         }
     }    
