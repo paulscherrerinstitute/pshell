@@ -1250,20 +1250,25 @@ public class FormatText implements Format {
                 addSimpleDatasetInfo(attr.type, attr.dimensions, info);
             } else if (header.get(0).startsWith(COMPOSITE_MARKER)){ //Composite   
                 String line = header.get(0).substring(getCompositePrefix().length());
-                String separator = getSeparator(line, getItemSeparator());
-                String[] columns = line.split(separator);                     
-                String[] names = new String[columns.length];
-                String[] types =  new String[columns.length];
-                int[] lengths = new int[columns.length];
-                for (int i=0; i<columns.length; i++){
-                    Attr attr = parseAttrStr(columns[i]);
-                    names[i] = attr.name;
-                    types[i] = attr.type;
-                    lengths[i] = attr.dimensions==null ? 0 : attr.dimensions[0];
-                }                
-                String compositePrefix = header.get(0).substring(0, getCompositePrefix().length());
-                Attr attr = parseAttrStr(compositePrefix.trim());
-                addCompositeDatasetInfo(names, types, lengths, attr.dimensions==null ? 0 : attr.dimensions[0], separator, info);                
+                if (line.isBlank()){
+                    //Empty table
+                    addCompositeDatasetInfo(new String[0], new String[0], new int[0], 0, getItemSeparator(), info); 
+                } else {
+                    String separator = getSeparator(line, getItemSeparator());
+                    String[] columns = line.split(separator);                     
+                    String[] names = new String[columns.length];
+                    String[] types =  new String[columns.length];
+                    int[] lengths = new int[columns.length];
+                    for (int i=0; i<columns.length; i++){
+                        Attr attr = parseAttrStr(columns[i]);
+                        names[i] = attr.name;
+                        types[i] = attr.type;
+                        lengths[i] = attr.dimensions==null ? 0 : attr.dimensions[0];
+                    }                
+                    String compositePrefix = header.get(0).substring(0, getCompositePrefix().length());
+                    Attr attr = parseAttrStr(compositePrefix.trim());
+                    addCompositeDatasetInfo(names, types, lengths, attr.dimensions==null ? 0 : attr.dimensions[0], separator, info);                
+                }
             }         
         } else {                       
             if (header.get(0).startsWith(TYPE_MARKER)){ //Simple
