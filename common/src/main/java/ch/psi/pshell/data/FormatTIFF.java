@@ -348,7 +348,7 @@ public class FormatTIFF extends FormatText {
         Set<String> prefixes = getImageListPrefixes(dir);
         for (var prefix:prefixes){
             String dataset = path.replaceAll("^/+|/+$", "");
-            if (prefix.startsWith(dataset)){
+            if ((prefixes.size()==1) || prefix.startsWith(dataset)){
                 List<String> files = getFilesForPrefix(dir, prefix);
                 List data = new ArrayList();
                 for (var file:files){
