@@ -1220,7 +1220,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             File[] ret = new File[0];
             if (f.isDirectory() && (dataManager != null)) {
                 if (Arr.containsEqual(additionalFiles, "*")) {
-                    ret = IO.listFiles(f, IO.getNotHiddenFileFileter());
+                    ret = IO.listFiles(f, IO.getNotHiddenFileFilter());
                 } else {
                     File[] files = IO.listFiles(f, dataManager.getFileFilter(additionalExtensions));
                     ret = files;

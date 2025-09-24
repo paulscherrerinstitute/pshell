@@ -404,7 +404,7 @@ public class IO {
         };
     }
     
-    public static FileFilter getNotHiddenFileFileter(){
+    public static FileFilter getNotHiddenFileFilter(){
         return new FileFilter(){
             @Override
             public boolean accept(File entry)
