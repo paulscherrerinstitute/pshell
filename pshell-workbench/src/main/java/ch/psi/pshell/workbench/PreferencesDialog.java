@@ -174,8 +174,7 @@ public class PreferencesDialog extends StandardDialog {
         ckScanPlotEnabled.setSelected(!preferences.scanPlotDisabled);
         ckScanTableEnabled.setSelected(!preferences.scanTableDisabled);
         checkCachedDataPanel.setSelected(preferences.cachedDataPanel);
-        textDataExtensions.setText((preferences.dataExtensions==null) ? "" : preferences.dataExtensions);
-        textDataFiles.setText((preferences.dataSubFiles==null) ? "" : preferences.dataSubFiles);
+        textDataVisibleFiles.setText((preferences.dataVisibleFiles==null) ? "" : preferences.dataVisibleFiles);
         checkShowEmergencyStop.setSelected(preferences.showEmergencyStop);
         checkShowHomingButtons.setSelected(preferences.showHomingButtons);
         checkShowJogButtons.setSelected(preferences.showJogButtons); 
@@ -339,11 +338,9 @@ public class PreferencesDialog extends StandardDialog {
         tableProcessingScripts = new javax.swing.JTable();
         buttonRemoveProcScript = new javax.swing.JButton();
         jLabel30 = new javax.swing.JLabel();
-        textDataExtensions = new javax.swing.JTextField();
+        textDataVisibleFiles = new javax.swing.JTextField();
         checkCachedDataPanel = new javax.swing.JCheckBox();
         jLabel33 = new javax.swing.JLabel();
-        textDataFiles = new javax.swing.JTextField();
-        jLabel36 = new javax.swing.JLabel();
         panelPlots = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
@@ -1086,36 +1083,34 @@ public class PreferencesDialog extends StandardDialog {
         jPanel12.setLayout(jPanel12Layout);
         jPanel12Layout.setHorizontalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel12Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
+                .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(buttonInsertProcScript)
                 .addGap(18, 18, 18)
                 .addComponent(buttonRemoveProcScript)
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 497, Short.MAX_VALUE)
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel12Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 106, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonRemoveProcScript)
-                    .addComponent(buttonInsertProcScript)))
+                    .addComponent(buttonInsertProcScript))
+                .addContainerGap())
         );
 
         jLabel30.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel30.setText("Visible file extensions:");
+        jLabel30.setText("Visible files:");
 
         jLabel33.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel33.setText("Data panel cached:");
-
-        jLabel36.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel36.setText("Visible files:");
 
         javax.swing.GroupLayout panelDataLayout = new javax.swing.GroupLayout(panelData);
         panelData.setLayout(panelDataLayout);
@@ -1133,14 +1128,8 @@ public class PreferencesDialog extends StandardDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel30)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textDataExtensions, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(textDataVisibleFiles, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDataLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel36)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textDataFiles, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
         );
         panelDataLayout.setVerticalGroup(
             panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1151,11 +1140,7 @@ public class PreferencesDialog extends StandardDialog {
                     .addComponent(jLabel33)
                     .addComponent(checkCachedDataPanel)
                     .addComponent(jLabel30)
-                    .addComponent(textDataExtensions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(5, 5, 5)
-                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel36)
-                    .addComponent(textDataFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(textDataVisibleFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -1783,8 +1768,7 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.scanPlotDisabled = !ckScanPlotEnabled.isSelected();
                 preferences.scanTableDisabled = !ckScanTableEnabled.isSelected();
                 preferences.cachedDataPanel = checkCachedDataPanel.isSelected();
-                preferences.dataExtensions = textDataExtensions.getText();
-                preferences.dataSubFiles = textDataFiles.getText();
+                preferences.dataVisibleFiles = textDataVisibleFiles.getText();
                 preferences.showEmergencyStop = checkShowEmergencyStop.isSelected();
                 preferences.showHomingButtons = checkShowHomingButtons.isSelected();
                 preferences.showJogButtons = checkShowJogButtons.isSelected();
@@ -2194,7 +2178,6 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
     private javax.swing.JLabel jLabel35;
-    private javax.swing.JLabel jLabel36;
     private javax.swing.JLabel jLabel37;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -2241,8 +2224,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JSpinner spinnerTab;
     private javax.swing.JTable tablePanels;
     private javax.swing.JTable tableProcessingScripts;
-    private javax.swing.JTextField textDataExtensions;
-    private javax.swing.JTextField textDataFiles;
+    private javax.swing.JTextField textDataVisibleFiles;
     private javax.swing.JTextField textOP;
     private javax.swing.JTextField textPL;
     private javax.swing.JTextField textPT;

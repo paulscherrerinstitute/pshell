@@ -9,13 +9,19 @@ import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.Nameable;
 import ch.psi.pshell.utils.Str;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jep.NDArray;
@@ -31,6 +37,7 @@ public class DataStore implements AutoCloseable {
     protected File outputFile;
     protected FilePermissions filePermissions = FilePermissions.Default;
     protected DirectoryStream.Filter fileFilter;
+    protected List<String> visible ;
     static DataStore defaultDataStore;
     static DataStore global;
     
@@ -128,8 +135,9 @@ public class DataStore implements AutoCloseable {
         return formatClass;
     }
 
-    public void setFormat(String name) throws Exception {
+    public void setFormat(String name) throws Exception {        
         Class providerClass = getFormatClass(name);
+        resetFileFilter();
         if ((format != null)) {
             if (format.getClass() == providerClass) {
                 return;
@@ -139,9 +147,9 @@ public class DataStore implements AutoCloseable {
     }
 
     public void setFormat(Format format) {
-        logger.log(Level.FINE, "Setting data format: {0}", format.getClass().getName());
+        logger.log((this==global) ? Level.INFO : Level.FINER, "Setting data format: {0}{1}", new Object[]{format.getClass().getName(), (this==global) ? " on global instance" : ""});
         this.format = format;
-        fileFilter = null;
+        resetFileFilter();
     }
 
     public Format cloneFormat() {
@@ -278,45 +286,89 @@ public class DataStore implements AutoCloseable {
     public int getDepthDimension()  {
         return defaultDepthDimension;
     }
+
+    public static File[] listVisibleFiles(DataStore ds, File f, List<String> visible) {
+        return IO.listFiles(f, ds.getFileFilter(visible));
+    }
+    
+    public static String[] listVisibleExtensions(List<String> visible) {
+        if (visible == null) return new String[0];
+
+        Set<String> exts = new HashSet<>();
+        for (String pattern : visible) {
+            if (pattern == null || pattern.isBlank()) continue;
+            // normalize
+            pattern = pattern.trim();
+            // ignore catch-all patterns like "*"
+            if (pattern.equals("*")) continue;
+
+            // find last dot, but only if it's after a wildcard-free prefix
+            int idx = pattern.lastIndexOf('.');
+            if (idx != -1 && idx < pattern.length() - 1) {
+                String ext = pattern.substring(idx + 1);
+                exts.add(ext);
+            }
+        }
+
+        return exts.toArray(new String[0]);
+    }    
     
     public DirectoryStream.Filter getFileFilter() {
-         return getFileFilter(new String[0]);
+         return getFileFilter(List.of());
     }
     
-    public DirectoryStream.Filter getFileFilter(final String[] additionalExtensions) {
-        return getFileFilter(additionalExtensions, false);
+    public DirectoryStream.Filter getFileFilter(final List<String>visible) {
+        return getFileFilter(visible, false);
     }
     
-    public DirectoryStream.Filter getFileFilter(final String[] additionalExtensions, boolean hidden) {
-        if (fileFilter == null) {
-            fileFilter = (DirectoryStream.Filter<Path>) (Path path) -> {
-                File file = path.toFile();
-                if (!file.isHidden() || hidden){
-                    if (file.isDirectory()) {
-                        if (!isDataPacked()) {
-                            if (isRoot(file.getParent())) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    } else {
-                        String ext = IO.getExtension(file);
-                        if (isDataPacked()) {
-                            if (getDataFileType() != null) {
-                                if (ext.equals(getDataFileType())) {
-                                    return true;
-                                }
-                            }
-                        }
-                        if (Arr.containsEqual(additionalExtensions, ext)){
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            };
+    public DirectoryStream.Filter getFileFilter(List<String> visible, boolean hidden) {        
+        if (visible == null) {
+            visible = List.of();
+        }         
+        if ((visible==this.visible) && (fileFilter != null)){
+            return fileFilter;
         }
+        this.visible = visible;
+        // Prepare matchers
+        List<PathMatcher> matchers = new ArrayList<>();
+        for (String pattern : visible) {
+            pattern.trim();                    
+            String glob = "glob:" + pattern;
+            matchers.add(FileSystems.getDefault().getPathMatcher(glob));
+        }                
+         String[] visibleExtensions = listVisibleExtensions(visible);
+
+        fileFilter = (DirectoryStream.Filter<Path>) (Path path) -> {
+            File file = path.toFile();
+            if (!file.isHidden() || hidden){
+                for (PathMatcher matcher : matchers) {
+                    if (matcher.matches(Paths.get(file.getName()))) {
+                        return true;
+                    }
+                }                    
+                if (file.isDirectory()) {
+                    if (isDataPacked() || !isRoot(file.getParent())){
+                        return true;
+                    }
+                } else {
+                    String ext = IO.getExtension(file);
+                    if (isDataPacked()) {
+                        if (ext.equals(getDataFileType())){
+                            return true;
+                        }                                  
+                    }                        
+                    if (Arr.containsEqual(visibleExtensions, ext)){
+                        return true;
+                    }
+                }                    
+            }
+            return false;
+        };
         return fileFilter;
+    }
+    
+    public void resetFileFilter(){
+        fileFilter=null;
     }
     
     public String getRootFileName() {

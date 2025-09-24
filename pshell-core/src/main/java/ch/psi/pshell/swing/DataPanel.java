@@ -115,8 +115,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     String[] fieldNames = null;
     DataPanelListener listener;
     String[] processingScripts;
-    String[] additionalExtensions = new String[0];
-    String[] additionalFiles = new String[0];
+    List<String> visibleFiles = new ArrayList<>();
     int selectedDataCol;
     PlotPanel plotPanel;
     
@@ -130,7 +129,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             showFileProps(file, false);
             if (file != null) {
                 try {
-                    if (file.isFile() && (Arr.containsEqual(additionalExtensions, IO.getExtension(file)))) {
+                    if (hasVisibleExtension(file)) {
                         setCurrentPath(file);
                     } else {
                         if (dataManager.isDataPacked()) {
@@ -272,11 +271,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         JMenuItem menuRefresh = new JMenuItem("Refresh");
         menuRefresh.addActionListener((ActionEvent e) -> {
-            try {
-                repaintTreePath(treeFolder.getSelectionPath(), true);
-            } catch (Exception ex) {
-                showException(ex);
-            }
+            refresh();
         });
         filePopupMenu.add(menuRefresh);
 
@@ -297,9 +292,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 checkPopup(e);
                 try {
                     if (e.getClickCount() == 2) {
-                        if (currentFile != null) {
-                            boolean isAdditionaExtension = currentFile.isFile() && (Arr.containsEqual(additionalExtensions, IO.getExtension(currentFile)));
-                            if ((!embedded) || isAdditionaExtension) {
+                        if (currentFile != null) {                            
+                            if ((!embedded) || hasVisibleExtension(currentFile)) {
                                 Logger.getLogger(DataPanel.class.getName()).fine("Opening: " + String.valueOf(currentFile));
                                 if (listener != null) {
                                     try {
@@ -341,10 +335,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         File file = (File) treeFolder.getLastSelectedPathComponent();
                         boolean isRoot = isRoot(file);
                         File selected = getFolderTreeSelectedFile();
-                        if (selected != null) {
-                            boolean isAdditionaExtension = file.isFile() && (Arr.containsEqual(additionalExtensions, IO.getExtension(file)));
+                        if (selected != null) {                            
                             boolean isProcessorDataFile = Processor.canProcessorsPlot(file.getAbsolutePath(), null, dataManager);
-                            menuOpen.setVisible(isRoot || isAdditionaExtension);
+                            menuOpen.setVisible(isRoot || hasVisibleExtension(file));
                             menuPlot.setVisible(isProcessorDataFile);
                             menuBrowse.setText(selected.isDirectory() ? "Browse folder" : "Open external editor");
                             menuBrowse.setVisible(isRoot || selected.isDirectory());
@@ -973,13 +966,37 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
     }
     
-    //!!! get arguments from App.getInstance().getMainFrame().getPreferences()
-    public void initialize(String[] additionalExtensions, String[] additionalFiles) {        
-        this.additionalExtensions = (additionalExtensions==null) ?  new String[0] : additionalExtensions;
-        this.additionalFiles = (additionalFiles==null) ?  new String[0] : additionalFiles;
+    public void initialize(String[] visibleFiles) {        
+        setVisibleFiles(visibleFiles);
         initialize();
     }
-
+    
+    public boolean isInitialized(){
+        return dataManager!=null;
+    }
+    
+    public void refresh(){    
+        try {
+            if (dataManager!=null){
+                dataManager.resetFileFilter();
+            }
+            repaintTreePath(treeFolder.getSelectionPath(), true);
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }
+    
+    public void setVisibleFiles(String[] visibleFiles){
+        this.visibleFiles = (visibleFiles==null) ?  new ArrayList<>() : List.of(visibleFiles);
+    }
+        
+    public boolean hasVisibleExtension(File file){
+        return file.isFile() &&  
+                ( Arr.containsEqual(DataStore.listVisibleExtensions(visibleFiles), IO.getExtension(file)) ||
+                  visibleFiles.contains("*")
+                );
+    }
+    
     //Filesystem tree    
     void registerFolderEvents(String name) {
         try {
@@ -1219,19 +1236,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
             File[] ret = new File[0];
             if (f.isDirectory() && (dataManager != null)) {
-                if (Arr.containsEqual(additionalFiles, "*")) {
-                    ret = IO.listFiles(f, IO.getNotHiddenFileFilter());
-                } else {
-                    File[] files = IO.listFiles(f, dataManager.getFileFilter(additionalExtensions));
-                    ret = files;
-                    for (String subFolder : additionalFiles) {
-                        File child = new File(f, subFolder);
-                        if (child.exists() && !child.isHidden()) {
-                            ret = Arr.append(ret, child);
-                        }
-                    }
-                }
-
+                ret = IO.listFiles(f, dataManager.getFileFilter(visibleFiles));                
+                
                 switch (fileOrder) {
                     case Modified -> IO.orderByModified(ret);
                     case Name -> IO.orderByName(ret);
@@ -1958,7 +1964,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             if ((path != null) && (path.exists())) {
                 panel.load(path.getAbsolutePath());
             } else {
-                panel.initialize(null,null); //!!! Should get parameter from somewhere?
+                panel.initialize((String[])null); //!!! Should get parameter from somewhere?
             }
         } catch (Exception ex) {
             Logger.getLogger(DataPanel.class.getName()).log(Level.SEVERE, null, ex);

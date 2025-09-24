@@ -354,7 +354,7 @@ public class View extends MainFrame{
     @Override
     public void onPathChange(String pathId) {
         if (Setup.TOKEN_DATA.equals(pathId)) {
-            dataPanel.initialize(preferences.getDataPanelAdditionalExtensions(), preferences.getDataPanelAdditionalFiles());
+            dataPanel.initialize(preferences.getDataPanelVisibleFiles());
         } else if (Setup.TOKEN_SCRIPT.equals(pathId)) {
             scriptsPanel.initialize();
         } else if (Setup.TOKEN_LOGS.equals(pathId)) {
@@ -556,7 +556,7 @@ public class View extends MainFrame{
 
         //Avoid re-initializing when application is first open
         if (Context.getRunCount() > 0) {
-            dataPanel.initialize(preferences.getDataPanelAdditionalExtensions(), preferences.getDataPanelAdditionalFiles());
+            dataPanel.initialize(preferences.getDataPanelVisibleFiles());
         }
         
         if (Setup.getPlotServer() == null ){
@@ -613,7 +613,7 @@ public class View extends MainFrame{
                 showException(ex);
             }
         });
-        dataPanel.initialize(preferences.getDataPanelAdditionalExtensions(), preferences.getDataPanelAdditionalFiles());//!!! DOne also in superclass
+        dataPanel.initialize(preferences.getDataPanelVisibleFiles());  
 
         menuFullScreen.setSelected(isFullScreen());
 
@@ -1303,7 +1303,10 @@ public class View extends MainFrame{
         statusBar.setShowDataFileName(true);
         
         setScanPanelVisible(!preferences.hideScanPanel);
-        setOutputPanelVisible(!preferences.hideOutputPanel);        
+        setOutputPanelVisible(!preferences.hideOutputPanel);  
+        if (dataPanel.isInitialized()){
+            dataPanel.setVisibleFiles(preferences.getDataPanelVisibleFiles());
+        }
     }
 
 

@@ -130,9 +130,8 @@ public class View extends MainFrame {
     @Override
     protected void onOpen() {
         super.onOpen();
-        var additionalExtensions = new String[]{"log", "txt", "xml", "png", "tif", "tiff", "mat", "h5"};
-        var additionalFiles = new String[]{};
-        dataPanel.initialize(additionalExtensions, additionalFiles);
+        var visibleFiles = new String[]{"*.log", "*.txt", "*.xml", "*.png", "*.tif", "*.tiff", "*.mat", "*.h5"};        
+        dataPanel.initialize(visibleFiles);
         
         if (Context.getApp().isViewPersisted()) {
             restoreOpenedFiles();

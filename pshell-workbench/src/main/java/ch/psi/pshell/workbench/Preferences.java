@@ -104,8 +104,7 @@ public class Preferences {
     public boolean scanPlotDisabled;
     public boolean scanTableDisabled;
     public boolean cachedDataPanel;
-    public String dataExtensions;
-    public String dataSubFiles;
+    public String dataVisibleFiles;
     public boolean showEmergencyStop;
     public boolean showHomingButtons;
     public boolean showJogButtons;
@@ -302,21 +301,11 @@ public class Preferences {
         }
         return scriptPopupMode;
     }
-    
+
     @Transient
-    public String[] getDataPanelAdditionalExtensions(){
-        if (dataExtensions!=null){
-            String[] ret = Str.split(dataExtensions.trim(), new String[]{"|", ";", ",", " "});
-            ret = Arr.removeEquals(ret, "");
-            return ret;
-        }
-        return new String[0];
-    }
-    
-    @Transient
-    public String[] getDataPanelAdditionalFiles(){
-        if (dataSubFiles!=null){
-            String[] ret = Str.split(dataSubFiles.trim(), new String[]{"|", ";", ",", " "});
+    public String[] getDataPanelVisibleFiles(){
+        if (dataVisibleFiles!=null){
+            String[] ret = Str.split(dataVisibleFiles.trim(), new String[]{"|", ";", ",", " "});
             ret = Arr.removeEquals(ret, "");
             return ret;
         }

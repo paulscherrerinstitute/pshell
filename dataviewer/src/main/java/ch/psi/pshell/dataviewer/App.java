@@ -56,7 +56,7 @@ public class App extends ch.psi.pshell.app.App{
                     }
                     dialog.setTitle(dialogTitle + " - " + file.getCanonicalPath());
                 } else if (Context.hasDataManager()){
-                    panel.initialize(null,null); //!!! Should get parameter from somewhere?
+                    panel.initialize((String[])null); //!!! Should get parameter from somewhere?
                 } 
             } catch (Exception ex) {
                 Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);

@@ -182,7 +182,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         return layoutClass;
     }        
 
-    public void setLayout(String name) throws Exception {
+    public void setLayout(String name) throws Exception {        
         Class layoutClass = getLayoutClass(name);
         if ((getLayout() != null) && (getLayout().getClass() == layoutClass)) {
             return;
@@ -191,7 +191,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     }
 
     public void setLayout(Layout layout) {
-        logger.log(Level.FINE, "Setting data layout: {0}", layout.getClass().getName());
+        logger.log((this==global) ? Level.INFO : Level.FINER, "Setting data layout: {0}{1}", new Object[]{layout.getClass().getName(), (this==global) ? " on global instance" : ""});
         this.layout = layout;
         this.layout.initialize();
     }
