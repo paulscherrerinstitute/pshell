@@ -2,6 +2,8 @@ package ch.psi.pshell.plot;
 
 import ch.psi.pshell.plot.LinePlotSeries.LinePlotSeriesListener;
 import java.awt.Color;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.List;
 
 /**
@@ -30,20 +32,18 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
 
     //TODO: Improve it to share the same X rows
     @Override
-    protected String getDataAsString() {
-        StringBuilder str = new StringBuilder(1024);
-
+    protected void writeData(Writer writer) throws IOException {
         int numberSeries = getAllSeries().length;
 
         String labelX = getAxis(AxisId.X).getLabel();
         if ((labelX == null) || (labelX.isEmpty())) {
             labelX = "X";
         }
-        str.append(labelX).append(FIELD_SEPARATOR);
+        writer.append(labelX).append(FIELD_SEPARATOR);
         for (LinePlotSeries series : getAllSeries()) {
-            str.append(series.getName()).append(FIELD_SEPARATOR);
+            writer.append(series.getName()).append(FIELD_SEPARATOR);
         }
-        str.append(LINE_SEPARATOR);
+        writer.append(LINE_SEPARATOR);
 
         int seriesIndex = 0;
         for (LinePlotSeries series : getAllSeries()) {
@@ -51,19 +51,18 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
             for (int i = 0; i < data[0].length; i++) {
                 double x = data[0][i];
                 double y = data[1][i];
-                str.append(getPersistenceValue(x)).append(FIELD_SEPARATOR);
+                writer.append(getPersistenceValue(x)).append(FIELD_SEPARATOR);
                 for (int j = 0; j < seriesIndex; j++) {
-                    str.append(String.format("NaN", x)).append(FIELD_SEPARATOR);
+                    writer.append(String.format("NaN", x)).append(FIELD_SEPARATOR);
                 }
-                str.append(getPersistenceValue(y)).append(FIELD_SEPARATOR);
+                writer.append(getPersistenceValue(y)).append(FIELD_SEPARATOR);
                 for (int j = seriesIndex + 1; j < numberSeries; j++) {
-                    str.append(String.format("NaN", x)).append(FIELD_SEPARATOR);
+                    writer.append(String.format("NaN", x)).append(FIELD_SEPARATOR);
                 }
-                str.append(LINE_SEPARATOR);
+                writer.append(LINE_SEPARATOR);
             }
             seriesIndex++;
         }
-        return str.toString();
     }
 
    final LinePlotSeriesListener seriesListener = new LinePlotSeriesListener() {

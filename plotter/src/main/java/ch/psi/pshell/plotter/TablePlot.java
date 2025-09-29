@@ -4,6 +4,8 @@ import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.plotter.TablePlot.TableSeries;
 import java.awt.BorderLayout;
+import java.io.IOException;
+import java.io.Writer;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
@@ -71,8 +73,8 @@ public class TablePlot extends PlotBase<TableSeries> {
     }
 
     @Override
-    protected String getDataAsString() {
-        return null;
+    protected void writeData(Writer writer) throws IOException {      
+        throw new UnsupportedOperationException();
     }
 
     @Override

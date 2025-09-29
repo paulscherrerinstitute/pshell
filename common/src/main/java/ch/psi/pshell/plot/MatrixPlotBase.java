@@ -4,6 +4,8 @@ import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.ManualScaleDialog.ScaleChangeListener;
 import ch.psi.pshell.plot.MatrixPlotSeries.MatrixPlotSeriesListener;
 import ch.psi.pshell.utils.Reflection.Hidden;
+import java.io.IOException;
+import java.io.Writer;
 
 /**
  *
@@ -82,16 +84,15 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
     }
 
     @Override
-    protected String getDataAsString() {
+    protected void writeData(Writer writer) throws IOException {
         if (getAllSeries().length == 0) {
-            return null;
+            return;
         }
         MatrixPlotSeries series = getAllSeries()[0];
-        StringBuilder str = new StringBuilder(1024);
 
-        str.append(getAxis(AxisId.X).getLabel().isEmpty() ? "X" : getAxis(AxisId.X).getLabel()).append(FIELD_SEPARATOR);
-        str.append(getAxis(AxisId.Y).getLabel().isEmpty() ? "Y" : getAxis(AxisId.Y).getLabel()).append(FIELD_SEPARATOR);
-        str.append(getAxis(AxisId.Z).getLabel().isEmpty() ? "Z" : getAxis(AxisId.Z).getLabel()).append(LINE_SEPARATOR);
+        writer.append(getAxis(AxisId.X).getLabel().isEmpty() ? "X" : getAxis(AxisId.X).getLabel()).append(FIELD_SEPARATOR);
+        writer.append(getAxis(AxisId.Y).getLabel().isEmpty() ? "Y" : getAxis(AxisId.Y).getLabel()).append(FIELD_SEPARATOR);
+        writer.append(getAxis(AxisId.Z).getLabel().isEmpty() ? "Z" : getAxis(AxisId.Z).getLabel()).append(LINE_SEPARATOR);
 
         double[][] data = getSeriesData(getAllSeries()[0]);
         double[][] xdata = getSeriesX(getAllSeries()[0]);
@@ -101,12 +102,11 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
                 double z = data[i][j];
                 double y = (ydata == null) ? series.getMinY() + i * series.getBinWidthY() : ydata[i][j];
                 double x = (xdata == null) ? series.getMinX() + j * series.getBinWidthX() : xdata[i][j];
-                str.append(getPersistenceValue(x)).append(FIELD_SEPARATOR);
-                str.append(getPersistenceValue(y)).append(FIELD_SEPARATOR);
-                str.append(getPersistenceValue(z)).append(LINE_SEPARATOR);
+                writer.append(getPersistenceValue(x)).append(FIELD_SEPARATOR);
+                writer.append(getPersistenceValue(y)).append(FIELD_SEPARATOR);
+                writer.append(getPersistenceValue(z)).append(LINE_SEPARATOR);
             }
         }
-        return str.toString();
     }
 
     @Override

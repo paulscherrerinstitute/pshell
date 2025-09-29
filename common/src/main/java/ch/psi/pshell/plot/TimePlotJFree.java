@@ -16,6 +16,7 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -216,31 +217,21 @@ public class TimePlotJFree extends TimePlotBase {
     }
 
     @Override
-    public void saveData(String filename) throws IOException {
-        String data = getDataAsString();
-        if (data != null) {
-            Files.write(Paths.get(filename), data.getBytes());
-        }
-    }
-
-    @Override
-    protected String getDataAsString() {
-        StringBuilder str = new StringBuilder(1024);
+    protected void writeData(Writer writer) throws IOException {       
         for (int i = 0; i < series.size(); i++) {
             List<TimestampedValue<Double>> values = getSeriesData(i);
-            str.append("#Series: ").append(getSeriesName(i)).append(PlotBase.LINE_SEPARATOR);
+            writer.append("#Series: ").append(getSeriesName(i)).append(PlotBase.LINE_SEPARATOR);
             for (TimestampedValue<Double> item : values) {
                 Double val = item.getValue();
                 if (val == null) {
                     val = Double.NaN;
                 }
-                str.append(Chrono.getTimeStr(item.getTimestamp(), "dd/MM/YY HH:mm:ss.SSS "));
-                str.append(String.valueOf(val));
-                str.append(PlotBase.LINE_SEPARATOR);
+                writer.append(Chrono.getTimeStr(item.getTimestamp(), "dd/MM/YY HH:mm:ss.SSS "));
+                writer.append(String.valueOf(val));
+                writer.append(PlotBase.LINE_SEPARATOR);
             }
-            str.append(PlotBase.LINE_SEPARATOR);
+            writer.append(PlotBase.LINE_SEPARATOR);
         }
-        return str.toString();
     }
 
     TimeSeriesCollection dataY2;

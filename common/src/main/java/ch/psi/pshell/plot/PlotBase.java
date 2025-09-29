@@ -30,7 +30,11 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -270,9 +274,17 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
 
     @Override
     public void saveData(String filename) throws IOException {
-        String data = getDataAsString();
-        if (data != null) {
-            Files.write(Paths.get(filename), data.getBytes());
+        try (FileWriter writer = new FileWriter(filename, false)) {
+            writeData(writer);
+        }               
+    }
+    
+    protected String getDataAsString() {
+        try (StringWriter sw = new StringWriter()) {
+            writeData(sw);           
+            return sw.toString();     
+        } catch (Exception ex){
+            return null;
         }
     }
 
@@ -384,7 +396,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
 
     }
 
-    abstract protected String getDataAsString();
+    abstract protected void writeData(Writer writer) throws IOException;
 
     abstract public void detach(String className);
 

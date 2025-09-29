@@ -1,5 +1,8 @@
 package ch.psi.pshell.plot;
 
+import java.io.IOException;
+import java.io.Writer;
+
 /**
  *
  */
@@ -33,7 +36,7 @@ abstract public class SlicePlotBase extends PlotBase<SlicePlotSeries> implements
     }
 
     @Override
-    protected String getDataAsString() {
+    protected void writeData(Writer writer) throws IOException {
         throw new UnsupportedOperationException();
     }
 
