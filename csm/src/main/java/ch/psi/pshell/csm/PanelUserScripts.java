@@ -438,13 +438,14 @@ public class PanelUserScripts extends MonitoredPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 308, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelScripts1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(buttonLibDownload, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(panelScripts1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(buttonLibDel)
-                        .addComponent(buttonLibUpload)))
+                .addGroup(panelScripts1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(buttonLibDownload, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonLibDel)
+                    .addComponent(buttonLibUpload))
                 .addContainerGap())
         );
+
+        panelScripts1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonLibDel, buttonLibDownload, buttonLibUpload});
 
         jTabbedPane1.addTab("Libraries", panelScripts1);
 
