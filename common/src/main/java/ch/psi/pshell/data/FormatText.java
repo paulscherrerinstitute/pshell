@@ -640,6 +640,9 @@ public class FormatText implements Format {
         if (dimensions!=null){
             info.put(INFO_DIMENSIONS, dimensions);
             info.put(INFO_RANK, dimensions.length);        
+        } else {
+            info.put(INFO_DIMENSIONS, new int[0]);
+            info.put(INFO_RANK, 0);        
         }
     }
     
@@ -987,7 +990,7 @@ public class FormatText implements Format {
         synchronized (of) {
             of.composite = false;
             of.dimensions = dimensions;
-            of.indeterminateSize = ((dimensions!=null) && (dimensions[0]==0));
+            of.indeterminateSize = ((dimensions!=null) && (dimensions.length>1) &&(dimensions[0]==0));
             writeSingleDatasetHeader(out, type, dimensions, unsigned, of.indeterminateSize);
         }
     }
@@ -1154,7 +1157,8 @@ public class FormatText implements Format {
             out.print(getLineSeparator());
             out.print(COMMENT_MARKER + DIMS_MARKER + Arrays.toString(dimensions));            
         } else {
-            out.print(COMMENT_MARKER + createAttrStr(ARRAY_MARKER, getTypeName(type, unsigned), dimensions, null));        
+            boolean scalar = (dimensions.length==0) && !indeterminateSize;
+            out.print(COMMENT_MARKER + createAttrStr(ARRAY_MARKER, getTypeName(type, unsigned), scalar ? null : dimensions, null));        
             if (indeterminateSize){
                 out.print(INDETERMINATE_SIZE_PLACEHOLDER);
             }
