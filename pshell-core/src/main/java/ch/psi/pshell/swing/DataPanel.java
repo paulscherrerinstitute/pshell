@@ -529,10 +529,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 //Nexus plots
                                 if (!menuPlotData.isVisible()){
                                     String defaultChild =  dataManager.getAttributes(currentFile.getPath(), dataPath).getOrDefault("default", "").toString();
-                                    if (defaultChild!=null){
+                                    if ((defaultChild!=null) && (!defaultChild.isBlank())){
                                         Map<String, Object> defaultInfo = dataManager.getInfo(currentFile.getPath(), dataPath+ "/" + defaultChild);
-                                        String defaultType = String.valueOf(info.get(Format.INFO_TYPE));
-                                        if ((type.equals(Format.INFO_VAL_TYPE_GROUP))) {
+                                        String defaultType = String.valueOf(defaultInfo.get(Format.INFO_TYPE));
+                                        if ((defaultType.equals(Format.INFO_VAL_TYPE_GROUP))) {
                                             menuPlotData.setVisible(true);                                        
                                         }
                                     }
