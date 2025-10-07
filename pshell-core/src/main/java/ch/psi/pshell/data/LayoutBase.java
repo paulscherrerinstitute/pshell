@@ -28,8 +28,8 @@ public abstract class LayoutBase implements Layout {
     //Default groups
     public static String PATH_META = "meta/";   
     public static String PATH_MONITORS = "monitors/";
-    public static String PATH_SNAPS = "snapshots/";
-    public static String PATH_DIAGS = "diagnostics/";
+    public static String PATH_SNAPS = "snaps/";
+    public static String PATH_DIAGS = "diags/";
     public static String PATH_LOGS = "logs/";   
     
     public static final String SETPOINTS_DATASET_SUFFIX = "_setpoint";
