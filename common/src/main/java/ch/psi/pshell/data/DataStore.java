@@ -922,21 +922,24 @@ public class DataStore implements AutoCloseable {
             IO.setFilePermissions(file, filePermissions);
         }
     }
-
-    public boolean isDisplayablePlot(Map<String, Object> info) {
+    
+    public static boolean isPlottable(Map<String, Object> info, boolean plotScalars) {
         if (info != null){
             String infoType = String.valueOf(info.get(Format.INFO_TYPE));
             boolean isDataset = infoType.equals(Format.INFO_VAL_TYPE_DATASET) || infoType.equals(Format.INFO_VAL_TYPE_SOFTLINK);
-            if (isDataset && (((Integer) info.getOrDefault(Format.INFO_RANK, 0)) > 0)) {
-                String dataType = (String) info.get(Format.INFO_DATA_TYPE);
-                if (dataType != null) {
-                    switch (dataType) {
-                        case Format.INFO_VAL_DATA_TYPE_COMPOUND:
-                        case Format.INFO_VAL_DATA_TYPE_FLOAT:
-                        case Format.INFO_VAL_DATA_TYPE_INTEGER:
-                        case Format.INFO_VAL_DATA_TYPE_BITFIELD:
-                        case Format.INFO_VAL_DATA_TYPE_BOOLEAN:
-                            return true;
+            int rank = (Integer) info.getOrDefault(Format.INFO_RANK, 0);
+            if (isDataset) {
+                if ((rank > 0) || (plotScalars && (rank == 0))){
+                    String dataType = (String) info.get(Format.INFO_DATA_TYPE);
+                    if (dataType != null) {
+                        switch (dataType) {
+                            case Format.INFO_VAL_DATA_TYPE_COMPOUND:
+                            case Format.INFO_VAL_DATA_TYPE_FLOAT:
+                            case Format.INFO_VAL_DATA_TYPE_INTEGER:
+                            case Format.INFO_VAL_DATA_TYPE_BITFIELD:
+                            case Format.INFO_VAL_DATA_TYPE_BOOLEAN:
+                                return true;
+                        }
                     }
                 }
             }

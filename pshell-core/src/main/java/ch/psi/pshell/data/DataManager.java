@@ -703,6 +703,20 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             createDataset(path, readable, new int[]{samples}, features);
         }
     }
+    
+    static boolean plotScalars = true;
+            
+    public static boolean getPlotScalars(){
+        return plotScalars;
+    }
+
+    public static void setPlotScalars(boolean value){
+        plotScalars = value;
+    }
+
+    public static boolean isPlottable(Map<String, Object> info) {
+        return DataStore.isPlottable(info, plotScalars);
+    }
 
     //Retrieve plots from dataset
     public List<PlotDescriptor> getPlots(String root, String path) throws IOException {
@@ -850,7 +864,9 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         }
 
         plots.removeIf(val -> (plotPreferences.enabledPlots != null) && (!plotPreferences.enabledPlots.contains(val.name)));
-        plots.removeIf(val -> val.rank == 0);   //Don't plot scalar datasets    
+        if (!plotScalars){
+            plots.removeIf(val -> val.rank == 0);  
+        }
 
         double[] xdata = null;
         if (plotPreferences.domainAxis != null) {

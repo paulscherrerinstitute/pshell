@@ -521,7 +521,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             if ((type.equals(Format.INFO_VAL_TYPE_GROUP))) {
                                 for (String child : dataManager.getChildren(currentFile.getPath(), dataPath)) {                                    
                                     info = dataManager.getInfo(currentFile.getPath(), child);
-                                    if (dataManager.isDisplayablePlot(info)) {
+                                    if (dataManager.isPlottable(info)) {
                                         menuPlotData.setVisible(true);
                                         break;
                                     }
@@ -539,7 +539,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 }
                             } else if (type.equals(Format.INFO_VAL_TYPE_DATASET) || type.equals(Format.INFO_VAL_TYPE_SOFTLINK)) {
                                 menuAssign.setVisible(Sequencer.hasInstance());
-                                if (dataManager.isDisplayablePlot(info)) {
+                                if (dataManager.isPlottable(info)) {
                                     menuConvert.removeAll();
                                     for (Converter converter : Converter.getServiceProviders()) {
                                         TreePath tp = treeFile.getSelectionPath();
@@ -574,7 +574,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                                 String name = getShortName(sibling);
                                                 if (!name.equals(self)){
                                                     Map siblingInfo = dataManager.getInfo(currentFile.getPath(), sibling);
-                                                    if (dataManager.isDisplayablePlot(info)) {
+                                                    if (dataManager.isPlottable(info)) {
                                                         if (siblingInfo.getOrDefault(Format.INFO_DATA_TYPE, Format.INFO_VAL_DATA_TYPE_COMPOUND) != Format.INFO_VAL_DATA_TYPE_COMPOUND) {
                                                             if (siblingInfo.getOrDefault(Format.INFO_RANK, 0) == Integer.valueOf(1)){
                                                                 if (elements.equals(((Number)siblingInfo.getOrDefault(Format.INFO_ELEMENTS, -1)).longValue())){                                                            
