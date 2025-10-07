@@ -161,7 +161,7 @@ public interface Converter {
             try {
                 ret.add((Converter) c.newInstance());
             } catch (Exception ex) {
-                Logger.getLogger(Converter.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Converter.class.getName()).log(Level.INFO, null, ex);
             }
         }
         try{
@@ -169,7 +169,7 @@ public interface Converter {
                 ret.add(importer);
             }
         } catch (Throwable ex) {
-            Logger.getLogger(Converter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Converter.class.getName()).log(Level.INFO, null, ex);
         }
             
         return ret;

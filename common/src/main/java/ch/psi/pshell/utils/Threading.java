@@ -209,8 +209,6 @@ public class Threading {
                 t.setName(name);
             }
             t.setDaemon(true);    
-            System.out.println(t.threadId());
-            
             return t;
         });
         VisibleCompletableFuture future =  getFuture(supplier, executor);
