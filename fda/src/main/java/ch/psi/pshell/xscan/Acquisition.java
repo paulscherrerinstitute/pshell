@@ -95,6 +95,7 @@ import ch.psi.pshell.xscan.plot.YSeries;
 import ch.psi.pshell.xscan.plot.YZSeries;
 import ch.psi.pshell.xscan.ui.ModelUtil;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -214,7 +215,11 @@ public class Acquisition {
                     datafile = new File(fprefix+".txt");
                     executionParameters = Context.getExecutionPars();
                     this.serializer = new SerializerTXT(datafile, configuration.getAppendSuffix(), executionParameters.getFlush());                    
-                    executionParameters.setDataPath(datafile.getParentFile()); //Create base dir and trigger callbacks
+                    try {
+                        executionParameters.setDataPath(datafile.getParentFile(), false); //Create base dir and trigger callbacks
+                    } catch (Exception ex) {
+                        Logger.getLogger(Acquisition.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     
                 } else {
                     this.serializer = new SerializerPShell(fprefix);
@@ -431,7 +436,11 @@ public class Acquisition {
 		// Clear global variables Jython
 		jVariableDictionary.clear();
                 if (executionParameters!=null){
-                    executionParameters.setDataPath(null);
+                    try {
+                        executionParameters.setDataPath(null, false);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Acquisition.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
                 
 		// Remove log handler

@@ -95,12 +95,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
         None,
         Exception,
         Return
-    }
-        
-    protected String[] imageFileExtensions = new String[]{"png", "bmp", "gif", "tif", "tiff", "jpg", "jpeg"};
-    protected String[] textFileExtensions = new String[]{"txt", "csv", "log"};
-    protected String[] dataFileExtensions = new String[]{"h5", "hdf5"};
-    
+    }            
     
     public static MainFrame getInstance(){
         return (MainFrame) INSTANCE;
@@ -1782,9 +1777,9 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
                 return MainFrame.this.openScript(fileName);
             } else if (getProcessorExtensions().contains(ext)) {
                 return openScriptOrProcessor(fileName);
-            } else if (Arr.containsEqual(dataFileExtensions, ext)){
+            } else if (Arr.containsEqual(DataPanel.dataFileExtensions, ext)){
                 return openDataFile(fileName);
-            } else if (Arr.containsEqual(imageFileExtensions, ext)){
+            } else if (Arr.containsEqual(DataPanel.imageFileExtensions, ext)){
                 return openImageFile(fileName);
             } else if (Context.getDataManager().isRoot(new File(fileName))){
                 return openDataFile(fileName);
@@ -1827,13 +1822,13 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
         if (ext != null) {
             ext = ext.toLowerCase();
         }
-        if (Arr.containsEqual(imageFileExtensions, ext)) {
+        if (Arr.containsEqual(DataPanel.imageFileExtensions, ext)) {
             return openImageFile(fileName);
-        } else if (Arr.containsEqual(textFileExtensions, ext)) {
+        } else if (Arr.containsEqual(DataPanel.textFileExtensions, ext)) {
             Editor ret = openTextFile(fileName);
             ret.setReadOnly(true);
             return ret;
-        } else if (Arr.containsEqual(dataFileExtensions, ext)) {
+        } else if (Arr.containsEqual(DataPanel.dataFileExtensions, ext)) {
             return openDataFile(fileName);
         } else {
             if (processor == null) {

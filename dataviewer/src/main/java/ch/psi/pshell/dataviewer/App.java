@@ -6,6 +6,8 @@ import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.SwingUtils;
+import ch.psi.pshell.utils.Arr;
+import ch.psi.pshell.utils.Str;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -46,7 +48,8 @@ public class App extends ch.psi.pshell.app.App{
                     panel.load(file.getAbsolutePath(), format, layout);
                     dialog.setTitle(dialogTitle + " - " + file.getCanonicalPath());
                 } else {
-                    File path = Context.getDefaultDataPath();                 
+                    File path = Context.getDefaultDataPath();        
+                    panel.setVisibleFiles(getDataPanelVisibleFiles());
                     panel.initialize(new DataManager(path.toString(), format, layout));
                 } 
             } catch (Exception ex) {
@@ -69,6 +72,16 @@ public class App extends ch.psi.pshell.app.App{
         });
         return dialog;
     }
+    
+    public static String[] getDataPanelVisibleFiles(){
+        String dataVisibleFiles = Options.VISIBLE_FILES.getString(null);
+        if ((dataVisibleFiles!=null) && (!dataVisibleFiles.isBlank())){
+            String[] ret = Str.split(dataVisibleFiles.trim(), new String[]{"|", ";", ",", " "});
+            ret = Arr.removeEquals(ret, "");
+            return ret;
+        }
+        return new String[0];
+    }        
     
     public static void main(String args[]) {
         Options.add();

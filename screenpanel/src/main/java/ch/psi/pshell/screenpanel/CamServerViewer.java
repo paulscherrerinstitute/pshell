@@ -8,6 +8,7 @@ import ch.psi.pshell.camserver.CameraClient;
 import ch.psi.pshell.camserver.CameraSource;
 import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.framework.Context;
@@ -157,7 +158,7 @@ public class CamServerViewer extends MonitoredPanel {
     public static interface CamServerViewerListener{
         default void onOpenedStream(String name, String instance) throws Exception {};
         default void onOpeningStream(String name) throws Exception {};
-        default void onSavingImages(String name, String instance, DataManager dm, String pathRoot) throws Exception {};
+        default void onSavingImages(String name, String instance, DataStore dm, String pathRoot) throws Exception {};
         default void onSavedSnapshot(String name, String instance, String snapshotFile) throws Exception {};        
     }
     
@@ -3244,13 +3245,13 @@ public class CamServerViewer extends MonitoredPanel {
         int height = shape[1];
         Class dataType = first.getValue(CHANNEL_IMAGE).getClass().getComponentType();
 
-        DataManager dm;
+        DataStore dm;
         if (Context.hasDataManager()) {
             Context.getSequencer().setExecutionPars(name);
             dm = Context.getDataManager();
         } else {
             String fileName = Setup.expandPath("{data}/{date}_{time}_") + name + ".h5";
-            dm = new DataManager(new File(fileName), "h5");
+            dm = new DataStore(new File(fileName), "h5");
         }
 
         //Create tables            

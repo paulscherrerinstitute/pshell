@@ -201,12 +201,13 @@ public class DataStore implements AutoCloseable {
         }
     }
     
-    protected void initializeOutput(File output){
+    public void initializeOutput(File output){
         try{
-            IO.setFilePermissions(output, filePermissions);            
-            setAttribute("/", ATTR_ID, UUID.randomUUID().toString());         
-            setAttribute("/", ATTR_FORMAT, getFormat().getId());         
-            
+            if (output!=null){
+                IO.setFilePermissions(output, filePermissions);            
+                setAttribute("/", ATTR_ID, UUID.randomUUID().toString());         
+                setAttribute("/", ATTR_FORMAT, getFormat().getId());         
+            }
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
         } 

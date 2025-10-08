@@ -211,7 +211,7 @@ public class ExecutionParameters {
     }
 
     @Hidden
-    public void setDataPath(File dataPath) {
+    public void setDataPath(File dataPath, boolean initStore) throws IOException {
         if (dataPath!=outputFile) {
             if ((dataPath!=null) && (dataPath.equals(outputFile))){
                 return;
@@ -223,7 +223,14 @@ public class ExecutionParameters {
             if (dataPath != null) {
                 lastOutputFile = outputFile;
             }
-            Context.getSequencer().onChangeDataPath(dataPath);
+            
+            if (initStore && Context.hasDataManager()){
+                Context.getDataManager().getFormat().openOutput(dataPath);
+                Context.getDataManager().initializeOutput(dataPath);            
+            }
+            if (Context.hasSequencer()){
+                Context.getSequencer().onChangeDataPath(dataPath);
+            }
             if (isHandlingSessions()){
                 try{
                     Context.getSessions().onChangeDataPath(dataPath);

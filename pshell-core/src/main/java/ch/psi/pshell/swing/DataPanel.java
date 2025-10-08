@@ -11,7 +11,11 @@ import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.LayoutBase;
 import ch.psi.pshell.data.PlotDescriptor;
+import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Processor;
+import ch.psi.pshell.framework.ScriptEditor;
+import ch.psi.pshell.imaging.DeviceRenderer;
+import ch.psi.pshell.imaging.FileSource;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotPanel;
 import ch.psi.pshell.scripting.ScriptType;
@@ -93,6 +97,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
  *
  */
 public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
+    public final static String[] imageFileExtensions = new String[]{"png", "bmp", "gif", "tif", "tiff", "jpg", "jpeg"};
+    public final static String[] textFileExtensions = new String[]{"txt", "csv", "log"};
+    public final static String[] dataFileExtensions = new String[]{"h5", "hdf5"};
+
 
     /**
      * The listener interface for receiving data panel manager events.
@@ -1916,29 +1924,59 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
             plot(getParent(), title, new PlotDescriptor[]{new PlotDescriptor(name, array, x)}, null);
         }
-
+               
         @Override
         public JPanel openFile(String fileName) throws Exception {
+            String ext=IO.getExtension(fileName);            
             if (ScriptType.isScript(fileName)) {
                 return openScript(new String(Files.readAllBytes(Paths.get(fileName))), fileName);
+            } else if (Arr.containsEqual(dataFileExtensions, ext)){
+                return openDataFile(fileName);
+            } else if (Arr.containsEqual(textFileExtensions, ext)){
+                return openTextFile(fileName);
+            } else if (Arr.containsEqual(imageFileExtensions, ext)){
+                return openImageFile(fileName);
+            } else if ((dataManager!=null) && dataManager.isRoot(new File(fileName))){
+                return openDataFile(fileName);
             } else {
-                DataPanel panel = new DataPanel();
-                panel.load(fileName);
-                panel.setListener(this);
-                SwingUtils.showDialog(getParent(), fileName, new Dimension(800, 600), panel);
-                return panel;
+                return openTextFile(fileName);
             }
         }
 
         @Override
         public JPanel openScript(String script, String name) throws Exception {
-            TextEditor editor = new TextEditor();
+            TextEditor editor = new TextEditor();            
             editor.setText((script == null) ? "" : script);
             editor.setReadOnly(true);
-            SwingUtils.showDialog(getParent(), name, new Dimension(800, 600), editor);
+            SwingUtils.showDialog(getParent(), name, new Dimension(800, 600), editor);            
             return editor;
         }
 
+        public JPanel openDataFile(String file) throws Exception {
+                DataPanel panel = new DataPanel();
+                panel.load(file);
+                panel.setListener(this);
+                SwingUtils.showDialog(getParent(), file, new Dimension(800, 600), panel);
+                return panel;
+        }
+
+        public JPanel openImageFile(String file) throws IOException, InterruptedException {
+            DeviceRenderer renderer = new DeviceRenderer();
+            FileSource source = new FileSource(new File(file).getName(), file);
+            renderer.setDevice(source);
+            source.initialize();
+            SwingUtils.showDialog(getParent(), file, new Dimension(800, 600), renderer);   
+            return renderer;
+        }        
+
+        public JPanel openTextFile(String file) throws IOException {
+            TextEditor editor = new TextEditor();
+            editor.load(file);
+            editor.setReadOnly(true);
+            SwingUtils.showDialog(getParent(), file, new Dimension(800, 600), editor);   
+            return editor;
+        }        
+        
     }
 
     public void setDefaultDataPanelListener() {
@@ -2013,7 +2051,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 } catch (Exception ex) {
                     if (plot == null) {
                     } else {
-                        Logger.getLogger(DataPanel.class.getName()).warning("Error creating plot " + String.valueOf((plot != null) ? plot.name : null) + ": " + ex.getMessage());
+                        Logger.getLogger(DataPanel.class.getName()).info("Error creating plot " + String.valueOf((plot != null) ? plot.name : null) + ": " + ex.getMessage());
                     }
                 }
             }

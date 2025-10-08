@@ -527,10 +527,8 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             fileSequentialNumber = Context.getFileSequentialNumber();
             daySequentialNumber = Context.getDaySequentialNumber();
 
-            if (dataPath != null) {
-                getExecutionPars().setDataPath(dataPath);
-                getFormat().openOutput(dataPath);                
-                initializeOutput(dataPath);
+            if (dataPath != null) {                
+                getExecutionPars().setDataPath(dataPath, true); //User getExecutionPars() to hold the datapath because it belongs to the running thread.
                 Context.incrementSequentialNumbers();
                 getLayout().onOpened(getExecutionPars().getOutputFile());
                 if (getExecutionPars().getSave()) {
@@ -555,7 +553,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             }
         }
     }
-
+    
     public void closeOutput() {
         ExecutionParameters ep = getExecutionPars();
         if (ep!=null){
@@ -594,7 +592,11 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
                 }
             } finally {
                 if (ep!=null){
-                    ep.setDataPath(null);
+                    try {
+                        ep.setDataPath(null, true);
+                    } catch (Exception ex) {
+                        logger.log(Level.WARNING, null, ex);
+                    }
                 }
             }
         }
