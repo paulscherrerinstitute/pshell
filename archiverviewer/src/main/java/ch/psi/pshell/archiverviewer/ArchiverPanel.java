@@ -2416,7 +2416,7 @@ public class ArchiverPanel extends StandardDialog {
             chooser.setAcceptAllFileFilterUsed(true);
             chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             chooser.setDialogTitle("Dump Data");            
-            chooser.setCurrentDirectory(new File(Context.hasDataManager() ? Setup.expandPath("{data}") : Sys.getUserHome()));
+            chooser.setCurrentDirectory(Context.getDefaultDataPath());
 
             int rVal = chooser.showSaveDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {

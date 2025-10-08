@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -176,7 +175,6 @@ public abstract class LayoutBase implements Layout {
 
     @Override
     public void onOpened(File output) throws IOException {
-        setFileIdAttribute();
         setLayoutAttribute();
         setNameAttribute();
         setScriptFileAttibute();
@@ -253,10 +251,6 @@ public abstract class LayoutBase implements Layout {
             }
         }
     }
-
-    protected void setFileIdAttribute() throws IOException {
-        getDataManager().setAttribute("/", ATTR_ID, UUID.randomUUID().toString());
-    }    
     
     protected void setLayoutAttribute() throws IOException {
         getDataManager().setAttribute("/", ATTR_LAYOUT, getClass().getName());

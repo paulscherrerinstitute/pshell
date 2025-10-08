@@ -139,9 +139,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 setCurrentPath(null);
                             }
                         } else {
-                            //String pathName = file.getCanonicalPath();
-                            String pathName = file.getPath();
-                            if ((dataManager.isRoot(pathName))) { // || (IO.listFiles(pathName, "*." + dataManager.getDataFileType()).length > 0) 
+                            if ((dataManager.isRoot(file))) {
                                 setCurrentPath(file);
                             } else {
                                 setCurrentPath(null);
@@ -333,7 +331,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         treeFolder.setSelectionPath(path);
 
                         File file = (File) treeFolder.getLastSelectedPathComponent();
-                        boolean isRoot = isRoot(file);
+                        boolean isRoot =  dataManager.isRoot(file);
                         File selected = getFolderTreeSelectedFile();
                         if (selected != null) {                            
                             boolean isProcessorDataFile = Processor.canProcessorsPlot(file.getAbsolutePath(), null, dataManager);
@@ -823,17 +821,6 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 splitFolder.setDividerLocation(0.70);
             }
         }
-    }
-
-    public boolean isRoot(File file) {
-        if (file != null) {
-            if (dataManager.isDataPacked()) {
-                return dataManager.getDataFileType().equals(IO.getExtension(file));
-            } else {
-                return dataManager.isRoot(file.getPath()) && file.isDirectory();
-            }
-        }
-        return false;
     }
 
     void setupProcessMenu(JMenuItem menuItem) {
@@ -1399,7 +1386,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
     void updateFileTree() throws IOException {
         treeFile.setModel(new DefaultTreeModel(null));
-        if ((currentFile != null) && (dataManager != null) && isRoot(currentFile)) {
+        if ((currentFile != null) && (dataManager != null) &&  dataManager.isRoot(currentFile)) {
             Object[] data = dataManager.getStructure(currentFile.getPath());
             setTreeData(treeFile, data);
         }

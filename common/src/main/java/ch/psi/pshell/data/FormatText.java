@@ -316,7 +316,7 @@ public class FormatText implements Format {
         }
         root.mkdirs();
         try {
-            this.root = root.getCanonicalPath();
+            this.root = root.getCanonicalPath();            
         } catch (IOException ex) {
             throw new IllegalArgumentException(root.getPath());
         }

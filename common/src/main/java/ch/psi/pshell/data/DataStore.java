@@ -24,15 +24,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.UUID;
 import jep.NDArray;
 
 /**
  * Implements format class instantiation and common data handling logic.
  */
 public class DataStore implements AutoCloseable {
-    //final Context context;
     static final Logger logger = Logger.getLogger(DataStore.class.getName());
-    //Layout layout;
+    public static final String ATTR_ID = "ID";
+    public static final String ATTR_FORMAT = "Format";
+    
     protected Format format;
     protected File outputFile;
     protected FilePermissions filePermissions = FilePermissions.Default;
@@ -40,6 +42,7 @@ public class DataStore implements AutoCloseable {
     protected List<String> visible ;
     static DataStore defaultDataStore;
     static DataStore global;
+    
     
     public DataStore(){        
     }
@@ -194,7 +197,20 @@ public class DataStore implements AutoCloseable {
         if (getFormat()!=null){            
             getFormat().openOutput(outputFile);
             open = true;
+            initializeOutput(outputFile);                        
         }
+    }
+    
+    protected void initializeOutput(File output){
+        try{
+            IO.setFilePermissions(output, filePermissions);            
+            setAttribute("/", ATTR_ID, UUID.randomUUID().toString());         
+            setAttribute("/", ATTR_FORMAT, getFormat().getId());         
+            
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, null, ex);
+        } 
+            
     }
     
     public void openOutput() throws IOException {        
@@ -222,9 +238,18 @@ public class DataStore implements AutoCloseable {
         return open;
     }    
     
-    public boolean isRoot(String path) {
-        return new File(path).equals(path);
-    }    
+    public boolean isRoot(File file) {
+        try {
+            if (isDataPacked()) {
+                return file.isFile() && getDataFileType().equals(IO.getExtension(file));
+            } else {
+                return file.isDirectory() && (getAttribute(file, ATTR_ID) != null);
+            }
+        } catch (Exception ex){            
+        }
+        return false;
+    }
+    
     
     public String getDataFileType() {
         return getFormat().getFileType();
@@ -347,7 +372,7 @@ public class DataStore implements AutoCloseable {
                     }
                 }                    
                 if (file.isDirectory()) {
-                    if (isDataPacked() || !isRoot(file.getParent())){
+                    if (isDataPacked() || !isRoot(file.getParentFile())){
                         return true;
                     }
                 } else {
@@ -611,6 +636,11 @@ public class DataStore implements AutoCloseable {
         }
         return ret;
     }
+    
+    //Standalone file/folder
+    public Map<String, Object> getInfo(File path) {
+        return getInfo(path.getPath(), "/");
+    }
 
     public Map<String, Object> getAttributes(String path) {
         DataAddress address = getAddress(path);
@@ -633,6 +663,11 @@ public class DataStore implements AutoCloseable {
         }
         return ret;
     }
+       
+    public Map<String, Object> getAttributes(File path) {
+        return getAttributes(path.getPath(), "/");
+    }
+    
 
     public Object getAttribute(String path, String name) {
         Map<String, Object> attrs = getAttributes(path);
@@ -643,6 +678,11 @@ public class DataStore implements AutoCloseable {
         Map<String, Object> attrs = getAttributes(root, path);
         return attrs.get(name);
     }
+    
+    public Object getAttribute(File path, String name) {
+        Map<String, Object> attrs = getAttributes(path);
+        return attrs.get(name);
+    }    
 
     public boolean exists(String path) {
         path=adjustPath(path);

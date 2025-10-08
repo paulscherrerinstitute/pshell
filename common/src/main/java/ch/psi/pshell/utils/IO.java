@@ -318,6 +318,19 @@ public class IO {
         return list.toArray(new File[0]);
     }
     
+    public static boolean hasFileWithExtension(File path, String extension) {
+        if (path == null || !path.isDirectory()) return false;
+        String ext = extension.toLowerCase();        
+        File[] files = path.listFiles();
+        if (files == null) return false;
+        for (File f : files) {
+            if (f.isFile() && f.getName().toLowerCase().endsWith(ext)) {
+                return true; 
+            }
+        }
+        return false;
+    }    
+    
     public static File[] listFilesRecursive(String pathName) {
         return listFilesRecursive(new File(pathName));
     }

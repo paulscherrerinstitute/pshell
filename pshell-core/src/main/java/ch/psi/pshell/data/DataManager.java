@@ -55,12 +55,6 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
      */
     public DataManager(){
         outputFile = null;
-        ExecutionParameters ep= getExecutionPars();
-        if (ep==null){
-            dataRootDepth = 0;
-        } else {
-            dataRootDepth = Paths.get(IO.getRelativePath(ep.getPath(), getDataFolder())).getNameCount();
-        }        
         setFormat(new FormatHDF5());
         setLayout(new LayoutDefault());        
     }    
@@ -117,8 +111,6 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     }       
     
 
-    int dataRootDepth;
-
     /**
      * Configures the application data manager for scan persistence
      */
@@ -142,7 +134,6 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         }
         setFormat(format);
         setLayout(layout);
-        dataRootDepth = Paths.get(IO.getRelativePath(getExecutionPars().getPath(), getDataFolder())).getNameCount();
         logger.log(Level.INFO, "Finished {0} initialization", getClass().getSimpleName());
         initialized = true;
     }
@@ -524,40 +515,44 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     }
         
     public void openOutput() throws IOException {
-        //Continue using open file        
-        if (isOpen()) {
-            return;
-        }
-        getExecutionPars().initializeData();
-        File dataPath = getDataRootPath();
-        fileSequentialNumber = Context.getFileSequentialNumber();
-        daySequentialNumber = Context.getDaySequentialNumber();
-        
-        if (dataPath != null) {
-            getExecutionPars().setDataPath(dataPath);
-            getFormat().openOutput(dataPath);
-            IO.setFilePermissions(dataPath, filePermissions);            
-            Context.incrementSequentialNumbers();
-            getLayout().onOpened(getExecutionPars().getOutputFile());
-            if (getExecutionPars().getSave()) {
-                appendLog("Open persistence context: " + getExecutionPars().getOutputFile());
-            }            
-            try{
-                File script = getExecutionPars().getScriptFile();
-                if (script != null){
-                    getLayout().onRunStarted(script);
-                }
-            } catch (Exception ex) {
-                logger.log(Level.WARNING, null, ex);
+        if (getExecutionPars()==null){
+            super.openOutput();
+        } else {
+            //Continue using open file        
+            if (isOpen()) {
+                return;
             }
-            if (getExecutionPars().getSaveLogs()) {
-                outputListener.start();
-            }
-            if (Context.isHandlingSessions()){
-                if (getExecutionPars().getSessionId() >0) {
-                    getLayout().writeSessionMetadata();
+            getExecutionPars().initializeData();
+            File dataPath = getDataRootPath();
+            fileSequentialNumber = Context.getFileSequentialNumber();
+            daySequentialNumber = Context.getDaySequentialNumber();
+
+            if (dataPath != null) {
+                getExecutionPars().setDataPath(dataPath);
+                getFormat().openOutput(dataPath);                
+                initializeOutput(dataPath);
+                Context.incrementSequentialNumbers();
+                getLayout().onOpened(getExecutionPars().getOutputFile());
+                if (getExecutionPars().getSave()) {
+                    appendLog("Open persistence context: " + getExecutionPars().getOutputFile());
+                }            
+                try{
+                    File script = getExecutionPars().getScriptFile();
+                    if (script != null){
+                        getLayout().onRunStarted(script);
+                    }
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
                 }
-            }            
+                if (getExecutionPars().getSaveLogs()) {
+                    outputListener.start();
+                }
+                if (Context.isHandlingSessions()){
+                    if (getExecutionPars().getSessionId() >0) {
+                        getLayout().writeSessionMetadata();
+                    }
+                }            
+            }
         }
     }
 
@@ -661,18 +656,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         }
         return path;
     }
-
-    //File reading        
-    public boolean isRoot(String path) {
-        try {
-            String rel = IO.getRelativePath(path, getDataFolder());
-            int nameCount = rel.isBlank() ? 0 : Paths.get(rel).getNameCount();
-            return nameCount == dataRootDepth;
-        } catch (Exception ex) {
-        }
-        return false;
-    }
-
+    
     public void appendLog(String log) throws IOException {
         if (getLayout().getCreateLogs()) {
             openOutput();

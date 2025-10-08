@@ -116,7 +116,7 @@ public class DataServer extends Replier {
             if ((address != "") || !dm.isOpen()) { //Empty string means current data context if open
                 File dir = Paths.get(dm.getDataFolder(), address).toFile();
                 if ((address.length() == 0) || (dir.exists() && dir.isDirectory())) {
-                    if (dm.isDataPacked() || !dm.isRoot(dir.getPath())) {
+                    if (dm.isDataPacked() || !dm.isRoot(dir)) {
                         return true;
                     }
                 }

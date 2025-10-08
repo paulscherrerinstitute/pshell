@@ -6,7 +6,6 @@ import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.SwingUtils;
-import ch.psi.pshell.utils.Sys;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -37,26 +36,18 @@ public class App extends ch.psi.pshell.app.App{
         return create(parent, title, modal, path, size, format, layout);
     }
 
-    public static DataDialog create(Window parent, String title, boolean modal, File path, Dimension size, String format, String layout) {    
-        return create(parent, title, modal, path, size, format, layout, false);
-    }
-    
-    public static DataDialog create(Window parent, String title, boolean modal, File path, Dimension size, String format, String layout, boolean single) {    
+    public static DataDialog create(Window parent, String title, boolean modal, File file, Dimension size, String format, String layout) {    
         String dialogTitle = (title==null) ? Optional.ofNullable(Setup.getTitle()).orElse("DataViewer") : title;
         DataDialog dialog = new DataDialog(parent, modal, dialogTitle);        
-        DataPanel panel = dialog.getDataPanel();        
-        File file = ((path ==null) && !Context.hasDataManager()) ? new File(Sys.getUserHome()) : path;
+        DataPanel panel = dialog.getDataPanel();                
         java.awt.EventQueue.invokeLater(() -> {            
             try {
                 if (file != null){
-                    if (file.isFile() || single){
-                        panel.load(file.getAbsolutePath(), format, layout);
-                    } else {
-                        panel.initialize(new DataManager(file.getAbsolutePath(), format, layout));
-                    }
+                    panel.load(file.getAbsolutePath(), format, layout);
                     dialog.setTitle(dialogTitle + " - " + file.getCanonicalPath());
-                } else if (Context.hasDataManager()){
-                    panel.initialize((String[])null); //!!! Should get parameter from somewhere?
+                } else {
+                    File path = Context.getDefaultDataPath();                 
+                    panel.initialize(new DataManager(path.toString(), format, layout));
                 } 
             } catch (Exception ex) {
                 Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);

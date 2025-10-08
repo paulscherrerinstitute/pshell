@@ -207,7 +207,7 @@ public interface Processor extends Executor {
                 try {
                     ret.add((Processor) c.newInstance());
                 } catch (Exception ex) {
-                    Logger.getLogger(Processor.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Processor.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         }
@@ -216,7 +216,7 @@ public interface Processor extends Executor {
                 ret.add(processor);
             }        
         } catch (Throwable ex) {
-            Logger.getLogger(Processor.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Processor.class.getName()).log(Level.INFO, null, ex);
         }
         return ret;
 

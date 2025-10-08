@@ -1786,7 +1786,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
                 return openDataFile(fileName);
             } else if (Arr.containsEqual(imageFileExtensions, ext)){
                 return openImageFile(fileName);
-            } else if ((new File(fileName).isDirectory()) && Context.getDataManager().isRoot(fileName)){
+            } else if (Context.getDataManager().isRoot(new File(fileName))){
                 return openDataFile(fileName);
             }  else {
                 return openTextFile(fileName);

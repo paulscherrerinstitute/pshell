@@ -34,6 +34,7 @@ import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.SortedProperties;
 import ch.psi.pshell.utils.State;
+import ch.psi.pshell.utils.Sys;
 import ch.psi.pshell.versioning.VersionControl;
 import java.io.File;
 import java.io.FileInputStream;
@@ -274,6 +275,9 @@ public class Context {
         return DevicePool.getInstance();
     }
         
+    public static File getDefaultDataPath(){
+        return new File((hasDataManager()||ch.psi.pshell.app.Options.DATA_PATH.defined()) ? Setup.expandPath(Setup.TOKEN_DATA) : Sys.getUserHome());
+    }
 
     static void triggerConfigurationChange(final Configurable obj) {   
          String message = "Configuration change: " + obj.toString();
