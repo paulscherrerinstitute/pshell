@@ -1886,7 +1886,7 @@ public class StripChart extends StandardDialog {
                         }
                         if (showOption( "Save", "Success saving data to " + fileName + ".\nDo you want to open the file?", SwingUtils.OptionType.YesNo) == SwingUtils.OptionResult.Yes) {
                             //DataPanel.createDialog(this, fileName, format, null);
-                            ch.psi.pshell.dataviewer.App.create(this, null, false, new File(fileName), null, format, layout);
+                            ch.psi.pshell.dataviewer.App.create(this, null, false, new File(fileName), null, format);
                         }
 
                     }

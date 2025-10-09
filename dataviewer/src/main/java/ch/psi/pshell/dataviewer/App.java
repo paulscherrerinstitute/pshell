@@ -33,24 +33,19 @@ public class App extends ch.psi.pshell.app.App{
         return create(parent, title, modal, path, size, format);
     }
         
-    public static DataDialog create(Window parent, String title, boolean modal, File path, Dimension size, String format) {            
-        String layout = ch.psi.pshell.framework.Options.DATA_LAYOUT.getString("default");
-        return create(parent, title, modal, path, size, format, layout);
-    }
-
-    public static DataDialog create(Window parent, String title, boolean modal, File file, Dimension size, String format, String layout) {    
+    public static DataDialog create(Window parent, String title, boolean modal, File file, Dimension size, String format) {    
         String dialogTitle = (title==null) ? Optional.ofNullable(Setup.getTitle()).orElse("DataViewer") : title;
         DataDialog dialog = new DataDialog(parent, modal, dialogTitle);        
         DataPanel panel = dialog.getDataPanel();                
         java.awt.EventQueue.invokeLater(() -> {            
             try {
                 if (file != null){
-                    panel.load(file.getAbsolutePath(), format, layout);
+                    panel.load(file.getAbsolutePath(), format, null);
                     dialog.setTitle(dialogTitle + " - " + file.getCanonicalPath());
                 } else {
                     File path = Context.getDefaultDataPath();        
                     panel.setVisibleFiles(getDataPanelVisibleFiles());
-                    panel.initialize(new DataManager(path.toString(), format, layout));
+                    panel.initialize(new DataManager(path.toString(), format, null));
                 } 
             } catch (Exception ex) {
                 Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);

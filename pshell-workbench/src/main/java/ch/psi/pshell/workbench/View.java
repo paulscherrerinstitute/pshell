@@ -2978,10 +2978,10 @@ public class View extends MainFrame{
                     new String[]{String.valueOf(Context.getScriptType().getExtension())}));
             //chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*.py, *.groovy, *.js)", new String[]{"py", "groovy", "js"}));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Java files (*.java)", new String[]{"java"}));
-            chooser.addChoosableFileFilter(new ExtensionFileFilter("Text files (*.txt, *.csv, *.log)", textFileExtensions));
-            chooser.addChoosableFileFilter(new ExtensionFileFilter("Data files (*.h5)", dataFileExtensions));
+            chooser.addChoosableFileFilter(new ExtensionFileFilter("Text files (*.txt, *.csv, *.log)", DataPanel.textFileExtensions));
+            chooser.addChoosableFileFilter(new ExtensionFileFilter("Data files (*.h5)", DataPanel.dataFileExtensions));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Strip Chart definition file (*." + StripChart.FILE_EXTENSION + ")", StripChart.FILE_EXTENSION));
-            chooser.addChoosableFileFilter(new ExtensionFileFilter("Image files (*.png, *.bmp, *.gif, *.jpg)", imageFileExtensions));
+            chooser.addChoosableFileFilter(new ExtensionFileFilter("Image files (*.png, *.bmp, *.gif, *.jpg)", DataPanel.imageFileExtensions));
 
             HashMap<FileFilter, Processor> processors = new HashMap<>();
             for (Processor processor : Processor.getServiceProviders()) {
