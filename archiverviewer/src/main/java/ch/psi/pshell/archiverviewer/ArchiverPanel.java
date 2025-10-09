@@ -338,14 +338,14 @@ public class ArchiverPanel extends StandardDialog {
         colEnabled.setPreferredWidth(60);
 
         TableColumn colName = tableSeries.getColumnModel().getColumn(1);
-        JTextField textNameEditor = new JTextField();
         selector = new ChannelSelector();
-        //selector.configure(ChannelSelector.Type.Daqbuf, null,  null, 1000);
         selector.setHistorySize(0);
         selector.setListMode(ChannelSelector.ListMode.Popup);
 
         colName.setPreferredWidth(320);
-        colName.setCellEditor(new ChannelSelector.ChannelSelectorCellEditor(selector));
+        colName.setCellEditor(Options.LOOKUP_WINDOW.getBool(true) ? 
+                new ChannelSelector.ChannelSelectorCellEditor(selector) : 
+                new DefaultCellEditor(new JTextField()));
 
         colName.getCellEditor().addCellEditorListener(new CellEditorListener() {
             @Override

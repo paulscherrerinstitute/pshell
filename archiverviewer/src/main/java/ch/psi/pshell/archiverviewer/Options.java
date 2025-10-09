@@ -19,7 +19,8 @@ public enum Options implements Option {
      BACKGROUND_COLOR,
      GRID_COLOR,
      LABEL_FONT,
-     PLOT_HEIGHT;  
+     PLOT_HEIGHT,
+     LOOKUP_WINDOW;  
          
     public static void add(){  
         ch.psi.pshell.app.Options.addBasic();
@@ -38,6 +39,7 @@ public enum Options implements Option {
         GRID_COLOR.add("gc", "Set default plot grid color");
         LABEL_FONT.add("tf", "Set font for tick labels");
         PLOT_HEIGHT.add("ph", "Set the minimum plot height");
+        LOOKUP_WINDOW.add("lw", "Display the channel lookup window (true by default)");
         ARCHIVER_VIEWER_HOME.add("ah", "Archiver Viewer default configuration folder", "path");        
     }    
     
