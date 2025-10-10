@@ -195,6 +195,7 @@ public class ArchiverPanel extends StandardDialog {
                 
         daqbuf = new Daqbuf(url, backend);
         daqbuf.setTimestampMillis(true);
+        daqbuf.setTimeout(Options.TIMEOUT.getInt(15000));
         
         if (Options.BACKGROUND_COLOR.hasValue()) {
             try {

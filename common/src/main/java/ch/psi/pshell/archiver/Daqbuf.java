@@ -357,10 +357,18 @@ public class Daqbuf implements ChannelQueryAPI {
             super("Timeout receiving from stream");
         }
     }
+    
+    int timeout = 10000;
+    public void setTimeout(int timeout){
+        this.timeout =  timeout;
+    }
+    
+    public int getTimeout(){
+        return timeout;
+    }
 
     byte[] readStream(InputStream inputStream, int dataSize) throws IOException, InterruptedException {
         long last = System.currentTimeMillis();
-        int timeout = 10000;
 
         byte[] data = new byte[dataSize];
         int bytesRead = 0;
@@ -384,7 +392,7 @@ public class Daqbuf implements ChannelQueryAPI {
     String readStreamLine(InputStream inputStream) throws IOException, InterruptedException {
         long start = System.currentTimeMillis();    
         StringBuilder ret = new StringBuilder();
-        int timeout = 10000;
+
         while(true){
             char c = (char)readStream(inputStream,1)[0];
             if (c == '\n'){

@@ -20,6 +20,7 @@ public enum Options implements Option {
      GRID_COLOR,
      LABEL_FONT,
      PLOT_HEIGHT,
+     TIMEOUT,
      LOOKUP_WINDOW;  
          
     public static void add(){  
@@ -39,6 +40,7 @@ public enum Options implements Option {
         GRID_COLOR.add("gc", "Set default plot grid color");
         LABEL_FONT.add("tf", "Set font for tick labels");
         PLOT_HEIGHT.add("ph", "Set the minimum plot height");
+        TIMEOUT.add("tm", "Set the server timeout (default 15s)");
         LOOKUP_WINDOW.add("lw", "Display the channel lookup window (true by default)");
         ARCHIVER_VIEWER_HOME.add("ah", "Archiver Viewer default configuration folder", "path");        
     }    
