@@ -18,6 +18,79 @@ except:
 class TimeoutException(Exception):
    pass
 
+class SSEReceiver:
+    def __init__(self, url, events, callback):
+        if SSEClient is None:
+            raise Exception("sseclient library is not installed: server events are not available")
+        self.url = url
+        self.events = events
+        self._stop = threading.Event()
+        self.session = None
+        self.client = None
+        self.thread = threading.Thread(target=self.task, args=(events, callback), kwargs={})
+        self.thread.daemon = True
+        self.thread.start()
+
+    def task(self, subscribed_events=None, event_callback=None):
+        try:
+            while not self._stop.is_set():
+                try:
+                    self.session = requests.Session()
+                    self.client = SSEClient(self.url, session=self.session)
+                    for msg in self.client:
+                        if self.is_closed():
+                            break
+                        if (subscribed_events is None) or (msg.event in subscribed_events):
+                            try:
+                                value = json.loads(msg.data)
+                            except:
+                                value = str(msg.data)
+                            event_callback(msg.event, value)
+                except IOError as e:
+                    #print(e)
+                    pass
+                except:
+                    print("Error:", sys.exc_info()[1])
+                finally:
+                    self._close_client()
+                if self.is_closed():
+                    break
+                else:
+                    time.sleep(1.0)
+        finally:
+            # print("Exit SSE loop task")
+            pass
+
+    def _close_client(self):
+        self.client = None
+        """
+        if self.client is not None:
+            try:
+                if hasattr(self.client.resp, "raw"):
+                    conn = getattr(self.client.resp.raw, "_connection", None)
+                    if conn and hasattr(conn, "sock") and conn.sock:
+                        conn.sock.shutdown(2)
+                        conn.sock.close()
+                self.client.resp.close()
+                self.client = None
+            except:
+                pass
+        """
+        if self.session is not None:
+            try:
+                self.session.close()
+                self.session = None
+            except:
+                pass
+
+    def close(self):
+        self._stop.set()
+        self._close_client()
+        #print("closed")
+
+    def is_closed(self):
+        return self._stop.is_set()
+
 class PShellClient:
     def __init__(self, url):
         if not url.endswith('/'):
@@ -26,20 +99,28 @@ class PShellClient:
         self.sse_event_loop_thread = None
         self.subscribed_events = None
         self.event_callback = None
+        self.sse_client = None
         self.plot_defaults={"format":"png", "width":600, "height":400}
         self.debug = False
-    
+        self.polling_interval = 0.1
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
     def _get(self, url, stream=False):
         url=self.url+url
         if self.debug:
-            print ("GET " + url)
+            print("GET " + url)
         return requests.get(url=url, stream=stream)
         
         
     def _put(self, url, json_data=None):
         url=self.url+url
         if self.debug:
-            print ("PUT " + url + " -> " + json.dumps(json_data))
+            print("PUT " + url + " -> " + json.dumps(json_data))
         return requests.put(url=url, json=json_data)           
     
     def _del(self, url):
@@ -49,12 +130,12 @@ class PShellClient:
         return requests.delete(url=url)
     
     def _get_response(self, response, is_json=True):
-        if self.debug==True or  self.debug=="rx":
-            print (" -> " + str(response.status_code) + ((" - " + response.text) if self.debug=="rx" else ""))
+        if self.debug == True or self.debug == "rx":
+            print(" -> " + str(response.status_code) + ((" - " + response.text) if self.debug == "rx" else ""))
         try:
             response.raise_for_status()
         except: 
-            print (response.text)
+            print(response.text)
             raise
         return json.loads(response.text) if is_json else response.text
 
@@ -114,7 +195,7 @@ class PShellClient:
         """        
         return self._get_response(self._get("state"))   
     
-    def wait_state(self, state, timeout = -1):
+    def wait_state(self, state, timeout=-1):
         """Wait application state equals.
 
         Args:
@@ -126,8 +207,8 @@ class PShellClient:
         start = time.time()
         while self.get_state() not in state:
             if (timeout>=0) and ((time.time()-start)>timeout):
-                raise TimeoutException()
-            time.sleep(0.1)
+                raise TimeoutException(f"Timeout waiting state {state}")
+            time.sleep(self.polling_interval)
 
     def wait_state_not(self, state, timeout = -1):
         """Wait application state different than.
@@ -141,8 +222,8 @@ class PShellClient:
         start = time.time()
         while self.get_state() in state:
             if (timeout>=0) and ((time.time()-start)>timeout):
-                raise TimeoutException()
-            time.sleep(0.1)
+                raise TimeoutException(f"Timeout waiting state not {state}")
+            time.sleep(self.polling_interval)
             
     def get_logs(self):
         """Return application logs.
@@ -273,7 +354,7 @@ class PShellClient:
         statement = quote(statement)
         return self._get_response(self._get("eval/"+statement), False)              
 
-    def run(self,script, pars=None, background=False):
+    def run(self, script, pars=None, background=False):
         """Executes script in the interpreter.
  
         Args:       
@@ -311,7 +392,33 @@ class PShellClient:
             Return object  decoded from JSON string
         """             
         statement = quote(statement)
-        return self._get_response(self._get("eval-json/"+statement), True)                      
+        return self._get_response(self._get("eval-json/"+statement), True)
+
+    def eval_then(self, statement, on_success=True, on_exception=True):
+        """Set a next execution stage for the interpreter - the statement is executed
+           after the foreground task concludes, keeping application state busy.
+
+        Args:
+            statement(str): statement for next execution stage
+            on_successs(bool): statement is executed if foreground task completes successfully.
+            on_exception(bool): statement is executed if foreground task throws exception.
+        """
+        return self._get_response(self._put("then", {"statement":statement, "onSuccess":on_success, "onException":on_exception}))
+
+    def run_then(self, script, pars=None, on_success=True, on_exception=True):
+        """Set a next execution stage for the interpreter - the script is executed
+           after the foreground task concludes, keeping application state busy.
+
+        Args:
+            script(str): name of the script (absolute or relative to the script base folder). Extension may be omitted.
+            pars(optional, list or dict): if a list is given, it sets sys.argv for the script.
+                                          If a dict is given, it sets global variable for the script.
+            on_successs(bool): statement is executed if foreground task completes successfully.
+            on_exception(bool): statement is executed if foreground task throws exception.
+        """
+        cmd = f"run('{script}', {pars})"
+        return self.eval_then(cmd, on_success, on_exception)
+
 
     def set_var(self,name, value):
         """Sets interpreter variable. 
@@ -527,39 +634,15 @@ class PShellClient:
     
     def print_logs(self):
         for l in self.get_logs():
-            print ("%s %s %-20s %-8s %s" % tuple(l))
+            print("%s %s %-20s %-8s %s" % tuple(l))
     
     def print_devices(self):
         for l in self.get_devices():
-            print ("%-16s %-32s %-10s %-32s %s" % tuple(l)) 
+            print("%-16s %-32s %-10s %-32s %s" % tuple(l))
                    
     def print_help(self, input = "<builtins>"):
         for l in self.help(input):
-            print (l)  
-
-    #Events       
-    def _sse_event_loop_task(self):  
-        try:
-            while True:
-                try:
-                    messages = SSEClient(self.url+"events")
-                    for msg in messages:
-                        if (self.subscribed_events is None) or (msg.event in self.subscribed_events):
-                            try:
-                                value = json.loads(msg.data)                               
-                            except:
-                                value = str(msg.data)
-                            self.event_callback(msg.event, value)
-                except IOError as e:
-                    #print(e)
-                    pass
-                except:
-                    print("Error:", sys.exc_info()[1])
-                    #raise
-        finally:
-            print ("Exit SSE loop task")
-            self.sse_event_loop_thread = None
-
+            print(l)
 
     def start_sse_event_loop_task(self, subscribed_events = None, event_callback = None):
         """
@@ -580,19 +663,54 @@ class PShellClient:
         """
         self.event_callback = event_callback if event_callback is not None else self.on_event
         self.subscribed_events = subscribed_events
-        if SSEClient is not None:
-            if self.sse_event_loop_thread is None:
-                self.sse_event_loop_thread = threading.Thread(target=self._sse_event_loop_task, \
-                                                     args = (), \
-                                                     kwargs={})
-                self.sse_event_loop_thread.daemon = True
-                self.sse_event_loop_thread.start()
-        else:
-            raise Exception ("sseclient library is not installed: server events are not available")
+        self.sse_client = SSEReceiver(self.url + "events", subscribed_events, event_callback)
+
+    def stop_sse_event_loop_task(self):
+        if self.sse_client is not None:
+            self.sse_client.close()
 
     def on_event(self, name, value):
         pass
 
+
+    def wait_events(self, events={}, timeout=-1):
+        """Wait any of the events matching the value (value None for any).
+
+        Args:
+            events (dict event name->value)
+        Returns:
+        """
+        rx = {}
+        condition = threading.Condition()
+        def callcack(name, value):
+            with condition:
+                rx[name] = value
+                condition.notify_all()
+
+        sse_client = SSEReceiver(self.url + "events", events.keys(), callcack)
+        try:
+            start = time.time()
+            with condition:
+                while True:
+                    for name in events.keys():
+                        if name in rx.keys():
+                            values, rx_value = events[name], rx[name]
+                            if values is not None and type(values) is not list:
+                                values = [values]
+                            if values is None or rx_value in values:
+                                return name,rx_value
+
+                    remaining = None
+                    if timeout >= 0:
+                        remaining = max(0, timeout - (time.time() - start))
+                        if remaining <= 0:
+                            raise TimeoutException(f"Timeout waiting for events {events}")
+                    condition.wait(timeout=remaining)
+        finally:
+            sse_client.close()
+
+    def close(self):
+        self.stop_sse_event_loop_task()
 
 if __name__ == "__main__":
     import socket
