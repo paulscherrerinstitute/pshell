@@ -11,7 +11,7 @@ public interface SequencerListener {
     
     default void onInitialized(int runCount) {}
     
-    default void onStateChanged(State state, State former) {}
+    default void onStateChanged(State state, State former) {}      
     
     default void onPreferenceChange(ViewPreference preference, Object value) {}
     
@@ -37,6 +37,10 @@ public interface SequencerListener {
     
     default void willEval(CommandSource source, String code) throws SecurityException {}
 
-    default void willRun(CommandSource source, String fileName, Object args) throws SecurityException  {}
+    default void willRun(CommandSource source, String fileName, Object args) throws SecurityException  {}        
     
+    default void onStartEval(CommandSource source, String code) {}
+            
+    default void onStartRun(CommandSource source, String fileName, Object args) {}
+        
 }

@@ -60,6 +60,8 @@ import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
 import org.glassfish.jersey.media.sse.SseFeature;
 import ch.psi.pshell.security.SecurityListener;
+import java.io.IOException;
+import javax.script.ScriptException;
 
 /**
  * Definition of the application REST API.
@@ -85,15 +87,25 @@ public class ServerService {
         }
     }
     
-    static Level commandLogLevel = Level.FINEST;
+    static Level evalLogLevel = Level.FINEST;
     
-    public static void setCommandLogLevel(Level level) {
-        commandLogLevel = level;
+    public static void setEvalLogLevel(Level level) {
+        evalLogLevel = level;
     }
     
-    public static Level getCommandLogLevel() {
-        return commandLogLevel;
+    public static Level getEvalLogLevel() {
+        return evalLogLevel;
     }
+    
+    static Level runLogLevel = Level.FINE;
+    
+    public static void setRunLogLevel(Level level) {
+        runLogLevel = level;
+    }
+    
+    public static Level getRunLogLevel() {
+        return runLogLevel;
+    }    
 
     @GET
     @Path("version")
@@ -190,7 +202,7 @@ public class ServerService {
     public String eval(@PathParam("statement") final String statement) throws ExecutionException {
         try {            
             String cmd = formatIncomingText(statement);
-            logger.log(getCommandLogLevel(), "eval: {0}", cmd);
+            logger.log(getEvalLogLevel(), "eval: {0}", cmd);
             Object ret = sequencer.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
             return (ret == null) ? "" : ret.toString();
         } catch (Exception ex) {
@@ -205,7 +217,7 @@ public class ServerService {
     public long evalAsync(@PathParam("statement") final String statement) throws ExecutionException {
         try {            
             String cmd = formatIncomingText(statement);
-            logger.log(getCommandLogLevel(), "evalAsync: {0}", cmd);
+            logger.log(getEvalLogLevel(), "evalAsync: {0}", cmd);
             CompletableFuture cf = sequencer.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
             long id = sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
             return id;
@@ -221,7 +233,7 @@ public class ServerService {
     public String evalJson(@PathParam("statement") final String statement) throws ExecutionException {
         try {            
             String cmd = formatIncomingText(statement);
-            logger.log(getCommandLogLevel(), "evalJson: {0}", cmd);
+            logger.log(getEvalLogLevel(), "evalJson: {0}", cmd);
             Object ret = sequencer.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd);
             return mapper.writeValueAsString(ret);
         } catch (Exception ex) {
@@ -230,11 +242,27 @@ public class ServerService {
     }
     
     @PUT
+    @Path("then")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Object then(final Map contents) throws ExecutionException {
+        try {
+            String cmd = (String) contents.get("statement");
+            Boolean onSuccess = (Boolean) contents.getOrDefault("onSuccess", true);
+            Boolean onException = (Boolean) contents.getOrDefault("onException", true);
+            sequencer.evalLineAfter(CommandSource.server, cmd.equals("\n") ? "" : cmd, onSuccess, onException);
+            return mapper.writeValueAsString("");
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+        
+    @PUT
     @Path("set-var")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setVariable(final Map contents) throws ExecutionException {
         try {
-            logger.log(getCommandLogLevel(), "setVariable: {0}", Str.toString(contents));
+            logger.log(getEvalLogLevel(), "setVariable: {0}", Str.toString(contents));
             String name = (String) contents.get("name");
             Object value = contents.get("value");
             sequencer.setInterpreterVariable(name, value);
@@ -590,30 +618,31 @@ public class ServerService {
             if (background) {
                 script = script.substring(0, script.length() - 1);
             }
-            List argList = null;
-            if (script.contains("(")) {
-                String args = script.substring(script.indexOf("(") + 1);
-                if (args.contains(")")) {
-                    argList = new ArrayList();
-                    args = args.substring(0, args.lastIndexOf(")"));
-                    script = script.substring(0, script.indexOf("("));
-                    String[] tokens = Str.splitWithQuotes(args, ",");
-                    for (String token : tokens) {
-                        argList.add(Str.removeQuotes(token).trim());
-                    }
-                }
-            }
-            if (background) {
-                logger.log(getCommandLogLevel(), "runb : {0}({1})", new Object[]{script, Str.toString(argList)});
-                return String.valueOf(sequencer.evalFileBackground(CommandSource.server, script, argList));
-            } else {
-                logger.log(getCommandLogLevel(), "run : {0}({1})", new Object[]{script, Str.toString(argList)});
-                return String.valueOf(sequencer.evalFile(CommandSource.server, script, argList));
-            }
+            List args = parseArgs(script);
+            return runScript(script, args, false, background).toString();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
     }
+    
+    @GET
+    @Path("runAsync/{contents : .+}")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String runAsync(@PathParam("contents") final String contents) throws ExecutionException {
+        try {
+            String script = formatIncomingText(contents).trim();
+            boolean background = contents.trim().endsWith("&");
+            if (background) {
+                script = script.substring(0, script.length() - 1);
+            }
+            List args = parseArgs(script);
+            return runScript(script, args, true, background).toString();
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+    
 
     @PUT
     @Path("run")
@@ -625,32 +654,55 @@ public class ServerService {
             Object pars = contents.get("pars");
             Boolean background = contents.containsKey("background") ? (Boolean) contents.get("background") : false;
             Boolean async = contents.containsKey("async") ? (Boolean) contents.get("async") : false;
-            Object ret = null;
-            CompletableFuture cf = null;
-            if (async) {
-                if (background) {
-                    logger.log(getCommandLogLevel(), "runb async: {0}({1})", new Object[]{script, Str.toString(pars)});
-                    cf = sequencer.evalFileBackgroundAsync(CommandSource.server, script, pars);
-
-                } else {
-                    logger.log(getCommandLogLevel(), "run async: {0}({1})", new Object[]{script, Str.toString(pars)});
-                    cf = sequencer.evalFileAsync(CommandSource.server, script, pars);
-                }
-                return sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
-            } else {
-                if (background) {
-                    logger.log(getCommandLogLevel(), "runb: {0}({1})", new Object[]{script, Str.toString(pars)});
-                    ret = sequencer.evalFileBackground(CommandSource.server, script, pars);
-                } else {
-                    logger.log(getCommandLogLevel(), "run: {0}({1})", new Object[]{script, Str.toString(pars)});
-                    ret = sequencer.evalFile(CommandSource.server, script, pars);
-                }
-            }
-            return mapper.writeValueAsString(ret);
+            return runScript(script, pars, async, background);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
     }
+    
+    Object runScript(String script, Object pars, boolean async, boolean background) throws Sequencer.StateException, InterruptedException, ScriptException, IOException{
+        if (async) {            
+            CompletableFuture cf = null;
+            
+            if (background) {
+                logger.log(getRunLogLevel(), "runb async: {0}({1})", new Object[]{script, Str.toString(pars)});
+                cf = sequencer.evalFileBackgroundAsync(CommandSource.server, script, pars);
+
+            } else {
+                logger.log(getRunLogLevel(), "run async: {0}({1})", new Object[]{script, Str.toString(pars)});
+                cf = sequencer.evalFileAsync(CommandSource.server, script, pars);
+            }
+            return sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
+        } else {
+            Object ret = null;
+            if (background) {
+                logger.log(getRunLogLevel(), "runb: {0}({1})", new Object[]{script, Str.toString(pars)});
+                ret = sequencer.evalFileBackground(CommandSource.server, script, pars);
+            } else {
+                logger.log(getRunLogLevel(), "run: {0}({1})", new Object[]{script, Str.toString(pars)});
+                ret = sequencer.evalFile(CommandSource.server, script, pars);
+            }
+            return mapper.writeValueAsString(ret);
+        }               
+    }
+    
+    List parseArgs(String script){    
+        List argList = null;
+        if (script.contains("(")) {
+            String args = script.substring(script.indexOf("(") + 1);
+            if (args.contains(")")) {
+                argList = new ArrayList();
+                args = args.substring(0, args.lastIndexOf(")"));
+                script = script.substring(0, script.indexOf("("));
+                String[] tokens = Str.splitWithQuotes(args, ",");
+                for (String token : tokens) {
+                    argList.add(Str.removeQuotes(token).trim());
+                }
+            }
+        }
+        return argList;
+    }
+    
 
     @GET
     @Path("evalScript/{contents : .+}")
@@ -659,7 +711,7 @@ public class ServerService {
     public String evalScript(@PathParam("contents") final String contents) throws ExecutionException {
         try {
             Statement[] statements = sequencer.parseString(formatIncomingText(contents), "Unknown");
-            logger.log(getCommandLogLevel(), "evalScript: {0}", contents);
+            logger.log(getEvalLogLevel(), "evalScript: {0}", contents);
             return String.valueOf(sequencer.evalStatements(CommandSource.server, statements, false, "Unknown", null));
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -826,7 +878,12 @@ public class ServerService {
         public void onStateChanged(State state, State former) {
             sendEvent("state", sequencer.getState());
         }
-
+        
+        @Override
+        public void onStartRun(CommandSource source, String fileName, Object args) {
+            sendEvent("run", fileName);
+        }
+        
         @Override
         public void onShellCommand(CommandSource source, String command) {
             sendShell(source, sequencer.getCursor(command) + command);

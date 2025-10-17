@@ -6,7 +6,6 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.framework.App.ExecutionStage;
 import ch.psi.pshell.imaging.FileSource;
 import ch.psi.pshell.imaging.DeviceRenderer;
 import ch.psi.pshell.plot.Plot;

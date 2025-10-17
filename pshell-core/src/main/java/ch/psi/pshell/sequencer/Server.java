@@ -93,7 +93,8 @@ public class Server implements AutoCloseable {
         String msg = String.format("Interface available at %s", getStaticURL());
         logger.info(msg);
         if (Setup.isDebug()){
-            ServerService.setCommandLogLevel(Level.INFO);
+            ServerService.setEvalLogLevel(Level.INFO);
+            ServerService.setRunLogLevel(Level.INFO);
         }
         System.out.println(msg);
     }

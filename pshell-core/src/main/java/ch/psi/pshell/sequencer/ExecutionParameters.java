@@ -466,7 +466,31 @@ public class ExecutionParameters {
         scriptOptions.remove(option);
         commandOptions.remove(option) ;      
     }
+    
+    Object getCommandOption(String option) {
+        if (getCommandOptions().containsKey(option)) {
+            return getCommandOptions().get(option);
+        }
+        return null;
+    }
+    
+    Object getScriptOption(String option) {
+        if (getScriptOptions().containsKey(option)) {
+            return getScriptOptions().get(option);
+        }
+        return null;
+    }
 
+    void setCommandOption(String option, Object value) {
+         Map options = getCommandOptions();
+         options.put(option, value);
+    }
+    
+    void setScriptOption(String option, Object value) {
+         Map options = getScriptOptions();
+         options.put(option, value);
+    }    
+    
     public Object getOption(String option) {
         if (getCommandOptions().containsKey(option)) {
             return getCommandOptions().get(option);
@@ -587,6 +611,19 @@ public class ExecutionParameters {
         }
         return new ExecutionStage(onSuccess, onException);
     }    
+    
+    
+    public void setThen(String command, boolean onSuccess, boolean onException){          
+        String option = "then";
+        if (onSuccess && !onException){
+            option = "then_success";
+        } else if (!onSuccess && onException){
+            option = "then_exception";
+        } else if (!onSuccess && !onException){
+            return;
+        }
+        setScriptOption(option, command);
+    }
 
     public Boolean getKeep() {
         Object option = getOption("keep");
@@ -848,7 +885,15 @@ public class ExecutionParameters {
                 }
             }
         }
-        clearCommandOptions();
+        
+        for (String option: new String[]{"then", "then_exception", "then_success"}){
+            Object value = getCommandOption(option);            
+            if ((value!=null) && getScriptOption(option)==null){
+                setScriptOption(option, value);
+            }
+        }   
+
+        clearCommandOptions();        
     }
 
     @Hidden

@@ -38,7 +38,7 @@ public class ExecutorTask extends Task {
         this.statement = statement;
     }
 
-    public ExecutorTask(App.ExecutionStage stage) {
+    public ExecutorTask(ExecutionStage stage) {
         super();
         this.executor = null;
         this.file = stage.file;

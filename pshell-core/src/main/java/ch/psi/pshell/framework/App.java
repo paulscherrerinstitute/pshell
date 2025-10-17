@@ -15,6 +15,7 @@ import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.sequencer.PlotListener;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.swing.ConfigDialog;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.MonitoredPanel;
@@ -689,53 +690,6 @@ public class App extends ch.psi.pshell.devices.App {
         return null;
     }
 
-    public static class ExecutionStage {
-
-        final public File file;
-        final public Map<String, Object> args;
-        final public String statement;
-
-        ExecutionStage(File file, Map<String, Object> args) {
-            this.file = file;
-            this.args = args;
-            this.statement = null;
-        }
-
-        ExecutionStage(String statement) {
-            this.file = null;
-            this.args = null;
-            this.statement = statement;
-        }
-
-        public String getArgsStr() {
-            StringBuilder sb = new StringBuilder();
-            if (args != null) {
-                for (String key : args.keySet()) {
-                    if (sb.length() > 0) {
-                        sb.append(", ");
-                    }
-                    Object value = args.get(key);
-                    String text;
-                    try {
-                        text = EncoderJson.encode(value, false);
-                    } catch (Exception ex) {
-                        text = String.valueOf(value);
-                    }
-                    sb.append(key).append(":").append(text);
-                }
-            }
-            return sb.toString();
-        }
-
-        public String toString() {
-            if (file != null) {
-                String args = getArgsStr();
-                return file.toString() + (args.isEmpty() ? " " : "(" + args + ")");
-            } else {
-                return statement;
-            }
-        }
-    }
 
     protected void onExecQueueChanged(){
         if (getMainFrame()!=null){
@@ -745,12 +699,12 @@ public class App extends ch.psi.pshell.devices.App {
     
     final List<ExecutionStage> executionQueue = new ArrayList<>();
 
-    public void evalFileNext(File file) throws State.StateException {
+    public void evalFileNext(File file) throws Sequencer.StateException {
         evalFileNext(file, null);
     }
 
-    public void evalFileNext(File file, Map<String, Object> args) throws State.StateException {
-        Context.getState().assertProcessing();        
+    public void evalFileNext(File file, Map<String, Object> args) throws Sequencer.StateException {
+        Context.getSequencer().assertRunning();    
         ExecutionStage stage = new ExecutionStage(file, args);
         synchronized (executionQueue) {
             logger.log(Level.INFO, "Next stage: {0}", stage.toString());
@@ -760,8 +714,8 @@ public class App extends ch.psi.pshell.devices.App {
         getStatusBar().setTransitoryStatusMessage("Run next: " + file.toString(), 5000);
     }
 
-    public void evalStatementNext(String statement) throws State.StateException {
-        Context.getState().assertProcessing();
+    public void evalStatementNext(String statement) throws Sequencer.StateException {
+        Context.getSequencer().assertRunning();    
         ExecutionStage stage = new ExecutionStage(statement);
         synchronized (executionQueue) {
             logger.log(Level.INFO, "Next stage: {0}", stage.toString());

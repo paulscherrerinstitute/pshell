@@ -44,6 +44,10 @@ public enum CommandSource {
     }    
 
     static boolean isBackgroundEval(String command){
+        if (command.startsWith(Sequencer.Command.run.toString())){
+            //Always log script execution
+            return false;
+        }
         return command.endsWith(ControlCommand.BACKGROUND_COMMAND_PREFIX.toString());
     }
     

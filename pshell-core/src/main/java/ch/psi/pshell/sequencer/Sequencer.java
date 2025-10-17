@@ -314,6 +314,14 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     @Hidden
+    public void assertRunning() throws StateException {
+        State state = getState();
+        if ((state!=State.Busy) && (state!=State.Paused)){
+            throw new StateException();
+        }
+    }
+
+    @Hidden
     public void assertState(State state) throws StateException {
         if (this.state != state) {
             throw new StateException();
@@ -583,23 +591,41 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         for (SequencerListener listener : getListeners()) {
             try {
                 listener.willEval(source, code);
+            } catch (SecurityException ex){
+                throw ex;
             } catch (Throwable ex) {
                 logger.log(Level.WARNING, null, ex);
             }
         }
+        for (SequencerListener listener : getListeners()) {
+            try {
+                listener.onStartEval(source, code);
+            } catch (Throwable ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }        
     }
 
     protected void triggerWillRun(final CommandSource source, final String fileName, final Object args) {
         for (SequencerListener listener : getListeners()) {
             try {
                 listener.willRun(source, fileName, args);
+            } catch (SecurityException ex){
+                throw ex;
+            } catch (Throwable ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+        for (SequencerListener listener : getListeners()) {
+            try {
+                listener.onStartRun(source, fileName, args);
             } catch (Throwable ex) {
                 logger.log(Level.WARNING, null, ex);
             }
         }
     }    
-        
-
+    
+ 
     protected void notifyExecution(final String fileName, final Object result) throws IOException{
         boolean notifyTask = true;
         boolean error = (result instanceof Throwable) && !aborted;
@@ -1195,7 +1221,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                     throw new IOException("Invalid control command");
                 } else {
                     if (controlCommand.isScripControl()) {
-                        triggerWillRun(source, command.toString(), null);
+                        triggerWillRun(source, command.toString(), null);                        
                     } else if (controlCommand.isEval()) {
                         triggerWillEval(source, command);
                     }
@@ -1242,6 +1268,14 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             }
         }
     }
+        
+    public void evalLineAfter(final CommandSource source, final String command, boolean onSuccess, boolean onException) throws ScriptException, IOException, StateException, InterruptedException {        
+        assertRunning();
+        onCommand(Command.then, new Object[]{command}, source);
+        if (getState().isProcessing()) {
+            getExecutionParsForeground().setThen(command,  onSuccess, onException);
+        }
+    }
 
     CompletableFuture<?> getInterpreterFuture(final Threading.SupplierWithException<?> supplier) {
         return Threading.getFuture(supplier, interpreterExecutor);
@@ -1284,8 +1318,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         final String scriptName = getStandardScriptName(fileName);
         final Map<String, Object> argsDict = parseArgs(args);
         ArrayList pars = new ArrayList();
-        pars.add(scriptName);
-        pars.add("Background");
+        pars.add(scriptName + " [background]");        
         for (String key : argsDict.keySet()) {
             pars.add(key + "=" + argsDict.get(key));
         }
@@ -1506,6 +1539,10 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             return executionPars.get(null);
         }
     }
+    
+    public ExecutionParameters getExecutionParsForeground() {
+        return getExecutionPars(null);
+    }
 
     public void setExecutionPars(String name) {
         Map pars = new HashMap();
@@ -1623,7 +1660,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             throw t;
         }
     }
-
+    
     public Object evalStatement(final CommandSource source, final Statement statement) throws ScriptException, IOException, StateException, InterruptedException {
         if (statement == null) {
             return null;
@@ -3146,6 +3183,11 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public Object evalLineBackground(String line) throws ScriptException, IOException, StateException, InterruptedException {
         return evalLineBackground(getPublicCommandSource(), line);
     }
+    
+    
+    public void evalLineAfter( final String line, boolean onSuccess, boolean onException) throws ScriptException, IOException, StateException, InterruptedException {
+        evalLineAfter(getPublicCommandSource(), line, onSuccess, onException);
+    }    
 
     public Object tryEvalLineBackground(String line) throws ScriptException, IOException, StateException, InterruptedException {
         return tryEvalLineBackground(getPublicCommandSource(), line);
