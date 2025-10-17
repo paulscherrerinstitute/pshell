@@ -16,10 +16,21 @@ public enum State {
     Offline;
 
     public class StateException extends Exception {
-
         StateException() {
             super("Invalid state: " + State.this.toString());
-        }
+        }        
+        StateException(State state) {
+            super ("Invalid state transition: " + State.this + " to " + state);
+        }            
+    }
+    
+    
+    public void throwStateException() throws StateException{
+        throw new StateException();
+    }
+    
+    public void throwTransitionException(State state) throws StateException{
+        throw new StateException(state);
     }
 
     public boolean isInitialized() {

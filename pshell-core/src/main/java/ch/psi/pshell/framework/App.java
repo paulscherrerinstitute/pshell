@@ -57,6 +57,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker.StateValue;
 import javax.swing.WindowConstants;
 import ch.psi.pshell.sequencer.SequencerListener;
+import ch.psi.pshell.utils.State.StateException;
 
 /**
  * The application singleton object.
@@ -699,11 +700,11 @@ public class App extends ch.psi.pshell.devices.App {
     
     final List<ExecutionStage> executionQueue = new ArrayList<>();
 
-    public void evalFileNext(File file) throws Sequencer.StateException {
+    public void evalFileNext(File file) throws StateException {
         evalFileNext(file, null);
     }
 
-    public void evalFileNext(File file, Map<String, Object> args) throws Sequencer.StateException {
+    public void evalFileNext(File file, Map<String, Object> args) throws StateException {
         Context.getSequencer().assertRunning();    
         ExecutionStage stage = new ExecutionStage(file, args);
         synchronized (executionQueue) {
@@ -714,7 +715,7 @@ public class App extends ch.psi.pshell.devices.App {
         getStatusBar().setTransitoryStatusMessage("Run next: " + file.toString(), 5000);
     }
 
-    public void evalStatementNext(String statement) throws Sequencer.StateException {
+    public void evalStatementNext(String statement) throws StateException {
         Context.getSequencer().assertRunning();    
         ExecutionStage stage = new ExecutionStage(statement);
         synchronized (executionQueue) {

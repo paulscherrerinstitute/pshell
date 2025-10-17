@@ -41,6 +41,7 @@ import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.ObservableBase;
 import ch.psi.pshell.utils.Reflection.Hidden;
 import ch.psi.pshell.utils.State;
+import ch.psi.pshell.utils.State.StateException;
 import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Sys;
 import ch.psi.pshell.utils.Threading;
@@ -254,17 +255,6 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return Paths.get(Setup.getContextPath(), "CommandHistory.dat").toString();
     }
     
-    //State
-    public class StateException extends Exception {
-
-        StateException() {
-            super("Invalid state: " + getState());
-        }
-
-        StateException(State state) {
-            super("Invalid state transition: " + getState() + " to " + state);
-        }
-    }
 
     volatile State state = State.Invalid;
 
@@ -278,7 +268,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                     || //Can pause
                     ((this.state == State.Fault) && (state != State.Initializing)) //To quit Fault state must restart
                     ) {
-                throw new StateException(state);
+                this.state.throwTransitionException(state);
             }
             State former = this.state;
             this.state = state;
@@ -302,9 +292,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     @Hidden
     public void assertStarted() throws StateException {
         assertNotState(State.Initializing);
-        if (!state.isActive()) {
-            throw new StateException();
-        }
+        state.assertActive();
     }
 
     @Hidden
@@ -317,22 +305,18 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public void assertRunning() throws StateException {
         State state = getState();
         if ((state!=State.Busy) && (state!=State.Paused)){
-            throw new StateException();
+            state.throwStateException();
         }
     }
 
     @Hidden
     public void assertState(State state) throws StateException {
-        if (this.state != state) {
-            throw new StateException();
-        }
+        this.state.assertIs(state);
     }
 
     @Hidden
     public void assertNotState(State state) throws StateException {
-        if (this.state == state) {
-            throw new StateException();
-        }
+        this.state.assertNot(state);
     }
 
     public State getState() {
@@ -3205,7 +3189,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return evalFileAsync(getPublicCommandSource(), fileName);
     }
 
-    public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws Sequencer.StateException{
+    public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws StateException{
         return evalFileAsync(getPublicCommandSource(), fileName, args);
     }
 

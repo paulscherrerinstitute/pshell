@@ -60,6 +60,7 @@ import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
 import org.glassfish.jersey.media.sse.SseFeature;
 import ch.psi.pshell.security.SecurityListener;
+import ch.psi.pshell.utils.State.StateException;
 import java.io.IOException;
 import javax.script.ScriptException;
 
@@ -660,7 +661,7 @@ public class ServerService {
         }
     }
     
-    Object runScript(String script, Object pars, boolean async, boolean background) throws Sequencer.StateException, InterruptedException, ScriptException, IOException{
+    Object runScript(String script, Object pars, boolean async, boolean background) throws StateException, InterruptedException, ScriptException, IOException{
         if (async) {            
             CompletableFuture cf = null;
             
