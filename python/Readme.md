@@ -14,6 +14,7 @@ pip install psi-pshell
 
 Dependencies:
   - requests
+  - sseclient
   - pyzmq
 
 # Classes

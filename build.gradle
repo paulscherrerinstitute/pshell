@@ -5,7 +5,7 @@ plugins {
 }
 
 allprojects {
-    version = '2.0.0'    
+    version = '2.0.1'    
     group = 'ch.psi'
     ext.release = '1'
     ext.app_jdk = '21'
@@ -288,7 +288,6 @@ subprojects {
                     
     ext.shadowJarExcludeFramework = { d ->
         d.exclude(d.dependency("redis.clients:.*:.*"))
-        d.exclude(d.dependency("net.imagej:.*:.*"))
         d.exclude(d.dependency("javax.mail::.*:.*"))            
         d.exclude(d.dependency("com.sun.mail:.*:.*"))            
         d.exclude(d.dependency("jline:.*:.*"))            
@@ -298,6 +297,7 @@ subprojects {
         d.exclude(d.dependency("org.eclipse.jgit:.*:.*"))    
         d.exclude(d.dependency("org.glassfish.jersey.containers:.*:.*"))
         d.exclude(d.dependency("org.glassfish.jersey.media:jersey-media-sse:.*"))       
+        //d.exclude(d.dependency("net.imagej:.*:.*"))
         //d.exclude(d.dependency("org.apache.commons:commons-math3:.*"))     
     }
     
