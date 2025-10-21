@@ -1,6 +1,6 @@
 import time
 
-from pshell.client import PShellClient
+from pshell import PShellClient
 import socket
 from threading import Thread
 import os

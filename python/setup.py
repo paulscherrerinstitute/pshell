@@ -1,12 +1,20 @@
-#!/usr/bin/env python
+import os
 from setuptools import setup
 
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 setup(
-    name='pshell',
-    version="2.0.0",
-    description="pshell is Python a client to PShell REST interface",
+    name='psi-pshell',
+    version="2.0.1",
     author='Paul Scherrer Institute',
-    requires=["requests"],
-    packages=['pshell',
-              ]
+    author_email="daq@psi.ch",
+    description="Python client to PShell REST API",
+    license="GPLv3",
+    keywords="",
+    url="https://github.com/paulscherrerinstitute/pshell/tree/master/python",
+    install_requires=['requests', 'sseclient', 'pyzmq'],
+    packages=['pshell'],
+    long_description=read('Readme.md'),
+    long_description_content_type="text/markdown"
 )

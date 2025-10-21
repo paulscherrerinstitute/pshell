@@ -143,7 +143,6 @@ class PShellProxy(PShellClient):
         self.inject()
         self.data_home=self.eval("expand_path('{data}')")+"/"
         self.scan_defaults={}
-        self.handlers = {}        
 
     def get_scan_defaults(self):
         """Return scan default properties.
@@ -212,7 +211,7 @@ class PShellProxy(PShellClient):
         return self._run_scan("rscan", config, writable, readables, start, end, steps, passes, zigzag, **pars)
     
     def bscan(self, stream, records, timeout = None, passes=1, **pars):
-        return self._run_scan("bscan", stream, records, timeout, passes, zigzag, **pars)
+        return self._run_scan("bscan", stream, records, timeout, passes, **pars)
     
     def tscan(self, readables, points, interval, passes=1, fixed_rate=True, **pars):
         return self._run_scan("tscan", readables, points, interval, passes, fixed_rate, **pars)        
@@ -340,35 +339,3 @@ class PShellProxy(PShellClient):
         else:            
             display(*images)
             
-    #Events
-    def add_handler(self, event, handler):    
-        l=self.handlers.get(event, set())
-        l.add(handler)        
-        self.handlers[event]=l
-        self.start_sse_event_loop_task(self.handlers.keys())
-            
-    def remove_handlers(self, event=None):
-        if event is None:
-            self.handlers={}
-        else:
-            del self.handlers[event]
-        self.start_sse_event_loop_task(self.handlers.keys())
-        
-    def remove_handler(self, handler):
-        removed_keys=set()
-        for event, handlers in self.handlers.copy().items():
-            handlers.discard(handler)
-            if len(handlers)==0:
-                removed_keys.add(event)
-        for key in removed_keys:
-            del self.handlers[key]
-        self.start_sse_event_loop_task(self.handlers.keys())                       
-
-    def on_event(self, name, value):
-        handlers=self.handlers.get(name, set()).copy()
-        for handler in handlers:
-            try:
-               handler(value) 
-            except:
-                pass
-    

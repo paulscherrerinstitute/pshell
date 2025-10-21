@@ -15,6 +15,7 @@ requirements:
     run:
         - python
         - requests
+        - pyzmq
 
 about:
     summary: "pshell_client is Python a client to PShell REST interface"

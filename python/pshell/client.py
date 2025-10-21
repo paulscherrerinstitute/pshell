@@ -1,95 +1,16 @@
 import threading
 import time
-import sys
 import requests
 import json
+from .sse import SSEReceiver
 
 try:
     from urllib import quote  # Python 2
 except ImportError:
     from urllib.parse import quote  # Python 3
 
-try:
-    from sseclient import SSEClient
-except:
-    SSEClient = None 
-    
-
 class TimeoutException(Exception):
-   pass
-
-class SSEReceiver:
-    def __init__(self, url, events, callback):
-        if SSEClient is None:
-            raise Exception("sseclient library is not installed: server events are not available")
-        self.url = url
-        self.events = events
-        self._stop = threading.Event()
-        self.session = None
-        self.client = None
-        self.thread = threading.Thread(target=self.task, args=(events, callback), kwargs={})
-        self.thread.daemon = True
-        self.thread.start()
-
-    def task(self, subscribed_events=None, event_callback=None):
-        try:
-            while not self._stop.is_set():
-                try:
-                    self.session = requests.Session()
-                    self.client = SSEClient(self.url, session=self.session)
-                    for msg in self.client:
-                        if self.is_closed():
-                            break
-                        if (subscribed_events is None) or (msg.event in subscribed_events):
-                            try:
-                                value = json.loads(msg.data)
-                            except:
-                                value = str(msg.data)
-                            event_callback(msg.event, value)
-                except IOError as e:
-                    #print(e)
-                    pass
-                except:
-                    print("Error:", sys.exc_info()[1])
-                finally:
-                    self._close_client()
-                if self.is_closed():
-                    break
-                else:
-                    time.sleep(1.0)
-        finally:
-            # print("Exit SSE loop task")
-            pass
-
-    def _close_client(self):
-        self.client = None
-        """
-        if self.client is not None:
-            try:
-                if hasattr(self.client.resp, "raw"):
-                    conn = getattr(self.client.resp.raw, "_connection", None)
-                    if conn and hasattr(conn, "sock") and conn.sock:
-                        conn.sock.shutdown(2)
-                        conn.sock.close()
-                self.client.resp.close()
-                self.client = None
-            except:
-                pass
-        """
-        if self.session is not None:
-            try:
-                self.session.close()
-                self.session = None
-            except:
-                pass
-
-    def close(self):
-        self._stop.set()
-        self._close_client()
-        #print("closed")
-
-    def is_closed(self):
-        return self._stop.is_set()
+    pass
 
 class PShellClient:
     def __init__(self, url):
@@ -97,8 +18,6 @@ class PShellClient:
             url=url+"/"
         self.url = url
         self.sse_event_loop_thread = None
-        self.subscribed_events = None
-        self.event_callback = None
         self.sse_client = None
         self.plot_defaults={"format":"png", "width":600, "height":400}
         self.debug = False
@@ -200,28 +119,30 @@ class PShellClient:
 
         Args:
             state (string or list of strings)
+            timeout(number) wait timeout in seconds. If less or equal 0 then wait forever.
         Returns:
         """
         if type(state)==str:
             state = [state]
         start = time.time()
         while self.get_state() not in state:
-            if (timeout>=0) and ((time.time()-start)>timeout):
+            if (timeout >= 0) and ((time.time()-start) > timeout):
                 raise TimeoutException(f"Timeout waiting state {state}")
             time.sleep(self.polling_interval)
 
-    def wait_state_not(self, state, timeout = -1):
+    def wait_state_not(self, state, timeout=-1):
         """Wait application state different than.
 
         Args:
             state (string or list of strings)
+            timeout(number) wait timeout in seconds. If less or equal 0 then wait forever.
         Returns:
         """
         if type(state)==str:
             state = [state]
         start = time.time()
         while self.get_state() in state:
-            if (timeout>=0) and ((time.time()-start)>timeout):
+            if (timeout >= 0) and ((time.time()-start) > timeout):
                 raise TimeoutException(f"Timeout waiting state not {state}")
             time.sleep(self.polling_interval)
             
@@ -644,76 +565,72 @@ class PShellClient:
         for l in self.help(input):
             print(l)
 
-    def start_sse_event_loop_task(self, subscribed_events = None, event_callback = None):
+    def _get_sse(self):
+        if self.sse_client is None:
+            self.sse_client = SSEReceiver(self.url + "events", None)
+        self.sse_client.debug = self.debug
+        return self.sse_client
+
+    def subscribe(self, callback=None, events=None):
         """
-        Initializes server event loop task.
-        Args:    
-            subscribed_events: list of event names to subscribe to. If None subscribes to all.
-            event_callback: callback function. If None, self.on_event is called instead.
+        Subscribe to SSE events.
+
+        Args:
+            callback: function(event_name, data), If None, calls self.on_event
+            events: None (all events), str (one event), or list[str] (multiple events)
 
         Usage example:
             def on_event(name, value):
                 if name == "state":
                     print ("State changed: ",  value)
                 elif name == "record":
-                    print ("Received scan record: ", value) 
+                    print ("Received scan record: ", value)
 
-            pc.start_sse_event_loop_task(["state", "record"], on_event)    
-           
+            pc.subscribe(["state", "record"], on_event)
         """
-        self.event_callback = event_callback if event_callback is not None else self.on_event
-        self.subscribed_events = subscribed_events
-        self.sse_client = SSEReceiver(self.url + "events", subscribed_events, event_callback)
+        if callback==None:
+            callback = self.on_event
+        self._get_sse().subscribe(callback, events)
 
-    def stop_sse_event_loop_task(self):
-        if self.sse_client is not None:
-            self.sse_client.close()
-
-    def on_event(self, name, value):
-        pass
-
+    def unsubscribe(self, callback):
+        """Unsubscribe a previously subscribed callback."""
+        self._get_sse().unsubscribe(callback)
 
     def wait_events(self, events={}, timeout=-1):
         """Wait any of the events matching the value (value None for any).
 
         Args:
             events (dict event name->value)
+            timeout(number) wait timeout in seconds. If less or equal 0 then wait forever.
         Returns:
+            (event, value) or raises TimeoutException
+
+        Usage example:
+            def on_event(name, value):
+                if name == "state":
+                    print ("State changed: ",  value)
+                elif name == "record":
+                    print ("Received scan record: ", value)
+
+            pc.subscribe(["state", "record"], on_event)
+
         """
-        rx = {}
-        condition = threading.Condition()
-        def callcack(name, value):
-            with condition:
-                rx[name] = value
-                condition.notify_all()
+        ret = self._get_sse().wait_events(events, timeout)
+        if ret is None:
+            raise TimeoutException(f"Timeout waiting for events {events}")
+        return ret
 
-        sse_client = SSEReceiver(self.url + "events", events.keys(), callcack)
-        try:
-            start = time.time()
-            with condition:
-                while True:
-                    for name in events.keys():
-                        if name in rx.keys():
-                            values, rx_value = events[name], rx[name]
-                            if values is not None and type(values) is not list:
-                                values = [values]
-                            if values is None or rx_value in values:
-                                return name,rx_value
-
-                    remaining = None
-                    if timeout >= 0:
-                        remaining = max(0, timeout - (time.time() - start))
-                        if remaining <= 0:
-                            raise TimeoutException(f"Timeout waiting for events {events}")
-                    condition.wait(timeout=remaining)
-        finally:
-            sse_client.close()
+    def on_event(self, name, value):
+        """
+        Default event callback
+        Args:
+            name: event name.
+            value: event value.
+        """
+        pass
 
     def close(self):
-        self.stop_sse_event_loop_task()
+        if self.sse_client is not None:
+            self.sse_client.close()
 
-if __name__ == "__main__":
-    import socket
-    ps = PShellClient( "http://" + socket.gethostname() + ":8080")
-    print (ps.get_state())
 
