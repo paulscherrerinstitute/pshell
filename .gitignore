@@ -16,3 +16,5 @@
 **/src/main/python/pshell/__pycache__/
 **/src/main/assembly/script/Lib/__pycache__/
 /.jython_cache/
+/python/psi_pshell.egg-info/
+/python/dist/

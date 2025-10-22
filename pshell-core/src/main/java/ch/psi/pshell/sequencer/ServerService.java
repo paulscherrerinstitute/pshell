@@ -930,10 +930,12 @@ public class ServerService {
     boolean printScan;
 
     void sendShell(CommandSource source, String line) {
-        line = line.replace("&", "&amp;");
-        line = line.replace("<", "&lt;");
-        line = line.replace(">", "&gt;");
-        sendEventAsText("shell", line);
+        if ((source==null) || source.isDisplayable()){
+            line = line.replace("&", "&amp;");
+            line = line.replace("<", "&lt;");
+            line = line.replace(">", "&gt;");
+            sendEventAsText("shell", line);
+        }
     }
 
     final EventListener eventListener = (String name, Object value) -> {
@@ -970,7 +972,7 @@ public class ServerService {
                 return;
             }
             if (printScan) {
-                sendShell(CommandSource.server, scan.getHeader("\t"));
+                sendShell(null, scan.getHeader("\t"));
             }
             if (plotScan) {
                 sendScanStart(scan);
@@ -985,7 +987,7 @@ public class ServerService {
                 return;
             }
             if (printScan) {
-                sendShell(CommandSource.server, record.print("\t"));
+                sendShell(null, record.print("\t"));
             }
             if (plotScan) {
                 //Removing 2d data. 
