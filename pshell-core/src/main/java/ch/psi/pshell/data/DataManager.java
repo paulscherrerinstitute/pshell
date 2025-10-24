@@ -593,7 +593,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             } finally {
                 if (ep!=null){
                     try {
-                        ep.setDataPath(null, true);
+                        ep.setDataPath(null, false);
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, null, ex);
                     }

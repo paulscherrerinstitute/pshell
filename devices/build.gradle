@@ -27,6 +27,7 @@ tasks {
         shadowJarExcludeJzy3dFiles(delegate)
         dependencies {
             shadowJarExcludeFramework(delegate)
+            shadowJarExcludeGit(delegate)
             shadowJarExcludeJzy3d(delegate)    
         }             
     }

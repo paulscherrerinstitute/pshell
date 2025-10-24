@@ -98,11 +98,13 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
     final boolean autoCommit;
     final ArrayList<String> addedFolders;
     final String secret;
+    
 
     Repository localRepo;
     Git git;
     
     static final Logger logger = Logger.getLogger(VersionControl.class.getName());
+    final static String token = Setup.getToken();    
     
     
     public VersionControl(VersionControlConfig config) {
@@ -131,8 +133,8 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
                 }
             }
         }
-        this.secret = secret;
-
+        this.secret = secret;        
+        
         if (getConnectionType() == ConnectionType.ssh) {
             //Evaluating here in order startPush to work in different process (no context)
             privateKeyFile = (secret == null)
@@ -358,9 +360,13 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         }
     }
 
-    void cloneRepo() {
+    public void cloneRepo() {
         try {
-            Git.cloneRepository().setURI(remotePath).setDirectory(new File(localPath)).call();
+            CredentialsProvider credentialsProvider = getCredentialsProvider();
+            Git.cloneRepository()
+                .setURI(remotePath)
+                .setCredentialsProvider(credentialsProvider)
+                .setDirectory(new File(localPath)).call();
         } catch (Exception ex) {
             logException(ex);
         }
@@ -712,11 +718,18 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         }
 
         if (usr.length() == 0) {
-            credentialsProvider = CredentialsProvider.getDefault();
+            credentialsProvider = getDefaultCredentialsProvider();
         }
         return credentialsProvider;
     }
     //Public interface
+    
+    public static CredentialsProvider getDefaultCredentialsProvider()  {        
+        if (token!=null){
+            return new UsernamePasswordCredentialsProvider("bot", token);
+        }
+        return CredentialsProvider.getDefault();
+    }
 
     /**
      * Force to overwrite remote history

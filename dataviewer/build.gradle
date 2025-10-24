@@ -22,6 +22,7 @@ tasks {
         dependencies {
             shadowJarExcludeDevices(delegate)
             shadowJarExcludeFramework(delegate)
+            shadowJarExcludeGit(delegate)
             shadowJarExcludeJzy3d(delegate)    
         }             
     }

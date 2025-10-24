@@ -3,16 +3,19 @@ package ch.psi.pshell.app;
 import ch.psi.pshell.plot.Plot.Quality;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Chrono;
+import ch.psi.pshell.utils.Facility;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Sys;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -412,7 +415,7 @@ public class Setup{
        return Options.DEBUG.getBool(false);
     }          
     
-    static public boolean isHidden() {
+    public static boolean isHidden() {
         return  Options.HIDE.getBool(false);
     }
     
@@ -424,7 +427,7 @@ public class Setup{
         return "ch.psi";
     }
     
-    static public Level getConsoleLogLevel(){
+    public static Level getConsoleLogLevel(){
         Level consoleLogLevel = Level.OFF;
         try {
             consoleLogLevel = Level.parse(Options.CONSOLE_LOG.getString("OFF"));
@@ -468,7 +471,7 @@ public class Setup{
         return null;
     }        
         
-    static public boolean getStartArg() {
+    public static boolean getStartArg() {
         return Options.START.getBool(false);
     }    
         
@@ -508,8 +511,36 @@ public class Setup{
         return Options.LOCAL.getBool(false); 
     }    
     
-    static public String getConfigArg() {
+    public static String getConfigArg() {
         return  Options.CONFIG.getString(null);
     }      
-                  
+            
+    public static String getToken() {
+        String val = System.getenv().get(Options.TOKEN.toEnvVar());
+        if ((val!=null) && (!val.isBlank())){
+            val = val.trim();  
+            File f = new File(expandPath(val));
+            if (f.isFile()){
+                try{
+                    return Files.readString(f.toPath()).trim();
+                } catch (Exception e){                    
+                }
+            } else {
+                return val;
+            }
+        }
+        for (String filename : new String[]{App.getApplicationId()+"-token", "token"}){
+            try{                                            
+                return Files.readString(Paths.get(getContextPath(), filename)).trim();
+            } catch (Exception e){                    
+            }
+            try{
+                return Files.readString(Paths.get(Facility.getAppConfigFolder().toString(), filename)).trim();
+            } catch (Exception e){                    
+            }
+        }
+        
+        return null;        
+    }   
+
 }

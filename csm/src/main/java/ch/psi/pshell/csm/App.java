@@ -41,11 +41,13 @@ public class App extends ch.psi.pshell.devices.App{
     }
     
     public static String getDataBufferSourcesRepo(){
-        return Options.DB_SRC_REPO.getString("https://git.psi.ch/archiver_config/sf_databuffer.git");
+        //return Options.DB_SRC_REPO.getString("https://git.psi.ch/archiver_config/sf_databuffer.git");
+        return Options.DB_SRC_REPO.getString("https://gitea.psi.ch/archiver_config/sf_databuffer.git");
     }
 
     public static String getImageBufferSourcesRepo(){
-        return Options.IB_SRC_REPO.getString("https://git.psi.ch/archiver_config/sf_imagebuffer.git");
+        //return Options.IB_SRC_REPO.getString("https://git.psi.ch/archiver_config/sf_imagebuffer.git");
+        return Options.DB_SRC_REPO.getString("https://gitea.psi.ch/archiver_config/sf_imagebuffer.git");
     }
             
     @Override

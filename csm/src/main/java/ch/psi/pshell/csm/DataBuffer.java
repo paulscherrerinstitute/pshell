@@ -2,6 +2,7 @@ package ch.psi.pshell.csm;
 
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Sys;
+import ch.psi.pshell.versioning.VersionControl;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 /**
@@ -27,6 +29,7 @@ public class DataBuffer {
     static String dataSourcesRepoFolder;
     
     public static Git cloneDataSourcesRepo(boolean imageBuffer) throws GitAPIException, IOException{
+        CredentialsProvider credentialsProvider = getCredentialsProvider();
         String path = getDataSourcesRepoFolder(imageBuffer);
         File gitFile =  new File(path + "/.git");
         if (!gitFile.exists()){
@@ -35,26 +38,35 @@ public class DataBuffer {
             Git.cloneRepository()
               .setURI(url)
               .setDirectory(new File(path)) 
+              .setCredentialsProvider(credentialsProvider)
               .call();
         }        
         Logger.getLogger(DataBuffer.class.getName()).info("Pulling data sources: " + gitFile);
         Git git = Git.open(gitFile);      
-        git.pull().call(); 
+        git.pull().setCredentialsProvider(credentialsProvider).call(); 
         return git;
+    }
+    
+    static CredentialsProvider getCredentialsProvider(){
+        return VersionControl.getDefaultCredentialsProvider();
+    }
+    static CredentialsProvider getCredentialsProvider(String usr, String pwd){
+        return new UsernamePasswordCredentialsProvider(usr, pwd);
     }
     
     public static void commitRepo(Git git, String msg) throws GitAPIException, IOException{
         git.commit().setAll(true).setMessage(msg).call();
     }    
+    //8f52060a88599bdce87b14658e4d722e90f7e535
+    
 
+    
     public static void pushRepo(Git git, String usr, String pwd) throws GitAPIException, IOException{
-        UsernamePasswordCredentialsProvider credentialsProvider = new UsernamePasswordCredentialsProvider(usr, pwd);      
-        git.push().setCredentialsProvider(credentialsProvider).setForce(true).call();
+        git.push().setCredentialsProvider(getCredentialsProvider(usr, pwd)).setForce(true).call();
     }        
 
     public static void checkCredentials(Git git, String usr, String pwd) throws GitAPIException, IOException{
-        UsernamePasswordCredentialsProvider credentialsProvider = new UsernamePasswordCredentialsProvider(usr, pwd);      
-        git.push().setDryRun(true).setCredentialsProvider(credentialsProvider).setForce(true).call();
+        git.push().setDryRun(true).setCredentialsProvider(getCredentialsProvider(usr, pwd)).setForce(true).call();
     }        
     
     public static Git updateDataSourcesRepo(boolean imageBuffer) throws GitAPIException, IOException{        
@@ -124,7 +136,7 @@ public class DataBuffer {
         return  output;        
     }
     
-    static String uploadSources(boolean imageBuffer) throws IOException, InterruptedException, GitAPIException{
+    static String uploadSources(boolean imageBuffer) throws IOException, InterruptedException, GitAPIException{        
         try(Git git = updateDataSourcesRepo(imageBuffer)){
             Logger.getLogger(DataBuffer.class.getName()).info("Uploading sources to " +  (imageBuffer ? "ImageBuffer" : "DataBuffer"));
 

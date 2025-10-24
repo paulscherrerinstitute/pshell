@@ -24,6 +24,7 @@ tasks {
         shadowJarExcludeJhdf5Files(delegate)
         dependencies {
             shadowJarExcludeFramework(delegate)
+            shadowJarExcludeMath(delegate)
             shadowJarExcludeJzy3d(delegate)                  
             shadowJarExcludeJhdf5(delegate)    
         }             

@@ -7,6 +7,7 @@ public enum Options implements Option {
     HELP,       //Only used as command-line argument
     VERSION,    //Only used as command-line argument
     COMMAND,    //Only used as environment variable
+    TOKEN,      //Only used as environment variable
     CONFIG,
     FILE,
     EVAL,
