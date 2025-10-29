@@ -16,7 +16,7 @@ public enum Options implements Option {
         ch.psi.pshell.devices.Options.addCamServer();      
         EXPERT.add("ex", "Expert mode");             
         DB_SRC_REPO.add("dr", "DataBuffer source repo");             
-        IB_SRC_REPO.add("it", "ImageBuffer source repo");             
+        IB_SRC_REPO.add("ir", "ImageBuffer source repo");             
     }        
         
 }

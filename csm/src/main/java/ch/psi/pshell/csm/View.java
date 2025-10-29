@@ -9,17 +9,18 @@ import java.util.logging.Logger;
  */
 public class View extends ch.psi.pshell.app.MainFrame {
 
-    static View instance;
-
     /**
      * Creates new form MainFrame
      */
     public View() {
         initComponents();
-        instance = this;
         setTitle(Optional.ofNullable(Setup.getTitle()).orElse("CamServer Management Console"));
         loggerPanel.start();
-        panelCameras.getPanelConfig().disableFixedCameras();        
+        panelCameras.getPanelConfig().disableFixedCameras();           
+    }
+    
+    public static View getInstance(){
+        return (View) ch.psi.pshell.app.MainFrame.getInstance();
     }
         
     /**
@@ -28,13 +29,21 @@ public class View extends ch.psi.pshell.app.MainFrame {
     @Override
     protected void onCreate() {
         Logger.getLogger(View.class.getName()).info("Startup");
-        panelCameras.setUrl(App.getCameraProxy());
-        panelPipelines.setUrl(App.getPipelineProxy());       
-        panelDataBuffer.setUrl(App.getPipelineProxy());  
-        panelUserScripts.setUrl(App.getPipelineProxy());       
-        backgroundPanel.setUrl(App.getPipelineProxy(), App.getCameraProxy());
+        panelCameras.setUrl(App.getCameraServer());
+        panelPipelines.setUrl(App.getPipelineServer());       
+        panelDataBuffer.setUrl(App.getPipelineServer());          
+        panelUserScripts.setUrl(App.getPipelineServer());       
+        backgroundPanel.setUrl(App.getPipelineServer(), App.getCameraServer());
+        
+        if (App.getDataBufferSourcesRepo().isBlank()  && App.getImageBufferSourcesRepo().isBlank()){
+            tabPane.removeTabAt(tabPane.indexOfTab("DataBuffer"));
+        } else if (App.getDataBufferSourcesRepo().isBlank()){
+            dataBufferPane.removeTabAt(0);
+        } else if (App.getImageBufferSourcesRepo().isBlank()){
+            dataBufferPane.removeTabAt(1);
+        }
     }
-
+    
     /**
      * Called once in the first time the frame is shown
      */
@@ -76,6 +85,16 @@ public class View extends ch.psi.pshell.app.MainFrame {
     protected void onClosing() {
     }
     
+    
+    public int getSelectedTabIndex() {
+        return tabPane.getSelectedIndex();
+    }
+    
+    public String getSelectedTabTitle(){
+        return tabPane.getTitleAt(getSelectedTabIndex());
+    }
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -87,16 +106,16 @@ public class View extends ch.psi.pshell.app.MainFrame {
 
         jToolBar1 = new javax.swing.JToolBar();
         jToolBar2 = new javax.swing.JToolBar();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
+        tabPane = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         panelPipelines = new ch.psi.pshell.csm.PanelServer();
         jPanel2 = new javax.swing.JPanel();
         panelCameras = new ch.psi.pshell.csm.PanelServer();
         backgroundPanel = new ch.psi.pshell.csm.BackgroundPanel();
         panelUserScripts = new ch.psi.pshell.csm.PanelUserScripts();
-        jTabbedPane2 = new javax.swing.JTabbedPane();
+        dataBufferPane = new javax.swing.JTabbedPane();
         panelDataBuffer = new ch.psi.pshell.csm.DataBufferPanel();
-        imageBufferConfigPanel1 = new ch.psi.pshell.csm.ImageBufferConfigPanel();
+        panelImageBuffer = new ch.psi.pshell.csm.ImageBufferConfigPanel();
         jPanel4 = new javax.swing.JPanel();
         loggerPanel = new ch.psi.pshell.swing.LoggerPanel();
 
@@ -117,7 +136,7 @@ public class View extends ch.psi.pshell.app.MainFrame {
             .addComponent(panelPipelines, javax.swing.GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("Pipelines", jPanel1);
+        tabPane.addTab("Pipelines", jPanel1);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -130,14 +149,14 @@ public class View extends ch.psi.pshell.app.MainFrame {
             .addComponent(panelCameras, javax.swing.GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("Cameras", jPanel2);
-        jTabbedPane1.addTab("Background", backgroundPanel);
-        jTabbedPane1.addTab("User Scripts", panelUserScripts);
+        tabPane.addTab("Cameras", jPanel2);
+        tabPane.addTab("Background", backgroundPanel);
+        tabPane.addTab("User Scripts", panelUserScripts);
 
-        jTabbedPane2.addTab("Reconnection", panelDataBuffer);
-        jTabbedPane2.addTab("ImageBuffer Config", imageBufferConfigPanel1);
+        dataBufferPane.addTab("Reconnection", panelDataBuffer);
+        dataBufferPane.addTab("ImageBuffer Config", panelImageBuffer);
 
-        jTabbedPane1.addTab("DataBuffer", jTabbedPane2);
+        tabPane.addTab("DataBuffer", dataBufferPane);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -156,17 +175,17 @@ public class View extends ch.psi.pshell.app.MainFrame {
                 .addContainerGap())
         );
 
-        jTabbedPane1.addTab("Logs", jPanel4);
+        tabPane.addTab("Logs", jPanel4);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE)
+            .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 497, Short.MAX_VALUE)
+            .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 497, Short.MAX_VALUE)
         );
 
         pack();
@@ -174,18 +193,18 @@ public class View extends ch.psi.pshell.app.MainFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private ch.psi.pshell.csm.BackgroundPanel backgroundPanel;
-    private ch.psi.pshell.csm.ImageBufferConfigPanel imageBufferConfigPanel1;
+    private javax.swing.JTabbedPane dataBufferPane;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel4;
-    private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JToolBar jToolBar2;
     private ch.psi.pshell.swing.LoggerPanel loggerPanel;
     private ch.psi.pshell.csm.PanelServer panelCameras;
     private ch.psi.pshell.csm.DataBufferPanel panelDataBuffer;
+    private ch.psi.pshell.csm.ImageBufferConfigPanel panelImageBuffer;
     private ch.psi.pshell.csm.PanelServer panelPipelines;
     private ch.psi.pshell.csm.PanelUserScripts panelUserScripts;
+    private javax.swing.JTabbedPane tabPane;
     // End of variables declaration//GEN-END:variables
 }

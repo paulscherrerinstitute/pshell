@@ -96,12 +96,15 @@ public class ImageBufferConfigPanel extends MonitoredPanel {
             }
             buttonApply.setEnabled(changed);
         });
+           
     }
     
     void updateFile(String selectedGroup){
-        modelGroups.setRowCount(0);
-        modelCameras.setRowCount(0);
-        tableGroups.setEnabled(false);
+        SwingUtilities.invokeLater(()->{
+            modelGroups.setRowCount(0);
+            modelCameras.setRowCount(0);
+            tableGroups.setEnabled(false);
+        });
         new Thread(()->{
             try{                    
                 cameras =  DataBuffer.getImageBufferConfig();          
@@ -112,20 +115,22 @@ public class ImageBufferConfigPanel extends MonitoredPanel {
                     }
                 }
                 groups = new TreeSet<>(groups);
-                for (String group: groups){
-                    modelGroups.addRow(new Object[]{group});
-                }
-                tableGroups.setEnabled(true);   //Ordering
                 
-                
-                if (selectedGroup!=null){                
-                    for (int i=0;i<modelGroups.getRowCount();i++){
-                        if (selectedGroup.equals(modelGroups.getValueAt(i, 0))){
-                            tableGroups.setRowSelectionInterval(i, i);
-                            break;
+                SwingUtilities.invokeLater(()->{  
+                    for (String group: groups){
+                        modelGroups.addRow(new Object[]{group});
+                    }
+                    tableGroups.setEnabled(true);   //Ordering                
+
+                    if (selectedGroup!=null){                
+                        for (int i=0;i<modelGroups.getRowCount();i++){
+                            if (selectedGroup.equals(modelGroups.getValueAt(i, 0))){
+                                tableGroups.setRowSelectionInterval(i, i);
+                                break;
+                            }
                         }
                     }
-                }
+                });
                 
             } catch (Exception ex){
                 Logger.getLogger(DataBufferPanel.class.getName()).log(Level.WARNING, null, ex);     
@@ -155,11 +160,11 @@ public class ImageBufferConfigPanel extends MonitoredPanel {
     }
     
     @Override
-    protected void onShow(){
+    protected void onShow(){        
         updateFile(null);
     }
     
-    
+        
     void apply() throws Exception{
         if (!updating){            
             CommitDialog dlg = new CommitDialog(ImageBufferConfigPanel.this.getFrame(), true);

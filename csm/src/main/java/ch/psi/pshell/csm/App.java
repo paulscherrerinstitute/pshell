@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  */
 public class App extends ch.psi.pshell.devices.App{
    
-    public static String getCameraProxy() {
+    public static String getCameraServer() {
         String url = Setup.getCameraServer();
         if (url.startsWith("http://")){            
             url = url.substring(7);
@@ -24,7 +24,7 @@ public class App extends ch.psi.pshell.devices.App{
         return url;        
     }    
 
-    public static String getPipelineProxy() {
+    public static String getPipelineServer() {
         String url = Setup.getPipelineServer();
         if (url.startsWith("http://")){
             url = url.substring(7);
@@ -41,13 +41,11 @@ public class App extends ch.psi.pshell.devices.App{
     }
     
     public static String getDataBufferSourcesRepo(){
-        //return Options.DB_SRC_REPO.getString("https://git.psi.ch/archiver_config/sf_databuffer.git");
-        return Options.DB_SRC_REPO.getString("https://gitea.psi.ch/archiver_config/sf_databuffer.git");
+        return Options.DB_SRC_REPO.getString("").trim();
     }
 
     public static String getImageBufferSourcesRepo(){
-        //return Options.IB_SRC_REPO.getString("https://git.psi.ch/archiver_config/sf_imagebuffer.git");
-        return Options.DB_SRC_REPO.getString("https://gitea.psi.ch/archiver_config/sf_imagebuffer.git");
+        return Options.IB_SRC_REPO.getString("").trim();
     }
             
     @Override
