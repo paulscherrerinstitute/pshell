@@ -1,5 +1,9 @@
 package ch.psi.pshell.framework;
 
+import ch.psi.pshell.app.AboutDialog;
+import ch.psi.pshell.scan.Scan;
+import ch.psi.pshell.scan.ScanListener;
+import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.swing.MonitoredPanel;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.SwingUtils.OptionResult;
@@ -46,6 +50,7 @@ import javax.swing.JToolBar.Separator;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import ch.psi.pshell.sequencer.SequencerListener;
+import java.util.function.Consumer;
 
 /**
  * Plugin implementation and JPanel extension, consisting of a panel to be
@@ -626,7 +631,13 @@ public class Panel extends MonitoredPanel implements Plugin {
         buttonRun.setName("buttonRun");
         buttonRun.addActionListener((java.awt.event.ActionEvent evt) -> {
             try {
-                p.execute();
+                if (Context.getState()==State.Paused){
+                    if (p.isExecuting()){
+                        p.resume();
+                    }
+                } else {
+                    p.execute();
+                }
             } catch (Exception ex) {
                 showException(ex);
             }            
@@ -700,7 +711,15 @@ public class Panel extends MonitoredPanel implements Plugin {
         buttonAbout.setName("buttonAbout");
         buttonAbout.addActionListener((java.awt.event.ActionEvent evt) -> {
             try {
-                getView().showAboutDialog();
+                if (getView()!=null){
+                    getView().showAboutDialog();
+                } else {
+                    AboutDialog aboutDialog = new AboutDialog(getTopLevel(), true);
+                    aboutDialog.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+                    SwingUtils.centerComponent(getTopLevel(), aboutDialog);
+                    aboutDialog.setVisible(true);
+
+                }            
             } catch (Exception ex) {
                 showException(ex);
             }              
@@ -715,18 +734,34 @@ public class Panel extends MonitoredPanel implements Plugin {
                 button.setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) button).getIcon().toString()).getName())));        
             }            
         }            
+        Runnable updateControls = () -> {
+            State state = Context.getSequencer().getState();
+            boolean ready = (state == State.Ready);
+            boolean busy = (state == State.Busy);
+            boolean paused = (state == State.Paused);
+            buttonRun.setEnabled(ready || paused);
+            buttonDebug.setEnabled((ready) || (paused));                
+            buttonPause.setEnabled(p.canPause() && Context.getSequencer().canPause());
+            buttonAbort.setEnabled(busy || paused || (state == State.Initializing));                
+            buttonRestart.setEnabled((state != State.Initializing) && !Setup.isOffline());
+        };
         
         Context.getSequencer().addListener(new SequencerListener() {
             @Override
             public void onStateChanged(State state, State former) {
-                boolean ready = (state == State.Ready);
-                boolean busy = (state == State.Busy);
-                boolean paused = (state == State.Paused);
-                buttonRun.setEnabled(ready);
-                buttonDebug.setEnabled((ready) || (paused));
-                buttonPause.setEnabled(p.canPause() && Context.getSequencer().canPause());
-                buttonAbort.setEnabled(busy || paused || (state == State.Initializing));                
-                buttonRestart.setEnabled((state != State.Initializing) && !Setup.isOffline());
+                updateControls.run();
+            }
+        });
+        
+        Context.getSequencer().addScanListener(new ScanListener() {
+            @Override
+            public void onScanStarted(Scan scan, final String plotTitle) {
+                updateControls.run();
+            }
+            
+            @Override
+            public void onScanEnded(Scan scan, Exception ex) {
+                updateControls.run();
             }
         });
         

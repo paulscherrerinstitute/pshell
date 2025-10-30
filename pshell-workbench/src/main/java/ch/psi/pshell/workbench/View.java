@@ -752,6 +752,7 @@ public class View extends MainFrame{
         return scanPanel;
     }
 
+    @Override
     public PlotPanel getScanPlot(){
         return scanPlot;
     }

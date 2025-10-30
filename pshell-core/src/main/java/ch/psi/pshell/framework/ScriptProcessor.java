@@ -76,6 +76,29 @@ public abstract class ScriptProcessor extends PanelProcessor {
     }
     
     @Override
+    public boolean canPause() {
+        return true;
+    }  
+    
+    public void pause() {
+        try{
+            Context.getSequencer().pause();
+        } catch (Exception e){ 
+            getLogger().log(Level.WARNING, null, e);
+        }   
+    }
+    
+    public void resume() {
+        try{
+            Context.getSequencer().resume();
+        } catch (Exception e){ 
+            getLogger().log(Level.WARNING, null, e);
+        }            
+    }    
+    
+    
+
+    @Override
     public void queue() throws Exception{
         //By default queue script and arguments insted of the filename
         queue(false);

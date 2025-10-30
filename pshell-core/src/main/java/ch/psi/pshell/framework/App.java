@@ -15,7 +15,6 @@ import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.sequencer.PlotListener;
-import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.swing.ConfigDialog;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.MonitoredPanel;
@@ -27,7 +26,6 @@ import ch.psi.pshell.swing.TextEditor;
 import ch.psi.pshell.swing.UserInterface;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Config;
-import ch.psi.pshell.utils.EncoderJson;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.Nameable;
@@ -326,11 +324,11 @@ public class App extends ch.psi.pshell.devices.App {
                 startShell();
                 logger.log(Level.INFO, "Create Shell");
             } else if (Setup.isDetached()) {
-                    logger.log(Level.INFO, "Create Panels");
-                    if (Setup.isDetachedPlots()) {
-                        setConsolePlotEnvironment(null);
-                        setupConsoleScanPlotting();
-                    }
+                logger.log(Level.INFO, "Create Panels");
+                if (Setup.isDetachedPlots()) {
+                    setConsolePlotEnvironment(null);
+                    setupConsoleScanPlotting();
+                }
             } else {
                 logger.log(Level.INFO, "Create Application MainFrame");
                 registerProcessors();
