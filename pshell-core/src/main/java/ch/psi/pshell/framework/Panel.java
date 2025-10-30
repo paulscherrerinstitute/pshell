@@ -161,7 +161,7 @@ public class Panel extends MonitoredPanel implements Plugin {
         }
         if (!isLoaded()) {
             String title = getTitle();
-            if (isDetached()) {
+            if (isDetached()) {                                
                 if (isDetachedDialog()) {
                     JDialog dlg = new JDialog(getTopLevel(), title, false);
                     dlg.setIconImage(App.getIconSmall());
@@ -178,6 +178,7 @@ public class Panel extends MonitoredPanel implements Plugin {
                         }
                     });                    
                 } else {
+                    title = ch.psi.pshell.app.Options.TITLE.getString(title);
                     boolean fullScreen = (frameCount == 0) && Setup.isFullScreen();
                     JFrame frame = new JFrame(title);
                     frame.setIconImage(App.getIconSmall());
