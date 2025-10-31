@@ -124,6 +124,7 @@ import ch.psi.pshell.device.SettlingCondition as SettlingCondition
 import ch.psi.pshell.device.HistogramGenerator as HistogramGenerator
 import ch.psi.pshell.device.Startable as Startable
 import ch.psi.pshell.devices.InlineDevice as InlineDevice
+import ch.psi.pshell.devices.Snapshot as Snapshot
 
 import ch.psi.pshell.epics.Epics as Epics
 import ch.psi.pshell.epics.ChannelSettlingCondition as ChannelSettlingCondition

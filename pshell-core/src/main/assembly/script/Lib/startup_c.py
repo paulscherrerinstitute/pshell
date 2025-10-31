@@ -329,6 +329,7 @@ from ch.psi.pshell.device import ReadonlyAsyncRegisterBase as ReadonlyAsyncRegis
 from ch.psi.pshell.device import Register as Register
 from ch.psi.pshell.device import Record as Record
 from ch.psi.pshell.devices import InlineDevice as InlineDevice
+from ch.psi.pshell.devices import Snapshot as Snapshot
 
 RegisterArray = Register.RegisterArray
 RegisterNumber = Register.RegisterNumber
