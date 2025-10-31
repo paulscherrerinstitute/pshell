@@ -38,15 +38,11 @@ public class Snapshot {
         STOP_ON_ERROR
     }
 
-    public Snapshot(String name) {
-        this(name, null);
-    }
-
     public Snapshot(List<ReadableWritable> devices) {
-        this(null, devices);
+        this(devices, null);
     }
 
-    public Snapshot(String name, List<ReadableWritable> devices) {
+    public Snapshot(List<ReadableWritable> devices, String name) {
         this.name = ((name == null) || (name.isBlank())) ? "default" : name.trim();
         this.devices = new ArrayList<>();
         this.state = new ArrayList<>();
@@ -66,7 +62,7 @@ public class Snapshot {
         return Collections.unmodifiableList(new ArrayList<>(state));
     }
 
-    public void setDevices(List<ReadableWritable> devices) {
+    protected void setDevices(List<ReadableWritable> devices) {
         this.state.clear();
         this.devices.clear();
         if (devices != null) {
@@ -188,7 +184,7 @@ public class Snapshot {
     }
 
     // Persistence
-    protected Path getPath() {
+    public Path getPath() {
         String cache =  Setup.getCachePath("snapshot");
         return Paths.get(cache, name);        
     }

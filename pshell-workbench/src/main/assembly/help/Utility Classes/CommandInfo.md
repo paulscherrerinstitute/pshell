@@ -17,7 +17,7 @@ Attributes:
   * CommandSource source
   * String script: name of the script (or None if evaluating a console statement).
   * String command: console statement (or one if valuating a script).
-  * boolean background: true if run n the background.
+  * boolean background: true if run in the background.
   * Object args: arguments to the command (list or dictionary).
   * Thread thread: running thread.
   * long id: unique identifier.
