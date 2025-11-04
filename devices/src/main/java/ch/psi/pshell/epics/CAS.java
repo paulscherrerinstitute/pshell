@@ -30,6 +30,7 @@ import gov.aps.jca.dbr.Severity;
 import gov.aps.jca.dbr.Status;
 import gov.aps.jca.dbr.TIME;
 import gov.aps.jca.dbr.TimeStamp;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.List;
 import java.util.logging.Level;
@@ -44,11 +45,11 @@ public class CAS extends ProcessVariable implements AutoCloseable {
     final String channelName;
     final DBRType type;
 
-    public CAS(String channelName, ReadonlyRegisterBase register) throws Exception {
+    public CAS(String channelName, ReadonlyRegisterBase register) throws IOException, InterruptedException {
         this(channelName, register, null);
     }
 
-    public CAS(String channelName, ReadonlyRegisterBase register, String typeName) throws Exception {
+    public CAS(String channelName, ReadonlyRegisterBase register, String typeName) throws IOException, InterruptedException {
         super(channelName, null);
         if (!isStarted()) {
             start();
@@ -72,13 +73,13 @@ public class CAS extends ProcessVariable implements AutoCloseable {
         if (typeName != null) {
             type = DBRType.forName("DBR_" + typeName.toUpperCase());
             if (type == null) {
-                throw new Exception("Error setting CAS type: bad type name");
+                throw new IOException("Error setting CAS type: bad type name");
             }
             //If not given tries to deduce from cache
         } else {
             Object val = register.take(Integer.MAX_VALUE); //Read if no cache
             if (val == null) {
-                throw new Exception("Error setting CAS type: cannot read device value");
+                throw new IOException("Error setting CAS type: cannot read device value");
             }
             Class t = (val.getClass().isArray()) ? val.getClass().getComponentType() : val.getClass();
             if (t.isPrimitive()) {
@@ -210,7 +211,7 @@ public class CAS extends ProcessVariable implements AutoCloseable {
                 }
             }
             synchronized (this) {
-                ((RegisterBase)register).write(obj);
+                ((RegisterBase) register).write(obj);
             }
             //postEvent(); Not posting here, let  value change callback             
             return CAStatus.NORMAL;
@@ -338,16 +339,14 @@ public class CAS extends ProcessVariable implements AutoCloseable {
 
     static {
         server = new DefaultServerImpl();
-        if (DevicePool.hasInstance()){
-            DevicePool.getInstance().addListener(new DevicePoolListener(){
-                public void onClosing() {
-                    if (isStarted()){
-                        stop();
-                    }
+        DevicePool.addStaticListener(new DevicePoolListener() {
+            public void onClosing() {
+                if (isStarted()) {
+                    stop();
                 }
-                
-            });
-        }
+            }
+
+        });
     }
 
     static int serverPort = 5064;
@@ -364,9 +363,13 @@ public class CAS extends ProcessVariable implements AutoCloseable {
     static Thread thread;
     static ServerContext context = null;
 
-    static void start() throws CAException {
+    static void start() throws IOException {
         JCALibrary jca = JCALibrary.getInstance();
-        context = jca.createServerContext(JCALibrary.CHANNEL_ACCESS_SERVER_JAVA, server);
+        try {
+            context = jca.createServerContext(JCALibrary.CHANNEL_ACCESS_SERVER_JAVA, server);
+        } catch (CAException ex) {
+            throw new IOException("Error creating CAS server context: " + ex.getMessage());
+        }
         thread = new Thread(() -> {
             Logger.getLogger(CAS.class.getName()).info("Starting channel access server: "
                     + ((CAJServerContext) context).getServerInetAddress() + ":" + ((CAJServerContext) context).getServerPort());
@@ -387,7 +390,9 @@ public class CAS extends ProcessVariable implements AutoCloseable {
     }
 
     static void stop() {
+        
         try {
+            PV.destroy();
             if (context != null) {
                 Logger.getLogger(CAS.class.getName()).info("Stopping channel access server");
                 context.destroy();
@@ -398,7 +403,7 @@ public class CAS extends ProcessVariable implements AutoCloseable {
                 thread = null;
             }
         } catch (Exception ex) {
-            Logger.getLogger(CAS.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(CAS.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

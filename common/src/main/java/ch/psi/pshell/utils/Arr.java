@@ -419,6 +419,12 @@ public class Arr {
         }
         return ret;
     }
+    
+    public static <T> T[] fill(Class<T> type, int size, T value) {
+        T[] arr = (T[]) Array.newInstance(type, size);
+        Arrays.fill(arr, value);
+        return arr;
+    }    
 
     public static double[] gradient(double[] array) {
         double[] ret = new double[array.length - 1];

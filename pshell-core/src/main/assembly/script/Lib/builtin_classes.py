@@ -165,6 +165,7 @@ import ch.psi.pshell.epics.ArraySource as ArraySource
 import ch.psi.pshell.epics.ByteArraySource as ByteArraySource
 import ch.psi.pshell.epics.PsiCamera as PsiCamera
 import ch.psi.pshell.epics.CAS as CAS
+import ch.psi.pshell.epics.PV as PV
 
 import ch.psi.pshell.serial.SerialPortDevice as SerialPortDevice
 import ch.psi.pshell.serial.TcpDevice as TcpDevice
