@@ -6,8 +6,10 @@
 #CAS.setServerPort(5062)
 
 #PVs can be created as:
-waveform = PV.newWaveform("TEST:WAVEFORM", "double", 5)
-scalar = PV.newScalar("TEST:SCALAR", "double")
+waveform = PV.waveform("TEST:WAVEFORM", PV.Type.DOUBLE, 5)
+scalar = PV.scalar("TEST:SCALAR", PV.Type.DOUBLE)
+#Once created PVs cannot be removed, or have type changed (unless sequencer is restarted).
+#PV.waveform and PV.scalar get the PV if it exists, or else create it.Theu can be called multiple times.
 
 #PVs are updated writing to the registers
 def after_read(record, scan):
