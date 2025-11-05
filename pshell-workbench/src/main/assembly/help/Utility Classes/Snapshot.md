@@ -12,10 +12,10 @@ Constructor arguments:
 
 Methods:
   * void clear(): clear the state.
-  * List<Exception> take(mode=Mode.PARALLEL): read state from devices.
-    Returns a list of the errors (Pair<Device Name, Exception>) - empty in case of success.
-  * List<Exception> restore(mode=Mode.PARALLEL): write state values to devices.
-    Returns a list of the errors (Pair<Device Name, Exception>) - empty in case of success.
+  * Map<ReadableWritable,Exception> take(mode=Mode.PARALLEL): read state from devices.
+    Returns all the errors reading state - empty in case of success.
+  * Map<ReadableWritable,Exception> restore(mode=Mode.PARALLEL): write state values to devices.
+    Returns all the errors restoring state - empty in case of success.
   * String save(): save current state to a file. Returns timestamp.
   * void load(timestamp=None): load state a file with a given timestamp. If None, loads the latest.
   * void del(): delete the persistence folder (all snapshots saved for the given name).
