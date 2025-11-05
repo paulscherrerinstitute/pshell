@@ -32,7 +32,7 @@ public class HistoryChart extends MonitoredPanel implements AutoCloseable {
         defaultAsync = value;
     }
 
-    public static boolean setDefaultAsync() {
+    public static boolean getDefaultAsync() {
         return defaultAsync;
     }
 
@@ -65,9 +65,10 @@ public class HistoryChart extends MonitoredPanel implements AutoCloseable {
                 showException(ex);
             }
         });
-
+        
         chart.addPopupMenuItem(menuInterval);
         chart.addPopupMenuItem(menuAsyncUpdates);
+        setAsyncUpdates(getDefaultAsync());
     }
 
     public TimePlotBase getPlot() {
@@ -231,7 +232,7 @@ public class HistoryChart extends MonitoredPanel implements AutoCloseable {
 
     public static HistoryChart create(Device dev) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         HistoryChart chart = new HistoryChart();
-        chart.setAsyncUpdates(defaultAsync);
+        chart.setAsyncUpdates(getDefaultAsync());
         chart.addDevice(dev.getName(), dev);
         if (dev instanceof ReadbackDevice readbackDevice) {
             Device readback = readbackDevice.getReadback();

@@ -144,7 +144,6 @@ public class DeviceValueChart extends DevicePanel {
 
                 } else {
                     chart = HistoryChart.create(device);    
-                    ((HistoryChart) chart).setAsyncUpdates(getAsyncUpdates());
                 }
                 if (chart instanceof PlotBase plotBase) {
                     plotBase.setTitle(null);
