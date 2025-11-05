@@ -22,6 +22,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  *
@@ -93,27 +95,27 @@ public class Snapshot {
         state.clear();
     }
 
-    public List<Exception> take() throws InterruptedException {
-        state.clear();
-        state.addAll(Collections.nCopies(devices.size(), null));
+    public List<Pair<ReadableWritable,Exception>> take() throws InterruptedException {
         return take(Mode.PARALLEL);
     }
 
-    public List<Exception> restore() throws InterruptedException {
+    public List<Pair<ReadableWritable,Exception>> restore() throws InterruptedException {
         return restore(Mode.PARALLEL);
     }
 
-    public List<Exception> take(Mode mode) throws InterruptedException {
+    public List<Pair<ReadableWritable,Exception>> take(Mode mode) throws InterruptedException {
+        state.clear();
+        state.addAll(Collections.nCopies(devices.size(), null));
         return execute(mode, false);
     }
 
-    public List<Exception> restore(Mode mode) throws InterruptedException {
+    public List<Pair<ReadableWritable,Exception>> restore(Mode mode) throws InterruptedException {
         assertTaken();
         return execute(mode, true);
     }
 
-    protected List<Exception> execute(Mode mode, boolean set) throws InterruptedException {
-        List<Exception> errors = Collections.synchronizedList(new ArrayList<>());
+    protected List<Pair<ReadableWritable,Exception>> execute(Mode mode, boolean set) throws InterruptedException {
+        List<Pair<ReadableWritable,Exception>> errors = Collections.synchronizedList(new ArrayList<>());
 
         Function<Integer, Exception> exec = (i) -> {
             try {
@@ -129,7 +131,7 @@ public class Snapshot {
                 return null;
             } catch (Exception e) {
                 java.util.logging.Logger.getLogger(Snapshot.class.getName()).warning((set ? "Error restoring: " : "Error taking: ") + devices.get(i) + " - " + e.toString());
-                errors.add(e);
+                errors.add(new ImmutablePair<ReadableWritable,Exception>(devices.get(i),e));
                 return e;
             }
         };            
@@ -141,7 +143,7 @@ public class Snapshot {
                     if (e instanceof InterruptedException ie) {
                         throw ie;
                     } else if (e != null) {
-                        errors.add(e);
+                        errors.add(new ImmutablePair<ReadableWritable,Exception>(devices.get(i),e));
                         if (mode == Mode.STOP_ON_ERROR) {
                             // Fail fast
                             break;

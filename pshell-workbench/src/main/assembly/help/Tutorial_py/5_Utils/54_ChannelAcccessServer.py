@@ -16,7 +16,7 @@ def after_read(record, scan):
     waveform.write(scan.result[ai1])
     scalar.write(record.index)
     
-r= tscan((ai1, ai1), 5, 0.3, after_read=after_read, save=False)
+r= tscan((ai1, ai2), 5, 0.3, after_read=after_read, save=False)
 waveform.write(r[ai1])
 scalar.write(len(r))
 
