@@ -5,11 +5,11 @@
 #The local CA port can be defined as
 #CAS.setServerPort(5062)
 
-#PVs can be created as:
+#PVs can be created with PV.waveform and PV.PV.waveform.
+#Once created PVs cannot be removed, or have type changed (unless interpreter is restarted).
+#PV.waveform and PV.scalar can be called multiple times:they get the PV if it exists, or else create it.
 waveform = PV.waveform("TEST:WAVEFORM", PV.Type.DOUBLE, 5)
-scalar = PV.scalar("TEST:SCALAR", PV.Type.DOUBLE)
-#Once created PVs cannot be removed, or have type changed (unless sequencer is restarted).
-#PV.waveform and PV.scalar get the PV if it exists, or else create it.Theu can be called multiple times.
+scalar = PV.scalar("TEST:SCALAR", PV.Type.INT)
 
 #PVs are updated writing to the registers
 def after_read(record, scan):
