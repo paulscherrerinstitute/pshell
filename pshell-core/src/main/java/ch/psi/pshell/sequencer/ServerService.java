@@ -220,7 +220,7 @@ public class ServerService {
             String cmd = formatIncomingText(statement);
             logger.log(getEvalLogLevel(), "evalAsync: {0}", cmd);
             CompletableFuture cf = sequencer.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
-            long id = sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
+            long id = sequencer.waitAsyncCommand(cf);
             return id;
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -673,7 +673,7 @@ public class ServerService {
                 logger.log(getRunLogLevel(), "run async: {0}({1})", new Object[]{script, Str.toString(pars)});
                 cf = sequencer.evalFileAsync(CommandSource.server, script, pars);
             }
-            return sequencer.waitAsyncCommand((Threading.VisibleCompletableFuture)cf);
+            return sequencer.waitAsyncCommand(cf);
         } else {
             Object ret = null;
             if (background) {

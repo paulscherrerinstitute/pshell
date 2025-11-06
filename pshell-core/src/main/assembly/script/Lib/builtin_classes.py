@@ -703,7 +703,6 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
             return string_to_list(self.val)
         
     def doWrite(self, val):
-        self.val = "Busy"
         try:
             if self.as_string:
                 cmd = str(val[0])
@@ -732,13 +731,18 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
                     if self.debug:
                         print self.val
                                             
-            #self.val = cmd      
+            #self.val = cmd   
             if self.background:     
-                get_sequencer().evalLineBackgroundAsync(cmd).handle(eval_callback())
+                cf = get_sequencer().evalLineBackgroundAsync(cmd)
             else:
-                get_sequencer().evalLineAsync(cmd).handle(eval_callback())
+                cf = get_sequencer().evalLineAsync(cmd)
+            id = get_sequencer().waitAsyncCommand(cf)
+            cf.handle(eval_callback())
+            self.val = "Id: " + str(id)
             
         except:
+            import traceback
+            traceback.print_exc()   
             err=str(sys.exc_info()[1])
             if "Exception:" in err:
                 err = err[err.index("Exception:")+10:].strip()

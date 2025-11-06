@@ -1119,12 +1119,15 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return getResult(-1);
     }
   
-    long waitAsyncCommand(Threading.VisibleCompletableFuture cf) throws InterruptedException {
-        return commandBus.waitAsyncCommand(cf);
+    public long waitAsyncCommand(CompletableFuture cf) throws InterruptedException {
+        if (cf instanceof Threading.VisibleCompletableFuture vcf){
+            return commandBus.waitAsyncCommand(vcf);
+        }
+        throw new RuntimeException ("Can only wait for async command in VisibleCompletableFuture"); 
     }
 
 
-    Object runInInterpreterThread(CommandInfo info, Callable callable) throws ScriptException, IOException, InterruptedException {
+    public Object runInInterpreterThread(CommandInfo info, Callable callable) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
         Object result = null;
         foregroundException = null;
