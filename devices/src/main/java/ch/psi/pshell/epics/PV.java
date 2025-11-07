@@ -129,8 +129,8 @@ public abstract class PV<T> extends RegisterBase<T> {
             if (value instanceof List list){
                 value = (T) Convert.toPrimitiveArray(list, type.getComponentType());
             }
-            int sz = Array.getLength(value);
-            if ((value == null) || (sz == 0)) {
+            int sz = (value==null) ? 0 : Array.getLength(value);
+            if (sz == 0) {
                 clear();
             } else if (fixedSize != null) {
                 clear();
@@ -145,9 +145,9 @@ public abstract class PV<T> extends RegisterBase<T> {
             T cache = super.take();      
             if (cache instanceof List list){
                 cache = (T) Convert.toPrimitiveArray(list, type.getComponentType());
-            }            
-            int sz = Array.getLength(cache);
+            }                        
             if (cache != null){
+                int sz = Array.getLength(cache);
                 if (fixedSize != null) {
                     T buffer = getEmptyBuffer(sz);
                     System.arraycopy(cache, 0, buffer, 0, Math.min(fixedSize, sz));
@@ -159,7 +159,7 @@ public abstract class PV<T> extends RegisterBase<T> {
 
         @Override
         public int getSize() {
-            return Array.getLength(value);
+            return (value==null) ? 0 : Array.getLength(value);
         }
 
         public void setFixedSize(Integer size) {
