@@ -2319,7 +2319,31 @@ public class CamServerViewer extends MonitoredPanel {
     protected Pen penFit = new Pen(new Color(192, 105, 0), 0);
     protected Pen penCross = new Pen(new Color(192, 105, 0), 0);
     protected Pen penSlices = new Pen(Color.CYAN.darker(), 1);
+    
+    public void setPenFit(Pen value) {
+        penFit = value;
+    }
 
+    public Pen getPenFit() {
+        return penFit;
+    }    
+    
+    public void setPenCross(Pen value) {
+        penCross = value;
+    }
+
+    public Pen getPenCross() {
+        return penCross;
+    }        
+    
+    public void setPenSlices(Pen value) {
+        penSlices = value;
+    }
+
+    public Pen getPenSlices() {
+        return penSlices;
+    }    
+    
     public Frame getCurrentFrame() {
         if ((imageBufferLength > 1) && (renderer.isPaused())) {
             int index = ((int) pauseSelection.getValue()) - 1;
