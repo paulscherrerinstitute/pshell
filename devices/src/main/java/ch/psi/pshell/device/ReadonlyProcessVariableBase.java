@@ -45,7 +45,7 @@ public abstract class ReadonlyProcessVariableBase extends ReadonlyRegisterBase<D
     public int getSignBit(){
         return getConfig().sign_bit;
     }
-
+    
     @Override
     protected boolean hasChanged(Object value, Object former) {
         if (former == null) {
@@ -54,8 +54,8 @@ public abstract class ReadonlyProcessVariableBase extends ReadonlyRegisterBase<D
         if (value == null){
             return true;
         }
-        double resolution = (getPrecision() < 0) ? Math.pow(10.0, -6) : Math.pow(10.0, -getPrecision());      
-        return (Math.abs((Double) value - (Double) former) > resolution / 2);
+        double deadband = getDeadband();
+        return (Math.abs((Double) value - (Double) former) > deadband / 2);
     }
 
 

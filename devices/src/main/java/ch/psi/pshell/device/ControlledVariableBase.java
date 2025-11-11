@@ -130,13 +130,13 @@ public abstract class ControlledVariableBase extends ProcessVariableBase impleme
 
     @Override
     public boolean isInPosition(Double pos) throws IOException, InterruptedException {
-        return Math.abs(getPosition() - pos) <= Math.abs(getResolution());
+        return Math.abs(getPosition() - pos) <= Math.abs(getDeadband());
     }
 
     @Override
     public void waitInPosition(Double pos, int timeout) throws IOException, InterruptedException {
         try {
-            getReadback().waitValueInRange(pos, getResolution(), timeout);
+            getReadback().waitValueInRange(pos, getDeadband(), timeout);
         } catch (IOException ex) {
             throw new PositionException(pos);
         }
@@ -156,5 +156,4 @@ public abstract class ControlledVariableBase extends ProcessVariableBase impleme
             throw new PositionException(pos);
         }
     }
-
 }

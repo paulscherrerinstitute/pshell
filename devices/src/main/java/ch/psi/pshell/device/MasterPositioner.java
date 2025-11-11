@@ -97,7 +97,7 @@ public class MasterPositioner extends PositionerBase {
         getConfig().minValue = cfg.minValue;
         getConfig().offset = cfg.offset;
         getConfig().precision = cfg.precision;
-        getConfig().resolution = cfg.resolution;
+        getConfig().deadband = cfg.deadband;
         getConfig().scale = cfg.scale;
         getConfig().sign_bit = cfg.sign_bit;
         getConfig().unit = cfg.unit;

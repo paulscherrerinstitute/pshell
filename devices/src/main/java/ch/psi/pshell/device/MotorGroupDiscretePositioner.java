@@ -116,8 +116,9 @@ public class MotorGroupDiscretePositioner extends DiscretePositionerBase {
     @Override
     protected String doReadReadback() throws IOException, InterruptedException {
         for (String position : getPositions()) {
-            double resolution = getConfig().precision < 0 ? Double.NaN : Math.pow(10.0, -getConfig().precision);
-            if (motorGroup.isInPosition(motorPositions.get(position), resolution)) {
+            //double deadband = getConfig().precision < 0 ? Double.NaN : Math.pow(10.0, -getConfig().precision);
+            //if (motorGroup.isInPosition(motorPositions.get(position), resolution)) {
+            if (motorGroup.isInPosition(motorPositions.get(position))) {
                 return position;
             }
         }

@@ -32,15 +32,11 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
     }    
     
     @Override
-    public double getResolution() {
-        if (Double.isNaN(getConfig().resolution) || (getConfig().resolution < 0)) {
-            double precision = getPrecision();
-            if (precision < 0) {
-                return Math.pow(10.0, -6);
-            }
-            return Math.pow(10.0, -precision);
+    public double getDeadband() {
+        if (Double.isNaN(getConfig().deadband) || (getConfig().deadband < 0)) {
+            return ProcessVariable.super.getDeadband();
         }
-        return getConfig().resolution;
+        return getConfig().deadband;
     }
 
     @Override
@@ -77,12 +73,12 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
             return false;
         }
         if (!Double.isNaN(min)) {
-            if (value < (min - getResolution() / 2.0)) {
+            if (value < (min - getDeadband() / 2.0)) {
                 return false;
             }
         }
         if (!Double.isNaN(max)) {
-            if (value > (max + getResolution() / 2.0)) {
+            if (value > (max + getDeadband() / 2.0)) {
                 return false;
             }
         }
@@ -97,7 +93,7 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
         if (value == null){
             return true;
         }
-        return (Math.abs((Double) value - (Double) former) > getResolution() / 2);
+        return (Math.abs((Double) value - (Double) former) > getDeadband() / 2);
     }
 
     boolean forceReadInRange;

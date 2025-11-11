@@ -123,7 +123,7 @@ The model is extensible though  and new families of devices may be added.
 
 The ch.psi.pshell.device contains many interfaces and abstract device classes to simplify creation of custom device families:
  - __Register__: Device representing a raw scalar or array value
- - __ProcessVariable__: A Register with metadata: units, range, resolution, scale and offset. Metadata may be static or persisted in configuration.
+ - __ProcessVariable__: A Register with metadata: units, range, deadband, scale and offset. Metadata may be static or persisted in configuration.
  - __ControlledVariable__: A ProcessVariable with readback (implementing __ReadbackDevice__) and position checking (implementing __Positionable__)
  - __Positioner__: ControlledVariable with move commands (sync and async, absolute and relative), and using __waitReady__ to wait end of move .
  - __Motor__: Positioner with speed, speed range, jog commands, and reference method.

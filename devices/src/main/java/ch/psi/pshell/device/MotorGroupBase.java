@@ -277,19 +277,19 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
 
     }
 
-    boolean isInPosition(Motor motor, double pos, double resolution) throws IOException, InterruptedException {
-        return Math.abs(motor.getPosition() - pos) <= resolution;
+    boolean isInPosition(Motor motor, double pos, double deadband) throws IOException, InterruptedException {
+        return Math.abs(motor.getPosition() - pos) <= deadband;
     }
 
     @Override
-    public boolean isInPosition(double[] position, double resolution) throws IOException, InterruptedException {
-        if (Double.isNaN(resolution)) {
+    public boolean isInPosition(double[] position, double deadband) throws IOException, InterruptedException {
+        if (Double.isNaN(deadband)) {
             return isInPosition(position);
         }
         assertArgumentOk(position);
         Motor[] motors = getMotors();
         for (int i = 0; i < motors.length; i++) {
-            if ((!Double.isNaN(position[i])) && (!isInPosition(motors[i], position[i], resolution))) {
+            if ((!Double.isNaN(position[i])) && (!isInPosition(motors[i], position[i], deadband))) {
                 return false;
             }
         }
@@ -439,7 +439,7 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
             }
 
             double distance = Math.abs(destinations[i] - positions[i]);
-            if (distance >= Math.abs(motors[i].getResolution())) {
+            if (distance >= Math.abs(motors[i].getDeadband())) {
                 isMoving[i] = true;
                 movingCount++;
                 if (mode == MoveMode.timed) {

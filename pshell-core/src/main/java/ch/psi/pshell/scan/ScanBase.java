@@ -360,9 +360,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             }
         } else {
             ReadonlyRegister readback = getReadback(writable);
-            if ((readback != null) && (writable instanceof Resolved resolved)) {
-                double resolution = resolved.getResolution();
-                readback.waitValueInRange(pos, resolution, settleTimeout);
+            if ((readback != null) && (writable instanceof ContinuousPositionable positioned)) {
+                double deadband = positioned.getDeadband();
+                readback.waitValueInRange(pos, deadband, settleTimeout);
             } else if (writable instanceof Device device) {
                 device.waitStateNot(State.Busy, -1);
             }

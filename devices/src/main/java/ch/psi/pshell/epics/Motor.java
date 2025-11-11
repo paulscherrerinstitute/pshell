@@ -162,7 +162,7 @@ public class Motor extends MotorBase {
             getLogger().log(Level.WARNING, null, ex);
         }
         try {
-            cfg.resolution = Epics.get(channelName + ".RDBD", Double.class);
+            cfg.deadband = Epics.get(channelName + ".RDBD", Double.class);
         } catch (ChannelException | java.util.concurrent.TimeoutException | java.util.concurrent.ExecutionException ex) {
             getLogger().log(Level.WARNING, null, ex);
         }
@@ -305,7 +305,7 @@ public class Motor extends MotorBase {
         setpoint.write(destination);
         if (!isTrustedWrite()) {
             Double confirm = setpoint.read();
-            if (Math.abs(confirm - destination) > Math.abs(getResolution())) {
+            if (Math.abs(confirm - destination) > Math.abs(getDeadband())) {
                 throw new DeviceException("Cannot change setpoint to: " + destination + " - read value is: " + confirm);
             }
             setCache(confirm);

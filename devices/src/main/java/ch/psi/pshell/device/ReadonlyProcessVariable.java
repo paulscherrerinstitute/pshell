@@ -20,5 +20,13 @@ public interface ReadonlyProcessVariable extends ReadonlyRegister.ReadonlyRegist
     @Override
     public String getUnit();
    
+    default public double getDeadband() {
+        double precision = getPrecision();
+        if (precision < 0) {
+            return Math.pow(10.0, -6);
+        }
+        return Math.pow(10.0, -precision);
+    }
+    
 
 }

@@ -7,7 +7,6 @@ import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.RegisterBase;
-import ch.psi.pshell.device.Resolved;
 import ch.psi.pshell.device.Speedable;
 import ch.psi.pshell.epics.ChannelDouble;
 import ch.psi.pshell.epics.Epics;
@@ -19,11 +18,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import ch.psi.pshell.device.ContinuousPositionable;
 
 /**
  *
  */
-public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackDevice<Double>, Movable<Double>, Speedable, Resolved {
+public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackDevice<Double>, Movable<Double>, Speedable, ContinuousPositionable {
 
     final String key;
     final String positionerReadback;
@@ -264,11 +264,11 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
 
     @Override
     public boolean isInPosition(Double pos) throws IOException, InterruptedException {
-        return Math.abs(getPosition() - read()) <= Math.abs(getResolution());
+        return Math.abs(getPosition() - read()) <= Math.abs(getDeadband());
     }
 
     @Override
-    public double getResolution() {
+    public double getDeadband() {
         if (getUseEncoder()) {
             return motorEncoderResolution * motorReadbackResolution;
         } else if (getUseReadback()) {
@@ -280,7 +280,7 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
 
     @Override
     public void waitInPosition(Double pos, int timeout) throws IOException, InterruptedException {
-        getReadback().waitValueInRange(pos, getResolution(), timeout);
+        getReadback().waitValueInRange(pos, getDeadband(), timeout);
     }
 
     @Hidden

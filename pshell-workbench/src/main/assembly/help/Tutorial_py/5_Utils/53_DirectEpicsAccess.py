@@ -67,7 +67,7 @@ a = lscan(m1, (ai1, ai2), 0, 0.1, 20, 0.01, after_read=after_read)
 
 caput("TESTIOC:TESTCALCOUT:Input", 0)
 positioner = ControlledVariable("positioner", "TESTIOC:TESTCALCOUT:Output", "TESTIOC:TESTSINUS:SinCalc")
-positioner.config.resolution = float('inf') 
+positioner.config.deadband = float('inf') 
 positioner.initialize()
 positioner.setSettlingCondition(ChannelSettlingCondition("TESTIOC:TESTCALCOUT:Input", 0))
 positioner.settlingCondition.latency = 100

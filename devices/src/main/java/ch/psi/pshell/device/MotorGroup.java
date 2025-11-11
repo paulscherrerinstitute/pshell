@@ -59,7 +59,7 @@ public interface MotorGroup extends Device, Readable<double[]>, Writable<double[
         return Movable.super.moveAsync(destination);
     }
 
-    boolean isInPosition(double[] position, double resolution) throws IOException, InterruptedException;
+    boolean isInPosition(double[] position, double deadband) throws IOException, InterruptedException;
 
     Motor[] getMotors();
     

@@ -140,7 +140,7 @@ public abstract class PositionerBase extends ControlledVariableBase implements P
         if (getConfig().rotation) {
             offset = Convert.toDegreesOffset(offset);
         }
-        return Math.abs(offset) <= Math.abs(getResolution());
+        return Math.abs(offset) <= Math.abs(getDeadband());
     }
 
     @Override
@@ -148,7 +148,7 @@ public abstract class PositionerBase extends ControlledVariableBase implements P
         if (getConfig().rotation) {
             try {
                 Chrono chrono = new Chrono();
-                while (Math.abs(Convert.toDegreesOffset(getPosition() - pos)) > Math.abs(getResolution())) {
+                while (Math.abs(Convert.toDegreesOffset(getPosition() - pos)) > Math.abs(getDeadband())) {
                     if ((timeout >= 0) && (chrono.isTimeout(timeout))) {
                         throw new DeviceTimeoutException("Timeout waiting value: " + pos);
                     }
@@ -171,7 +171,7 @@ public abstract class PositionerBase extends ControlledVariableBase implements P
                 if (getConfig().rotation) {
                     offset = Convert.toDegreesOffset(offset);
                 }
-                if (Math.abs(offset) <= Math.abs(getResolution())) {
+                if (Math.abs(offset) <= Math.abs(getDeadband())) {
                     setState(State.Ready);
                 } else {
                     setState(State.Busy);

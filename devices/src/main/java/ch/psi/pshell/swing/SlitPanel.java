@@ -64,7 +64,7 @@ public final class SlitPanel extends DevicePanel {
         super.setDevice(device);
         valueCenter.setMinValue(getDevice().getBladePos().getMinValue());
         valueCenter.setMaxValue(getDevice().getBladeNeg().getMaxValue());
-        valueSize.setMinValue(getDevice().getBladePos().getResolution());
+        valueSize.setMinValue(getDevice().getBladePos().getDeadband());
         valueSize.setMaxValue(getDevice().getBladePos().getMaxValue() - getDevice().getBladeNeg().getMinValue());
         int precision = getDevice().getBladePos().getPrecision();
         if (precision >= 0) {

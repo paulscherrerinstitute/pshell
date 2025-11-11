@@ -297,9 +297,9 @@ public abstract class MotorBase extends PositionerBase implements Motor {
                 ret.referencing = false;
                 ret.referenced = true;
                 ret.error = false;
-                ret.onSoftLimitSup = Math.abs(simulatedPosition - getConfig().maxValue) < Math.abs(getResolution());
-                ret.onSoftLimitInf = Math.abs(simulatedPosition - getConfig().minValue) < Math.abs(getResolution());
-                ret.stopped = Math.abs(simulatedPosition - take()) < Math.abs(getResolution()) / 2;
+                ret.onSoftLimitSup = Math.abs(simulatedPosition - getConfig().maxValue) < Math.abs(getDeadband());
+                ret.onSoftLimitInf = Math.abs(simulatedPosition - getConfig().minValue) < Math.abs(getDeadband());
+                ret.stopped = Math.abs(simulatedPosition - take()) < Math.abs(getDeadband()) / 2;
                 ret.enabled = true;
             } else {
                 ret = doReadStatus();

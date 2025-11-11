@@ -134,9 +134,9 @@
  * My positioner don't have readback values in different scales than setpoints. 
    How can I make the scan not to wait the readback reach the setpoint.
     - ControlledVariable and Positioner devices can have the  in-position band checking disabled during 
-      scans  setting the resolution to infinity
+      scans  setting the deadband to infinity
         ```
-        positioner.config.resolution = float('inf') 
+        positioner.config.deadband = float('inf') 
         ```   
 
  * Scans assume types and shapes of arrays are known previously, so tables can be created before the scab begins.  

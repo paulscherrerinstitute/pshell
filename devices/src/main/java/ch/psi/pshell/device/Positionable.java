@@ -1,5 +1,6 @@
 package ch.psi.pshell.device;
 
+import ch.psi.pshell.utils.Chrono;
 import ch.psi.pshell.utils.Nameable;
 import java.io.IOException;
 
@@ -12,8 +13,19 @@ public interface Positionable<T> extends Nameable {
 
     public boolean isInPosition(T pos) throws IOException, InterruptedException;
 
-    public void waitInPosition(T pos, int timeout) throws IOException, InterruptedException;
+    default public void waitInPosition(T pos, int timeout) throws IOException, InterruptedException{
+        Chrono chrono = new Chrono();
+        while (!isInPosition(pos)) {
+            if ((timeout >= 0) && (chrono.isTimeout(timeout))) {
+                throw new IOException("Timeout waiting value: " + pos);
+            }
+            Thread.sleep(10);
+        }
+    }
 
-    public void assertInPosition(T pos) throws IOException, InterruptedException;
-
+    default public void assertInPosition(T pos) throws IOException, InterruptedException{
+        if (!isInPosition(pos)) {
+            throw new IOException("Not in position: " + pos);
+        }
+    }
 }

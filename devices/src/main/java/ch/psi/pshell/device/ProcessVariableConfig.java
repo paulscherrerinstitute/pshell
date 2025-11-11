@@ -5,7 +5,7 @@ package ch.psi.pshell.device;
  */
 public class ProcessVariableConfig extends ReadonlyProcessVariableConfig {
 
-    public double resolution = Double.NaN;  //In-position deadband: if undefined equals to Math.pow(10.0, -precision);
+    public double deadband = Double.NaN;  //In-position deadband: if undefined equals to Math.pow(10.0, -precision);
     public double minValue = Double.NaN;
     public double maxValue = Double.NaN;
     
