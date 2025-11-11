@@ -7,9 +7,12 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.StaticHttpHandler;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
@@ -19,7 +22,6 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-
 
 /**
  * Embedded HTTP server.
@@ -35,16 +37,18 @@ public class Server implements AutoCloseable {
     public int getPort() {
         return port;
     }
+
     public String getInterfaceURL() {
         String url = getBaseURL();
-        if (url.contains("://0.0.0.0")){
+        if (url.contains("://0.0.0.0")) {
             try {
                 url = url.replaceFirst("0.0.0.0", InetAddress.getLocalHost().getHostName());
             } catch (Exception ex) {
             }
         }
         return url;
-    }    
+    }
+
     public String getStaticURL() {
         return String.format("%sstatic/", getInterfaceURL());
     }
@@ -56,7 +60,7 @@ public class Server implements AutoCloseable {
     public Server(String hostname, Integer port) throws IOException {
         this(hostname, port, false);
     }
-    
+
     public Server(String hostname, Integer port, boolean https) throws IOException {
         this(hostname, port, https, false);
     }
@@ -64,7 +68,7 @@ public class Server implements AutoCloseable {
     public Server(String hostname, Integer port, boolean https, boolean light) throws IOException {
         logger.log(Level.INFO, "Initializing {0}", getClass().getSimpleName());
         if (hostname == null) {
-            hostname = "0.0.0.0"; 
+            hostname = "0.0.0.0";
         }
         if (port == null) {
             port = 8080;
@@ -83,32 +87,30 @@ public class Server implements AutoCloseable {
             //Generate keystore with: keytool -genkeypair -alias server -keyalg RSA -keysize 2048  -keystore keystore.jks -validity 3650  -storepass changeit
             SSLContextConfigurator sslConfig = new SSLContextConfigurator();
             sslConfig.setKeyStoreFile(Paths.get(Setup.getCachePath("keystore"), "keystore.jks").toString());
-            try{
+            try {
                 String pass = Files.readString(Paths.get(Setup.getCachePath("keystore"), "pass")).trim();
-                if (pass.length()>0){
+                if (pass.length() > 0) {
                     sslConfig.setKeyStorePass(pass);
                 }
-            } catch (Exception ex){                
+            } catch (Exception ex) {
             }
-            try{
+            try {
                 //JKS (default) or PKCS12
                 String type = Files.readString(Paths.get(Setup.getCachePath("keystore"), "type")).trim();
-                if (type.length()>0){
+                if (type.length() > 0) {
                     sslConfig.setKeyStoreType(type);
                 }
-            } catch (Exception ex){                
+            } catch (Exception ex) {
             }
-            // Optional truststore (if you need client auth)
-            // sslConfig.setTrustStoreFile("/path/to/truststore.jks");
-            // sslConfig.setTrustStorePass("trustpass");
-            SSLEngineConfigurator sslEngineConfig =
-                new SSLEngineConfigurator(sslConfig)
-                    .setClientMode(false)
-                    .setNeedClientAuth(false);
-            server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, true, sslEngineConfig);
+            
+            SSLEngineConfigurator sslEngineConfig = new SSLEngineConfigurator(sslConfig)
+                                                    .setClientMode(false)
+                                                    .setNeedClientAuth(false);
+            
+            server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, true, sslEngineConfig, false);                        
         } else {
-           server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
-        }        
+            server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
+        }
         
         if (light){
             ThreadPoolConfig kernelPoolConfig = ThreadPoolConfig.defaultConfig()
@@ -126,6 +128,7 @@ public class Server implements AutoCloseable {
             transport.setKernelThreadPoolConfig(kernelPoolConfig);
             transport.setWorkerThreadPoolConfig(workerPoolConfig);
         }
+
         server.start();
 
         // Static content
@@ -133,7 +136,7 @@ public class Server implements AutoCloseable {
         server.getServerConfiguration().addHttpHandler(new StaticHttpHandler(home), "/static");
         String msg = String.format("Interface available at %s", getStaticURL());
         logger.info(msg);
-        if (Setup.isDebug()){
+        if (Setup.isDebug()) {
             ServerService.setEvalLogLevel(Level.INFO);
             ServerService.setRunLogLevel(Level.INFO);
         }
