@@ -701,7 +701,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         updateColorScale(0, 1);
 
         //Create the Chartpanel where the chart will be plotted
-        chartPanel = new ChartPanel(chart, getOffscreenBuffer()){
+        chartPanel = new ChartPanel(chart, isBufferedRendering()){
             @Override
             public void restoreAutoRangeBounds() {
                 super.restoreAutoRangeBounds();             

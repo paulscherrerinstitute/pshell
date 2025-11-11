@@ -101,7 +101,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         this.seriesType = seriesType;
         try {
             createChart();
-            if (!offscreen) {
+            if (!isOffscreen()) {
                 createPopupMenu();
             }
         } catch (Exception ex) {
@@ -109,7 +109,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         }
         updating = new AtomicBoolean(false);
         instantiated = true;
-        executor = offscreen ? Executors.newSingleThreadExecutor(new NamedThreadFactory("Offscreen plot update task")) : null;
+        executor = isOffscreen() ? Executors.newSingleThreadExecutor(new NamedThreadFactory("Offscreen plot update task")) : null;
     }
     
     String title;
@@ -160,7 +160,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
 
     @Override
     public final void update(boolean deferred) {
-        if ((!deferred) && (offscreen || SwingUtilities.isEventDispatchThread())) {
+        if ((!deferred) && (isOffscreen() || SwingUtilities.isEventDispatchThread())) {
             updating.set(false);
             doUpdate();
         } else {
@@ -551,7 +551,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     }
 
     protected void invokeLater(Runnable r) {
-        if (offscreen) {
+        if (isOffscreen()) {
             executor.submit(r);
         } else {
             SwingUtilities.invokeLater(r);
@@ -675,18 +675,36 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     public static boolean getHardwareAccelerated() {
         return hardwareAccelerated;
     }
+    
+    //If offscreen draws to memory only.
+    private static boolean offscreen = SwingUtils.isHeadless();
+    
+    public static void setOffscreen(boolean value){
+        offscreen = value;
+    }       
 
-    //Offscreen buffer drawing
-    static boolean offscreenBuffer = true;
+    public static boolean getOffscreen(){
+        return offscreen;
+    }           
+    
+    public boolean isOffscreen(){
+        return getOffscreen();
+    }    
+    
+    //Plot double-buffering.
+    private static boolean bufferedRendering = true;
 
-    public static void setOffscreenBuffer(boolean value) {
-        offscreenBuffer = value;
+    public static void setBufferedRendering(boolean value) {
+        bufferedRendering = value;
     }
 
-    public static boolean getOffscreenBuffer() {
-        return offscreenBuffer || offscreen;
+    public static boolean getBufferedRendering() {
+        return bufferedRendering || offscreen;
     }
 
+    public  boolean isBufferedRendering() {
+        return getBufferedRendering() || isOffscreen();
+    }    
 
     static boolean lightWeightPopups = true;
 

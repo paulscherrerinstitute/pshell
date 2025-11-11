@@ -132,7 +132,7 @@ public class Preferences {
     public Integer plotBackground = null; 
     public Integer gridColor = null;  
     public Integer outlineColor = null; 
-    public boolean disableOffscreenBuffer;
+    public boolean directRendering;
 
     public DefaultPanel[] defaultPanels;
 

@@ -933,7 +933,7 @@ public class LinePlotJFree extends LinePlotBase {
             }
         });
 
-        if (!offscreen) {
+        if (!isOffscreen()) {
             //Activate (arrow) keys
             addKeyBindings();
             setLayout(new BorderLayout());
@@ -952,7 +952,7 @@ public class LinePlotJFree extends LinePlotBase {
         plot.getRangeAxis().setLabelFont(labelFont);
         plot.getDomainAxis().setTickLabelFont(tickLabelFont);
         plot.getRangeAxis().setTickLabelFont(tickLabelFont);
-        if (!offscreen) {
+        if (!isOffscreen()) {
             add(chartPanel);
         }
     }
@@ -1041,7 +1041,7 @@ public class LinePlotJFree extends LinePlotBase {
             if (hasX2) {
                 createX2();
             }              
-            if (!offscreen) {
+            if (!isOffscreen()) {
                 createPopupMenu();
             }
             onTitleChanged();
@@ -1209,7 +1209,7 @@ public class LinePlotJFree extends LinePlotBase {
     }
     
     protected ChartPanel newChartPanel(JFreeChart chart) {
-        return new ChartPanel(chart, getOffscreenBuffer()) {
+        return new ChartPanel(chart, isBufferedRendering()) {
             //TODO: This is to fix JFreeChart bug zooming out when range has been set. 
             //JFreeChart is then performing an auto range which is unexpected.
             //http://www.jfree.org/phpBB2/viewtopic.php?t=23763

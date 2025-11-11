@@ -1,6 +1,5 @@
 package ch.psi.pshell.plot;
 
-import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Range;
 import ch.psi.pshell.utils.Reflection.Hidden;
 import java.awt.Color;
@@ -21,15 +20,8 @@ import java.util.List;
 /**
  *
  */
-public interface Plot<T extends PlotSeries> {
+public interface Plot<T extends PlotSeries> {        
     
-    final static boolean offscreen = SwingUtils.isHeadless();
-    
-    public static boolean isOffscreen(){
-        return offscreen;
-    }       
-    
-
     //Request update on event loop
     public void update(boolean deferred);
 
@@ -206,5 +198,9 @@ public interface Plot<T extends PlotSeries> {
         return (Plot) Class.forName(className).newInstance();
     }    
     
+    
+    default public boolean isOffscreen(){return false;}
+    
+    default public boolean isBufferedRendering(){return true;}
     
 }

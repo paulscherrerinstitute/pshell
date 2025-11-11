@@ -263,14 +263,16 @@ public abstract class App extends ObservableBase<AppListener> {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel","OFF");
         
         if (Setup.isForcedHeadless()) {
+            //Must be set before any awt class is instantiatd
             System.setProperty("java.awt.headless", "true");
-        }
-        Logging.setConsoleLoggerLevel(Setup.getConsoleLogLevel());         
+        }        
         
+        Logging.setConsoleLoggerLevel(Setup.getConsoleLogLevel());         
+                
         Quality quality = Setup.getQuality();
         if (quality!=null){
             System.setProperty(PlotPanel.PROPERTY_PLOT_QUALITY, quality.toString());
-        }
+        }        
         applyLookAndFeel();
     }    
 

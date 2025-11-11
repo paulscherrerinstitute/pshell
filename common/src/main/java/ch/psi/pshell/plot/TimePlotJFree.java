@@ -111,7 +111,7 @@ public class TimePlotJFree extends TimePlotBase {
         //((NumberAxis)plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("####0.000"));
 
         setLayout(new java.awt.BorderLayout());
-        chartPanel = new ChartPanel(chart, getOffscreenBuffer()) {
+        chartPanel = new ChartPanel(chart, isBufferedRendering()) {
 
             @Override
             public void restoreAutoRangeBounds() {

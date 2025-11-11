@@ -8,6 +8,7 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePanelFactory;
 import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.plot.Plot;
+import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plotter.Client;
 import ch.psi.pshell.plotter.Plotter;
 import ch.psi.pshell.scan.Scan;
@@ -67,7 +68,7 @@ public class App extends ch.psi.pshell.devices.App {
     Shell shell;
     Console console;
     Logging logging;
-        
+            
     static public App getInstance() {
         return (App)instance;
     }
@@ -82,7 +83,7 @@ public class App extends ch.psi.pshell.devices.App {
         
     protected App(){
         if (Setup.isServerMode()) {
-            SwingUtils.setHeadless();
+            PlotBase.setOffscreen(true);
         }         
         if (Setup.isVolatile()) {            
             try {

@@ -12,6 +12,7 @@ import ch.psi.pshell.notification.Notifier;
 import ch.psi.pshell.extension.PackageLoader;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.extension.Extensions;
+import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanConfig;
 import ch.psi.pshell.scan.ScanResult;
@@ -732,10 +733,6 @@ public class Context {
         return ui.showPanel(table, scanMessage); 
 
     }   
-    
-    public static boolean isOffscreenPlotting(){
-        return Plot.isOffscreen();
-    }       
     
     //Commnands
     public static void abort() throws InterruptedException {      

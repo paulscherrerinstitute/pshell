@@ -146,7 +146,7 @@ public class PlotPanel extends MonitoredPanel {
      
     public void clear() {
         plots.clear();
-        if (!Plot.isOffscreen()) {
+        if (!PlotBase.getOffscreen()) {
             pnGraphs.removeAll();
             panelIndexY = 0;
             panelIndexX = 0;
@@ -164,7 +164,7 @@ public class PlotPanel extends MonitoredPanel {
         plot.setQuality(getQuality());
         plots.add(plot);
 
-        if (!Plot.isOffscreen()) {
+        if (!plot.isOffscreen()) {
             GridBagConstraints c = new GridBagConstraints();
             c.fill = GridBagConstraints.HORIZONTAL;
             c.fill = GridBagConstraints.BOTH;
@@ -445,7 +445,7 @@ public class PlotPanel extends MonitoredPanel {
             }
             plot.setTitle(name);
             addPlot((PlotBase) plot);
-            plot.setUpdatesEnabled(Plot.isOffscreen());
+            plot.setUpdatesEnabled(plot.isOffscreen());
         }
         return plot;
     }
@@ -713,7 +713,7 @@ public class PlotPanel extends MonitoredPanel {
 
             plot.update(true);
             plot.setUpdatesEnabled(true);//This plot is user general-purpose so disable scan optimization
-            if (!Plot.isOffscreen()) {                
+            if (!plot.isOffscreen()) {                
                 validate();
                 repaint();
             }

@@ -139,7 +139,7 @@ public class SlicePlotDefault extends SlicePlotBase {
                 pageSelection.setValue(page);
             }
         } catch (Exception ex) {
-            if (!offscreen){
+            if (!isOffscreen()){
                 showException(ex);
             }
         }

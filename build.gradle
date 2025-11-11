@@ -250,7 +250,7 @@ subprojects {
     ext.shadowJarMinimizeKeepJersey = { d ->
        d.exclude(d.dependency("org.glassfish.jersey.core:.*:.*"))
        d.exclude(d.dependency("org.glassfish.jersey.inject:.*:.*"))
-       d.exclude(d.dependency("org.glassfish.jersey.media:.*:.*"))       
+       d.exclude(d.dependency("org.glassfish.jersey.media:.*:.*")) 
     }
     
     ext.shadowJarMinimizeKeepFlatLaf = { d ->
@@ -296,7 +296,7 @@ subprojects {
         d.exclude(d.dependency("com.github.sarxos:.*:.*"))
         d.exclude(d.dependency("org.python:.*:.*"))        
         d.exclude(d.dependency("org.glassfish.jersey.containers:.*:.*"))
-        d.exclude(d.dependency("org.glassfish.jersey.media:jersey-media-sse:.*"))       
+        d.exclude(d.dependency("org.glassfish.jersey.media:jersey-media-sse:.*"))     
     }
     
     ext.shadowJarExcludeMath = { d ->

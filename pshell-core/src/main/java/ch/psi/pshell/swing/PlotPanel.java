@@ -16,6 +16,7 @@ import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.MatrixPlotBase;
 import ch.psi.pshell.plot.MatrixPlotSeries;
 import ch.psi.pshell.plot.Plot;
+import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.scan.RegionScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
@@ -201,7 +202,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
             } catch (Exception ex) {
                 Logger.getLogger(PlotPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-            if (!Plot.isOffscreen()) {
+            if (!PlotBase.getOffscreen()) {
                 validate();
                 repaint();
             }
@@ -242,7 +243,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                 for (Readable r : scan.getReadables()){
                     unsigned.add(Boolean.TRUE.equals(r.isElementUnsigned()));
                 }
-                if (!Plot.isOffscreen() && !SwingUtilities.isEventDispatchThread()) {
+                if (!PlotBase.getOffscreen() && !SwingUtilities.isEventDispatchThread()) {
                     SwingUtilities.invokeLater(() -> {
                         startPlot(scan, pars);
                     });
@@ -258,7 +259,7 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                 synchronized (scanRecordBuffer) {
                     scanRecordBuffer.add(record);
                     if (updating.compareAndSet(false, true)) {
-                        if (Plot.isOffscreen()) {
+                        if (PlotBase.getOffscreen()) {
                             addRecords(scan);
                         } else {
                             SwingUtilities.invokeLater(() -> {

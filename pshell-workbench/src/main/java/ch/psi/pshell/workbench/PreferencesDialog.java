@@ -196,7 +196,7 @@ public class PreferencesDialog extends StandardDialog {
         } else {
             spinnerMarkerSize.setValue(preferences.markerSize);
         }
-        checkOffscreenBuffers.setSelected(!preferences.disableOffscreenBuffer);
+        checkBufferedRendering.setSelected(!preferences.directRendering);
         selectedPlotBackground = preferences.plotBackground;
         selectedPlotGrid = preferences.gridColor;
         selectedPlotOutline = preferences.outlineColor;
@@ -358,7 +358,7 @@ public class PreferencesDialog extends StandardDialog {
         spinnerMarkerSize = new javax.swing.JSpinner();
         jLabel19 = new javax.swing.JLabel();
         comboColormapPlot = new javax.swing.JComboBox();
-        checkOffscreenBuffers = new javax.swing.JCheckBox();
+        checkBufferedRendering = new javax.swing.JCheckBox();
         jLabel35 = new javax.swing.JLabel();
         panelLayout = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
@@ -1083,16 +1083,17 @@ public class PreferencesDialog extends StandardDialog {
         jPanel12.setLayout(jPanel12Layout);
         jPanel12Layout.setHorizontalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
+            .addGroup(jPanel12Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
+                .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(buttonInsertProcScript)
+                        .addGap(18, 18, 18)
+                        .addComponent(buttonRemoveProcScript)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonInsertProcScript)
-                .addGap(18, 18, 18)
-                .addComponent(buttonRemoveProcScript)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1188,7 +1189,7 @@ public class PreferencesDialog extends StandardDialog {
 
         comboColormapPlot.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
-        jLabel35.setText("Offscreen Buffers:");
+        jLabel35.setText("Buffered Rendering:");
 
         javax.swing.GroupLayout panelPlotsLayout = new javax.swing.GroupLayout(panelPlots);
         panelPlots.setLayout(panelPlotsLayout);
@@ -1226,7 +1227,7 @@ public class PreferencesDialog extends StandardDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(panelPlotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(spinnerMarkerSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(checkOffscreenBuffers))))
+                            .addComponent(checkBufferedRendering))))
                 .addContainerGap())
         );
 
@@ -1273,7 +1274,7 @@ public class PreferencesDialog extends StandardDialog {
                     .addGroup(panelPlotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                         .addComponent(comboColormapPlot, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel19))
-                    .addComponent(checkOffscreenBuffers)
+                    .addComponent(checkBufferedRendering)
                     .addComponent(jLabel35))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -1786,7 +1787,7 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.scriptPopupMode = scriptPopup;
                 preferences.quality = quality;
                 preferences.markerSize = (Integer) spinnerMarkerSize.getValue();
-                preferences.disableOffscreenBuffer = !checkOffscreenBuffers.isSelected();
+                preferences.directRendering = !checkBufferedRendering.isSelected();
                 preferences.plotBackground = selectedPlotBackground;
                 preferences.gridColor = selectedPlotGrid;
                 preferences.outlineColor = selectedPlotOutline;
@@ -2118,9 +2119,9 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JButton buttonSetEditorForeground;
     private javax.swing.JButton buttonSetGrid;
     private javax.swing.JButton buttonT;
+    private javax.swing.JCheckBox checkBufferedRendering;
     private javax.swing.JCheckBox checkCachedDataPanel;
     private javax.swing.JCheckBox checkEditorContextMenu;
-    private javax.swing.JCheckBox checkOffscreenBuffers;
     private javax.swing.JCheckBox checkOutputPanel;
     private javax.swing.JCheckBox checkPersistRendererWindows;
     private javax.swing.JCheckBox checkQueueBrowser;

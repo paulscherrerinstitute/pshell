@@ -1020,17 +1020,19 @@
               <Layout>
                 <DimensionLayout dim="0">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" alignment="1" attributes="0">
+                      <Group type="102" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jScrollPane2" pref="512" max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="jScrollPane2" alignment="1" pref="512" max="32767" attributes="0"/>
+                              <Group type="102" alignment="1" attributes="0">
+                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                  <Component id="buttonInsertProcScript" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                                  <Component id="buttonRemoveProcScript" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                              </Group>
+                          </Group>
                           <EmptySpace max="-2" attributes="0"/>
-                      </Group>
-                      <Group type="102" alignment="1" attributes="0">
-                          <EmptySpace max="32767" attributes="0"/>
-                          <Component id="buttonInsertProcScript" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace type="separate" max="-2" attributes="0"/>
-                          <Component id="buttonRemoveProcScript" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -1176,7 +1178,7 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="spinnerMarkerSize" min="-2" max="-2" attributes="0"/>
-                                  <Component id="checkOffscreenBuffers" min="-2" max="-2" attributes="0"/>
+                                  <Component id="checkBufferedRendering" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
@@ -1234,7 +1236,7 @@
                               <Component id="comboColormapPlot" linkSize="16" alignment="2" min="-2" max="-2" attributes="0"/>
                               <Component id="jLabel19" linkSize="16" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="checkOffscreenBuffers" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="checkBufferedRendering" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel35" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="32767" attributes="0"/>
@@ -1366,11 +1368,11 @@
                 </Property>
               </Properties>
             </Component>
-            <Component class="javax.swing.JCheckBox" name="checkOffscreenBuffers">
+            <Component class="javax.swing.JCheckBox" name="checkBufferedRendering">
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel35">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Offscreen Buffers:"/>
+                <Property name="text" type="java.lang.String" value="Buffered Rendering:"/>
               </Properties>
             </Component>
           </SubComponents>

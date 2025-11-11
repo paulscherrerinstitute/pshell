@@ -1263,7 +1263,7 @@ public class View extends MainFrame{
         if (preferences.fontPlotTick != null){
             PlotBase.setDefaultTickFont(preferences.fontPlotTick.toFont());
         }
-        PlotBase.setOffscreenBuffer(!preferences.disableOffscreenBuffer);
+        PlotBase.setBufferedRendering(!preferences.directRendering);
         if (preferences.fontPlotTitle != null){
             PlotPanel.setTitleFont(preferences.fontPlotTitle.toFont());
         }

@@ -1,11 +1,11 @@
 package ch.psi.pshell.framework;
 
 import ch.psi.pshell.epics.Epics;
+import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.sequencer.ExecutionParameters;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.IO;
-import ch.psi.pshell.utils.Miniconda;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -364,7 +364,7 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     }
 
     static public boolean isOffscreenPlotting() {
-        return isServerMode() || isHeadless();
+        return PlotBase.getOffscreen();
     }
 
     static public boolean isGui() {

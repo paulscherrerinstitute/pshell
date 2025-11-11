@@ -1728,10 +1728,5 @@ public class SwingUtils {
     
     static public boolean isHeadless() {
         return GraphicsEnvironment.isHeadless();
-    }
-    
-    static public void setHeadless() {
-        System.setProperty("java.awt.headless", "true");
-    }
-
+    }    
 }
