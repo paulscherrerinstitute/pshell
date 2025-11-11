@@ -117,7 +117,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                 
         dataManager = new DataManager();        
         extensions = new Extensions();
-        interpreter = new Sequencer(config.serverHostName, config.commandQueueSize, config.commandTimeToLive);
+        interpreter = new Sequencer(config.commandQueueSize, config.commandTimeToLive);
         security = new Security(null);
         devicePool = new DevicePool();
         sessions = new Sessions();
@@ -169,9 +169,10 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                 logger.log(Level.SEVERE, "Cannot set PYTHONHOME: {0}", ex.getMessage());
             }
         }
-        interpreter.setTerminalPort(config.isTerminalEnabled() ? config.terminalPort : 0);
-        interpreter.setServerPort(config.isServerEnabled() ? config.serverPort : 0);    
-        interpreter.setServerLight(!Setup.isServerMode());
+        int terminaPort = config.isTerminalEnabled() ? config.terminalPort : 0;
+        interpreter.setTerminalConfig(new Sequencer.TerminalConfig(terminaPort));
+        int serverPort = config.isServerEnabled() ? config.serverPort : 0;    
+        interpreter.setServerConfig(new Sequencer.ServerConfig(config.serverHostName, serverPort, config.serverHttps, !Setup.isServerMode()));
         sessions.setMode(config.sessionHandling);
 
         for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, packageLoader, notifier,

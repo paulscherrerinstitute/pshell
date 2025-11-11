@@ -70,6 +70,7 @@ public class Configuration extends Config {
     public boolean serverEnabled;    
     public boolean serverCommandsHidden = false;
     public String serverHostName  = "";        
+    public boolean serverHttps = false;
     public int serverPort = 8080;
     public boolean terminalEnabled;
     public int terminalPort = 3579;

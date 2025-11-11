@@ -114,34 +114,11 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public static final String INTERPRETER_THREAD = "MainThread";    
 
     public Sequencer() {
-        this(null,DEFAULT_COMMAND_BUS_SIZE,DEFAULT_COMMAND_BUS_TIME_TO_LIVE);
+        this(DEFAULT_COMMAND_BUS_SIZE,DEFAULT_COMMAND_BUS_TIME_TO_LIVE);
     }
     
-    public Sequencer(String hostName, int commandBusSize, int commandBusTimeToLive) {
+    public Sequencer(int commandBusSize, int commandBusTimeToLive) {
         instance = this;        
-
-        if ((hostName != null) && (!hostName.trim().isEmpty()) && (!hostName.equalsIgnoreCase("null"))) {
-            if (!isLocalMode()) {
-                String localHostName = hostName;
-                try {
-                    localHostName = Sys.getLocalHost();
-                    if (!localHostName.equalsIgnoreCase(hostName)) {
-                        InetAddress[] addresses = InetAddress.getAllByName(localHostName);
-                        for (InetAddress address : addresses) {
-                            if (address.getHostAddress().equalsIgnoreCase(hostName)) {
-                                localHostName = hostName;
-                                break;
-                            }
-                        }
-                    }
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, null, ex);
-                }
-                if (!localHostName.equalsIgnoreCase(hostName)) {
-                    throw new RuntimeException("Application must run on host: " + hostName + " or else in local mode (-l option)");
-                }
-            }
-        }
 
         if (System.getProperty(Interpreter.PROPERTY_PYTHON_HOME) == null){
             System.setProperty(Interpreter.PROPERTY_PYTHON_HOME, Setup.getScriptsPath());
@@ -178,36 +155,60 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
     
     //Configuration
-    private int terminalPort=0;    
+    public record TerminalConfig(int port) {
+        public boolean isEnabled(){
+            return port>0;
+        }
+    }    
+    private TerminalConfig terminalConfig = new TerminalConfig(0); 
 
-    public void setTerminalPort(int value){
-        terminalPort = value;
+    public void setTerminalConfig(TerminalConfig config) {
+        terminalConfig = config;
     }
 
-    public int getTerminalPort(){
-        return terminalPort;
-    }
-    
-    private int serverPort=0;    
-
-    public void setServerPort(int value){
-        serverPort = value;
-    }
-
-    public int getServerPort(){
-        return serverPort;
+    public TerminalConfig getTerminalConfig() {
+        return terminalConfig;
     }
     
-    private boolean serverLight;    
-
-    public void setServerLight(boolean value){
-        serverLight = value;
+    public record ServerConfig(String hostname, int port, boolean https, boolean light) {
+        public boolean isEnabled(){
+            return port>0;
+        }
+        public String getHostname(){
+            if ((hostname == null) || (hostname.isBlank()) || (hostname.equalsIgnoreCase("null")) || (hostname.equalsIgnoreCase("0.0.0.0"))) {
+                return null;
+            }
+            return hostname.trim();
+        }
     }
 
-    public boolean getServerLight(){
-        return serverLight;
+    private ServerConfig serverConfig = new ServerConfig(null, 0,false,false); 
+    
+    public void setServerConfig(ServerConfig config) {
+        serverConfig = config;
+                
+        String hostname = config.getHostname();
+        if (!isLocalMode() && serverConfig.isEnabled() &&  (hostname != null)){            
+            if (!hostname.equals(Sys.getLocalHost())){
+                try {
+                    InetAddress[] addresses = InetAddress.getAllByName(Sys.getLocalHost());
+                    for (InetAddress address : addresses) {
+                        if (address.getHostAddress().equals(hostname)) {
+                            return;
+                        }
+                    } 
+                } catch (Exception ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+                exit("Application must run on host: " + hostname + " or else in local mode (-l option)");
+            }                    
+        }
     }
-       
+
+    public ServerConfig getServerConfig() {
+        return serverConfig;
+    }
+    
     final ArrayList<String> notifiedTasks = new ArrayList<>();    
 
     public void setNotifiedTasks(List<String> notifiedTasks){
@@ -379,11 +380,11 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
     
     public boolean isServerEnabled() {
-        return (serverPort >0) && !isLocalMode();
+        return serverConfig.isEnabled() && !isLocalMode();
     }
 
     public boolean isTerminalEnabled() {
-        return (terminalPort >0) && !isLocalMode();
+        return terminalConfig.isEnabled() && !isLocalMode();
     }
     
     @Hidden
@@ -937,29 +938,29 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         restartThread = Thread.currentThread();
         try {
             if (!isLocalMode()) {
-                if ((terminalServer != null) && ((!isTerminalEnabled()) || (getTerminalPort() != terminalServer.getPort()))) {
+                if ((terminalServer != null) && ((!isTerminalEnabled()) || (terminalConfig.port() != terminalServer.getPort()))) {
                     terminalServer.close();
                     terminalServer = null;
                 }
                 if ((terminalServer == null) && isTerminalEnabled()) {
                     try {
-                        terminalServer = new TerminalServer(getTerminalPort());
-                        logger.log(Level.INFO, "Started terminal server on port {0}", getTerminalPort());
+                        terminalServer = new TerminalServer(terminalConfig.port);
+                        logger.log(Level.INFO, "Started terminal server on port {0}", terminalConfig.port);
                     } catch (Exception ex) {
-                        throw new Exception("Error initializing terminal server on port " + getTerminalPort(), ex);
+                        throw new Exception("Error initializing terminal server on port " + terminalConfig.port, ex);
                     }
                 }
 
-                if ((server != null) && ((!isServerEnabled()) || (getServerPort() != server.getPort()))) {
+                if ((server != null) && ((!isServerEnabled()) || (serverConfig.port != server.getPort()))) {
                     server.close();
                     server = null;
                 }
                 //Must restart sw if server changes
                 if ((server == null) && isServerEnabled()) {
                     try {
-                        server = new Server(null, getServerPort(), getServerLight());
+                        server = new Server(serverConfig.getHostname(), serverConfig.port, serverConfig.https, serverConfig.light);
                     } catch (Exception ex) {
-                        throw new Exception("Error initializing server on port " + getServerPort(), ex);
+                        throw new Exception("Error initializing server on port " + serverConfig.port, ex);
                     }
                 }
             }
@@ -2860,8 +2861,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 }
             } else {
                 //Only exclusive execution on same pc, if terminal server is activated
-                if (getTerminalPort()  > 0) {
-                    try (ServerSocket socket = new ServerSocket(getTerminalPort())) {
+                if (terminalConfig.isEnabled()) {
+                    try (ServerSocket socket = new ServerSocket(terminalConfig.port)) {
                     } catch (IOException ex) {
                         exit("Another instance of this application is running.\nApplication can be started in local mode (-l option)");
                     }
