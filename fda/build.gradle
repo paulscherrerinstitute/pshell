@@ -9,8 +9,8 @@ dependencies {
     implementation project(':devices')
     implementation project(':pshell-core')       
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
-    implementation 'com.sun.xml.bind:jaxb-core:4.0.5'
-    implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
+    implementation 'com.sun.xml.bind:jaxb-core:4.0.6'
+    implementation 'com.sun.xml.bind:jaxb-impl:4.0.6'
     implementation 'com.sun.xml.messaging.saaj:saaj-impl:3.0.4'
     implementation 'net.sourceforge.jmatio:jmatio:1.0'
 }

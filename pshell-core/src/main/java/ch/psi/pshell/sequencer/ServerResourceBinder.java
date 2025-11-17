@@ -1,6 +1,6 @@
 package ch.psi.pshell.sequencer;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.inject.hk2.AbstractBinder;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
 
 /**

@@ -9,10 +9,10 @@ dependencies {
     implementation project(':plotter')   
     implementation 'jline:jline:2.14.6' 
     implementation 'com.twelvemonkeys.imageio:imageio-tiff:3.12.0'
-    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
-    implementation 'org.glassfish.jersey.media:jersey-media-sse:3.1.10'
-    implementation 'org.glassfish.jersey.inject:jersey-hk2:3.1.10'
-    api 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.10'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.6'
+    implementation 'org.glassfish.jersey.media:jersey-media-sse:4.0.0'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:4.0.0'
+    api 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:4.0.0'
 }
 
 createDefaultTasks(project)

@@ -5,7 +5,7 @@ ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.csm.App'
 dependencies {
     implementation project(':common')
     implementation project(':devices')
-    implementation 'org.glassfish.jersey.inject:jersey-hk2:3.1.10'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:4.0.0'
 }
 
 createDefaultTasks(project)

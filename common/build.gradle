@@ -28,8 +28,8 @@ dependencies {
     api 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:7.3.0.202506031305-r' 
     api 'com.fifesoft:rsyntaxtextarea:3.6.0'
     api 'org.zeromq:jeromq:0.6.0'       
-    api 'org.glassfish.jersey.media:jersey-media-json-jackson:3.1.10'
-    api 'org.glassfish.jersey.core:jersey-client:3.1.10'                    
+    api 'org.glassfish.jersey.media:jersey-media-json-jackson:4.0.0'
+    api 'org.glassfish.jersey.core:jersey-client:4.0.0'                    
 }
 
 createPublishingTask(project)

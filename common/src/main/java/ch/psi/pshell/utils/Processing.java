@@ -1,6 +1,7 @@
 package ch.psi.pshell.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -11,18 +12,28 @@ import java.util.logging.Logger;
  */
 public class Processing {
     
-    
-    public static String[] run(String... command) throws InterruptedException, IOException{
-        return run(List.of(command));
+    public static String[] run( String... command) throws InterruptedException, IOException{
+        return run(null, List.of(command));
     }
     
-    
+    public static String[] run(File workingFolder,String... command) throws InterruptedException, IOException{
+        return run(workingFolder, List.of(command));
+    }
+       
     public static String[] run(List<String> command) throws InterruptedException, IOException{
+        return run(null, command);
+    }
+    
+    public static String[] run(File workingFolder, List<String> command) throws InterruptedException, IOException{
         Logger.getLogger(Processing.class.getName()).info("Starting process: " + String.join(" ", command));        
         StringBuilder builderErr = new StringBuilder();
         StringBuilder builderOut= new StringBuilder();        
         String line = null;        
         ProcessBuilder pb = new ProcessBuilder(command);
+        if (workingFolder!=null){
+            pb.directory(workingFolder);
+        }
+    
         //pb.redirectErrorStream(true);
         Process p = pb.start();
         BufferedReader readerErr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
