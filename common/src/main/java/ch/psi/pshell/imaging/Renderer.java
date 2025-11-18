@@ -380,11 +380,11 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         return painter;
     }
 
-    Dimension getCanvasVisibleSize() {
+    public Dimension getCanvasVisibleSize() {
         return scrollPane.getViewport().getSize();
     }
 
-    Dimension getCanvasExtentSize() {
+    public Dimension getCanvasExtentSize() {
         return scrollPane.getViewport().getExtentSize();
     }
 
@@ -1096,9 +1096,20 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     }
 
     public BufferedImage getImage(boolean withOverlays) {
-        BufferedImage ret = getImage();
+        return getImage(withOverlays, null);
+    }
+    
+    public BufferedImage getImage(boolean withOverlays, Dimension size) {
+        BufferedImage ret = getImage(); 
         if (ret == null) {
             return null;
+        }
+        double scaleX = 1.0;
+        double scaleY = 1.0;
+        if (size!=null){
+            scaleX = (double)size.width / (double)ret.getWidth();
+            scaleY = (double)size.height / (double)ret.getHeight();
+            ret = Utils.stretch(ret, size.width, size.height);
         }
 
         if (withOverlays) {
@@ -1109,16 +1120,26 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                 } else {
                     ret = Utils.copy(ret, null, null);
                 }
-                Graphics g = ret.createGraphics();
+                Graphics2D g = ret.createGraphics();
+                Graphics2D sg = null;
+                if (size!=null){
+                    sg = ret.createGraphics();
+                    sg.scale(scaleX, scaleY);
+                }                
 
                 //TODO: This should be synchronized if if not in event loop (or a better solution used)              
-                OverlayBase.zoomScaleX = 1.0;
-                OverlayBase.zoomScaleY = 1.0;
+                OverlayBase.zoomScaleX = scaleX;
+                OverlayBase.zoomScaleY = scaleY;
                 Rectangle visible = new Rectangle(ret.getWidth(), ret.getHeight());
                 for (Overlay overlay : ovs) {
                     manageOverlayOffset(overlay, ret.getWidth(), ret.getHeight(), visible);
                     try {
-                        overlay.paint(g);
+                        if ((size==null) || overlay.isFixed() || overlay.isManagingScaling()) {
+                            overlay.paint(g);
+                        } else {
+                            overlay.paint(sg);
+                        }
+                        
                     } catch (Exception ex) {
                     }
                 }

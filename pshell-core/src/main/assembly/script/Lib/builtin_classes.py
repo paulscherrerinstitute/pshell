@@ -213,6 +213,7 @@ import ch.psi.pshell.imaging.Pen as Pen
 import ch.psi.pshell.imaging.Data as Data
 import ch.psi.pshell.imaging.Colormap as Colormap
 import ch.psi.pshell.imaging.Renderer as Renderer
+import ch.psi.pshell.imaging.RendererMode as RendererMode
 import ch.psi.pshell.imaging.DeviceRenderer as DeviceRenderer
 
 
