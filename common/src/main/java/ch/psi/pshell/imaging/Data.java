@@ -88,8 +88,14 @@ public class Data implements Serializable {
         this.image = null;
         timestamp = System.currentTimeMillis();
     }
-    
     public Data(BufferedImage image) {
+        this(image, false);
+    }
+    
+    public Data(BufferedImage image, boolean grayscale) {
+        if (grayscale){
+            image = Utils.grayscale(image);
+        }
         this.dataBuffer = image.getRaster().getDataBuffer();
         this.array = Utils.getDataBufferArray(dataBuffer);
         this.unsigned = Utils.isDataBufferUnsigned(dataBuffer);
@@ -143,7 +149,7 @@ public class Data implements Serializable {
             }
         }
     }
-
+    
     Calibration calibration;
 
     public Data getRoi(Rectangle roi) {
@@ -1649,4 +1655,12 @@ public class Data implements Serializable {
     public Data copy(Class type, boolean unsigned){
         return new Data(this, type, unsigned);
     }
+    
+    public Data toGrayscale(){
+        if (isRgb()){
+            return new Data(image, true);
+        }
+        return this;
+    }
+    
 }
