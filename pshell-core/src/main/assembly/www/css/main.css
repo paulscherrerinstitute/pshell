@@ -175,6 +175,21 @@ textarea {
 
 
 
+/* Default for very small widths — behaves like normal container */
+.flex-margin  {
+    max-width   : 100%;
+}
+
+/* Larger than Bootstrap XL (~1200px) */
+@media (min-width: 768px) {
+    .flex-margin  {
+        max-width: 98%;  /* scale to screen */
+    }
+}
+
+
+
+
 
 
 

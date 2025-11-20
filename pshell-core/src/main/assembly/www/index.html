@@ -366,67 +366,67 @@
                 });                  
             }
             
-            function onHome() {
-                $("#home").show()
+            function deselectTab() {
+                $("#console").hide()
                 $("#plots").hide()
                 $("#logs").hide()
                 $("#devices").hide()
                 $("#scripts").hide()
-                $("#data").hide()
-                $("#command").focus();
+                $("#data").hide()                
+                $("#tab_console").removeClass("active");
+                $("#tab_plots").removeClass("active");                
+                $("#tab_devices").removeClass("active");
+                $("#tab_logs").removeClass("active");                
+                $("#tab_scripts").removeClass("active");
+                $("#tab_data").removeClass("active");                
+            }
+                    
+            function onHome() {
+                
+            }
+            
+            function onConsole() {
+                deselectTab()
+                $("#console").show()                                
+                $("#tab_console").addClass("active");
+                          
             }
             
             function onPlots(no_refresh) {
-   
-                $("#home").hide()
+                deselectTab()
                 $("#plots").show()
-                $("#logs").hide()
-                $("#devices").hide()
-                $("#scripts").hide()
-                $("#data").hide()
+                $("#tab_plots").addClass("active");
                 if (!no_refresh){
                     getPlots(true);
-                }
+                }                
             }            
 
             function onDevices() {
-                $("#home").hide()
-                $("#plots").hide()
-                $("#logs").hide()
+                deselectTab()
                 $("#devices").show()
-                $("#scripts").hide()
-                $("#data").hide()
-                getDevices();
+                $("#tab_devices").addClass("active");
+                getDevices();                
             }
 
             function onLogs() {
-                $("#home").hide()
-                $("#plots").hide()
+                deselectTab()
                 $("#logs").show()
-                $("#devices").hide()
-                $("#scripts").hide()
-                $("#data").hide()
+                $("#tab_logs").addClass("active");
                 getLogs();
             }
 
             function onScripts() {
-                $("#home").hide()
-                $("#plots").hide()
-                $("#logs").hide()
-                $("#devices").hide()
+                deselectTab()
                 $("#scripts").show()
-                $("#data").hide()
+                $("#tab_scripts").addClass("active");
                 $("#data_path").focus();
                 getScripts("/")
             }
 
             function onData() {
-                $("#home").hide()
-                $("#plots").hide()
-                $("#logs").hide()
-                $("#devices").hide()
-                $("#scripts").hide()
+                deselectTab()
                 $("#data").show()
+                $("#tab_data").addClass("active");
                 $("#data_path").focus();
             }
 
@@ -1137,12 +1137,12 @@
 
                     <div class="navbar-collapse collapse" id="myNavbar">
                         <ul class="nav navbar-nav">
-                            <li><a href="#" onclick="onHome()">Console</a></li>
-                            <li><a href="#" onclick="onPlots()">Plots</a></li>
-                            <li><a href="#" onclick="onDevices()">Devices</a></li>
-                            <li><a href="#" onclick="onLogs()">Logs</a></li>
-                            <li><a href="#" onclick="onScripts()">Scripts</a></li>                            
-                            <li><a href="#" onclick="onData()">Data</a></li>
+                            <li id="tab_console"><a href="#" onclick="onConsole()">Console</a></li>
+                            <li id="tab_plots"><a href="#" onclick="onPlots()">Plots</a></li>
+                            <li id="tab_devices"><a href="#" onclick="onDevices()">Devices</a></li>
+                            <li id="tab_logs"><a href="#" onclick="onLogs()">Logs</a></li>
+                            <li id="tab_scripts"><a href="#" onclick="onScripts()">Scripts</a></li>                            
+                            <li id="tab_data"><a href="#" onclick="onData()">Data</a></li>
                         </ul>
                         <ul id="abortbutton" class="nav navbar-nav navbar-right">
                             <li><a href="#" onclick="abort()">Abort</a></li>
@@ -1175,7 +1175,7 @@
             </div>
         </div>
          
-        <div id="home" class="container">
+        <div id="console" class="container-fluid flex-margin">
             <div class="row">
                 <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="txtarea" readonly="readonly" rows="23" ></textarea>                              
 
@@ -1188,7 +1188,7 @@
             </div>
         </div>
 
-        <div id="plots_ant" class="container" style="display:none">
+        <div id="plots_ant" class="container-fluid flex-margin" style="display:none">
             <div class="row">
                 <div id="graph1_container_ant" class="graph-container shadow img-rounded">                        
                     <div id="graph1_ant" class="graph-placeholder"></div>
@@ -1196,7 +1196,7 @@
             </div>
         </div>
         
-        <div id="plots" class="container" style="display:none">            
+        <div id="plots" class="container-fluid flex-margin" style="display:none">            
             <div class="row">
                   <select name="plotsize" id="plotsize" class="btn btn-secondary dropdown-toggle pull-right" style="font-size:smaller"> 
                       <option value="Tiny">Tiny</option>
@@ -1216,7 +1216,7 @@
             </div>
         </div>
 
-        <div id="devices" class="container" style="display:none">
+        <div id="devices" class="container-fluid flex-margin" style="display:none">
             <div class="row borderless-container">                            
                 <button id="updatedevices" type="button" class="btn btn-default pull-right header_button" onclick="updateDevices();this.blur()" style="">Update</button>                                                   
                 <button id="initdevices" type="button" class="btn btn-default pull-right header_button" onclick="initDevices();this.blur()" style="margin-right:10px">Init</button>                                                   
@@ -1239,7 +1239,7 @@
             </div>                                                                         
         </div>   
 
-        <div id="logs" class="container" style="display:none">
+        <div id="logs" class="container-fluid flex-margin" style="display:none">
             <div class="row borderless-container">                            
                 <button id="openlog" type="button" class="btn btn-default pull-right header_button" data-toggle="button" onclick="openLog()">Open</button>                                                   
             </div>                
@@ -1262,7 +1262,7 @@
             </div>                                                                         
         </div>        
 
-        <div id="scripts" class="container" style="display:none">           
+        <div id="scripts" class="container-fluid flex-margin" style="display:none">           
             <div class="row">
                 <!--  <p> -->                 
                 <div class="row borderless-container">                            
@@ -1282,7 +1282,7 @@
             </div>
         </div>
 
-        <div id="data" class="container" style="display:none">
+        <div id="data" class="container-fluid flex-margin" style="display:none">
             <div class="row">
                 <div class="row borderless-container">                            
                     <button id="plotdata" type="button" class="btn btn-default pull-right header_button" onclick="plotDataset()">Plot</button>                                                   
@@ -1316,6 +1316,7 @@
             }   
             
             $(".row").css("width", '100%');
+            $("#tab_console").addClass("active");
             
             getState();
             getVersion();
