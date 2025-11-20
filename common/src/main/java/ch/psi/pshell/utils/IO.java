@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
@@ -22,6 +24,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
@@ -921,4 +924,44 @@ public class IO {
             return false;
         }
     }
+        
+    
+    public static InputStream connect(String urlStr) throws IOException {
+        URL url = new URL(urlStr);
+
+        // If URL contains userInfo (user:password), use Basic Auth
+        String userInfo = url.getUserInfo(); // returns "user:password" or null
+
+        InputStream stream = null;
+        if (userInfo != null && !userInfo.isEmpty()) {
+            //Connect with authentication
+            // Split into user and password
+            String[] parts = userInfo.split(":", 2);
+            String user = parts.length > 0 ? parts[0] : "";
+            String password = parts.length > 1 ? parts[1] : "";
+
+            // Rebuild URL without credentials (to avoid 401 issues)
+            URL cleanUrl = new URL(
+                    url.getProtocol(),
+                    url.getHost(),
+                    url.getPort(),
+                    url.getFile()
+            );
+            
+            HttpURLConnection conn = (HttpURLConnection) cleanUrl.openConnection();
+            // Build "user:password" and Base64-encode it
+            String encoded = Base64.getEncoder().encodeToString((user + ":" + password).getBytes("UTF-8"));
+            conn.setRequestProperty("Authorization", "Basic " + encoded);
+            conn.connect();            
+            stream = conn.getInputStream();
+        } else {
+            // No credentials → regular openStream()
+            stream = url.openStream();
+        }
+        
+        if (!stream.markSupported()) {
+            stream = new BufferedInputStream(stream);
+        }
+        return stream;
+    }        
 }

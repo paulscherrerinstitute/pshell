@@ -1,6 +1,7 @@
 package ch.psi.pshell.imaging;
 
 
+import ch.psi.pshell.utils.IO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.EOFException;
@@ -46,14 +47,20 @@ public class MjpegSource extends SourceBase {
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
         super.doInitialize();
-        URL aux = new URL(url);
         synchronized(url){
-            stream = aux.openStream();
-            if (!stream.markSupported()) {
-                stream = new BufferedInputStream(stream);
-            }
+            stream = IO.connect(url);
         }
     }
+    
+    @Override
+    protected void doClose() throws IOException {
+        super.doClose();
+        synchronized(url){
+            if (stream!=null){
+                stream.close();
+            }
+        }        
+    }    
 
     Thread monitoringThread;
 
@@ -174,5 +181,5 @@ public class MjpegSource extends SourceBase {
             }
         }
     }
-
+    
 }
