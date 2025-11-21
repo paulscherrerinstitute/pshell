@@ -447,6 +447,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        table.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(table);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);

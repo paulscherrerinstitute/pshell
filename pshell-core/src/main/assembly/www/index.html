@@ -21,6 +21,7 @@
         </style>        
         <link rel="stylesheet" href="css/jquery-ui.min.css">
         <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/dark.css">
         <link rel="shortcut icon" href="img/favicon.ico">
 
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
@@ -87,8 +88,10 @@
                 //$('#close_context').prop('disabled', (getCurrentPlotContext()=="null"));
                 if (getCurrentPlotContext()=="null"){
                     $('#close_context').hide()
+                    $('#plotsize').show()                    
                 } else {
                     $('#close_context').show()
+                    $('#plotsize').hide()                    
                 }
             }
 
@@ -115,14 +118,26 @@
                 $('#runscript').prop('disabled', (state != "Ready") || !communicationOk)
                 $('#abort').prop('disabled', ((state != "Busy") && (state != "Paused") && (state != "Initializing")) || !communicationOk)
             }
+            
+            var progress
+            function setProgress() {   
+                $('#progbar').attr("aria-valuenow", progress);
+                $('#progbar').attr("style", "width: " + progress + "%");                
+            }
 
-            function updateProgress(data) {
+            function updateProgress(data) {              
                 data *= 100; //0.0 to 1.0
                 data = Math.max(data, 0);
                 data = Math.min(data, 100);
-                //$('#progbar').attr('aria-valuenow', data+"%").css('width',data+"%");              
-                $('#progbar').attr("aria-valuenow", data);
-                $('#progbar').attr("style", "width: " + data + "%");
+                progress = data
+                if (data==0){   //Delaying 1s otherwise 100% is never displayed
+                    let val = $('#progbar').attr("aria-valuenow");
+                    if (val!=0){
+                        setTimeout(setProgress, 1000);             
+                    }
+                } else{
+                    setProgress();
+                }
             }
 
             function updateTable(table, data) {
@@ -380,9 +395,14 @@
                 $("#tab_scripts").removeClass("active");
                 $("#tab_data").removeClass("active");                
             }
-                    
+
             function onHome() {
-                
+                 onConsole()
+            }
+            
+            function onToggleDark() {
+                  $("body").toggleClass("dark-mode");
+                  localStorage.setItem("dark-mode",$("body").hasClass("dark-mode"));                  
             }
             
             function onConsole() {
@@ -1125,9 +1145,12 @@
             <div class="navbar navbar-inverse navbar-fixed-top">
                 <div class="container-fluid">                           
                     <div class="navbar-header">
-                        <a class="navbar-brand" href="#" onclick="onHome()" style="margin-right: 40px">PShell
+                        <a class="navbar-brand" href="#" onclick="onHome()" style="margin-right: 20px">PShell                             
                             <img align="left" style="max-width:80px; margin-left: -20px; margin-top: -2px;margin-right: 5px;" src="img/icon.png">
                         </a>        
+                        <a class="navbar-brand" href="#" onclick="onToggleDark()" style="margin-right: 40px">
+                            <span class="glyphicon glyphicon-adjust"></span>
+                        </a>                         
                         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#myNavbar">
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -1197,20 +1220,16 @@
         </div>
         
         <div id="plots" class="container-fluid flex-margin" style="display:none">            
-            <div class="row">
-                  <select name="plotsize" id="plotsize" class="btn btn-secondary dropdown-toggle pull-right" style="font-size:smaller"> 
-                      <option value="Tiny">Tiny</option>
-                      <option value="Small">Small</option>
-                      <option value="Medium" selected="selected">Medium</option>
-                      <option value="Big">Big</option>      
-                      <option value="Huge">Huge</option> </select>            
-                  <!-- <label class="pull-right small text-muted header_combo" for="plotsize" style="margin-top:5px">Size:</label> -->
-            </div>                                        
-            
             <ul id="plots_tab" class="nav nav-tabs" style="font-size:smaller">
               <li class="active"><a data-toggle="tab" href="#">Default</a></li>
             </ul>
-            <button id="close_context" type="button" class="btn btn-default btn-xs pull-right header_button" onclick="close_context()" style="display:none;margin-top:-24px;">Close</button>                                            
+            <button id="close_context" type="button" class="btn btn-default btn-xs pull-right header_button" onclick="close_context()" style="display:none;margin-top:-32px;height: 28px">Close</button>                                            
+            <select name="plotsize" id="plotsize" class="btn btn-secondary dropdown-toggle pull-right" style="font-size:smaller;margin-top:-32px;"> 
+                <option value="Tiny">Tiny</option>
+                <option value="Small">Small</option>
+                <option value="Medium" selected="selected">Medium</option>
+                <option value="Big">Big</option>      
+                <option value="Huge">Huge</option> </select>            
             
             <div id="plots_container" class="row">
             </div>
@@ -1298,7 +1317,7 @@
             </div>
         </div>
 
-        <footer class="footer singleline shadow">   
+        <footer class="footer singleline statusbar">   
             <div class="col-sm-4 statusBar progress">
                 <div id="progbar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
                     <span>Unknown</span>
@@ -1317,6 +1336,10 @@
             
             $(".row").css("width", '100%');
             $("#tab_console").addClass("active");
+            
+            if (localStorage.getItem("dark-mode") === "true") {
+                $("body").addClass("dark-mode");
+            }            
             
             getState();
             getVersion();

@@ -1,0 +1,164 @@
+
+/* Dark mode overrides */
+.dark-mode {
+    background-color: #222 !important;
+    color: #eee !important;
+}
+
+/* Navbar */
+.dark-mode .navbar {
+    background-color: #111 !important;
+    border-color: #333 !important;
+}
+
+/* Buttons */
+.dark-mode .btn {
+    /* Visible borders
+    background-color: #333 !important; 
+    */
+    background-color: #222 !important;
+    border-color: #555 !important;    
+    color: #eee !important;    
+}
+
+/* Buttons */
+.dark-mode .btn-secondary {
+    border-color: #222 !important;    
+}
+
+.dark-mode .btn:hover,
+.dark-mode .btn:focus {
+    background-color: #444 !important;
+    border-color: #666 !important;
+}
+
+/* Form controls: inputs, textareas, selects */
+.dark-mode textarea,
+.dark-mode select {
+    background-color: #1f1f1f !important;
+    color: #eee !important;
+    border: 1px solid #555 !important;
+}
+
+.dark-mode input {
+    background-color: #333 !important;
+    color: #eee !important;
+    border: 1px solid #555 !important;
+}
+
+.dark-mode .panel,
+.dark-mode .card,
+.dark-mode .modal-content,
+.dark-mode .tab-content {
+    background-color: #1a1a1a !important;
+    color: #e0e0e0 !important;
+    border-color: #333 !important;
+}
+
+/* Optional: placeholder text */
+.dark-mode ::placeholder {
+    color: #aaa !important;
+}
+
+/* Scrollbars (optional, for better dark appearance) */
+.dark-mode ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 4px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+    background-color: #222;
+}
+
+.dark-mode .progress {
+  background-color: #1f1f1f;
+}
+
+.dark-mode .progress span {
+    color: #e0e0e0;
+}
+
+.dark-mode .shadow_ro {
+    background: #222;
+    background: linear-gradient(#111, 0, #222 50px);
+    background: -o-linear-gradient(#111, 0, #222 50px);
+    background: -ms-linear-gradient(#111, 0, #222 50px);
+    background: -moz-linear-gradient(#111, 0, #222 50px);
+    background: -webkit-linear-gradient(#111, 0, #222 50px);
+}
+
+.dark-mode .shadow {
+    background: #333;
+    background: linear-gradient(#222 0, #333 50px);
+    background: -o-linear-gradient(#222 0, #333 50px);
+    background: -ms-linear-gradient(#222 0, #333 50px);
+    background: -moz-linear-gradient(#222 0, #333 50px);
+    background: -webkit-linear-gradient(#222 0, #333 50px);
+}
+
+.dark-mode .statusbar {
+    background: #1D1D1D;
+}
+
+
+.dark-mode .dropdown-menu {
+  background-color: #111;
+}
+
+.dark-mode .dropdown-menu .divider {
+  background-color: #151515;
+}
+
+.dark-mode .dropdown-menu > li > a {
+  color: #eee;
+}
+
+.dark-mode .dropdown-menu > li > a:hover,
+.dark-mode .dropdown-menu > li > a:focus {
+  color: #262626;
+}
+.dark-mode .dropdown-menu > .active > a,
+.dark-mode .dropdown-menu > .active > a:hover,
+.dark-mode .dropdown-menu > .active > a:focus {
+  color: #fff;
+}
+.dark-mode .dropdown-menu > .disabled > a,
+.dark-mode .dropdown-menu > .disabled > a:hover,
+.dark-mode .dropdown-menu > .disabled > a:focus {
+  color: #777;
+}
+
+.dark-mode .nav-tabs > li.active > a,
+.dark-mode .nav-tabs > li.active > a:hover,
+.dark-mode .nav-tabs > li.active > a:focus,
+.dark-mode .list-group-item {
+  color: #FFF;
+  background-color: #222;
+}
+
+.dark-mode a.list-group-item,
+.dark-mode button.list-group-item {
+  color: #ccc;
+}
+
+.dark-mode a.list-group-item:hover,
+.dark-mode button.list-group-item:hover,
+.dark-mode a.list-group-item:focus,
+button.list-group-item:focus {
+  color: #111;
+}
+
+.dark-mode #plots_tab > li > a  {
+    color: #AAA !important;  /*Inactive tabs are not displayed blue*/
+}
+
+.dark-mode #plots_tab > li.active > a,
+.dark-mode #plots_tab > li.active > a:focus,
+.dark-mode #plots_tab > li.active > a:hover {
+    color: #FFF !important;   
+}

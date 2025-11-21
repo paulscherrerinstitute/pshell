@@ -146,6 +146,7 @@ public class ScanPanel extends MonitoredPanel {
 
             }
         ));
+        table.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(table);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
