@@ -1,5 +1,6 @@
 package ch.psi.pshell.sequencer;
 
+import ch.psi.pshell.data.DataAddress;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.data.Table;
 import ch.psi.pshell.device.GenericDevice;
@@ -2247,6 +2248,33 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     public void setPlotListener(PlotListener listener) {
         plotListener = listener;
     }
+    
+    public List<Plot> plot(String root, String title) throws Exception {
+        DataAddress add = DataAddress.fromFullPath(root);            
+        return plot(add.root, add.path, title);
+    }
+    
+    public List<Plot> plot(String root, String path, String title) throws Exception {     
+        PlotDescriptor[] plots;        
+        boolean endingSlash = (path!=null) && path.trim().endsWith("/");
+        if (!Context.getDataManager().isGroup(root, path) && endingSlash){  //Clear ending slash if it is a dataset
+            path = path.trim();
+            path = path.substring(0, path.length()-1);            
+        }
+        if (!endingSlash){
+            //tries to display the scan plot
+            plots = Context.getDataManager().getScanPlots(root, path).toArray(new PlotDescriptor[0]);            
+        } else {
+            if (Context.getDataManager().isGroup(root, path)){                
+                plots = Context.getDataManager().getChildrenPlots(root, path).toArray(new PlotDescriptor[0]);
+            } else {
+                plots = Context.getDataManager().getPlots(root, path).toArray(new PlotDescriptor[0]);
+            }
+        }
+        return plot(plots, title);
+        
+    }    
+    
 
     @Hidden
     public List<Plot> plot(PlotDescriptor plots[], String title) throws Exception {
@@ -2274,6 +2302,21 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     @Hidden
     public List<Plot> plot(PlotDescriptor plot, String title) throws Exception {
+        if ( (plot.data!=null) && (plot.data instanceof Object[] rows)){
+            if ((rows.length>0) && (rows[0] instanceof Object[] firstRow)){
+                var plots = new ArrayList<PlotDescriptor>();
+                //composite value                
+                for (int col=0; col<firstRow.length; col++){
+                    var data = new ArrayList();
+                    for (int row=0; row<rows.length; row++){
+                        data.add(((Object[])rows[row])[col]);
+                    }                    
+                    
+                    plots.add(new PlotDescriptor(data.toArray()));
+                }
+                return plot(plots.toArray(PlotDescriptor[]::new), title);
+            }
+        }
         return plot(new PlotDescriptor[]{plot}, title);
     }
 

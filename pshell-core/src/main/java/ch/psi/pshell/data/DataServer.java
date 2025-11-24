@@ -163,6 +163,7 @@ public class DataServer extends Replier {
         public List<String> contents;
     }
 
+    
     public static DataContent getDataContents(String path) throws Exception {
         DataManager dm = Context.getDataManager();
         DataContent ret = new DataContent();
@@ -175,25 +176,22 @@ public class DataServer extends Replier {
             }            
         }
         String prefix = "";
-
+        DataAddress add;
         //Full path
-        if (path.contains("|") || path.contains(" /")) {
-            String[] tokens = path.contains("|") ? path.split("\\|") : path.split(" /");
-            ret.root = tokens[0].trim();
-            ret.path = (tokens.length > 1) ? tokens[1].trim() : "/";
-            if (!ret.path.endsWith("/")){
+        if (DataAddress.isFullPath(path)){
+            add = DataAddress.fromFullPath(path);
+            if (!add.path.endsWith("/")){
                 prefix = "/";
             }
             //Root
         } else if (dm.getChildren(path, "/").length > 0) {
-            ret.root = path;
-            ret.path = "/";
+            add = DataAddress.fromRoot(path);
             prefix = " /";
-            //Current data context
         } else {
-            ret.root = dm.getOutput();
-            ret.path = (path == "") ? "/" : path;
+            add = DataAddress.fromDataStore(dm, path);
         }
+        ret.root = add.root;
+        ret.path = add.path;        
         ret.info = dm.getInfo(ret.root, ret.path);
         ret.attributes = dm.getAttributes(ret.root, ret.path);
         if (dm.isDataset(ret.root, ret.path)) {

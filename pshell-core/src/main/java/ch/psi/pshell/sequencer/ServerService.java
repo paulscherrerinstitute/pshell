@@ -1,6 +1,7 @@
 package ch.psi.pshell.sequencer;
 
 import ch.psi.pshell.data.DataServer;
+import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
@@ -481,20 +482,63 @@ public class ServerService {
         }
     }    
         
+    /*
     @GET
     @Path("/download{path : .+}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public byte[] dataDownload(@PathParam("path") final String path) {
         try{
             File file = new File(Setup.expandPath(((path.startsWith("/")) ? "{data}"+path : "{data}/"+path)).trim());
-            if (!file.isFile()){
+            if (!file.exists()){
                 throw new Exception("Invalid file name: " + path);
             }
-            return Files.readAllBytes(file.toPath());
+            if (file.isFile()){
+                return Files.readAllBytes(file.toPath());
+            } else {
+                return IO.createZipStream(file).toByteArray();
+            }
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }        
     }    
+    */
+        @GET
+        @Path("/download{path : .+}")
+        @Produces(MediaType.APPLICATION_OCTET_STREAM)
+        public Response dataDownload(@PathParam("path") final String path) {
+        try{
+            String name = path.replaceAll("/ ", "/");
+            name = name.replaceAll(" /", "/");
+            File file = new File(Setup.expandPath(((name.startsWith("/")) ? "{data}"+name : "{data}/"+name)).trim());
+            if (!file.exists()){
+                for (String ext : DataStore.getFormatIds()){
+                    File aux = new File(file.toString() + "." + ext);
+                    if (aux.exists()){
+                        file = aux;
+                        break;
+                    }
+                }
+            }
+            if (!file.exists()){
+                throw new Exception("Invalid file name: " + path);
+            }
+            byte[] data;
+            String filename;
+            if (file.isFile()){
+                filename =  file.getName();
+                data = Files.readAllBytes(file.toPath());
+            } else {
+                filename = file.getName() + ".zip";
+                data = IO.createZipStream(file).toByteArray();
+            }
+            
+            return Response.ok(data)
+                .header("Content-Disposition","attachment; filename=\"" + filename + "\"")
+                .build();            
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }        
+    }        
    
     @GET
     @Path("plot/{title}/{index}/{format}/{width}/{height}")

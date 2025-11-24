@@ -704,6 +704,14 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         return DataStore.isPlottable(info, plotScalars);
     }
 
+    public List<PlotDescriptor> getChildrenPlots(String root, String path) throws IOException {
+        List<PlotDescriptor> plots = new ArrayList<>();
+        for (String child : getChildren(root, path)) {
+            plots.addAll(getPlots(root, child));
+        }
+        return plots;
+    }
+    
     //Retrieve plots from dataset
     public List<PlotDescriptor> getPlots(String root, String path) throws IOException {
         path=adjustPath(path);

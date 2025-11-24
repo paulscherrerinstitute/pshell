@@ -566,7 +566,14 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
     Returns:
         List of Plot.
     """
-    data = json_to_obj(data)
+    try:
+        data = json_to_obj(data)
+    except:
+        #Not a JSON string but a data path
+        if is_string(data):
+            return get_sequencer().plot(data, title)
+        raise 
+
     xdata = json_to_obj(xdata)
     ydata = json_to_obj(ydata)
     if isinstance(data, ch.psi.pshell.data.Table):
@@ -597,7 +604,11 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
             plots[i] =  PlotDescriptor(plotName , to_array(data[i], 'd'), to_array(x, 'd'), to_array(y, 'd'))
         return get_sequencer().plot(plots,title)
     else:
-        plot = PlotDescriptor(name, to_array(data, 'd'), to_array(xdata, 'd'), to_array(ydata, 'd'))
+        try:
+            data = to_array(data, 'd')
+        except:
+            pass
+        plot = PlotDescriptor(name, data, to_array(xdata, 'd'), to_array(ydata, 'd'))
         return get_sequencer().plot(plot,title)
 
 def get_plots(title=None):

@@ -2,6 +2,7 @@ package ch.psi.pshell.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -190,6 +191,29 @@ public class IO {
                 }
             }
         }
+    }
+    
+    public static ByteArrayOutputStream createZipStream(File folder) throws IOException{
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ZipOutputStream zos = new ZipOutputStream(baos);
+
+        Path basePath = folder.toPath();
+        Files.walk(basePath).forEach(p -> {
+            try {
+                if (Files.isDirectory(p)) return; // skip dirs, ZIP only files
+
+                String zipEntryName = basePath.relativize(p).toString().replace("\\", "/");
+                ZipEntry entry = new ZipEntry(zipEntryName);
+                zos.putNextEntry(entry);
+
+                Files.copy(p, zos); // write file content
+                zos.closeEntry();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        zos.close();
+        return baos;
     }
 
     public static String[] getJarContents(String fileName) throws IOException {

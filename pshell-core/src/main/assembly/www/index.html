@@ -846,7 +846,8 @@
             
             function plotDataset(path) {
                 closeDataResult()
-                $.get(base + '/eval/plot(load_data("' + $('#data_path').val() + '"))', function (data) {
+                //$.get(base + '/eval/plot(load_data("' + $('#data_path').val() + '"))', function (data) {
+                $.get(base + '/eval/plot("' + $('#data_path').val() + '")', function (data) {
                     onPlots()
                 }).error(function (xhr, textStatus, errorThrown) {
                     showDataResult(xhr.responseText)                    
@@ -877,8 +878,18 @@
                     if (this.status == 200){
                         if (this.readyState == 4){
                             closeDataResult()
-                            var name = path.substring(path.lastIndexOf('/') + 1)
-                            saveData(this.response, name)  
+                            
+                            // Try to read filename from the Content-Disposition header
+                            var fileName = null;
+                            var cd = xhr.getResponseHeader('Content-Disposition');
+                            if (cd) {
+                                var match = /filename="?([^"]+)"?/i.exec(cd);
+                                if (match && match[1]) {fileName = match[1];}
+                            }
+                            if (!fileName) { //Falllback
+                                fileName = path.substring(path.lastIndexOf('/') + 1);
+                            }
+                            saveData(this.response, fileName);
                         }
                     } else if (this.status){                        
                         $('#download').prop('disabled', false);

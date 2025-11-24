@@ -3,6 +3,8 @@
 .dark-mode {
     background-color: #222 !important;
     color: #eee !important;
+    scrollbar-width: thin;
+    scrollbar-color: #555;
 }
 
 /* Navbar */
@@ -62,25 +64,43 @@
 
 /* Scrollbars (optional, for better dark appearance) */
 .dark-mode ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-.dark-mode ::-webkit-scrollbar-thumb {
-    background-color: #555;
-    border-radius: 4px;
+    width: 14px;
+    height: 14px;
 }
 
 .dark-mode ::-webkit-scrollbar-track {
     background-color: #222;
+    border-radius: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #666, #444);
+  border-radius: 8px;
+  border: 2px solid #1e1e1e; /* Creates padding illusion */
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #777, #555);
+}
+
+.dark-mode ::-webkit-scrollbar-corner {
+  background: #1e1e1e;
+}
+
+/* Resizer */
+.dark-mode ::-webkit-resizer {
+  background: #333;
+  border-radius: 4px;
+  width: 14px;
+  height: 14px;  
 }
 
 .dark-mode .progress {
-  background-color: #1f1f1f;
+  background-color: #222;
 }
 
 .dark-mode .progress span {
-    color: #e0e0e0;
+    color: #eee;
 }
 
 .dark-mode .shadow_ro {
@@ -94,11 +114,11 @@
 
 .dark-mode .shadow {
     background: #333;
-    background: linear-gradient(#222 0, #333 50px);
-    background: -o-linear-gradient(#222 0, #333 50px);
-    background: -ms-linear-gradient(#222 0, #333 50px);
-    background: -moz-linear-gradient(#222 0, #333 50px);
-    background: -webkit-linear-gradient(#222 0, #333 50px);
+    background: linear-gradient(#303030 0, #333 50px);
+    background: -o-linear-gradient(#303030 0, #333 50px);
+    background: -ms-linear-gradient(#303030 0, #333 50px);
+    background: -moz-linear-gradient(#303030 0, #333 50px);
+    background: -webkit-linear-gradient(#303030 0, #333 50px);
 }
 
 .dark-mode .statusbar {
@@ -125,7 +145,7 @@
 .dark-mode .dropdown-menu > .active > a,
 .dark-mode .dropdown-menu > .active > a:hover,
 .dark-mode .dropdown-menu > .active > a:focus {
-  color: #fff;
+  color: #eee;
 }
 .dark-mode .dropdown-menu > .disabled > a,
 .dark-mode .dropdown-menu > .disabled > a:hover,
@@ -137,7 +157,7 @@
 .dark-mode .nav-tabs > li.active > a:hover,
 .dark-mode .nav-tabs > li.active > a:focus,
 .dark-mode .list-group-item {
-  color: #FFF;
+  color: #eee;
   background-color: #222;
 }
 
@@ -154,11 +174,11 @@ button.list-group-item:focus {
 }
 
 .dark-mode #plots_tab > li > a  {
-    color: #AAA !important;  /*Inactive tabs are not displayed blue*/
+    color: #aaa !important;  /*Inactive tabs are not displayed blue*/
 }
 
 .dark-mode #plots_tab > li.active > a,
 .dark-mode #plots_tab > li.active > a:focus,
 .dark-mode #plots_tab > li.active > a:hover {
-    color: #FFF !important;   
+    color: #eee !important;   
 }
