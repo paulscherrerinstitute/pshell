@@ -28,16 +28,21 @@ import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableRowSorter;
 
 /**
  *
@@ -305,6 +310,20 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                 return transferable;
             }
         });
+        
+        // Add key binding for Escape on the table itself (not in cell editors)
+        InputMap im = table.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        ActionMap am = table.getActionMap();
+
+        im.put(KeyStroke.getKeyStroke("ESCAPE"), "reset-sort");
+        am.put("reset-sort", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (table.getRowSorter() instanceof TableRowSorter trs) {
+                    trs.setSortKeys(null);
+                }
+            }
+        });          
 
     }
 

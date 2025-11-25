@@ -21,10 +21,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 /**
  *
@@ -235,6 +241,20 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
             }
         }
         );
+        
+        // Add key binding for Escape on the table itself (not in cell editors)
+        InputMap im = table.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        ActionMap am = table.getActionMap();
+
+        im.put(KeyStroke.getKeyStroke("ESCAPE"), "reset-sort");
+        am.put("reset-sort", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (table.getRowSorter() instanceof TableRowSorter trs) {
+                    trs.setSortKeys(null);
+                }
+            }
+        });        
 
     }
     public void initialize() {
@@ -332,7 +352,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
         }
     }
 
-    int getDeviceRow(GenericDevice dev) {
+    int getDeviceIndex(GenericDevice dev) {
         for (int i = 0; i < model.getRowCount(); i++) {
             if (dev.getName().equals(model.getValueAt(i, 0))) {
                 return i;
@@ -341,9 +361,20 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
         return -1;
     }
 
+    int getDeviceRow(GenericDevice dev) {
+        int index = getDeviceIndex(dev);
+        if (index>=0){
+            return table.convertRowIndexToView(index);
+        }
+        return index;
+    }    
     GenericDevice getRowDevice(int row) {
+        return getIndexDevice(table.convertRowIndexToModel(row));
+    }
+
+    GenericDevice getIndexDevice(int index) {
         try {
-            return DevicePool.getInstance().getByName((String) model.getValueAt(row, 0), type);
+            return DevicePool.getInstance().getByName((String) model.getValueAt(index, 0), type);
         } catch (Exception ex) {
             return null;
         }
@@ -423,6 +454,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
 
+        table.setAutoCreateRowSorter(true);
         table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
