@@ -46,7 +46,7 @@ public enum Options implements Option {
         VERSION.add("vr", "Show version");
         DEBUG.add("db", "Set debug mode");
         LAF.add("lf", "Look and feel: system, metal, nimbus, flat, dark or black");             
-        SIZE.add("sz", "Set application window size");     
+        SIZE.add("sz", "Set application window size","WxH");     
         FULL_SCREEN.add("fs", "Start in full screen mode");  
         UI_SCALE.add("us", "UI Scale factor as factor (e.g 0.75, 75% or 72dpi)");       
         CONSOLE_LOG.add("cl", "Set the console logging level");        
