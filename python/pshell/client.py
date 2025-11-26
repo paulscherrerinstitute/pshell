@@ -2,6 +2,9 @@ import threading
 import time
 import requests
 import json
+import re
+import os
+import zipfile
 from .sse import SSEReceiver
 
 try:
@@ -488,8 +491,45 @@ class PShellClient:
             url= "scandata-bin/"+url
             return  self._get_binary_response(self._get(url, stream=True))            
         url= "scandata/"+url
-        return self._get_response(self._get(url), False)        
-    
+        return self._get_response(self._get(url), False)
+
+    def download_data(self, path, output_dir=".", extract=False):
+        """
+          Downloads either a single file or a zipped folder
+          from the Java server's /download endpoint.
+          """
+        url = "download" + ("" if path.startswith('/') else "/") + path
+        response = self._get(url, stream=True)
+        response.raise_for_status()
+
+        # Extract filename from Content-Disposition header, if available
+        cd = response.headers.get("Content-Disposition", "")
+        filename = None
+        match = re.search(r'filename="?([^"]+)"?', cd)
+        if match:
+            filename = match.group(1)
+        # Fallback: use last part of URL
+        if not filename:
+            filename = url.rstrip("/").split("/")[-1]
+
+        os.makedirs(output_dir, exist_ok=True)
+        file_path = os.path.join(output_dir, filename)
+
+        # Save the file in chunks (good for large files)
+        with open(file_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+        if filename.lower().endswith(".zip") and extract:
+            extract_dir = filename[:-4]  # remove .zip
+            os.makedirs(extract_dir, exist_ok=True)
+            with zipfile.ZipFile(filename, "r") as zip_ref:
+                zip_ref.extractall(extract_dir)
+            os.remove(filename)
+            return extract_dir
+        return file_path
+
     def get_plot_contexts(self):
         """Return list of plot contexts
 
