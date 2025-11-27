@@ -382,10 +382,16 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                             double yValue = positions[1].doubleValue();
                             if (plot instanceof MatrixPlotBase matrixPlotBase) {
                                 matrixPlotBase.getSeries(0).appendData(xValue, yValue, number.doubleValue());
-                            } else if (plot instanceof LinePlotBase linePlotBase) {
+                            } else if (plot instanceof LinePlotBase linePlotBase) {                                
                                 int series = index % (scan.getNumberOfSteps()[1] + 1);
+                                boolean returning = scan.isZigzag()  &&  ((int)(index/ (scan.getNumberOfSteps()[1] + 1)) %2 ==1);
+                                if (returning){
+                                    series = scan.getNumberOfSteps()[1] - series;
+                                }
                                 if (newPass) {
-                                    linePlotBase.getSeries(0).appendData(xValue, Double.NaN);
+                                    for (int s=0; s<linePlotBase.getNumberOfSeries(); s++){
+                                        linePlotBase.getSeries(s).appendData(xValue, Double.NaN);
+                                    }
                                 }
                                 linePlotBase.getSeries(series).appendData(xValue, number.doubleValue());
 

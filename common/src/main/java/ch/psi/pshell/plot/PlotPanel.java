@@ -218,13 +218,14 @@ public class PlotPanel extends MonitoredPanel {
     Plot newPlot(String name, boolean isScan, int dim, boolean allowLowerDim) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Plot requestedPlot = null;
         try {
-            if (isScan && (prefs.plotTypes != null)) {
+            //Not honoring requested plot type in saved because must manage sevar edge cases and requires saving more scan info.
+            if (isScan && (prefs.plotTypes != null)) { 
                 Class type = getPlotClass(prefs.plotTypes.get(name));
                 //If device name matches a Cacheable cache name, use the rule for the parent  
                 if (type != null) {
-                    requestedPlot = (Plot) type.newInstance();
+                        requestedPlot = (Plot) type.newInstance();
+                    }
                 }
-            }
         } catch (Exception ex) {
             Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
         }
@@ -635,7 +636,34 @@ public class PlotPanel extends MonitoredPanel {
                     if (data instanceof Number){
                         data = new double[]{((Number)data).doubleValue()};
                     }
-                    ((LinePlotSeries) plot.getSeries(0)).setData(x, (double[]) data);
+                    /*
+                    //Don't have information to properly display zigzag.
+                    if ((rank == 2) && (steps.length==2) ){      
+                        double[] d = (double[])data;
+                        for (int p=0; p< descriptor.passes; p++){
+                            boolean newPass= p>0;
+                            int offset = p * (steps[0]+1) * (steps[1]+1);
+                            for (int i=0; i<=steps[1];i++){  
+                                double[] series = new double[steps[0]+1];
+                                double[] xseries = (x!=null) ? new double[steps[0]+1] : null;
+                                for (int j=0; j<=steps[0]; j++){
+                                    int index = offset + j*(steps[1]+1)+i;
+                                    series[j] = (index<d.length) ? d[index] : Double.NaN;
+                                    if (xseries!=null){
+                                        xseries[j] = (index<x.length) ? x[index] : Double.NaN;
+                                    }
+                                }
+                                if (newPass){
+                                    ((LinePlotSeries) plot.getSeries(i)).appendData(xseries[0], Double.NaN);
+                                }
+                                ((LinePlotSeries) plot.getSeries(i)).appendData(xseries, series);
+                            }                        
+                        }
+                    }
+                    else {
+                    */
+                        ((LinePlotSeries) plot.getSeries(0)).setData(x, (double[]) data);
+                    //}
                 }
             } else if (plot instanceof MatrixPlot matrixPlot) {
                 MatrixPlotSeries series = matrixPlot.getSeries(0);
