@@ -32,11 +32,6 @@ public class LayoutDefault extends LayoutBase {
     public static String PATH_TIMESTAMPS = "timestamps/";
     public static String PATH_SETPOINTS = "setpoints/";
 
-    public static final String ATTR_SCAN_DIMENSION = "Dimensions";
-    public static final String ATTR_SCAN_STEPS = "Steps";
-    public static final String ATTR_SCAN_PASSES = "Passes";
-    public static final String ATTR_SCAN_WRITABLES = "Writables";
-    public static final String ATTR_SCAN_READABLES = "Readables";
     public static final String ATTR_READABLE_INDEX = "Readable Index";
     public static final String ATTR_WRITABLE_INDEX = "Writable Index";
     public static final String ATTR_WRITABLE_DIMENSION = "Writable Dimension";

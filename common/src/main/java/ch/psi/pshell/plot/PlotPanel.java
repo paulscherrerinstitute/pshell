@@ -191,6 +191,12 @@ public class PlotPanel extends MonitoredPanel {
     
     protected Class getPlotClass(Object plotType) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         if (plotType != null) {
+            if (plotType instanceof String str) {                  
+                try {
+                   plotType = Integer.parseInt(str);                  
+               } catch (NumberFormatException e) {
+               }
+            }
             if (plotType instanceof Number number) {
                 switch (number.intValue()) {
                     case 1 -> plotType = PlotPanel.getLinePlotImpl();
@@ -212,7 +218,7 @@ public class PlotPanel extends MonitoredPanel {
     Plot newPlot(String name, boolean isScan, int dim, boolean allowLowerDim) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Plot requestedPlot = null;
         try {
-            if (isScan && (prefs.plotTypes != null)) {
+            if ((prefs.plotTypes != null)) {
                 Class type = getPlotClass(prefs.plotTypes.get(name));
                 //If device name matches a Cacheable cache name, use the rule for the parent  
                 if (type != null) {
@@ -658,6 +664,9 @@ public class PlotPanel extends MonitoredPanel {
                                 series.appendData(x[i], y[i], array[i]);
                             }
                         }
+                    }
+                    if (plot instanceof MatrixPlotJFree mpjf){
+                        mpjf.resetZoom();
                     }
                 } else {
                     series.setData((double[][]) data);

@@ -31,6 +31,13 @@ public abstract class LayoutBase implements Layout {
     public static String PATH_DIAGS = "diags/";
     public static String PATH_LOGS = "logs/";   
     
+    public static final String ATTR_SCAN_DIMENSION = "Dimensions";
+    public static final String ATTR_SCAN_STEPS = "Steps";
+    public static final String ATTR_SCAN_PASSES = "Passes";
+    public static final String ATTR_SCAN_WRITABLES = "Writables";
+    public static final String ATTR_SCAN_READABLES = "Readables";
+    
+    
     public static final String SETPOINTS_DATASET_SUFFIX = "_setpoint";
 
     boolean writeSessionMetadata=true;
@@ -190,6 +197,7 @@ public abstract class LayoutBase implements Layout {
         setStartTimestampAttibute(scan);
         setPlotPreferencesAttibutes(scan);
         setScanType(scan);
+        
     }
     
     @Override

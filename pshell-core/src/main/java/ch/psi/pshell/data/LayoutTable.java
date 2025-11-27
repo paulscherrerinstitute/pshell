@@ -108,10 +108,12 @@ public class LayoutTable extends LayoutBase {
             }
             fieldNames[index++] = readable.getAlias();
         }        
-        Map features =  getDataManager().getStorageFeatures(null);
-        getDataManager().createDataset(path, fieldNames, fieldTypes, fieldLength, features);
-        getDataManager().setAttribute(path, ATTR_SCAN_WRITABLE_DIMS, (writableDims.length > 0) ? writableDims : new int[]{-1});
-
+        DataManager dm = getDataManager();
+        Map features =  dm.getStorageFeatures(null);
+        dm.createDataset(path, fieldNames, fieldTypes, fieldLength, features);
+        dm.setAttribute(path, ATTR_SCAN_WRITABLE_DIMS, (writableDims.length > 0) ? writableDims : new int[]{-1});
+        dm.setAttribute(path, ATTR_SCAN_STEPS, (scan.getNumberOfSteps().length > 0) ? scan.getNumberOfSteps() : new int[]{-1});
+        dm.setAttribute(path, ATTR_SCAN_PASSES, scan.getNumberOfPasses());        
         super.onStart(scan);
     }
 
@@ -190,7 +192,12 @@ public class LayoutTable extends LayoutBase {
                     }
                 }
                 int[] steps = (size == null) || (size[0] == 0) || (size[1] == 0) ? null : new int[]{size[0] - 1, size[1] - 1};
-
+                Object attrSteps = dm.getAttribute(root, path, ATTR_SCAN_STEPS);
+                if (attrSteps instanceof int[] intSteps) {
+                     steps = intSteps;
+                }                
+                Object passes = dm.getAttribute(root, path, ATTR_SCAN_PASSES);
+                    
                 double[] xdata = null;
                 double[] ydata = null;
 
@@ -221,6 +228,9 @@ public class LayoutTable extends LayoutBase {
                 for (PlotDescriptor plot : ret) {
                     plot.labelX = label;
                     plot.steps = steps;
+                    if (passes instanceof Number number) {
+                        plot.passes = number.intValue();
+                    }                    
                 }
                 return ret;
             }
