@@ -18,6 +18,7 @@ public class ScriptStdio implements AutoCloseable {
     ScriptStdioListener listener;
     final static Logger logger = Logger.getLogger(ScriptStdio.class.getName());
     public static final String END_OF_LINES = Character.toString((char) 0);
+    public static boolean READ_AS_STRING = true;
 
     public ScriptStdioListener getListener() {
         return listener;
@@ -117,6 +118,10 @@ public class ScriptStdio implements AutoCloseable {
                                     buf = null;
                                     return -1;
                                 } else {
+                                    if (READ_AS_STRING){
+                                        String quotes = buf.contains("\"") ? "'" : "\"";                                                                                  
+                                        buf= quotes + buf + quotes;
+                                    }
                                     buf += '\n';
                                 }
 

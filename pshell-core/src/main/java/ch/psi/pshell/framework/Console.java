@@ -81,10 +81,20 @@ public class Console implements AutoCloseable{
 
     }
         
-
+    public String readLine() throws IOException{
+        if (console==null){
+            throw new IOException("No stdin available");
+        }
+        return console.readLine(">");
+    }
+    
+    ConsoleReader console;
+    public ConsoleReader getAdvancedConsole(){
+        return console;
+    }
     //Uses JLine has JNI on Windows
     void runAdvancedConsole() throws IOException {
-        ConsoleReader console = new ConsoleReader();
+        console = new ConsoleReader();
         MemoryHistory history = new MemoryHistory();
         history.setMaxSize(Context.getSequencer().getHistory().getSize());
         history.setIgnoreDuplicates(true);

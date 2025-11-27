@@ -13,6 +13,7 @@ import ch.psi.pshell.framework.Setup.LockMode;
 import ch.psi.pshell.notification.Notifier.NotificationLevel;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.extension.Plugin;
+import ch.psi.pshell.framework.App;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanBase;
@@ -46,9 +47,11 @@ import ch.psi.pshell.utils.State.StateException;
 import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Sys;
 import ch.psi.pshell.utils.Threading;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
@@ -757,8 +760,17 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         public String readStdin() throws InterruptedException {
             //TODO
             synchronized (stdinInput) {
-                stdinInput.waiting = true;
-                stdinInput.wait();
+                stdinInput.waiting = true;                
+                if (Setup.isGui()){
+                    stdinInput.wait();
+                } else {
+                    try{
+                        stdinInput.str =  App.getConsole().readLine();
+                    } catch (IOException | RuntimeException ex) {
+                        stdinInput.str = "";
+                    }
+                    stdinInput.waiting = false;
+                }
                 return stdinInput.str;
             }
         }
