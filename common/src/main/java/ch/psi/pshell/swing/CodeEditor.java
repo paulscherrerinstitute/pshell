@@ -72,12 +72,12 @@ public class CodeEditor extends TextEditor {
         Color colorText = getForegroundColor();
         Color colorString = new Color(206, 123, 0);
         Color colorComment = dark ? new Color(128, 128, 128) : new Color(150, 150, 150);
-        Color colorReserved = dark ? new Color(70, 70, 255) : new Color(0, 0, 230);
-        Color colorNumber = dark ? new Color(155, 105, 50) : new Color(125, 75, 0);
+        Color colorReserved = dark ? new Color(100, 149, 255) : new Color(0, 0, 230);
+        Color colorNumber = dark ? new Color(221, 171, 90) : new Color(125, 75, 0);
         Color colorSeparator = colorText; //Brackets, parenthesis...
         Color colorOperator = colorText;
-        Color colorField = dark ? new Color(0, 200, 0) : new Color(0, 140, 0);
-        Color colorFunction = dark ? new Color(220, 0, 220) : new Color(128, 0, 128);        
+        Color colorField = dark ? new Color(0, 180, 0) : new Color(0, 140, 0);
+        Color colorFunction = dark ? new Color(200, 0, 200) : new Color(128, 0, 128);        
         
         boolean italicComments = true;
         boolean boldReserverd = false;

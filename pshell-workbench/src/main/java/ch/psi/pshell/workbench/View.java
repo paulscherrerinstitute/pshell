@@ -2982,7 +2982,7 @@ public class View extends MainFrame{
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Text files (*.txt, *.csv, *.log)", DataPanel.textFileExtensions));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Data files (*.h5)", DataPanel.dataFileExtensions));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Strip Chart definition file (*." + StripChart.FILE_EXTENSION + ")", StripChart.FILE_EXTENSION));
-            chooser.addChoosableFileFilter(new ExtensionFileFilter("Image files (*.png, *.bmp, *.gif, *.jpg)", DataPanel.imageFileExtensions));
+            chooser.addChoosableFileFilter(new ExtensionFileFilter("Image files (*.png, *.bmp, *.gif, *.jpg, *.tiff)", DataPanel.imageFileExtensions));
 
             HashMap<FileFilter, Processor> processors = new HashMap<>();
             for (Processor processor : Processor.getServiceProviders()) {

@@ -71,24 +71,13 @@ public class Shell extends MonitoredPanel {
     }
     @Override
     protected final void onLafChange() {  
-        if (MainFrame.isDark()){
-            colorOutput = Color.LIGHT_GRAY ;
-            colorError = new Color(255, 70, 70);
-            colorInput = new Color(100, 100, 255);
-            colorRemote = Color.GRAY;
-            colorStdout = new Color(187, 187, 187);
-            colorStderr = new Color(255, 0, 255);
-            colorStdin = new Color(0, 200, 0);               
-        } else {
-            colorOutput = Color.DARK_GRAY;
-            colorError =  Color.RED;
-            colorInput = Color.BLUE;
-            colorRemote = Color.GRAY;
-            colorStdout = Color.BLACK;
-            colorStderr = Color.MAGENTA;
-            colorStdin = Color.GREEN;  
-        }
-     
+            colorOutput = SwingUtils.getColorOutput();
+            colorError =  SwingUtils.getColorError();
+            colorInput = SwingUtils.getColorInput();
+            colorRemote = SwingUtils.getColorRemote();
+            colorStdout = SwingUtils.getColorStdout();
+            colorStderr = SwingUtils.getColorStderr();
+            colorStdin = SwingUtils.getColorStdin();     
     }        
     
     public static Color getColorOutput(){

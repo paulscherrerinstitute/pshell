@@ -1697,7 +1697,7 @@ public class SwingUtils {
             Logger.getLogger(SwingUtils.class.getName()).log(Level.WARNING, null, ex);
         }
     }
-
+    
     public static Color getColorOutput(){
         return isDark() ? Color.LIGHT_GRAY :  Color.DARK_GRAY;
     }
@@ -1707,7 +1707,7 @@ public class SwingUtils {
     }
 
     public static Color getColorInput(){
-        return isDark() ? new Color(100, 100, 255) :  Color.BLUE;
+        return isDark() ? new Color(85, 155, 255) :  Color.BLUE;
     }
 
     public static Color getColorRemote(){
@@ -1719,7 +1719,7 @@ public class SwingUtils {
     }
 
     public static Color getColorStderr(){
-        return isDark() ? new Color(255, 0, 255) :  Color.MAGENTA;
+        return isDark() ? new Color(240, 0, 240) :  Color.MAGENTA;
     }
     
     public static Color getColorStdin(){
