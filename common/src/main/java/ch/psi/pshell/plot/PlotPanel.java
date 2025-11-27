@@ -218,7 +218,7 @@ public class PlotPanel extends MonitoredPanel {
     Plot newPlot(String name, boolean isScan, int dim, boolean allowLowerDim) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Plot requestedPlot = null;
         try {
-            if ((prefs.plotTypes != null)) {
+            if (isScan && (prefs.plotTypes != null)) {
                 Class type = getPlotClass(prefs.plotTypes.get(name));
                 //If device name matches a Cacheable cache name, use the rule for the parent  
                 if (type != null) {
