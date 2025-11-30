@@ -33,6 +33,9 @@ public abstract class LayoutBase implements Layout {
     
     public static final String ATTR_SCAN_DIMENSION = "Dimensions";
     public static final String ATTR_SCAN_STEPS = "Steps";
+    public static final String ATTR_SCAN_START = "StartPos";
+    public static final String ATTR_SCAN_END = "EndPos";
+    public static final String ATTR_SCAN_ZIGZAG = "ZigZag";
     public static final String ATTR_SCAN_PASSES = "Passes";
     public static final String ATTR_SCAN_WRITABLES = "Writables";
     public static final String ATTR_SCAN_READABLES = "Readables";
@@ -196,8 +199,7 @@ public abstract class LayoutBase implements Layout {
     public void onStart(Scan scan) throws IOException {
         setStartTimestampAttibute(scan);
         setPlotPreferencesAttibutes(scan);
-        setScanType(scan);
-        
+        setScanAttributes(scan);        
     }
     
     @Override
@@ -224,10 +226,20 @@ public abstract class LayoutBase implements Layout {
         }
     }
     
-    protected void setScanType(Scan scan) throws IOException {
+    protected void setScanAttributes(Scan scan) throws IOException {
         String scanPath = getScanPath(scan);
         if (scanPath != null) {
-            getDataManager().setAttribute(getScanPathName(scan), ATTR_TYPE, scan.getType());  
+            DataManager dataManager = getDataManager();
+            dataManager.setAttribute(scanPath, ATTR_TYPE, scan.getType());  
+            dataManager.setAttribute(scanPath, ATTR_SCAN_DIMENSION, scan.getDimensions());
+            dataManager.setAttribute(scanPath, ATTR_SCAN_STEPS, (scan.getNumberOfSteps().length > 0) ? scan.getNumberOfSteps() : new int[]{-1});
+            dataManager.setAttribute(scanPath, ATTR_SCAN_PASSES, scan.getNumberOfPasses());
+            dataManager.setAttribute(scanPath, ATTR_SCAN_READABLES, scan.getReadableNames());
+            dataManager.setAttribute(scanPath, ATTR_SCAN_WRITABLES, scan.getWritableNames());
+            dataManager.setAttribute(scanPath, ATTR_SCAN_START, scan.getStart());
+            dataManager.setAttribute(scanPath, ATTR_SCAN_END, scan.getEnd());
+            dataManager.setAttribute(scanPath, ATTR_SCAN_ZIGZAG, scan.isZigzag());        
+            
         }
     }   
 

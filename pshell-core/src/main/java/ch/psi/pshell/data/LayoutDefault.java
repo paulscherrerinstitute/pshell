@@ -176,13 +176,7 @@ public class LayoutDefault extends LayoutBase {
 
             dataManager.setAttribute(getDataPath(scan, name), ATTR_READABLE_INDEX, index++);
             writeDeviceMetadataAttrs(getDataPath(scan, name), readable);
-        }
-        dataManager.setAttribute(group, ATTR_SCAN_DIMENSION, scan.getDimensions());
-        dataManager.setAttribute(group, ATTR_SCAN_STEPS, (scan.getNumberOfSteps().length > 0) ? scan.getNumberOfSteps() : new int[]{-1});
-        dataManager.setAttribute(group, ATTR_SCAN_PASSES, scan.getNumberOfPasses());
-        dataManager.setAttribute(group, ATTR_SCAN_READABLES, scan.getReadableNames());
-        dataManager.setAttribute(group, ATTR_SCAN_WRITABLES, scan.getWritableNames());
-
+        }                
         super.onStart(scan);
     }
 
@@ -297,7 +291,6 @@ public class LayoutDefault extends LayoutBase {
 
             String[] children = dm.getChildren(root, path);
 
-            Object steps = dm.getAttribute(root, path, ATTR_SCAN_STEPS);
             for (String child : ch.psi.pshell.utils.Arr.copy(children)) {
                 Object dim = dm.getAttribute(root, child, ATTR_WRITABLE_DIMENSION);
                 Object index = dm.getAttribute(root, child, ATTR_WRITABLE_INDEX);
@@ -349,13 +342,26 @@ public class LayoutDefault extends LayoutBase {
                         }
                     }
 
-                    if (steps instanceof int[] intSteps) {
-                        descriptor.steps = intSteps;
+                    if (dm.getAttribute(root, path, ATTR_SCAN_STEPS) instanceof int[] isteps) {
+                        descriptor.steps = isteps;
                     }
-                    Object passes = dm.getAttribute(root, path, ATTR_SCAN_PASSES);
-                    if (passes instanceof Number number) {
+                    if (dm.getAttribute(root, path, ATTR_SCAN_START) instanceof double[] dstart) {
+                        descriptor.start = dstart;
+                    }
+                    if (dm.getAttribute(root, path, ATTR_SCAN_END) instanceof double[] dend) {
+                        descriptor.end = dend;
+                    }
+                    if (dm.getAttribute(root, path, ATTR_SCAN_ZIGZAG) instanceof Boolean bzigzag) {
+                        descriptor.zigzag = bzigzag;
+                    }                    
+                    if (dm.getAttribute(root, path, ATTR_SCAN_PASSES) instanceof Number number) {
                         descriptor.passes = number.intValue();
                     }
+                    if (dm.getAttribute(root, path, ATTR_SCAN_DIMENSION) instanceof Number number) {
+                        descriptor.dimensions = number.intValue();
+                    }
+                                       
+                    
                     try {
                         //Getting stdev if available and error not yet set by DeviceManager(if error vector is too big for an attribute)
                         if (descriptor.error == null) {
@@ -364,7 +370,7 @@ public class LayoutDefault extends LayoutBase {
                         }
                     } catch (Exception ex) {
                     }
-                    descriptor.labelX = ((writables != null) && (writables.length > 0)) ? writables[0] : null;
+                    descriptor.labels =  writables;
                 }
                 ret.addAll(descriptors);
             }

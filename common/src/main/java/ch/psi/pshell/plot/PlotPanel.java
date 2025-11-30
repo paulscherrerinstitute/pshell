@@ -217,15 +217,16 @@ public class PlotPanel extends MonitoredPanel {
 
     Plot newPlot(String name, boolean isScan, int dim, boolean allowLowerDim) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Plot requestedPlot = null;
-        try {
-            //Not honoring requested plot type in saved because must manage sevar edge cases and requires saving more scan info.
-            if (isScan && (prefs.plotTypes != null)) { 
+        try {            
+            if (prefs.plotTypes != null) { 
                 Class type = getPlotClass(prefs.plotTypes.get(name));
-                //If device name matches a Cacheable cache name, use the rule for the parent  
-                if (type != null) {
+                if (isScan || LinePlot.class.isAssignableFrom(type)){ 
+                    //If device name matches a Cacheable cache name, use the rule for the parent  
+                    if (type != null) {
                         requestedPlot = (Plot) type.newInstance();
                     }
                 }
+            }
         } catch (Exception ex) {
             Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
         }
@@ -303,8 +304,9 @@ public class PlotPanel extends MonitoredPanel {
             } else {
                 if ((recordSize == null) || (recordSize[0] == 1)) {
 
-                    plot = newPlot(name, isScan, 3, false);
+                    plot = newPlot(name, isScan, 3, false);                    
                     SlicePlotSeries series = new SlicePlotSeries(name, start[1], end[1], steps[1] + 1, start[2], end[2], steps[2] + 1, start[0], end[0], steps[0] + 1);
+                    //SlicePlotSeries series = new SlicePlotSeries(name, start[2], end[2], steps[2] + 1, start[1], end[1], steps[1] + 1, start[0], end[0], steps[0] + 1);
                     plot.addSeries(series);
                 }
             }
@@ -354,7 +356,7 @@ public class PlotPanel extends MonitoredPanel {
                     double step_size = (steps[1]!=0) ? ((end[1] - start[1]) / (steps[1])) : 0;
                     for (int i = 0; i <= steps[1]; i++) {
                         double y = start[1] + (i * step_size);
-                        String seriesName = String.valueOf(Convert.roundDouble(y, 8));
+                        String seriesName = getDispVal(y);
                         while (Arr.containsEqual(plot.getSeriesNames(), seriesName)){
                             seriesName = seriesName + "'";
                         }                
@@ -478,6 +480,7 @@ public class PlotPanel extends MonitoredPanel {
         throw new IllegalArgumentException("Invalid array type: " + data.getClass());
     }
 
+    //Open offline pots (scan=False)
     public Plot addPlot(PlotDescriptor descriptor) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Object data = descriptor.data;
         if (data == null) {
@@ -502,23 +505,44 @@ public class PlotPanel extends MonitoredPanel {
         if (rank < 0) {
             rank = dimensions;
         }
-
-        double[] start = null;
-        double[] end = null;
+ 
+        double[] start = (dimensions>1) || multidimentional1dDataset ? descriptor.start : null;
+        double[] end =  (dimensions>1) || multidimentional1dDataset ? descriptor.end : null;
         int[] steps = null;
-
-        if (dimensions == 1) {
-            //2D-scan with 1d datasets
-            if ((numberSteps != null) && (numberSteps.length == 2) && (y != null) && (x != null)
-                    && (x.length == y.length) && (((double[]) data).length == x.length)) {
-                start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y)};
-                end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y)};
-                steps = numberSteps;
-                rank = 2;
-                multidimentional1dDataset = true;
+         if (dimensions == 1) {            
+            if (multidimentional1dDataset) {
+                start = descriptor.start;
+                end = descriptor.end;                               
+                if (descriptor.dimensions==3){
+                    //3D-scan with 1d datasets of scalar
+                    if (start==null){
+                        start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y), (Double) Arr.getMin(z)};
+                    }
+                    if (end==null){
+                        end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y), (Double) Arr.getMax(z)};                    
+                    }
+                    steps = numberSteps;
+                    if (descriptor.passes>1){
+                        steps[0]=steps[0]*2+1;
+                    }
+                    rank = 3;
+                } else {
+                    //2D-scan with 1d datasets of scalar
+                    if (start==null){
+                        start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y)};
+                    }
+                    if (end==null){
+                        end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y)};                    
+                    }
+                    steps = numberSteps;
+                    rank = 2;                    
+                }
+            } else {
+                //Single line plot or 1d scan of scalar
             }
         } else if (dimensions == 2) {
             if (rank == 3) {
+                //Single slice plot as list of images, or 1d scan of images, or 2d scan of images  , or 3d scan of images 
                 //z must be set
                 double[][] array = (double[][]) data;
                 start = new double[]{z[0], 0, 0};
@@ -534,26 +558,33 @@ public class PlotPanel extends MonitoredPanel {
                     end[2] = y[y.length - 1];
                     steps[2] = y.length - 1;
                 }
-            } else {
-                //2D-scan with 1d datasets of arrays 
+            } else {                
                 if (multidimentional1dDataset) {
+                    //2D-scan with 1d datasets of arrays  or 3D-scan with 1d datasets of arrays
                     sparseArrayData = (dimensions==2) && (numberSteps[0] < 0) && (numberSteps[1] < 0);
                     // Sparse table: don't try to make 3d plots of array data
+                    double startX = ((start==null)||(start.length<1)) ? (Double) Arr.getMin(x) : start[0];
+                    double startY = ((start==null)||(start.length<2)) ? (Double) Arr.getMin(y) : start[1];
+                    double endX = ((end==null)||(end.length<1)) ? (Double) Arr.getMax(x) : end[0];
+                    double endY = ((end==null)||(end.length<2)) ? (Double) Arr.getMax(y) : end[1];
                     if (sparseArrayData){
-                        //data = Convert.transpose(data);
-                        start = new double[]{(Double) Arr.getMin(x), 0};
-                        end = new double[]{(Double) Arr.getMax(x), shape[1] - 1};
+                        start = new double[]{startX, 0};
+                        end = new double[]{endX, shape[1] - 1};
                         steps = new int[]{-1, shape[1] - 1};
                         rank = 2;
                     } else {
-                        start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y), 0};
-                        end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y), shape[1] - 1};
+                        start = new double[]{startX, startY, 0};
+                        end = new double[]{endX, endY, shape[1] - 1};
                         steps = new int[]{numberSteps[0], numberSteps[1], shape[1] - 1};
                         if (numberSteps.length==2){
                             if ((z != null) && (z.length > 0)) {
                                 start[2] = z[0];
                                 end[2] = z[z.length - 1];
                                 steps[2] = z.length - 1;
+                            } else {
+                                if (descriptor.passes>1){
+                                    steps[0]=steps[0]*2+1;
+                                }                                
                             }
                             rank = 3;
                         } else if (numberSteps.length>2){
@@ -565,6 +596,7 @@ public class PlotPanel extends MonitoredPanel {
                         }
                     }
                 } else {
+                    //Single matrix plot or 1d scan of waveform
                     start = new double[2];
                     end = new double[2];
                     steps = new int[2];
@@ -594,8 +626,8 @@ public class PlotPanel extends MonitoredPanel {
                 }
             }
         } else if (dimensions == 3) {
+            //Single slice plot as 3d dataset
             double[][][] array = (double[][][]) data;
-
             start = new double[3];
             start[0] = 0;
             end = new double[3];
@@ -624,7 +656,12 @@ public class PlotPanel extends MonitoredPanel {
             }
         }
 
-        Plot plot = addPlot(descriptor.name, false, descriptor.labelX, rank, null, start, end, steps, false);
+        int[] size = (steps==null) ? new int[0] : new int[steps.length];
+        for (int i=0; i< size.length;i++){
+            size[i] = steps[i]+1;
+        }
+                
+        Plot plot = addPlot(descriptor.name, false, descriptor.getLabelX(), rank, null, start, end, steps, false);
         if (plot != null) {
             if (plot instanceof LinePlotBase linePlot) {
                 if ((descriptor.error != null) && (descriptor.error.length == ((double[]) data).length) && (plot instanceof LinePlotJFree)) {
@@ -636,34 +673,51 @@ public class PlotPanel extends MonitoredPanel {
                     if (data instanceof Number){
                         data = new double[]{((Number)data).doubleValue()};
                     }
-                    /*
-                    //Don't have information to properly display zigzag.
-                    if ((rank == 2) && (steps.length==2) ){      
-                        double[] d = (double[])data;
-                        for (int p=0; p< descriptor.passes; p++){
-                            boolean newPass= p>0;
-                            int offset = p * (steps[0]+1) * (steps[1]+1);
-                            for (int i=0; i<=steps[1];i++){  
-                                double[] series = new double[steps[0]+1];
-                                double[] xseries = (x!=null) ? new double[steps[0]+1] : null;
-                                for (int j=0; j<=steps[0]; j++){
-                                    int index = offset + j*(steps[1]+1)+i;
-                                    series[j] = (index<d.length) ? d[index] : Double.NaN;
-                                    if (xseries!=null){
-                                        xseries[j] = (index<x.length) ? x[index] : Double.NaN;
+                   
+                    if ((rank == 2) && (steps.length==2) ){                            
+                        if (data instanceof double[][] d){
+                            //TODO: avoid double transpose (in DataManager.doGetScanPlots)
+                            descriptor.transpose();
+                            d = (double[][])descriptor.data;
+                            //1d scan of array  as lineplot.
+                            linePlot.clear();
+                            linePlot.getAxis(Plot.AxisId.X).setLabel(descriptor.name);
+                            linePlot.getAxis(Plot.AxisId.X).setAutoRange(); 
+                            for (int i = 0; i <  d.length; i++) {
+                                String seriesName = (x!=null) ? getDispVal(x[i]) : String.valueOf(i);
+                                LinePlotSeries series = new LinePlotSeries(seriesName);
+                                linePlot.addSeries(series);
+                                series.setData(d[i]);
+                            }
+                        } else if (data instanceof double[] d){
+                            //2d scan of scalar  as lineplot.
+                            for (int p=0; p< descriptor.passes; p++){
+                                boolean newPass= p>0;
+                                int offset = p * size[0] * size[1];
+                                for (int j=0; j<=steps[1];j++){  
+                                    double[] series = new double[size[0]];
+                                    double[] xseries = (x!=null) ? new double[size[0]] : null;
+                                    for (int i=0; i<=steps[0]; i++){
+                                        boolean backwards = descriptor.zigzag && (i%2)==1;
+                                        int index = offset + i*size[1] + (backwards? steps[1]-j : j);
+                                        //int sindex = i ? steps[0]-i: i;
+                                        series[i] = (index<d.length) ? d[index] : Double.NaN;
+                                        if (xseries!=null){
+                                            xseries[i] = (index<x.length) ? x[index] : Double.NaN;
+                                        }
                                     }
-                                }
-                                if (newPass){
-                                    ((LinePlotSeries) plot.getSeries(i)).appendData(xseries[0], Double.NaN);
-                                }
-                                ((LinePlotSeries) plot.getSeries(i)).appendData(xseries, series);
-                            }                        
+                                    if (newPass){
+                                        ((LinePlotSeries) plot.getSeries(j)).appendData(xseries[0], Double.NaN);
+                                    }
+                                    ((LinePlotSeries) plot.getSeries(j)).appendData(xseries, series);
+                                }                        
+                            }
                         }
                     }
                     else {
-                    */
+                        //Single line plot or 1d scan of scalar
                         ((LinePlotSeries) plot.getSeries(0)).setData(x, (double[]) data);
-                    //}
+                    }
                 }
             } else if (plot instanceof MatrixPlot matrixPlot) {
                 MatrixPlotSeries series = matrixPlot.getSeries(0);
@@ -678,6 +732,7 @@ public class PlotPanel extends MonitoredPanel {
                         }                        
                     } else {
                         if (forceMatrixPlot){
+                            //3D-scan with 1d datasets of arrays
                             double[][] array = (double[][]) data;
                             //Already checked array sizes                   
                             for (int i = 0; i < array.length; i++) {
@@ -686,6 +741,7 @@ public class PlotPanel extends MonitoredPanel {
                                 }
                             }
                         } else {
+                            //2D-scan with 1d datasets (scalar)
                             double[] array = (double[]) data;
                             //Already checked array sizes                   
                             for (int i = 0; i < array.length; i++) {
@@ -697,27 +753,54 @@ public class PlotPanel extends MonitoredPanel {
                         mpjf.resetZoom();
                     }
                 } else {
+                    //Single matrix plot or  1d scan of waveform
                     series.setData((double[][]) data);
                 }
             } else if (plot instanceof SlicePlot slicePlot) {
                 final SlicePlotSeries series = slicePlot.getSeries(0);
                 if (multidimentional1dDataset) {
-                    double[][] array = (double[][]) data;
-                    final int[] _steps = steps;
-                    ((SlicePlotSeries) plot.getSeries(0)).setListener((SlicePlotSeries series1, int page) -> {
-                        try {
-                            int begin = page * (_steps[1] + 1);
-                            series1.clear();
-                            for (int i = begin; i < begin + (_steps[1] + 1); i++) {
-                                for (int j = 0; j < (_steps[2] + 1); j++) {
-                                    series1.appendData(y[i], (z == null) ? j : z[j], array[i][j]);
+                    //3D-scan with 1d datasets of scalar
+                    double step_y = descriptor.getStepSizeY();
+                    if (data instanceof double[] array){
+                        int pageSize = size[2] * size[1];
+                        ((SlicePlotSeries) plot.getSeries(0)).setListener((SlicePlotSeries series1, int page) -> {
+                            try {
+                                int begin = page * pageSize;
+                                series1.clear();
+                                for (int i = begin; i <begin+pageSize; i++) {
+                                    series1.appendData(y[i], z[i], array[i]);
                                 }
+                                //double vy = descriptor.start[0] + step_y * page;
+                                if (x!=null){
+                                    series1.getSlicePlot().setPageSubtitle( " " + descriptor.getLabelZ() + "=" + getDispVal(x[begin]));
+                                }
+                            } catch (Exception ex) {
+                                Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
                             }
-                        } catch (Exception ex) {
-                            Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
-                        }
-                    });
+                        });                        
+                    } else {
+                        //2D-scan with 1d datasets of arrays  
+                        double[][] array = (double[][]) data;
+                        ((SlicePlotSeries) plot.getSeries(0)).setListener((SlicePlotSeries series1, int page) -> {
+                            try {
+                                int begin = page * size[1];
+                                series1.clear();
+                                for (int i = begin; i < begin + size[1]; i++) {
+                                    for (int j = 0; j < size[2]; j++) {
+                                        series1.appendData(y[i], (z == null) ? j : z[j], array[i][j]);
+                                    }
+                                }
+                                double vy = x[page * size[1]];
+                                if ((descriptor.steps.length==2) &&  !Double.isNaN(step_y)){
+                                    series1.getSlicePlot().setPageSubtitle( " " + descriptor.getLabelY() + "=" + getDispVal(vy));
+                                }
+                            } catch (Exception ex) {
+                                Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
+                            }
+                        });
+                    }
                 } else if (dimensions == 3) {
+                    //Single slice plot as 3d datasety
                     double[][][] array = (double[][][]) data;
                     series.setListener((SlicePlotSeries series1, int page) -> {
                         try {
@@ -727,9 +810,13 @@ public class PlotPanel extends MonitoredPanel {
                         }
                     });
                 } else {
+                    //Single slice plot as list of images, or 1d scan of images, or 2d scan of images  or 3d scan of image
                     series.setListener((SlicePlotSeries series1, int page) -> {
                         for (String fmt: DataStore.getFormatIds()){
                             try {                            
+                                double step_z = descriptor.getStepSizeZ();
+                                double step_y = descriptor.getStepSizeY();
+                                double step_x = descriptor.getStepSizeX();
                                 DataSlice slice = new DataStore(fmt).getData(descriptor.root, descriptor.path, page);   
                                 try{
                                     Object data1 = slice.sliceData;
@@ -737,6 +824,39 @@ public class PlotPanel extends MonitoredPanel {
                                         data1 = Convert.toUnsigned(data1);
                                     }
                                     series1.setData((double[][]) Convert.toDouble(data1));
+                                    if ((descriptor.steps.length==2) && !Double.isNaN(step_x) && !Double.isNaN(step_y)){
+                                        int index_x;
+                                        int index_y;
+                                        if (descriptor.dimensions<=1){
+                                            index_y = page % (descriptor.steps[0]+1);
+                                            index_x = index_y;
+                                        } else {
+                                            if (descriptor.passes>1){
+                                                page = page % ((descriptor.steps[0]+1) * (descriptor.steps[1]+1));
+                                            }                                            
+                                            index_y = page / (descriptor.steps[1]+1);
+                                            boolean backwards = descriptor.zigzag && (index_y%2)==1;
+                                            index_x = backwards ? descriptor.steps[1] - page % (descriptor.steps[1]+1) : page % (descriptor.steps[1]+1);
+                                        }
+                                        double vy = descriptor.start[0] + step_y * index_y;
+                                        double vx = descriptor.start[1] + step_x * index_x;
+                                        series1.getSlicePlot().setPageSubtitle( " " +
+                                                descriptor.getLabelY() + "=" + getDispVal(vy) + " " +
+                                                descriptor.getLabelX() + "=" + getDispVal(vx));
+                                    } else if ((descriptor.steps.length==3) && !Double.isNaN(step_x) && !Double.isNaN(step_y)&& !Double.isNaN(step_z)){
+                                        int sz[]=new int[]{(descriptor.steps[0]+1), (descriptor.steps[1]+1), (descriptor.steps[2]+1)};
+                                        int index_x = page % sz[2];
+                                        int index_y = (page/sz[2]) % (sz[1]);
+                                        int index_z = (page/sz[2]/sz[1]) % (sz[0]);
+                                        
+                                        double vz = descriptor.start[0] + step_z * index_z;
+                                        double vy = descriptor.start[2] + step_y * index_y;
+                                        double vx = descriptor.start[1] + step_x * index_x;
+                                        series1.getSlicePlot().setPageSubtitle( " " +
+                                                descriptor.getLabelZ() + "=" + getDispVal(vz) + " " +
+                                                descriptor.getLabelY() + "=" + getDispVal(vy) + " " +
+                                                descriptor.getLabelX() + "=" + getDispVal(vx));
+                                    }
                                 } catch (Exception ex) {
                                     Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
                                 }
@@ -758,6 +878,9 @@ public class PlotPanel extends MonitoredPanel {
         return plot;
     }
 
+    static String getDispVal(Double d){
+        return String.valueOf(Convert.roundDouble(d, 6));
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

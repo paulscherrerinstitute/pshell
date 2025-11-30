@@ -19,5 +19,6 @@ public interface SlicePlot extends Plot<SlicePlotSeries> {
         }
         return getSeries(0).getPage();
     }    
-
+    
+    void setPageSubtitle(String value);
 }

@@ -2314,8 +2314,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     @Hidden
     public List<Plot> plot(PlotDescriptor plot, String title) throws Exception {
-        if ( (plot.data!=null) && (plot.data instanceof Object[] rows)){
-            if ((rows.length>0) && (rows[0] instanceof Object[] firstRow)){
+        if ( (plot.data!=null) && (plot.data instanceof Object[] rows) && Arr.getComponentType(plot.data)==Object.class){
+            if ((rows.length>0) && (rows[0].getClass().isArray()) && (rows[0] instanceof Object[] firstRow)){
                 var plots = new ArrayList<PlotDescriptor>();
                 //composite value                
                 for (int col=0; col<firstRow.length; col++){

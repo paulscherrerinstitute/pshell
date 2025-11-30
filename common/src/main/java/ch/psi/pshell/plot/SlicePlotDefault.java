@@ -198,21 +198,34 @@ public class SlicePlotDefault extends SlicePlotBase {
         return null;
     }
     
+    
     protected String getPageSubtitle(SlicePlotSeries series, int page){
         if ((series.hasRangeZ())) {
-            return " z=" + String.valueOf(Convert.roundDouble(series.getZ(page), 6));
+            return "z=" + String.valueOf(Convert.roundDouble(series.getZ(page), 6));
         }
         return "";
+    }
+    
+    String pageSubtitle;
+    public void setPageSubtitle(String value){
+        pageSubtitle = value;
+        setPageTitle();
     }
 
     void setPageTitle() {
         if (matrixPlot != null) {
             String title = getTitle();                        
-
-            SlicePlotSeries series = getSeries(0);
-            if (series != null) {
-                int page = (int) pageSelection.getValue();
-                title += getPageSubtitle(series, page);                
+            if (title!=null){
+                if (pageSubtitle!=null){
+                    title += " " + pageSubtitle;   
+                } else {
+                    SlicePlotSeries series = getSeries(0);
+                    if (series != null) {
+                        int page = (int) pageSelection.getValue();
+                        title += " " +getPageSubtitle(series, page);           
+                    }
+                }
+                title = title.trim();
             }
             matrixPlot.setTitle(title);
         }

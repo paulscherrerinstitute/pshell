@@ -43,7 +43,7 @@ public class PlotDescriptor {
     }
 
     public PlotDescriptor(String name, String root, String path, Object data, double[] x, double[] y, double[] z) {
-        this(name, root, path, data, x, y, z, 3);
+        this(name, root, path, data, x, y, z, Arr.getRank(data)==1 ? -1 :  3);
     }
 
     private PlotDescriptor(String name, Object data, double[] x, double[] y, double[] z, int rank) {
@@ -106,8 +106,15 @@ public class PlotDescriptor {
 
     public Object data;
     public int rank;
-    public int[] steps; //Set for multidimentional data linearized in 1d array
     public int passes;
+    public int dimensions;
+    
+    //Set for multidimentional data linearized in 1d array
+    public int[] steps; 
+    public double[] start; 
+    public double[] end;         
+    public boolean zigzag; 
+    
 
     public double[] x;
     public double[] y;
@@ -118,9 +125,9 @@ public class PlotDescriptor {
 
     public boolean isMultidimentional1dArray() {
         int[] shape = Arr.getShape(data);
-        if (    (rank==2) && (steps != null) && (steps.length >= 2) && 
+        if (    (rank<=2) && (steps != null) && (steps.length >= 2) && 
                 (y != null) && (x != null) && (x.length == y.length) &&
-                (shape.length >= 2) && (shape[0] == x.length) ){
+                (shape.length >= 1) && (shape[0] == x.length) ){
             if (steps.length==2){
                 return true;
             }
@@ -133,5 +140,91 @@ public class PlotDescriptor {
        return false;
     }
 
-    public String labelX;
+
+    public double getStepSize(int dim){
+        if ((steps!=null) && (end!=null) && (start!=null)){
+            if ((dim<steps.length) && (dim<end.length)  && (dim<start.length) ){
+                return steps[dim]!=0 ? (end[dim] - start[dim]) / (steps[dim]) : 0;
+            }
+        }
+        return Double.NaN;
+    }
+    
+    public double getStepSizeX(){
+        if ((steps!=null) && (steps.length>0)){
+            return getStepSize(steps.length-1);
+        }
+        return Double.NaN;
+    }
+
+    public double getStepSizeY(){
+        if ((steps!=null) && (steps.length>1)){
+            return getStepSize(steps.length-2);
+        }
+        return Double.NaN;
+    }
+
+    public double getStepSizeZ(){
+        if ((steps!=null) && (steps.length>2)){
+            return getStepSize(steps.length-3);
+        }
+        return Double.NaN;
+    }
+    
+     
+    public String[] labels;
+
+    public String getLabel(int dim){
+        if ((labels!=null) &&  (dim<labels.length) ){
+            return labels[dim];
+        }
+        return null;
+    }
+    
+    public String getLabelX(){
+        if ((labels!=null) && (labels.length>0)){
+            return labels[labels.length-1];
+        }
+        return "x";
+    }
+    
+    public String getLabelY(){
+        if ((labels!=null) && (labels.length>1)){
+            return labels[labels.length-2];
+        }
+        return "y";
+    }
+
+    public String getLabelZ(){
+        if ((labels!=null) && (labels.length>2)){
+            return labels[labels.length-3];
+        }
+        return "z";
+    }
+    
+    public void setLabelX(String value){
+        if ((labels!=null) && (labels.length>0)){
+            labels[labels.length-1] = value;
+        } else {
+            labels=new String[]{value};
+        }
+    }
+    
+    public void setLabelY(String value){
+        if ((labels!=null) && (labels.length>1)){
+            labels[labels.length-2] = value;
+        } else {
+            labels=new String[]{value,""};
+        }
+    }
+    
+    public void setLabelZ(String value){
+        if ((labels!=null) && (labels.length>2)){
+            labels[labels.length-3] = value;
+        } else {
+            labels=new String[]{value,"",""};
+        }
+    }
+        
+    
 }

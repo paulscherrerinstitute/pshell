@@ -112,8 +112,6 @@ public class LayoutTable extends LayoutBase {
         Map features =  dm.getStorageFeatures(null);
         dm.createDataset(path, fieldNames, fieldTypes, fieldLength, features);
         dm.setAttribute(path, ATTR_SCAN_WRITABLE_DIMS, (writableDims.length > 0) ? writableDims : new int[]{-1});
-        dm.setAttribute(path, ATTR_SCAN_STEPS, (scan.getNumberOfSteps().length > 0) ? scan.getNumberOfSteps() : new int[]{-1});
-        dm.setAttribute(path, ATTR_SCAN_PASSES, scan.getNumberOfPasses());        
         super.onStart(scan);
     }
 
@@ -178,6 +176,9 @@ public class LayoutTable extends LayoutBase {
                         sensors = fields - positioners;
                     }
                 }
+                if (dm.getAttribute(root, path, ATTR_SCAN_DIMENSION) instanceof Number number) {
+                    dimensions = number.intValue();
+                }
                 int[] size = null;
                 if (dimensions == 2) {
                     size = new int[]{0, 0};
@@ -196,10 +197,10 @@ public class LayoutTable extends LayoutBase {
                 if (attrSteps instanceof int[] intSteps) {
                      steps = intSteps;
                 }                
-                Object passes = dm.getAttribute(root, path, ATTR_SCAN_PASSES);
                     
                 double[] xdata = null;
                 double[] ydata = null;
+                double[] zdata = null;
 
                 if (positioners > 0) {
                     xdata = new double[records];
@@ -212,6 +213,12 @@ public class LayoutTable extends LayoutBase {
                             ydata[i] = (Double) sliceData[i][1];
                         }
                     }
+                    if (dimensions > 2) {
+                        zdata = new double[records];
+                        for (int i = 0; i < records; i++) {
+                            zdata[i] = (Double) sliceData[i][2];
+                        }
+                    }
                 }
                 Object[][] data = new Object[sensors][records];
                 for (int i = 0; i < records; i++) {
@@ -221,16 +228,25 @@ public class LayoutTable extends LayoutBase {
                 }
                 for (int j = 0; j < sensors; j++) {
                     String name = names[j + positioners];
-                    ret.add(new PlotDescriptor(name, root, path + "/" + name, data[j], xdata, ydata));
+                    ret.add(new PlotDescriptor(name, root, path + "/" + name, data[j], xdata, ydata, zdata));
                 }
 
-                String label = ((positioners > 0) && (names.length > 0)) ? names[0] : null;
-                for (PlotDescriptor plot : ret) {
-                    plot.labelX = label;
-                    plot.steps = steps;
-                    if (passes instanceof Number number) {
-                        plot.passes = number.intValue();
+                for (PlotDescriptor descriptor : ret) {
+                    if (dm.getAttribute(root, path, ATTR_SCAN_START) instanceof double[] dstart) {
+                        descriptor.start = dstart;
+                    }
+                    if (dm.getAttribute(root, path, ATTR_SCAN_END) instanceof double[] dend) {
+                        descriptor.end = dend;
+                    }
+                    if (dm.getAttribute(root, path, ATTR_SCAN_ZIGZAG) instanceof Boolean bzigzag) {
+                        descriptor.zigzag = bzigzag;
                     }                    
+                    if (dm.getAttribute(root, path, ATTR_SCAN_PASSES) instanceof Number number) {
+                        descriptor.passes = number.intValue();
+                    }
+                    descriptor.dimensions = dimensions;
+                    descriptor.steps = steps;
+                    
                 }
                 return ret;
             }

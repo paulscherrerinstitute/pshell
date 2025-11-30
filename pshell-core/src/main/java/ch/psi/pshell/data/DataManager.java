@@ -896,7 +896,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         for (PlotDescriptor plot : plots) {
             if (plotPreferences.domainAxis != null) {
                 if ((plot.rank < 3) && (xdata != null)) {
-                    plot.labelX = plotPreferences.domainAxis;
+                    plot.setLabelX(plotPreferences.domainAxis);
                     plot.x = xdata;
                 }
             }

@@ -490,7 +490,7 @@ public class LayoutSF extends LayoutBase {
                         }
                     } catch (Exception ex) {
                     }
-                    descriptor.labelX = ((writables != null) && (writables.length > 0)) ? writables[0] : null;
+                    descriptor.labels= writables;
                 }
                 ret.addAll(descriptors);
             }
