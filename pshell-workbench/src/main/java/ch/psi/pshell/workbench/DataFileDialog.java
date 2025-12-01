@@ -140,12 +140,16 @@ public class DataFileDialog extends StandardDialog {
         return !String.valueOf(comboLayout.getSelectedItem()).trim().equals(config.dataLayout.trim());
     }
     
+    boolean changedTruncate() {
+        return checkTruncate.isSelected() != config.dataTruncate;
+    }  
+    
     boolean changedPermissions() {
         return !comboPermissions.getSelectedItem().equals(config.filePermissionsData);
     }    
   
     boolean changedData() {
-        return (changedFormat() || changedLayout()
+        return (changedFormat() || changedLayout() || changedTruncate()
                 || (checkEmbeddedAttributes.isSelected() != config.dataEmbeddedAttributes)                 
                 || !spinnerDepthDim.getValue().equals(config.dataDepthDimension));
 
@@ -342,6 +346,8 @@ public class DataFileDialog extends StandardDialog {
         comboPermissions = new javax.swing.JComboBox<>();
         jLabel10 = new javax.swing.JLabel();
         checkEmbeddedAttributes = new javax.swing.JCheckBox();
+        jLabel12 = new javax.swing.JLabel();
+        checkTruncate = new javax.swing.JCheckBox();
         jPanel4 = new javax.swing.JPanel();
         ckAutoSave = new javax.swing.JCheckBox();
         ckConvert = new javax.swing.JCheckBox();
@@ -566,6 +572,15 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
+        jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel12.setText("Truncate existing:");
+
+        checkTruncate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkTruncateActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -577,14 +592,16 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(jLabel4)
                     .addComponent(jLabel7)
                     .addComponent(jLabel16)
-                    .addComponent(jLabel10))
+                    .addComponent(jLabel10)
+                    .addComponent(jLabel12))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(checkEmbeddedAttributes))
+                    .addComponent(checkEmbeddedAttributes)
+                    .addComponent(checkTruncate))
                 .addContainerGap())
         );
 
@@ -613,7 +630,11 @@ public class DataFileDialog extends StandardDialog {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(checkEmbeddedAttributes)
                     .addComponent(jLabel10))
-                .addContainerGap(83, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(checkTruncate)
+                    .addComponent(jLabel12))
+                .addContainerGap(58, Short.MAX_VALUE))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {comboFormat, comboLayout});
@@ -977,6 +998,7 @@ public class DataFileDialog extends StandardDialog {
                 config.dataPath = textPathConfig.getText().trim();
                 config.dataFormat = String.valueOf(comboFormat.getSelectedItem()).trim();
                 config.dataLayout = String.valueOf(comboLayout.getSelectedItem()).trim();
+                config.dataTruncate = checkTruncate.isSelected();
                 config.dataEmbeddedAttributes = checkEmbeddedAttributes.isSelected();
                 config.filePermissionsData= (FilePermissions)comboPermissions.getSelectedItem();
                 config.scanAutoSave = ckAutoSave.isSelected();
@@ -998,6 +1020,7 @@ public class DataFileDialog extends StandardDialog {
                 DataStore.setDefaultDepthDimension(config.dataDepthDimension);
                 Context.setDataFilePattern(config.getDataPath());                 
                 if (changedData) {
+                    Context.getDataManager().setTruncate(config.getDataTruncate());
                     Context.getDataManager().initialize(config.getDataFormat(), config.getDataLayout(), config.dataEmbeddedAttributes);
                 } 
                 if (changedPermissions){
@@ -1028,6 +1051,7 @@ public class DataFileDialog extends StandardDialog {
         textPathConfig.setText(config.dataPath);
         comboFormat.setSelectedItem(config.dataFormat);
         comboLayout.setSelectedItem(config.dataLayout);
+        checkTruncate.setSelected(config.dataTruncate);
         checkEmbeddedAttributes.setSelected(config.dataEmbeddedAttributes);
         comboPermissions.setSelectedItem(config.filePermissionsData);
         spinnerSeq.setValue(Context.getFileSequentialNumber());
@@ -1151,6 +1175,10 @@ public class DataFileDialog extends StandardDialog {
         update();
     }//GEN-LAST:event_checkEmbeddedAttributesActionPerformed
 
+    private void checkTruncateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkTruncateActionPerformed
+        update();
+    }//GEN-LAST:event_checkTruncateActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonApply;
     private javax.swing.JButton buttonCancel;
@@ -1163,6 +1191,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JButton buttonUndo;
     private javax.swing.JCheckBox checkEmbeddedAttributes;
     private javax.swing.JCheckBox checkRSyncAuthorized;
+    private javax.swing.JCheckBox checkTruncate;
     private javax.swing.JCheckBox ckAutoSave;
     private javax.swing.JCheckBox ckConvert;
     private javax.swing.JCheckBox ckFlush;
@@ -1179,6 +1208,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;

@@ -34,6 +34,7 @@ public class Configuration extends Config {
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
     public boolean dataEmbeddedAttributes = false;
+    public boolean dataTruncate = true;
     public int dataDepthDimension = 0;    
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
     public String dataTransferPath = "";
@@ -139,6 +140,11 @@ public class Configuration extends Config {
         String layout = Setup.getDataLayout();
         return layout == null ? dataLayout : layout;
     }
+    
+    public boolean getDataTruncate() {
+        Boolean truncate = Setup.getDataTruncate();
+        return truncate == null ? dataTruncate : truncate;
+    }    
     
     public List<String> getNotifiedTasks() {
         List<String> ret = new ArrayList<>();

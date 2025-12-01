@@ -9,6 +9,8 @@ import java.util.Map;
  * Format implementations execute the actual reading/writing of data in a hierarchical storage.
  */
 public interface Format {
+    
+    public static boolean DEFAUT_TRUNCATE = true;
 
     public static final String INFO_TYPE = "Type";
     public static final String INFO_CREATION = "Creation";
@@ -57,10 +59,10 @@ public interface Format {
      */
     boolean isPacked();
 
-    void openOutput(File root, boolean append) throws IOException;
+    void openOutput(File root, boolean truncate) throws IOException;
     
     default void openOutput(File root) throws IOException{
-        openOutput(root, false);
+        openOutput(root, DEFAUT_TRUNCATE);
     }
 
     void closeOutput() throws IOException;

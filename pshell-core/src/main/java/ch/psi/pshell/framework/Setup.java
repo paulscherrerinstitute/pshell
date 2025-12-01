@@ -309,6 +309,9 @@ public class Setup extends ch.psi.pshell.devices.Setup {
          return Options.DATA_LAYOUT.getString(null);
     }        
     
+    public static Boolean getDataTruncate() {
+        return Options.DATA_TRUNCATE.getBool(null);
+    }
     
     public static String getUser() {
          return Options.USER.getString(null);

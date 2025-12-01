@@ -309,12 +309,12 @@ public class FormatText implements Format {
     }   
 
     @Override
-    public void openOutput(File root, boolean append) throws IOException {
+    public void openOutput(File root, boolean truncate) throws IOException {
         closeOutput();
         if (root.isFile()) {
             throw new IllegalArgumentException(root.getPath());
         }
-        if (!append && root.exists()){
+        if (truncate && root.exists()){
             IO.deleteRecursive(root);
         }
         root.mkdirs();

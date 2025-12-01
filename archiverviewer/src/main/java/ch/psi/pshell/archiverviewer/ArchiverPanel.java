@@ -32,7 +32,6 @@ import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
 import ch.psi.pshell.swing.ChannelSelector;
-import ch.psi.pshell.swing.DirectoryOnlyFileFilter;
 import ch.psi.pshell.swing.ExtensionFileFilter;
 import ch.psi.pshell.swing.PatternFileChooserAuxiliary;
 import ch.psi.pshell.swing.StandardDialog;

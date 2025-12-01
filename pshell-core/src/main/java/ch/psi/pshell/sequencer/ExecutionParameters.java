@@ -225,8 +225,7 @@ public class ExecutionParameters {
             }
             
             if (initStore && Context.hasDataManager()){
-                Context.getDataManager().getFormat().openOutput(dataPath);
-                Context.getDataManager().initializeOutput(dataPath);            
+                Context.getDataManager().reinitializeOutput(dataPath);            
             }
             if (Context.hasSequencer()){
                 Context.getSequencer().onChangeDataPath(dataPath);

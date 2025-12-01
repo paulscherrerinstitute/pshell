@@ -82,8 +82,8 @@ public class FormatTIFF extends FormatText {
    
     Map<String,Map> datasets = new HashMap<String,Map>();
     @Override
-    public void openOutput(File root) throws IOException {
-        super.openOutput(root);
+    public void openOutput(File root, boolean truncate) throws IOException {
+        super.openOutput(root, truncate);
         datasets.clear();
     }
     

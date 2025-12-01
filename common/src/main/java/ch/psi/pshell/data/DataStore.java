@@ -33,7 +33,7 @@ import jep.NDArray;
 public class DataStore implements AutoCloseable {
     static final Logger logger = Logger.getLogger(DataStore.class.getName());
     public static final String ATTR_ID = "ID";
-    public static final String ATTR_FORMAT = "Format";
+    public static final String ATTR_FORMAT = "Format";    
     
     protected Format format;
     protected File outputFile;
@@ -44,7 +44,8 @@ public class DataStore implements AutoCloseable {
     static DataStore global;
     
     
-    public DataStore(){        
+    public DataStore(){      
+        truncate = Format.DEFAUT_TRUNCATE;
     }
     
     public void setGlobal(){
@@ -81,14 +82,33 @@ public class DataStore implements AutoCloseable {
         this();
         DataStore.this.setFormat(format);     
     }
+    
+    public DataStore(String format, boolean truncate) throws Exception {
+        this(format);
+        this.truncate=truncate;
+    }
+
+    public DataStore(Format format, boolean truncate) {
+        this(format);   
+        this.truncate=truncate;
+    }    
 
     public DataStore(File outputFile, String format) throws Exception {
         this(format);
         setOutputFile(outputFile);
     }
     
+    public DataStore(File outputFile, String format, boolean truncate) throws Exception {
+        this(format, truncate);
+        setOutputFile(outputFile);
+    }
+
     public DataStore(String outputFile, String format) throws Exception {
         this(new File(outputFile), format);
+    }
+
+    public DataStore(String outputFile, String format, boolean truncate) throws Exception {
+        this(new File(outputFile), format, true);
     }
 
     public DataStore(File outputFile, Format format) throws Exception {
@@ -96,9 +116,18 @@ public class DataStore implements AutoCloseable {
         setOutputFile(outputFile);
     }
     
+    public DataStore(File outputFile, Format format, boolean truncate) throws Exception {
+        this(format, truncate);
+        setOutputFile(outputFile);
+    }
+    
     public DataStore(String outputFile, Format format) throws Exception {
         this(new File(outputFile), format);
     }
+    
+    public DataStore(String outputFile, Format format, boolean truncate) throws Exception {
+        this(new File(outputFile), format, truncate);
+    }    
     
     
     public void setOutputFile(File file) throws IOException{
@@ -183,7 +212,17 @@ public class DataStore implements AutoCloseable {
         }
         return false;
     }
+    
+    boolean truncate;
+    
+    public boolean getTruncate(){
+        return truncate;
+    }
            
+    public void setTruncate(boolean value){
+        truncate = value;
+    }
+
     public String getDataFolder() {
         return outputFile.getParent();
     }
@@ -195,7 +234,7 @@ public class DataStore implements AutoCloseable {
             return;
         }
         if (getFormat()!=null){            
-            getFormat().openOutput(outputFile);
+            getFormat().openOutput(outputFile, truncate);
             open = true;
             initializeOutput(outputFile);                        
         }
@@ -210,9 +249,13 @@ public class DataStore implements AutoCloseable {
             }
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
-        } 
-            
+        }             
     }
+    
+    public void reinitializeOutput(File output) throws IOException{
+        getFormat().openOutput(output, truncate);
+        initializeOutput(output);                    
+    }    
     
     public void openOutput() throws IOException {        
         doOpenOutput();      

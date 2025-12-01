@@ -39,7 +39,8 @@ public enum Options implements Option {
     USER,
     SCRIPT_TYPE,
     DATA_FORMAT, 
-    DATA_LAYOUT,    
+    DATA_LAYOUT,  
+    DATA_TRUNCATE,
     DISABLE_PRINT,     
     DISABLE_PLOT,  
     INTERP_ARGS,
@@ -76,6 +77,7 @@ public enum Options implements Option {
         SCRIPT_TYPE.add("type", "Set the script type, overriding the setup: py, cpy, jv or groovy");        
         DATA_FORMAT.add("dfmt", "Set the data format, overriding the configuration: h5, txt, csv or fda");        
         DATA_LAYOUT.add("dlay", "Set the data layout, overriding the configuration: default, table, sf or fda");
+        DATA_TRUNCATE.add("dtru", "Set if truncate existing data files (default=true)");        
         DISABLE_PLOT.add("dspl", "Disable scan plots");
         DISABLE_PRINT.add("dspr", "Disable printing scans to console");   
         EXTRACT.add("extr", "Force (true) or disable (false) extraction of startup and utility scrips");     

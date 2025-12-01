@@ -268,6 +268,7 @@
                           <Component id="jLabel7" linkSize="3" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel16" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel10" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel12" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -276,6 +277,7 @@
                           <Component id="comboPermissions" alignment="0" min="-2" pref="182" max="-2" attributes="0"/>
                           <Component id="spinnerDepthDim" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="checkEmbeddedAttributes" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="checkTruncate" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
@@ -309,7 +311,12 @@
                           <Component id="checkEmbeddedAttributes" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel10" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="83" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="checkTruncate" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel12" alignment="0" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace pref="58" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -391,6 +398,17 @@
             <Component class="javax.swing.JCheckBox" name="checkEmbeddedAttributes">
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkEmbeddedAttributesActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel12">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Truncate existing:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="checkTruncate">
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkTruncateActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>
