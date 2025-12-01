@@ -433,42 +433,50 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                                     if (plot instanceof MatrixPlotBase) {
                                         val = Convert.toDouble(val);
                                         MatrixPlotSeries series = ((MatrixPlotBase) plot).getSeries(0);
-                                        double minY = series.getMinY();
-                                        double maxY = series.getMaxY();
-                                        double scale = ((maxY > minY) && (Array.getLength(val) > 1)) ? (maxY - minY) / (Array.getLength(val) - 1) : Double.NaN;
-
-                                        if ((prefs.autoRange != null) && (prefs.autoRange)) {
-                                            //TODO: improve perfoemance, avoiding copying
-                                            Axis x = ((MatrixPlotBase) plot).getAxis(Plot.AxisId.X);
-                                            if (record.getIndex() == 0) {
-                                                series.setRangeX(xValue, xValue);
-                                                x.setRange(xValue, xValue);
-                                            } else {
-                                                double min = Math.min(xValue, x.getMin());
-                                                double max = Math.max(xValue, x.getMax());
-                                                series.setRangeX(min, max);
-                                                x.setRange(min, max);
-                                            }
-                                            double[][] data = series.getData();
-
+                                        if (scan.getDimensions() >3) {
                                             for (int y = 0; y < Array.getLength(val); y++) {
                                                 Object o = Array.get(val, y);
-                                                if (data[y].length <= record.getIndex()) {
-                                                    double[] aux = new double[record.getIndex() + 1];
-                                                    System.arraycopy(data[y], 0, aux, 0, data[y].length);
-                                                    data[y] = aux;
-                                                }
-                                                data[y][record.getIndex()] = (Double) o;
+                                                double z = (Double) o;                                                
+                                                series.appendData(record.getIndexInPass(), y, z );
                                             }
-                                            series.setNumberOfBinsX(data[0].length);
-                                            series.setNumberOfBinsY(data.length);
-                                            series.setData(data);
+                                            
                                         } else {
-                                            for (int y = 0; y < Array.getLength(val); y++) {
-                                                Object o = Array.get(val, y);
-                                                double zValue = (Double) o;
-                                                double yValue = Double.isNaN(scale) ? y : scale * y + minY;
-                                                series.appendData(xValue, yValue, zValue);
+                                            if ((prefs.autoRange != null) && (prefs.autoRange)) {
+                                                //TODO: improve perfoemance, avoiding copying
+                                                Axis x = ((MatrixPlotBase) plot).getAxis(Plot.AxisId.X);
+                                                if (record.getIndex() == 0) {
+                                                    series.setRangeX(xValue, xValue);
+                                                    x.setRange(xValue, xValue);
+                                                } else {
+                                                    double min = Math.min(xValue, x.getMin());
+                                                    double max = Math.max(xValue, x.getMax());
+                                                    series.setRangeX(min, max);
+                                                    x.setRange(min, max);
+                                                }
+                                                double[][] data = series.getData();
+
+                                                for (int y = 0; y < Array.getLength(val); y++) {
+                                                    Object o = Array.get(val, y);
+                                                    if (data[y].length <= record.getIndex()) {
+                                                        double[] aux = new double[record.getIndex() + 1];
+                                                        System.arraycopy(data[y], 0, aux, 0, data[y].length);
+                                                        data[y] = aux;
+                                                    }
+                                                    data[y][record.getIndex()] = (Double) o;
+                                                }
+                                                series.setNumberOfBinsX(data[0].length);
+                                                series.setNumberOfBinsY(data.length);
+                                                series.setData(data);
+                                            } else {
+                                                double minY = series.getMinY();
+                                                double maxY = series.getMaxY();                                            
+                                                double scale = ((maxY > minY) && (Array.getLength(val) > 1)) ? (maxY - minY) / (Array.getLength(val) - 1) : Double.NaN;
+                                                for (int y = 0; y < Array.getLength(val); y++) {
+                                                    Object o = Array.get(val, y);
+                                                    double zValue = (Double) o;
+                                                    double yValue = Double.isNaN(scale) ? y : scale * y + minY;
+                                                    series.appendData(xValue, yValue, zValue);
+                                                }
                                             }
                                         }
                                     } else if (plot instanceof LinePlotBase linePlotBase) {                                        
@@ -489,18 +497,22 @@ public class PlotPanel extends ch.psi.pshell.plot.PlotPanel {
                         } else if (val instanceof Number number) {
                             //Single plot 
                             LinePlotSeries series = ((LinePlotBase) plot).getSeries(0);
+                            double x = xValue;
+                            if (scan.getDimensions() >3) {
+                                x = record.getIndexInPass();
+                            }
                             if (newPass) {
-                                series.appendData(xValue, Double.NaN);
+                                series.appendData(x, Double.NaN);
                             }
                             if (series instanceof LinePlotErrorSeries) {
                                 DescStatsDouble d = (val instanceof DescStatsDouble dsdv) ? dsdv : new DescStatsDouble(new Number[]{number}, -1);
                                 if ((prefs.plotTypes != null) && (prefs.plotTypes.containsKey(series.getName()) && (prefs.plotTypes.get(series.getName()).equals("minmax")))) {
-                                    ((LinePlotErrorSeries) ((LinePlotJFree) plot).getSeries(0)).appendData(xValue, d.doubleValue(), d.getMin(), d.getMax());
+                                    ((LinePlotErrorSeries) ((LinePlotJFree) plot).getSeries(0)).appendData(x, d.doubleValue(), d.getMin(), d.getMax());
                                 } else {
-                                    ((LinePlotErrorSeries) ((LinePlotJFree) plot).getSeries(0)).appendData(xValue, d.doubleValue(), d.getStdev());
+                                    ((LinePlotErrorSeries) ((LinePlotJFree) plot).getSeries(0)).appendData(x, d.doubleValue(), d.getStdev());
                                 }
                             } else {
-                                ((LinePlotBase) plot).getSeries(0).appendData(xValue, number.doubleValue());
+                                ((LinePlotBase) plot).getSeries(0).appendData(x, number.doubleValue());
                             }
                         }
                     }

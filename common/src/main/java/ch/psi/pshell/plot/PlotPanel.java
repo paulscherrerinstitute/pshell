@@ -254,6 +254,13 @@ public class PlotPanel extends MonitoredPanel {
     protected Plot addPlot(String name, boolean isScan, String labelX, int rank, int[] recordSize, double[] start, double[] end, int[] steps, boolean hasStats) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Plot plot = null;
         int recordDimensions = (recordSize == null) ? 0 : recordSize.length;
+        int records = -1;
+        if ((steps!=null) && (steps.length>0)){
+            records = 1;
+            for (int i=0; i<steps.length; i++){
+                records = records * (steps[i]+1);
+            }
+        }
 
         if (rank == 3) {
             //Don't use slice plot during scan
@@ -384,8 +391,7 @@ public class PlotPanel extends MonitoredPanel {
                     plot.addSeries(series);
                 }
             }
-        }
-        if (rank <= 1) {
+        } else {
             if (recordDimensions == 2) {
                 plot = newPlot(name, isScan, 2, false);
                 int xSize = recordSize[0];
@@ -412,13 +418,17 @@ public class PlotPanel extends MonitoredPanel {
                     double y_start = (start.length > 1) ? start[1] : 0;
                     double y_end = (end.length > 1) ? end[1] : (ySize - 1);
                     MatrixPlotSeries series = null;
-                    int nX = ((steps[0] < 0)||(steps[0] == Integer.MAX_VALUE)) ? DEFAULT_RANGE_STEPS : steps[0] + 1;
-                    series = new MatrixPlotSeries(name, start[0], end[0], nX, y_start, y_end, ySize);
-                    if (prefs.range != null) {
-                        plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
-                        if (changedScaleX) {
-                            series.setRangeX(prefs.range.min, prefs.range.max);
+                    if (rank <= 1){                        
+                        int nX = ((steps[0] < 0)||(steps[0] == Integer.MAX_VALUE)) ? DEFAULT_RANGE_STEPS : steps[0] + 1;
+                        series = new MatrixPlotSeries(name, start[0], end[0], nX, y_start, y_end, ySize);
+                        if (prefs.range != null) {
+                            plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
+                            if (changedScaleX) {
+                                series.setRangeX(prefs.range.min, prefs.range.max);
+                            }
                         }
+                    } else {
+                        series = new MatrixPlotSeries(name, 0, records-1, records, 0, recordSize[0]-1, recordSize[0]);
                     }
                     plot.addSeries(series);
                 }
@@ -431,17 +441,22 @@ public class PlotPanel extends MonitoredPanel {
                 } else {
                     plot.addSeries(new LinePlotSeries(name));
                 }
-                if (prefs.range != null) {
-                    plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
-                } else if ((prefs.autoRange == null) || (!prefs.autoRange)) {
-                    if ((start != null) && (start.length > 0) && (end != null) && (end.length > 0)) {
-                        plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
+                if (rank <= 1){    
+                    if (prefs.range != null) {
+                        plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
+                    } else if ((prefs.autoRange == null) || (!prefs.autoRange)) {
+                        if ((start != null) && (start.length > 0) && (end != null) && (end.length > 0)) {
+                            plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
+                        }
                     }
+                    if (prefs.rangeY != null) {
+                        plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);
+                    }                
+                    plot.getAxis(Plot.AxisId.X).setLabel(labelX);
+                } else {
+                    plot.getAxis(Plot.AxisId.X).setRange(0, records-1);
+                    plot.getAxis(Plot.AxisId.X).setLabel("Index");
                 }
-                if (prefs.rangeY != null) {
-                    plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);
-                }                
-                plot.getAxis(Plot.AxisId.X).setLabel(labelX);
                 plot.getAxis(Plot.AxisId.Y).setLabel(null);
             }
         }
@@ -513,7 +528,13 @@ public class PlotPanel extends MonitoredPanel {
             if (multidimentional1dDataset) {
                 start = descriptor.start;
                 end = descriptor.end;                               
-                if (descriptor.dimensions==3){
+                if (descriptor.dimensions>3){
+                    int records = descriptor.getRecords();
+                    steps = new int[] {records * descriptor.passes -1};                    
+                    start = new double[]{0.0};
+                    end = new double[]{steps[0]};          
+                    rank = 1;                                        
+                } else if (descriptor.dimensions==3){
                     //3D-scan with 1d datasets of scalar
                     if (start==null){
                         start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y), (Double) Arr.getMin(z)};
@@ -676,10 +697,10 @@ public class PlotPanel extends MonitoredPanel {
                    
                     if ((rank == 2) && (steps.length==2) ){                            
                         if (data instanceof double[][] d){
-                            //TODO: avoid double transpose (in DataManager.doGetScanPlots)
-                            descriptor.transpose();
-                            d = (double[][])descriptor.data;
                             //1d scan of array  as lineplot.
+                            //TODO: data had been transposed because arrays are plotted vertically to match scalars against x.
+                            descriptor.transpose();
+                            d = (double[][])descriptor.data;                            
                             linePlot.clear();
                             linePlot.getAxis(Plot.AxisId.X).setLabel(descriptor.name);
                             linePlot.getAxis(Plot.AxisId.X).setAutoRange(); 
@@ -715,8 +736,8 @@ public class PlotPanel extends MonitoredPanel {
                         }
                     }
                     else {
-                        //Single line plot or 1d scan of scalar
-                        ((LinePlotSeries) plot.getSeries(0)).setData(x, (double[]) data);
+                        //Single line plot or 1d scan of scalar, or multidimentinsl scan (>3)
+                        ((LinePlotSeries) plot.getSeries(0)).setData((descriptor.dimensions>3) ? null : x, (double[]) data);
                     }
                 }
             } else if (plot instanceof MatrixPlot matrixPlot) {
@@ -732,7 +753,7 @@ public class PlotPanel extends MonitoredPanel {
                         }                        
                     } else {
                         if (forceMatrixPlot){
-                            //3D-scan with 1d datasets of arrays
+                            //3D or multidimentional scan with 1d datasets of arrays 
                             double[][] array = (double[][]) data;
                             //Already checked array sizes                   
                             for (int i = 0; i < array.length; i++) {
@@ -810,7 +831,7 @@ public class PlotPanel extends MonitoredPanel {
                         }
                     });
                 } else {
-                    //Single slice plot as list of images, or 1d scan of images, or 2d scan of images  or 3d scan of image
+                    //Single slice plot as list of images, or 1d scan of images, or multi-dimentional scan of image
                     series.setListener((SlicePlotSeries series1, int page) -> {
                         for (String fmt: DataStore.getFormatIds()){
                             try {                            

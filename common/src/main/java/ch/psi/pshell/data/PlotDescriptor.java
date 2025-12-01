@@ -131,10 +131,8 @@ public class PlotDescriptor {
             if (steps.length==2){
                 return true;
             }
-            if (steps.length==3){
-                if ((z != null) && (z.length == shape[0])){
-                    return true;
-                }
+            if ((z != null) && (z.length == shape[0])){
+                return true;
             }
         }
        return false;
@@ -226,5 +224,27 @@ public class PlotDescriptor {
         }
     }
         
+    
+    public int getRecords(){
+        if ((steps!=null) && (steps.length>0)){
+            int records = 1;
+            for (int i=0; i<steps.length; i++){
+                records = records * (steps[i]+1);
+            }
+            return records;
+        }
+        return -1;
+    }
+    
+    public int[] getSize(){
+        if (steps==null){
+            return null;
+        }
+        int[] ret = new int[steps.length];
+        for (int i=0; i<ret.length; i++){
+            ret[i] = steps[i]+1;
+        }
+        return ret;
+    }
     
 }

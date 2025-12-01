@@ -900,6 +900,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
                     plot.x = xdata;
                 }
             }
+            //Plot waveforms vertically, so that they dispplay aligned with scalar plots.
             if ((plot.rank == 2) && (plot.root != null) && (plot.path != null) && (!plot.isMultidimentional1dArray())) {
                 if (getLayout().isScanDataset(plot.root, plot.path, this)) {
                     plot.transpose();
