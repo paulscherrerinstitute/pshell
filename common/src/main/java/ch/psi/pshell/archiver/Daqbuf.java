@@ -947,23 +947,14 @@ public class Daqbuf implements ChannelQueryAPI {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> fetchQuery(channels, start, end, bins));
     }
 
-    public void saveQuery(String filename, String channel, String start, String end) throws IOException, InterruptedException {
-        saveQuery(filename, channel, start, end, null);
-    }
 
-    public void saveQuery(String filename, String channel, String start, String end, Integer bins) throws IOException, InterruptedException {
-        try (DataStore dm = getDataManager(filename)) {
-            saveQuery(dm, channel, start, end, bins);
-        }
-    }
-
-    DataStore getDataManager(String filename) throws IOException, InterruptedException {
+    DataStore getDataManager(String filename, Boolean truncate) throws IOException, InterruptedException {
         try {
             String ext = IO.getExtension(filename);
             if (ext.isEmpty()){
-                return new DataStore(filename, "tiff");
+                return new DataStore(filename, "tiff", truncate);
             } else {
-                return new DataStore(filename, "h5");
+                return new DataStore(filename, "h5", truncate);
             }
         } catch (InterruptedException | IOException ex) {
             throw ex;
@@ -972,6 +963,16 @@ public class Daqbuf implements ChannelQueryAPI {
         }
 
     }
+    
+    public void saveQuery(String filename, Boolean truncte, String channel, String start, String end) throws IOException, InterruptedException {
+        saveQuery(filename, truncte, channel, start, end, null);
+    }
+
+    public void saveQuery(String filename, Boolean truncte, String channel, String start, String end, Integer bins) throws IOException, InterruptedException {
+        try (DataStore dm = getDataManager(filename, truncte)) {
+            saveQuery(dm, channel, start, end, bins);
+        }
+    }    
 
     void saveQuery(DataStore dm, String channel, String start, String end, Integer bins) throws IOException, InterruptedException {
         String channelBackend = getChannelBackend(channel);
@@ -1030,14 +1031,14 @@ public class Daqbuf implements ChannelQueryAPI {
         }
     }
 
-    public void saveQuery(String filename, String[] channels, String start, String end) throws IOException, InterruptedException {
-        saveQuery(filename, channels, start, end, null);
+    public void saveQuery(String filename, Boolean truncate, String[] channels, String start, String end) throws IOException, InterruptedException {
+        saveQuery(filename, truncate, channels, start, end, null);
     }
 
-    public void saveQuery(String filename, String[] channels, String start, String end, Integer bins) throws IOException, InterruptedException {
+    public void saveQuery(String filename, Boolean truncate, String[] channels, String start, String end, Integer bins) throws IOException, InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         Map<String, CompletableFuture> futures = new HashMap<>();
-        try (DataStore dm = getDataManager(filename)) {
+        try (DataStore dm = getDataManager(filename, truncate)) {
             // Submit tasks for each channel
             for (String channel : channels) {
                 CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
@@ -1079,20 +1080,20 @@ public class Daqbuf implements ChannelQueryAPI {
         }
     }
 
-    public CompletableFuture startSaveQuery(String filename, String channel, String start, String end) {
-        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channel, start, end));
+    public CompletableFuture startSaveQuery(String filename, Boolean truncate, String channel, String start, String end) {
+        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, truncate, channel, start, end));
     }
 
-    public CompletableFuture startSaveQuery(String filename, String channel, String start, String end, Integer bins) {
-        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channel, start, end, bins));
+    public CompletableFuture startSaveQuery(String filename, Boolean truncate, String channel, String start, String end, Integer bins) {
+        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, truncate, channel, start, end, bins));
     }
 
-    public CompletableFuture startSaveQuery(String filename, String[] channels, String start, String end) {
-        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channels, start, end));
+    public CompletableFuture startSaveQuery(String filename, Boolean truncate, String[] channels, String start, String end) {
+        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, truncate, channels, start, end));
     }
 
-    public CompletableFuture startSaveQuery(String filename, String[] channels, String start, String end, Integer bins) {
-        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channels, start, end, bins));
+    public CompletableFuture startSaveQuery(String filename, Boolean truncate, String[] channels, String start, String end, Integer bins) {
+        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, truncate, channels, start, end, bins));
     }
 
 

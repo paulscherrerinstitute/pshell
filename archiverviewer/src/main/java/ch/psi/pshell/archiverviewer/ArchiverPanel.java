@@ -2373,7 +2373,7 @@ public class ArchiverPanel extends StandardDialog {
     }
     
     volatile boolean dumping = false;
-    void saveQuery(String filename) throws IOException, InterruptedException {
+    void saveQuery(String filename, boolean truncate) throws IOException, InterruptedException {
         List<String> channels = new ArrayList<>();
         Vector vector = modelSeries.getDataVector();
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
@@ -2396,7 +2396,7 @@ public class ArchiverPanel extends StandardDialog {
         JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
         dumping = true;
         update();
-        daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex) -> {
+        daqbuf.startSaveQuery(filename, truncate, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex) -> {
             splash.setVisible(false);
             if (ex != null) {
                 showException((Exception) ex);
@@ -2419,9 +2419,11 @@ public class ArchiverPanel extends StandardDialog {
             chooser.addChoosableFileFilter(new ExtensionFileFilter("HDF5 files or folders for txt format", new String[]{"h5"}));
             chooser.setAcceptAllFileFilterUsed(false);
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-            chooser.setDialogTitle("Dump Data");
+            chooser.setDialogTitle("Save Data");
             chooser.setCurrentDirectory(Context.getDefaultDataPath());
-            PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "ArchiverPanel", false);
+            boolean usePattern = Context.hasDataManager();
+            PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "ArchiverPanel", usePattern);
+            auxiliary.addTruncate();
             auxiliary.addFormat(new String[]{"h5", "txt"});
             chooser.setAccessory(auxiliary);                          
             
@@ -2445,7 +2447,8 @@ public class ArchiverPanel extends StandardDialog {
                             fileName += ".h5";
                         }                    
                     }
-                    saveQuery(fileName);
+                    Boolean truncate = auxiliary.getSelectedTruncate();
+                    saveQuery(fileName, truncate);
                  }                                        
              }
         } catch (Exception ex) {
@@ -3156,7 +3159,7 @@ public class ArchiverPanel extends StandardDialog {
         toolBar.add(jSeparator4);
 
         buttonDumpData.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Rec.png"))); // NOI18N
-        buttonDumpData.setToolTipText("Dump data to file");
+        buttonDumpData.setToolTipText("Save data to file");
         buttonDumpData.setFocusable(false);
         buttonDumpData.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         buttonDumpData.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);

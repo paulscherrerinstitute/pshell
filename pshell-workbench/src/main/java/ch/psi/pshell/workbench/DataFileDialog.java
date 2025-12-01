@@ -573,7 +573,7 @@ public class DataFileDialog extends StandardDialog {
         });
 
         jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel12.setText("Truncate existing:");
+        jLabel12.setText("Truncate:");
 
         checkTruncate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

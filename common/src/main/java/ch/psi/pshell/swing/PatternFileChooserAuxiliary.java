@@ -2,6 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.app.Setup;
 import ch.psi.pshell.data.DataStore;
+import ch.psi.pshell.data.Format;
 import ch.psi.pshell.utils.IO;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -32,6 +33,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
     JTextField textFile;
     JComboBox comboFormat;
     JComboBox comboLayout;
+    JCheckBox checkTruncate;
 
     public PatternFileChooserAuxiliary(JFileChooser chooser, String tokenName, boolean usePatternSelected) {
         this.chooser = chooser;
@@ -46,7 +48,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
 
         try{
             selectedPath = Setup.getDataPath();
-            checkStdPath = new JCheckBox("Use name pattern");
+            checkStdPath = new JCheckBox("Name pattern");
             ActionListener listener =(e) -> {
                 boolean stdPath = checkStdPath.isSelected();
                 if (stdPath) {
@@ -126,6 +128,17 @@ public class PatternFileChooserAuxiliary extends JPanel {
             Logger.getLogger(PatternFileChooserAuxiliary.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    public void addTruncate() {
+        try {
+            checkTruncate = new JCheckBox("Truncate", Format.DEFAUT_TRUNCATE);
+            addComponent(checkTruncate);
+
+        } catch (Exception ex) {
+            Logger.getLogger(PatternFileChooserAuxiliary.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
 
     public String getSelectedFile() {
         String fileName = chooser.getSelectedFile().getAbsolutePath();
@@ -155,4 +168,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
          return  (comboLayout==null) ? null : String.valueOf(comboLayout.getSelectedItem());
      }
                
+     public Boolean getSelectedTruncate() {
+         return  (checkTruncate==null) ? null : checkTruncate.isSelected();
+     }
 }

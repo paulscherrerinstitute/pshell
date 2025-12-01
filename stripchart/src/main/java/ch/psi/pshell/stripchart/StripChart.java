@@ -1812,8 +1812,8 @@ public class StripChart extends StandardDialog {
                 chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                 chooser.setDialogTitle("Save Data");
                 chooser.setCurrentDirectory(Context.getDefaultDataPath());
-
-                PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "StripChart", true);
+                boolean usePattern = Context.hasDataManager();
+                PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "StripChart", usePattern);
                 auxiliary.addFormat(new String[]{"h5", "txt", "csv"});
                 auxiliary.addLayout(new String[]{"default", "table"});
                 chooser.setAccessory(auxiliary);                          

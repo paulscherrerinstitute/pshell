@@ -83,49 +83,51 @@ public class DataStore implements AutoCloseable {
         DataStore.this.setFormat(format);     
     }
     
-    public DataStore(String format, boolean truncate) throws Exception {
+    public DataStore(String format, Boolean truncate) throws Exception {
         this(format);
-        this.truncate=truncate;
+        if (truncate!=null){
+            this.truncate=truncate;
+        }
     }
 
-    public DataStore(Format format, boolean truncate) {
+    public DataStore(Format format, Boolean truncate) {
         this(format);   
-        this.truncate=truncate;
+        if (truncate!=null){
+            this.truncate=truncate;
+        }
     }    
 
     public DataStore(File outputFile, String format) throws Exception {
-        this(format);
-        setOutputFile(outputFile);
+        this(outputFile, format, null);
     }
     
-    public DataStore(File outputFile, String format, boolean truncate) throws Exception {
+    public DataStore(File outputFile, String format, Boolean truncate) throws Exception {
         this(format, truncate);
         setOutputFile(outputFile);
     }
 
     public DataStore(String outputFile, String format) throws Exception {
-        this(new File(outputFile), format);
+        this(outputFile, format, null);
     }
 
-    public DataStore(String outputFile, String format, boolean truncate) throws Exception {
-        this(new File(outputFile), format, true);
+    public DataStore(String outputFile, String format, Boolean truncate) throws Exception {
+        this(new File(outputFile), format, truncate);
     }
 
     public DataStore(File outputFile, Format format) throws Exception {
-        this(format);
-        setOutputFile(outputFile);
+        this(outputFile, format, null);
     }
     
-    public DataStore(File outputFile, Format format, boolean truncate) throws Exception {
+    public DataStore(File outputFile, Format format, Boolean truncate) throws Exception {
         this(format, truncate);
         setOutputFile(outputFile);
     }
     
     public DataStore(String outputFile, Format format) throws Exception {
-        this(new File(outputFile), format);
+        this(outputFile, format, null);
     }
     
-    public DataStore(String outputFile, Format format, boolean truncate) throws Exception {
+    public DataStore(String outputFile, Format format, Boolean truncate) throws Exception {
         this(new File(outputFile), format, truncate);
     }    
     

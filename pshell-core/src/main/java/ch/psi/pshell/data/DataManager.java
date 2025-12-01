@@ -117,8 +117,10 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     public void initialize(String format, String layout) throws Exception {
         initialize(format, layout, null);
     }
-    
     public void initialize(String format, String layout, Boolean embeddedAttributes) throws Exception {
+        initialize(format, layout, embeddedAttributes, null);
+    }
+    public void initialize(String format, String layout, Boolean embeddedAttributes, Boolean truncate) throws Exception {
         initialized = false;        
         logger.log(Level.INFO, "Initializing {0}", getClass().getSimpleName());
         Context.setDataManager(this);
@@ -126,6 +128,9 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             Context.getSequencer().addScanListener(scanListener);
         }
         closeOutput();
+        if (truncate != null){
+            setTruncate(truncate);
+        }
         if (embeddedAttributes != null){            
             if (embeddedAttributes != FormatText.getDefaultEmbeddedAttributes()){                
                 FormatText.setDefaultEmbeddedAttributes(embeddedAttributes);

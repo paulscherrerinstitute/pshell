@@ -403,7 +403,7 @@
             <Component class="javax.swing.JLabel" name="jLabel12">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Truncate existing:"/>
+                <Property name="text" type="java.lang.String" value="Truncate:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JCheckBox" name="checkTruncate">
