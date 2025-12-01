@@ -8,8 +8,8 @@ import javax.swing.filechooser.FileFilter;
  */
 public class ExtensionFileFilter extends FileFilter {
 
-    String description;
-    String extensions[];
+    final String description;
+    final String extensions[];
 
     public ExtensionFileFilter(String description, String extension) {
         this(description, new String[]{extension});

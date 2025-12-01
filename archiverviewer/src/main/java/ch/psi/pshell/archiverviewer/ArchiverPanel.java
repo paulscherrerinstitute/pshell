@@ -32,6 +32,9 @@ import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
 import ch.psi.pshell.swing.ChannelSelector;
+import ch.psi.pshell.swing.DirectoryOnlyFileFilter;
+import ch.psi.pshell.swing.ExtensionFileFilter;
+import ch.psi.pshell.swing.PatternFileChooserAuxiliary;
 import ch.psi.pshell.swing.StandardDialog;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.swing.SwingUtils.OptionResult;
@@ -107,6 +110,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
@@ -182,6 +186,8 @@ public class ArchiverPanel extends StandardDialog {
     public ArchiverPanel(Window parent, String url, String backend, String title, boolean modal, File defaultFolder) {
         super(parent, null, modal);        
         initComponents();        
+        ((SpinnerNumberModel)spinnerBins.getModel()).setMaximum(DEFAULT_MAX_SERIES_SIZE);
+        //.setModel(new javax.swing.SpinnerNumberModel(200, 1, null, 10));
         defaultFolder = (defaultFolder==null) ? getDaqbufFolderArg() : defaultFolder;
         this.defaultFolder = (defaultFolder == null) ?  new File(Sys.getUserHome()) : defaultFolder;        
         
@@ -2388,18 +2394,17 @@ public class ArchiverPanel extends StandardDialog {
         final String start = textFrom.getText();
         final String end = textTo.getText();
 
-        String finalFilename = IO.getExtension(filename).isEmpty() ? filename + ".h5" : filename;
-        JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + finalFilename);
+        JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
         dumping = true;
         update();
-        daqbuf.startSaveQuery(finalFilename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex) -> {
+        daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex) -> {
             splash.setVisible(false);
             if (ex != null) {
                 showException((Exception) ex);
             } else {
-                if (SwingUtils.showOption(this, "Save", "Success saving data to " + finalFilename + ".\nDo you want to open the file?", OptionType.YesNo) == OptionResult.Yes) {
+                if (SwingUtils.showOption(this, "Save", "Success saving data to " + filename + ".\nDo you want to open the file?", OptionType.YesNo) == OptionResult.Yes) {
                     //DataPanel.createDialog(this, finalFilename, null, null);
-                    ch.psi.pshell.dataviewer.App.create(this, null, false, new File(finalFilename), null, "h5");
+                    ch.psi.pshell.dataviewer.App.create(this, null, false, new File(filename), null, IO.getExtension(filename).isBlank() ? "tiff" : "h5");
                 }
             }
             dumping = false;
@@ -2411,21 +2416,39 @@ public class ArchiverPanel extends StandardDialog {
     void saveQuery() throws IOException {
         try {
             String dataHome = Setup.getDataPath();
-            JFileChooser chooser = new JFileChooser(dataHome);
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
-            chooser.setFileFilter(filter);
-            chooser.setAcceptAllFileFilterUsed(true);
-            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            chooser.setDialogTitle("Dump Data");            
+            JFileChooser chooser = new JFileChooser(dataHome);            
+            chooser.addChoosableFileFilter(new ExtensionFileFilter("HDF5 files or folders for txt format", new String[]{"h5"}));
+            chooser.setAcceptAllFileFilterUsed(false);
+            chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            chooser.setDialogTitle("Dump Data");
             chooser.setCurrentDirectory(Context.getDefaultDataPath());
-
+            PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "ArchiverPanel", false);
+            auxiliary.addFormat(new String[]{"h5", "txt"});
+            chooser.setAccessory(auxiliary);                          
+            
             int rVal = chooser.showSaveDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
-                File file = chooser.getSelectedFile();
-                if (file!=null) {
-                    saveQuery(file.getAbsolutePath());
-                }
-            }
+                String fileName = auxiliary.getSelectedFile();
+                if ((fileName!=null) && (!fileName.isBlank())){                    
+                    File file = new File(fileName);
+                    String format = auxiliary.getSelectedFormat();
+                    String ext = IO.getExtension(fileName);
+                    if (format.equals("txt")){
+                        if (!ext.isEmpty() || file.isFile()){
+                            throw new Exception ("Output path must be a folder");
+                        }
+                    }
+                    if (format.equals("h5")) {
+                        if (file.isDirectory()){
+                            throw new Exception ("Output path must be a file");
+                        }                            
+                        if (ext.isEmpty()){
+                            fileName += ".h5";
+                        }                    
+                    }
+                    saveQuery(fileName);
+                 }                                        
+             }
         } catch (Exception ex) {
             showException(ex);
         } catch (Throwable t) {
@@ -2969,7 +2992,7 @@ public class ArchiverPanel extends StandardDialog {
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel4.setText("Bins:");
 
-        spinnerBins.setModel(new javax.swing.SpinnerNumberModel(200, 1, 10000, 10));
+        spinnerBins.setModel(new javax.swing.SpinnerNumberModel(200, 1, null, 10));
 
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel7.setText("Max size (K): ");

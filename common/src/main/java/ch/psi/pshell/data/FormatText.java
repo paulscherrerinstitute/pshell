@@ -309,10 +309,13 @@ public class FormatText implements Format {
     }   
 
     @Override
-    public void openOutput(File root) throws IOException {
+    public void openOutput(File root, boolean append) throws IOException {
         closeOutput();
         if (root.isFile()) {
             throw new IllegalArgumentException(root.getPath());
+        }
+        if (!append && root.exists()){
+            IO.deleteRecursive(root);
         }
         root.mkdirs();
         try {
@@ -660,10 +663,10 @@ public class FormatText implements Format {
 
 
     protected Path getAttributePath(String root, String path) throws IOException {
-        String attrFileName = ATTR_FILE;
+        Path p = getFilePath(root, path, false);
         return isGroup(root, path)
-                ? Paths.get(root, path, attrFileName)
-                : Paths.get(root, path + "." + attrFileName);
+                ? p.resolve(ATTR_FILE)
+                : p.resolve("." + ATTR_FILE);
     }
 
     @Override
@@ -899,7 +902,7 @@ public class FormatText implements Format {
                 
     @Override
     public boolean isGroup(String root, String path) throws IOException {
-        return Paths.get(root, path).toFile().isDirectory();
+        return getFilePath(root, path, false).toFile().isDirectory();
     }
 
     @Override

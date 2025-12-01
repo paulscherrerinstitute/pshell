@@ -57,7 +57,11 @@ public interface Format {
      */
     boolean isPacked();
 
-    void openOutput(File root) throws IOException;
+    void openOutput(File root, boolean append) throws IOException;
+    
+    default void openOutput(File root) throws IOException{
+        openOutput(root, false);
+    }
 
     void closeOutput() throws IOException;
 

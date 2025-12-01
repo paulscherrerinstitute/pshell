@@ -4,6 +4,7 @@ import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.utils.Arr;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.EncoderJson;
+import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Threading;
 import ch.psi.pshell.utils.Threading.VisibleCompletableFuture;
@@ -958,7 +959,12 @@ public class Daqbuf implements ChannelQueryAPI {
 
     DataStore getDataManager(String filename) throws IOException, InterruptedException {
         try {
-            return new DataStore(filename, "h5");
+            String ext = IO.getExtension(filename);
+            if (ext.isEmpty()){
+                return new DataStore(filename, "tiff");
+            } else {
+                return new DataStore(filename, "h5");
+            }
         } catch (InterruptedException | IOException ex) {
             throw ex;
         } catch (Exception ex) {

@@ -90,11 +90,13 @@ public class FormatHDF5 implements Format {
     }
 
     @Override
-    public void openOutput(File root) {
+    public void openOutput(File root, boolean append) {
         writerFile = root;
         if (writerFile != null) {
             writerFile.mkdirs();
-            writerFile.delete();
+            if (!append){
+                writerFile.delete();
+            }
             writer = HDF5Factory.open(writerFile.getPath());
         }
     }
