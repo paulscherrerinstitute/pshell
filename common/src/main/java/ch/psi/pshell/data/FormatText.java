@@ -666,7 +666,7 @@ public class FormatText implements Format {
         Path p = getFilePath(root, path, false);
         return isGroup(root, path)
                 ? p.resolve(ATTR_FILE)
-                : p.resolve("." + ATTR_FILE);
+                : p.resolveSibling(p.getFileName().toString() + "." + ATTR_FILE);
     }
 
     @Override
