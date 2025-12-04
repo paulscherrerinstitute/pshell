@@ -2267,24 +2267,13 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
     
     public List<Plot> plot(String root, String path, String title) throws Exception {     
-        PlotDescriptor[] plots;        
         boolean endingSlash = (path!=null) && path.trim().endsWith("/");
         if (!Context.getDataManager().isGroup(root, path) && endingSlash){  //Clear ending slash if it is a dataset
             path = path.trim();
             path = path.substring(0, path.length()-1);            
         }
-        if (!endingSlash){
-            //tries to display the scan plot
-            plots = Context.getDataManager().getScanPlots(root, path).toArray(new PlotDescriptor[0]);            
-        } else {
-            if (Context.getDataManager().isGroup(root, path)){                
-                plots = Context.getDataManager().getChildrenPlots(root, path).toArray(new PlotDescriptor[0]);
-            } else {
-                plots = Context.getDataManager().getPlots(root, path).toArray(new PlotDescriptor[0]);
-            }
-        }
-        return plot(plots, title);
-        
+        PlotDescriptor[] plots = Context.getDataManager().getScanPlots(root, path).toArray(new PlotDescriptor[0]);            
+        return plot(plots, title);        
     }    
     
 

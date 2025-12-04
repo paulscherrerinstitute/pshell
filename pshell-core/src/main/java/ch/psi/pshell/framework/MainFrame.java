@@ -1697,7 +1697,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
                 } catch (Exception ex) {
                     if (plot == null) {
                     } else {
-                        logger.log(Level.WARNING, null, ex);
+                        logger.log(Level.INFO, null, ex);
                     }
                 }
             }

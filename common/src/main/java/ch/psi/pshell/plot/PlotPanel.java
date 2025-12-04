@@ -845,38 +845,40 @@ public class PlotPanel extends MonitoredPanel {
                                         data1 = Convert.toUnsigned(data1);
                                     }
                                     series1.setData((double[][]) Convert.toDouble(data1));
-                                    if ((descriptor.steps.length==2) && !Double.isNaN(step_x) && !Double.isNaN(step_y)){
-                                        int index_x;
-                                        int index_y;
-                                        if (descriptor.dimensions<=1){
-                                            index_y = page % (descriptor.steps[0]+1);
-                                            index_x = index_y;
-                                        } else {
-                                            if (descriptor.passes>1){
-                                                page = page % ((descriptor.steps[0]+1) * (descriptor.steps[1]+1));
-                                            }                                            
-                                            index_y = page / (descriptor.steps[1]+1);
-                                            boolean backwards = descriptor.zigzag && (index_y%2)==1;
-                                            index_x = backwards ? descriptor.steps[1] - page % (descriptor.steps[1]+1) : page % (descriptor.steps[1]+1);
+                                    if (descriptor.steps!=null){
+                                        if ((descriptor.steps.length==2) && !Double.isNaN(step_x) && !Double.isNaN(step_y)){
+                                            int index_x;
+                                            int index_y;
+                                            if (descriptor.dimensions<=1){
+                                                index_y = page % (descriptor.steps[0]+1);
+                                                index_x = index_y;
+                                            } else {
+                                                if (descriptor.passes>1){
+                                                    page = page % ((descriptor.steps[0]+1) * (descriptor.steps[1]+1));
+                                                }                                            
+                                                index_y = page / (descriptor.steps[1]+1);
+                                                boolean backwards = descriptor.zigzag && (index_y%2)==1;
+                                                index_x = backwards ? descriptor.steps[1] - page % (descriptor.steps[1]+1) : page % (descriptor.steps[1]+1);
+                                            }
+                                            double vy = descriptor.start[0] + step_y * index_y;
+                                            double vx = descriptor.start[1] + step_x * index_x;
+                                            series1.getSlicePlot().setPageSubtitle( " " +
+                                                    descriptor.getLabelY() + "=" + getDispVal(vy) + " " +
+                                                    descriptor.getLabelX() + "=" + getDispVal(vx));
+                                        } else if ((descriptor.steps.length==3) && !Double.isNaN(step_x) && !Double.isNaN(step_y)&& !Double.isNaN(step_z)){
+                                            int sz[]=new int[]{(descriptor.steps[0]+1), (descriptor.steps[1]+1), (descriptor.steps[2]+1)};
+                                            int index_x = page % sz[2];
+                                            int index_y = (page/sz[2]) % (sz[1]);
+                                            int index_z = (page/sz[2]/sz[1]) % (sz[0]);
+
+                                            double vz = descriptor.start[0] + step_z * index_z;
+                                            double vy = descriptor.start[2] + step_y * index_y;
+                                            double vx = descriptor.start[1] + step_x * index_x;
+                                            series1.getSlicePlot().setPageSubtitle( " " +
+                                                    descriptor.getLabelZ() + "=" + getDispVal(vz) + " " +
+                                                    descriptor.getLabelY() + "=" + getDispVal(vy) + " " +
+                                                    descriptor.getLabelX() + "=" + getDispVal(vx));
                                         }
-                                        double vy = descriptor.start[0] + step_y * index_y;
-                                        double vx = descriptor.start[1] + step_x * index_x;
-                                        series1.getSlicePlot().setPageSubtitle( " " +
-                                                descriptor.getLabelY() + "=" + getDispVal(vy) + " " +
-                                                descriptor.getLabelX() + "=" + getDispVal(vx));
-                                    } else if ((descriptor.steps.length==3) && !Double.isNaN(step_x) && !Double.isNaN(step_y)&& !Double.isNaN(step_z)){
-                                        int sz[]=new int[]{(descriptor.steps[0]+1), (descriptor.steps[1]+1), (descriptor.steps[2]+1)};
-                                        int index_x = page % sz[2];
-                                        int index_y = (page/sz[2]) % (sz[1]);
-                                        int index_z = (page/sz[2]/sz[1]) % (sz[0]);
-                                        
-                                        double vz = descriptor.start[0] + step_z * index_z;
-                                        double vy = descriptor.start[2] + step_y * index_y;
-                                        double vx = descriptor.start[1] + step_x * index_x;
-                                        series1.getSlicePlot().setPageSubtitle( " " +
-                                                descriptor.getLabelZ() + "=" + getDispVal(vz) + " " +
-                                                descriptor.getLabelY() + "=" + getDispVal(vy) + " " +
-                                                descriptor.getLabelX() + "=" + getDispVal(vx));
                                     }
                                 } catch (Exception ex) {
                                     Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);

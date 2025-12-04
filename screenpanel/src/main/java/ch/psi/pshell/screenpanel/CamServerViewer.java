@@ -266,6 +266,7 @@ public class CamServerViewer extends MonitoredPanel {
                             Map cfg = (Map) server.getInstanceConfig();
                             cfg.put("port", 0); //Make sure get new port
                             cfg.remove("no_client_timeout");                            
+                            cfg.put("detached_instance", true);                            
                             setStream(cfg);
                             SwingUtils.showMessage(getTopLevel(), "Success", "Detached instance name:\n" + server.getInstanceId());
                         }
@@ -1416,6 +1417,7 @@ public class CamServerViewer extends MonitoredPanel {
         boolean goodRegion;
         boolean slicing;
         boolean valid;
+        boolean detached;
 
         ImageData(Stream stream, Renderer renderer) {
             if (stream != null) {
@@ -1431,6 +1433,7 @@ public class CamServerViewer extends MonitoredPanel {
                     slicing = ((Map<String, Object>) (pars.get("image_slices"))) != null;
                     String processingError = (String) pars.getOrDefault("processing_error", null);   
                     valid = (processingError==null) || (processingError.isBlank());
+                    detached = pars.getOrDefault("detached_instance", null) != null;
                 } catch (Exception ex) {
                 }                                                  
                 if (valid){

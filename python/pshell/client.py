@@ -645,15 +645,6 @@ class PShellClient:
         Returns:
             (event, value) or raises TimeoutException
 
-        Usage example:
-            def on_event(name, value):
-                if name == "state":
-                    print ("State changed: ",  value)
-                elif name == "record":
-                    print ("Received scan record: ", value)
-
-            pc.subscribe(["state", "record"], on_event)
-
         """
         ret = self._get_sse().wait_events(events, timeout)
         if ret is None:

@@ -11,9 +11,7 @@ import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.LayoutBase;
 import ch.psi.pshell.data.PlotDescriptor;
-import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Processor;
-import ch.psi.pshell.framework.ScriptEditor;
 import ch.psi.pshell.imaging.DeviceRenderer;
 import ch.psi.pshell.imaging.FileSource;
 import ch.psi.pshell.plot.Plot;
@@ -402,6 +400,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem menuPlotData = new JMenuItem("Plot data");
+        JMenuItem menuPlotSeparately = new JMenuItem("Plot separately");
         JMenu menuPlotAgainst = new JMenu("Plot against");
         JMenu menuConvert = new JMenu("Convert");
         menuPlotData.addActionListener((ActionEvent e) -> {
@@ -415,7 +414,19 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 showException(ex);
             }
         });
+        menuPlotSeparately.addActionListener((ActionEvent e) -> {
+            try {
+                TreePath path = treeFile.getSelectionPath();
+                String dataPath = getDataPath(path);
+                if (listener != null) {
+                    listener.plotData(dataManager, currentFile.getPath(), dataPath+"/*");
+                }
+            } catch (Exception ex) {
+                showException(ex);
+            }
+        });
         popupMenu.add(menuPlotData);
+        popupMenu.add(menuPlotSeparately);
         popupMenu.add(menuPlotAgainst);
 
         Separator menuPlotDataSeparator = new Separator();
@@ -517,9 +528,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         if (dataPath == null) {
                             return;
                         }                       
-                        Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), dataPath);
+                        Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), dataPath);                        
                         menuPlotData.setVisible(false);
                         menuPlotAgainst.setVisible(false);
+                        menuPlotSeparately.setVisible(false);
                         menuAssign.setVisible(false);
                         menuConvert.setVisible(false);
                         if (info != null) {
@@ -532,9 +544,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                         break;
                                     }
                                 }
+                                Map<String, Object> attrs = dataManager.getAttributes(currentFile.getPath(), dataPath);
                                 //Nexus plots
-                                if (!menuPlotData.isVisible()){
-                                    String defaultChild =  dataManager.getAttributes(currentFile.getPath(), dataPath).getOrDefault("default", "").toString();
+                                if (!menuPlotData.isVisible()){                                    
+                                    String defaultChild =  attrs.getOrDefault("default", "").toString();
                                     if ((defaultChild!=null) && (!defaultChild.isBlank())){
                                         Map<String, Object> defaultInfo = dataManager.getInfo(currentFile.getPath(), dataPath+ "/" + defaultChild);
                                         String defaultType = String.valueOf(defaultInfo.get(Format.INFO_TYPE));
@@ -542,6 +555,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                             menuPlotData.setVisible(true);                                        
                                         }
                                     }
+                                } else {
+                                    if (attrs.containsKey(Layout.ATTR_TYPE)  && attrs.containsKey(LayoutBase.ATTR_SCAN_WRITABLES) ) {
+                                        menuPlotSeparately.setVisible(true);
+                                    }                                    
                                 }
                             } else if (type.equals(Format.INFO_VAL_TYPE_DATASET) || type.equals(Format.INFO_VAL_TYPE_SOFTLINK)) {
                                 menuAssign.setVisible(Sequencer.hasInstance());
@@ -567,6 +584,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                     menuPlotAgainst.removeAll();
                                     menuConvert.setVisible(menuConvert.getMenuComponentCount() > 0);
                                     menuPlotData.setVisible(true);
+                                    Map<String, Object> attrs = dataManager.getAttributes(currentFile.getPath(), dataPath);
+                                    if (attrs.containsKey(Layout.ATTR_TYPE)  && attrs.containsKey(LayoutBase.ATTR_SCAN_WRITABLES) ) {
+                                        menuPlotSeparately.setVisible(true);
+                                    }
                                     try{
                                         Integer rank = ((Number) info.getOrDefault(Format.INFO_RANK, 0)).intValue();
                                         Long elements = ((Number) info.getOrDefault(Format.INFO_ELEMENTS, -1)).longValue();

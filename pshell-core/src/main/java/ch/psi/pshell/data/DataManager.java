@@ -721,10 +721,19 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     public List<PlotDescriptor> getPlots(String root, String path) throws IOException {
         path=adjustPath(path);
         ArrayList<PlotDescriptor> ret = new ArrayList<>();
+        int index = -1;
+        if (path.contains(".")) {
+            try{
+                index = Integer.valueOf(path.substring(path.lastIndexOf(".")+1));
+                path = path.substring(0, path.lastIndexOf("."));
+            } catch (Exception ex){
+                
+            }            
+        }        
         Map<String, Object> info = getInfo(root, path);
         String infoType = String.valueOf(info.get(Format.INFO_TYPE));
         if (infoType.equals(Format.INFO_VAL_TYPE_DATASET) || infoType.equals(Format.INFO_VAL_TYPE_SOFTLINK)) {
-            DataSlice slice = getData(root, path);
+            DataSlice slice = getData(root, path, Math.max(index, 0));
             if (info.get(Format.INFO_DATA_TYPE) == Format.INFO_VAL_DATA_TYPE_COMPOUND) {
                 Object[][] sliceData = (Object[][]) slice.sliceData;
                 String[] names = (String[]) info.get(Format.INFO_FIELD_NAMES);
@@ -802,7 +811,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
                     }
 
                     PlotDescriptor plot = null;
-                    if (slice.dataRank == 3) {
+                    if ((slice.dataRank == 3) && (index<0)) {
                         double[] z = Arr.indexesDouble(slice.getNumberSlices(getDepthDimension()));
                         plot = new PlotDescriptor(name, root, path, data, x, y, z);
                     } else {
@@ -837,6 +846,15 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
     }
 
     List<PlotDescriptor> doGetScanPlots(String root, String path) throws Exception {
+        if (path.endsWith("/*")){
+            //Get separately plots
+            path = path.substring(0, path.length()-2);
+            if (Context.getDataManager().isGroup(root, path)){                
+                return getChildrenPlots(root, path);
+            } else {
+                return getPlots(root, path);
+            }                        
+        }        
         PlotPreferences plotPreferences = getPlotPreferences(root, path);
         Map<String, Object> attrs = getAttributes(root, path);
         if (attrs.containsKey(Layout.ATTR_TYPE)) {
@@ -907,7 +925,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             }
             //Plot waveforms vertically, so that they dispplay aligned with scalar plots.
             if ((plot.rank == 2) && (plot.root != null) && (plot.path != null) && (!plot.isMultidimentional1dArray())) {
-                if (getLayout().isScanDataset(plot.root, plot.path, this)) {
+                if (getLayout().isScanDataset(plot.root, plot.path, this) && (plot.dimensions>0)) {
                     plot.transpose();
                 }
             }

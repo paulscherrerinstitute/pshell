@@ -166,8 +166,11 @@ public class DataServer extends Replier {
     
     public static DataContent getDataContents(String path) throws Exception {
         DataManager dm = Context.getDataManager();
-        DataContent ret = new DataContent();
-        if (path.contains(".")) {
+        DataContent ret = new DataContent();        
+                   
+        if (path.endsWith("/*")) {
+            path = path.substring(0, path.length()-1);
+        } else if (path.contains(".")) {
             try{
                 ret.index = Integer.valueOf(path.substring(path.lastIndexOf(".")+1));
                 path = path.substring(0, path.lastIndexOf("."));

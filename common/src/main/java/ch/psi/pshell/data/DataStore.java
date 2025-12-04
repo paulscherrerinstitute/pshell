@@ -1,5 +1,6 @@
 package ch.psi.pshell.data;
 
+import ch.psi.pshell.app.Setup;
 import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.extension.Extensions;
 import ch.psi.pshell.scripting.JepUtils;
@@ -226,7 +227,10 @@ public class DataStore implements AutoCloseable {
     }
 
     public String getDataFolder() {
-        return outputFile.getParent();
+        if (outputFile!=null){
+            return outputFile.getParent();
+        }
+        return Setup.getDataPath();
     }
     
     boolean open = false;
@@ -638,7 +642,7 @@ public class DataStore implements AutoCloseable {
 
     protected String adjustRoot(String root) {
         if (!new File(root).exists()) {
-            String base = getDataFolder();
+            String base = getDataFolder(); 
             if (!IO.isSubPath(root, base)) {
                 root = Paths.get(base, root).toString();
             }
