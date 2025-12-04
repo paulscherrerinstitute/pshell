@@ -10,12 +10,14 @@ import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.IO.FilePermissions;
 import ch.psi.pshell.utils.Nameable;
 import ch.psi.pshell.utils.Str;
+import ch.psi.pshell.utils.Type;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -608,6 +610,41 @@ public class DataStore implements AutoCloseable {
 
         DataSlice ret = getFormat().getData(root, path, index);
         if (ret == null) {
+            DataAddress child = new DataAddress(root, path); 
+            DataAddress parent = child.getParent();
+            if (parent!=null){
+                try {
+                    //Try to get compound type column
+                    String name = child.getName();
+                    Map<String, Object> info = getInfo(parent.root, parent.path);
+                    if (info.get(Format.INFO_DATA_TYPE) == Format.INFO_VAL_DATA_TYPE_COMPOUND) {
+                        String[] names = (String[]) info.get(Format.INFO_FIELD_NAMES);
+                        if (Arr.containsEqual(names, name)){
+                            DataSlice data = getFormat().getData(parent.root, parent.path, index);
+                            int col = Arr.getIndexEqual(names, name);
+                            int length = ((int[]) info.get(Format.INFO_FIELD_LENGTHS))[col];                        
+                            String typeName = ((String[]) info.get(Format.INFO_FIELD_TYPES))[col];
+                            try{
+                               typeName = Type.fromClass(Class.forName(typeName), false).getKey();
+                            } catch (Exception ex){                                
+                            }
+                            if (length>0){
+                                typeName+="[]";
+                            }                            
+                            Class cls = Type.toClass(typeName);
+                            
+                            Object[] d = (Object[]) data.sliceData;
+                            Object array = Array.newInstance(cls, d.length);
+                        
+                            for (int i=0; i<d.length; i++){
+                                Array.set(array, i, Array.get(d[i], col));
+                            }
+                            return new DataSlice(root, path, data.sliceShape, array, 0, false);
+                        }                   
+                    }
+                } catch (Exception ex) {
+                }
+            }
             throw new UnsupportedOperationException(String.format("Invalid data path : %s-%s-%d", root, path, index));
         }
 

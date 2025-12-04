@@ -6,12 +6,35 @@ package ch.psi.pshell.data;
  */
 public class DataAddress {
     
+    public final String root;
+    public final String path;
+
     DataAddress(String root, String path) {
         this.root = root;
         this.path = path;
     }
-    public final String root;
-    public final String path;
+    
+    public DataAddress getParent(){
+        if (!path.contains("/")){
+            return null;
+        }
+        String ret = path.substring(0, path.lastIndexOf("/")).trim();
+        if (ret.isBlank()){
+            return null;
+        }
+        return new DataAddress(root, ret); 
+    }
+    
+    public String getName(){
+        if (!path.contains("/")){
+            return null;
+        }
+        String ret = path.substring(path.lastIndexOf("/")+1).trim();
+        if (ret.isBlank()){
+            return null;
+        }
+        return ret;         
+    }
     
     static public boolean isFullPath(String path){
         return path.contains("|") || path.contains(" /");
