@@ -84,12 +84,14 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.border.Border;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import org.apache.commons.math3.analysis.function.Gaussian;
@@ -174,6 +176,8 @@ public class CamServerViewer extends MonitoredPanel {
     public CamServerViewer() {
         try {
             initComponents();
+            sidePanelScroll.setBorder(null);
+            sidePanelScroll.setViewportBorder(null);            
             setSidePanelVisible(false);
             toolBar.setFloatable(false);
             panelPipeline.setVisible(false);
@@ -1201,12 +1205,14 @@ public class CamServerViewer extends MonitoredPanel {
     }
 
     public boolean isSidePanelVisible() {
-        return sidePanel.isVisible();
+        return sidePanelScroll.isVisible();
     }
 
     public void setSidePanelVisible(boolean value) {
         buttonSidePanel.setSelected(value);
-        sidePanel.setVisible(value);
+        sidePanelScroll.setVisible(value);
+        revalidate();
+        repaint();
     }
 
     public boolean isToolbarVisible() {
@@ -3512,6 +3518,10 @@ public class CamServerViewer extends MonitoredPanel {
         return sidePanel;
     }    
     
+    public JScrollPane getSidePanelScroll() {
+        return sidePanelScroll;
+    }        
+    
     public JPanel getTopPanel() {
         return topPanel;
     }    
@@ -3587,6 +3597,7 @@ public class CamServerViewer extends MonitoredPanel {
         labelType = new javax.swing.JLabel();
         comboType = new javax.swing.JComboBox();
         renderer = new ch.psi.pshell.imaging.DeviceRenderer();
+        sidePanelScroll = new javax.swing.JScrollPane();
         sidePanel = new javax.swing.JPanel();
         panelPipeline = new javax.swing.JPanel();
         checkThreshold = new javax.swing.JCheckBox();
@@ -3862,6 +3873,11 @@ public class CamServerViewer extends MonitoredPanel {
                 .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addComponent(panelStream, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
     );
+
+    sidePanelScroll.setBorder(null);
+    sidePanelScroll.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+    sidePanel.setAutoscrolls(true);
 
     panelPipeline.setBorder(javax.swing.BorderFactory.createTitledBorder("Pipeline"));
 
@@ -4457,6 +4473,8 @@ public class CamServerViewer extends MonitoredPanel {
             .addContainerGap())
     );
 
+    sidePanelScroll.setViewportView(sidePanel);
+
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
     this.setLayout(layout);
     layout.setHorizontalGroup(
@@ -4466,7 +4484,7 @@ public class CamServerViewer extends MonitoredPanel {
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addComponent(topPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createSequentialGroup()
-                    .addComponent(sidePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(sidePanelScroll, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(0, 0, 0)
                     .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, 580, Short.MAX_VALUE)))
             .addContainerGap())
@@ -4475,9 +4493,10 @@ public class CamServerViewer extends MonitoredPanel {
         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(layout.createSequentialGroup()
             .addComponent(topPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGap(0, 0, 0)
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(sidePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addComponent(sidePanelScroll, javax.swing.GroupLayout.DEFAULT_SIZE, 570, Short.MAX_VALUE)))
     );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -4826,7 +4845,7 @@ public class CamServerViewer extends MonitoredPanel {
     }//GEN-LAST:event_buttonZoom2ActionPerformed
 
     private void buttonSidePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSidePanelActionPerformed
-        sidePanel.setVisible(buttonSidePanel.isSelected());
+        setSidePanelVisible(buttonSidePanel.isSelected());
     }//GEN-LAST:event_buttonSidePanelActionPerformed
 
     private void buttonGrabBackgroundActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGrabBackgroundActionPerformed
@@ -5165,6 +5184,7 @@ public class CamServerViewer extends MonitoredPanel {
     private ch.psi.pshell.swing.ValueSelection pauseSelection;
     protected ch.psi.pshell.imaging.DeviceRenderer renderer;
     private javax.swing.JPanel sidePanel;
+    private javax.swing.JScrollPane sidePanelScroll;
     private javax.swing.JSpinner spinnerAvFrames;
     private javax.swing.JSpinner spinnerAvMode;
     private javax.swing.JSpinner spinnerBackground;
