@@ -302,4 +302,13 @@ public class Threading {
         }        
     }
    
+    public static Thread newDaemonThread(Runnable task){
+        return newDaemonThread(task,null);
+    }
+    
+    public static Thread newDaemonThread(Runnable task, String name){
+        Thread thread = (name==null) ? new Thread(task) : new Thread(task, name);
+        thread.setDaemon(true);
+        return thread;
+    }
 }

@@ -7,7 +7,6 @@ import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.camserver.CameraClient;
 import ch.psi.pshell.camserver.CameraSource;
 import ch.psi.pshell.camserver.PipelineSource;
-import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.devices.Setup;
@@ -170,7 +169,7 @@ public class CamServerViewer extends MonitoredPanel {
 
     public void setListener(CamServerViewerListener listener) {
         this.listener = listener;
-    }
+    }   
             
     public CamServerViewer() {
         try {
@@ -217,19 +216,7 @@ public class CamServerViewer extends MonitoredPanel {
             JMenuItem menuCameraConfig = new JMenuItem("Camera Configuration");
             menuCameraConfig.addActionListener((ActionEvent e) -> {
                 try {
-                    if (camera != null) {
-                        String cameraName = getCameraName();
-                        String cameraConfigJson = null;
-                        try ( CameraSource srv = newCameraSource()) {
-                            //TODO: replace into encodeMultiline
-                            cameraConfigJson = EncoderJson.encode(srv.getConfig(getCameraName()), true);
-                        }
-                        
-                        ScriptDialog dlg = new ScriptDialog(getWindow(), true, cameraName, cameraConfigJson, "json");
-                        dlg.setReadOnly(true);
-                        dlg.setVisible(true);
-                        
-                    }
+                    editCameraConfig();
                 } catch (Exception ex) {
                     showException(ex);
                 }
@@ -238,20 +225,7 @@ public class CamServerViewer extends MonitoredPanel {
             JMenuItem menuInstanceConfig = new JMenuItem("Instance Configuration");
             menuInstanceConfig.addActionListener((ActionEvent e) -> {
                 try {
-                    if (server!=null){                    
-                        String instance = server.getInstanceId();                        
-                        Map<String, Object> cfg = server.getInstanceConfig();
-                        if ((instance!=null) && (cfg!=null)){
-                            String json = EncoderJson.encode(cfg, true);
-                            ScriptDialog dlg = new ScriptDialog(getWindow(), true, instance, json, "json");
-                            dlg.setVisible(true);
-                            if (dlg.getResult()){
-                                json = dlg.getText();
-                                cfg = (Map) EncoderJson.decode(json, Map.class);
-                                server.setInstanceConfig(cfg);
-                            }
-                        }
-                    }
+                    editInstanceConfig();
                 } catch (Exception ex) {
                     showException(ex);
                 }
@@ -260,16 +234,9 @@ public class CamServerViewer extends MonitoredPanel {
             JMenuItem menuPipelineDetach  = new JMenuItem("Detach Instance");
             menuPipelineDetach.addActionListener((ActionEvent e) -> {
                 try {
-                    if (server!=null){                    
-                        String instance = server.getInstanceId();                        
-                        if ((instance!=null) && (server.getInstanceConfig()!=null)){
-                            Map cfg = (Map) server.getInstanceConfig();
-                            cfg.put("port", 0); //Make sure get new port
-                            cfg.remove("no_client_timeout");                            
-                            cfg.put("detached_instance", true);                            
-                            setStream(cfg);
-                            SwingUtils.showMessage(getTopLevel(), "Success", "Detached instance name:\n" + server.getInstanceId());
-                        }
+                    String instance = detachInstance();
+                    if (instance!=null){
+                        SwingUtils.showMessage(getTopLevel(), "Success", "Detached instance name:\n" + instance);
                     }
                 } catch (Exception ex) {
                     showException(ex);
@@ -279,20 +246,7 @@ public class CamServerViewer extends MonitoredPanel {
             JMenuItem menuSavedConfig = new JMenuItem("Saved Configuration");
             menuSavedConfig.addActionListener((ActionEvent e) -> {
                 try {
-                    if (server!=null){           
-                        Map<String, Object> cfg = server.getSavedConfig();
-                        String pipeline = server.getCurrentPipeline();
-                        if ((cfg!=null) && (pipeline!=null)){
-                            String json = EncoderJson.encode(cfg, true);
-                            ScriptDialog dlg = new ScriptDialog(getWindow(), true, pipeline, json, "json");
-                            dlg.setVisible(true);
-                            if (dlg.getResult()){
-                                json = dlg.getText();
-                                cfg = (Map) EncoderJson.decode(json, Map.class);
-                                server.setConfig(pipeline, cfg);
-                            }
-                        }
-                    }
+                   editSavedConfig();
                 } catch (Exception ex) {
                     showException(ex);
                 }
@@ -331,311 +285,89 @@ public class CamServerViewer extends MonitoredPanel {
 
             JMenuItem menuSetROI = new JMenuItem("Set ROI");
             menuSetROI.addActionListener((ActionEvent e) -> {
-                renderer.abortSelection();
-                if (server != null) {
-                    final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMovingOverlay());
-                    renderer.addListener(new RendererListener() {
-                        @Override
-                        public void onSelectionFinished(Renderer renderer, Overlay overlay) {
-                            try {
-                                renderer.setShowReticle(false);
-                                Rectangle roi = overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds();
-                                if (server.isRoiEnabled()) {
-                                    int[] cur = server.getRoi();
-                                    server.setRoi(new int[]{roi.x + cur[0], roi.width,  roi.y + cur[1], roi.height});
-                                } else {
-                                    server.setRoi(new int[]{roi.x, roi.width, roi.y, roi.height});
-                                }
-                            } catch (Exception ex) {
-                                showException(ex);
-                            } finally {
-                                renderer.removeListener(this);
-                            }
-                        }
-
-                        @Override
-                        public void onSelectionAborted(Renderer renderer, Overlay overlay) {
-                            renderer.removeListener(this);
-                        }
-                    });
-                    selection.setFixed(true);
-                    renderer.startSelection(selection);
-                }
+                try {
+                    setRoi();
+                } catch (Exception ex) {
+                    showException(ex);
+                }                    
             });
 
             JMenuItem menuResetROI = new JMenuItem("Reset ROI");
             menuResetROI.addActionListener((ActionEvent e) -> {
-                renderer.abortSelection();
-                if (server != null) {
-                    try {
-                        renderer.setShowReticle(false);
-                        server.resetRoi();
-                    } catch (IOException ex) {
-                        showException(ex);
-                    }
-                }
+                try {
+                    resetRoi();
+                } catch (Exception ex) {
+                    showException(ex);
+                }                   
             });
             
             
             JMenuItem menuSetCameraROI = new JMenuItem("Set Camera ROI");
-            menuSetCameraROI.addActionListener((ActionEvent e) -> {                
-                renderer.abortSelection();
-                if (server != null) {
-                    try {
-                        checkCanChangeCameraROI();
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }
-                    
-                    
-                    final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMovingOverlay());
-                    renderer.addListener(new RendererListener() {
-                        @Override
-                        public void onSelectionFinished(Renderer renderer, Overlay overlay) {
-                            try {
-                                renderer.setShowReticle(false);
-
-                                CameraClient cc = new CameraClient(getCameraServerUrl());
-                                Rectangle roi = overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds();
-                                int[] cur = cc.getRoi(getCameraName());
-                                if (cur != null) {
-                                    cc.setRoi(getCameraName(), new int[]{roi.x + cur[0], roi.y + cur[1], roi.width, roi.height});
-                                } else {
-                                    cc.setRoi(getCameraName(), new int[]{roi.x, roi.y, roi.width, roi.height});
-                                }
-                            } catch (Exception ex) {
-                                showException(ex);
-                            } finally {
-                                renderer.removeListener(this);
-                            }
-                        }
-
-                        @Override
-                        public void onSelectionAborted(Renderer renderer, Overlay overlay) {
-                            renderer.removeListener(this);
-                        }
-                    });
-                    selection.setFixed(true);
-                    renderer.startSelection(selection);
-                }
+            menuSetCameraROI.addActionListener((ActionEvent e) -> {       
+                try {
+                    setCameraRoi();
+                } catch (Exception ex) {
+                    showException(ex);
+                }                   
             });
 
             JMenuItem menuResetCameraROI = new JMenuItem("Reset Camera ROI");
             menuResetCameraROI.addActionListener((ActionEvent e) -> {
-                renderer.abortSelection();
-                if (server != null) {
-                    try {
-                        checkCanChangeCameraROI();                        
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                    
-                    try {
-                        renderer.setShowReticle(false);
-                        
-                        CameraClient cc = new CameraClient(getCameraServerUrl());
-                        cc.resetRoi(getCameraName());
-                        
-                    } catch (IOException ex) {
-                        showException(ex);
-                    }
-                }
+                try {
+                    resetCameraRoi();
+                } catch (Exception ex) {
+                    showException(ex);
+                }                   
             });
-            
+                            
             JMenuItem menuApplySavedBackground = new JMenuItem("Apply Instance Background to Saved");
             menuApplySavedBackground.addActionListener((ActionEvent e) -> {
-                if (server != null) {
-                    try {
-                        if (!server.isBackgroundSubtractionEnabled()){
-                            throw new Exception("Pipeline background subtraction is not enabled");
-                        }
-                        Object bg = getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background", null);
-                        String image = (bg==null) ? "" : bg.toString().trim();
-                        if (image.isBlank()){
-                            throw new Exception("Background subtraction image is undefined");
-                        }
-                        if (Boolean.FALSE.equals(getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background_ok", true))){
-                            throw new Exception("Background subtraction image is invalid: " + image);
-                        }  
-         
-                        server.setSavedConfigValue("image_background_enable", server.getBackgroundSubtraction());                                
-                        server.setSavedConfigValue("image_background", image);                                                
-                        
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                }
+                applyInstanceBackgroundToSaved();
             });          
 
             JMenuItem menuApplySavedROI = new JMenuItem("Apply Instance ROI to Saved");
             menuApplySavedROI.addActionListener((ActionEvent e) -> {
-                if (server != null) {
-                    try {
-         
-                        server.setSavedConfigValue("image_region_of_interest", server.getRoi());                                
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                }
+                applyInstanceRoiToSaved();
             });          
          
             
             JMenuItem menuResetSavedROI = new JMenuItem("Reset Saved ROI");
             menuResetSavedROI.addActionListener((ActionEvent e) -> {
-                if (server != null) {
-                    try {
-         
-                        server.setSavedConfigValue("image_region_of_interest", null);                                
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                }
+                resetSavedRoi();
             });          
 
             JMenuItem menuSetSavedBackground = new JMenuItem("Set Saved Background to Latest");
             menuSetSavedBackground.addActionListener((ActionEvent e) -> {
-                if (server != null) {
-                    try {
-                        String last = server.getLastBackground();
-                        if ((last==null) || (last.isBlank())){
-                            throw new Exception("No background image file is available");
-                        }
-                        server.setSavedConfigValue("image_background_enable", true);
-                        server.setSavedConfigValue("image_background", null);
-                        
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                }
+                setSavedBackgroundToLatest();
             });          
 
             JMenuItem menuResetSavedBackground = new JMenuItem("Reset Saved Background");
             menuResetSavedBackground.addActionListener((ActionEvent e) -> {
-                if (server != null) {
-                    try {
-                        try{
-                            server.setSavedConfigValue("image_background_enable", false);
-                        } catch (IOException ex){
-                            //Not persisted
-                        }                        
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                }
+                resetSavedBackground();
             });           
             
             
             
             JMenuItem menuApplyCameraBackground = new JMenuItem("Apply Instance Background to Camera");
             menuApplyCameraBackground.addActionListener((ActionEvent e) -> {
-                if (server != null) {
-                    try {
-                        if (!server.isBackgroundSubtractionEnabled()){
-                            throw new Exception("Pipeline background subtraction is not enabled");
-                        }
-                        if (server.getBackgroundSubtraction().equals("signed")){
-                            throw new Exception("Camera only supports unsigned background subtraction");
-                        }
-                        Object bg = getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background", null);
-                        String image = (bg==null) ? "" : bg.toString().trim();
-                        if (image.isBlank()){
-                            throw new Exception("Background subtraction image is undefined");
-                        }
-                        if (Boolean.FALSE.equals(getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background_ok", true))){
-                            throw new Exception("Background subtraction image is invalid: " + image);
-                        }  
-                        server.setBackground(null);
-                        server.setBackgroundSubtraction(false);
-                        try{
-                            server.setSavedConfigValue("image_background_enable", false);
-                        } catch (IOException ex){
-                            //Not persisted
-                        }                        
-                                
-                        CameraClient cc = new CameraClient(getCameraServerUrl());
-                        cc.setBackground(getCameraName(), image);
-                        updatePipelineControls();
-                        
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                }
+                applyInstanceBackgroundToCamera();
             });          
  
             JMenuItem menuSetCameraBackground = new JMenuItem("Set Camera Background to Latest");
             menuSetCameraBackground.addActionListener((ActionEvent e) -> {
-                if (server != null) {
-                    try {
-                        String last = server.getLastBackground();
-                        if ((last==null) || (last.isBlank())){
-                            throw new Exception("No background image file is available");
-                        }
-                        
-                        CameraClient cc = new CameraClient(getCameraServerUrl());
-                        cc.setLatestBackground(getCameraName());
-                        updatePipelineControls();                        
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                }                
+                setCameraBackgroundToLatest();
            });          
             
             
             JMenuItem menuResetCameraBackground = new JMenuItem("Reset Camera Background");
             menuResetCameraBackground.addActionListener((ActionEvent e) -> {
-                if (server != null) {
-                    try {
-                        CameraClient cc = new CameraClient(getCameraServerUrl());
-                        cc.setBackground(getCameraName(), null);
-                        
-                    } catch (Exception ex) {
-                        showException(ex);
-                        return;
-                    }                    
-                }
+                resetCameraBackground();
             });           
             
 
             JCheckBoxMenuItem menuFrameIntegration = new JCheckBoxMenuItem("Multi-Frame", (integration != 0));
             menuFrameIntegration.addActionListener((ActionEvent e) -> {
-                if (integration == 0) {
-                    JPanel panel = new JPanel();
-                    GridBagLayout layout = new GridBagLayout();
-                    layout.columnWidths = new int[]{150, 50};   //Minimum width
-                    layout.rowHeights = new int[]{30, 30};   //Minimum height
-                    panel.setLayout(layout);
-                    JCheckBox checkContinuous = new JCheckBox("");
-                    checkContinuous.setSelected(true);
-                    JTextField textFrames = new JTextField();
-                    GridBagConstraints c = new GridBagConstraints();
-                    c.gridx = 0;
-                    c.gridy = 0;
-                    panel.add(new JLabel("Number of frames:"), c);
-                    c.gridy = 1;
-                    panel.add(new JLabel("Continuous:"), c);
-                    c.fill = GridBagConstraints.HORIZONTAL;
-                    c.gridx = 1;
-                    panel.add(checkContinuous, c);
-                    c.gridy = 0;
-                    panel.add(textFrames, c);
-                    if (SwingUtils.showOption(getTopLevel(), "Multi-Frame Integration", panel, OptionType.OkCancel) == OptionResult.Yes) {
-                        setIntegration(checkContinuous.isSelected() ? -(Integer.valueOf(textFrames.getText())) : (Integer.valueOf(textFrames.getText())));
-                    }
-                } else {
-                    if (SwingUtils.showOption(getTopLevel(), "Multi-Frame Integration",
-                            "Do you want to disable " + ((integration < 0) ? "continuous " : "") + "multi-frame integration (" + Math.abs(integration) + ")?", OptionType.YesNo) == OptionResult.Yes) {
-                        setIntegration(0);
-                    }
-                }
+                setFrameIntegration();
             });
 
             SwingUtilities.invokeLater(() -> {
@@ -858,7 +590,360 @@ public class CamServerViewer extends MonitoredPanel {
             updateButtons();
         }
     }
+    
+    public String detachInstance() throws IOException, InterruptedException{
+        if (server!=null){                    
+            String instance = server.getInstanceId();                        
+            if ((instance!=null) && (server.getInstanceConfig()!=null)){
+                Map cfg = (Map) server.getInstanceConfig();
+                cfg.put("port", 0); //Make sure get new port
+                cfg.remove("no_client_timeout");                            
+                cfg.put("detached_instance", true);                            
+                setStream(cfg);
+                return server.getInstanceId();                
+            }
+            return null;
+        }
+        return null;
+    }
+    
+    public void editCameraConfig() throws IOException, InterruptedException{
+        if (camera != null) {
+            String cameraName = getCameraName();
+            String cameraConfigJson = null;
+            try ( CameraSource srv = newCameraSource()) {
+                //TODO: replace into encodeMultiline
+                cameraConfigJson = EncoderJson.encode(srv.getConfig(getCameraName()), true);
+            }
 
+            ScriptDialog dlg = new ScriptDialog(getWindow(), true, cameraName, cameraConfigJson, "json");
+            dlg.setReadOnly(true);
+            dlg.setVisible(true);
+
+        }
+    }
+    
+    public void editInstanceConfig() throws IOException{
+        if (server!=null){                    
+            String instance = server.getInstanceId();                        
+            Map<String, Object> cfg = server.getInstanceConfig();
+            if ((instance!=null) && (cfg!=null)){
+                String json = EncoderJson.encode(cfg, true);
+                ScriptDialog dlg = new ScriptDialog(getWindow(), true, instance, json, "json");
+                dlg.setVisible(true);
+                if (dlg.getResult()){
+                    json = dlg.getText();
+                    cfg = (Map) EncoderJson.decode(json, Map.class);
+                    server.setInstanceConfig(cfg);
+                }
+            }
+        }        
+    }
+    
+    public void editSavedConfig() throws IOException{
+        if (server!=null){           
+            Map<String, Object> cfg = server.getSavedConfig();
+            String pipeline = server.getCurrentPipeline();
+            if ((cfg!=null) && (pipeline!=null)){
+                String json = EncoderJson.encode(cfg, true);
+                ScriptDialog dlg = new ScriptDialog(getWindow(), true, pipeline, json, "json");
+                dlg.setVisible(true);
+                if (dlg.getResult()){
+                    json = dlg.getText();
+                    cfg = (Map) EncoderJson.decode(json, Map.class);
+                    server.setConfig(pipeline, cfg);
+                }
+            }
+        }
+    }
+    
+    public void setRoi(){
+        renderer.abortSelection();
+        if (server != null) {
+            final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMovingOverlay());
+            renderer.addListener(new RendererListener() {
+                @Override
+                public void onSelectionFinished(Renderer renderer, Overlay overlay) {
+                    try {
+                        renderer.setShowReticle(false);
+                        Rectangle roi = overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds();
+                        if (server.isRoiEnabled()) {
+                            int[] cur = server.getRoi();
+                            server.setRoi(new int[]{roi.x + cur[0], roi.width,  roi.y + cur[1], roi.height});
+                        } else {
+                            server.setRoi(new int[]{roi.x, roi.width, roi.y, roi.height});
+                        }
+                    } catch (Exception ex) {
+                        showException(ex);
+                    } finally {
+                        renderer.removeListener(this);
+                    }
+                }
+
+                @Override
+                public void onSelectionAborted(Renderer renderer, Overlay overlay) {
+                    renderer.removeListener(this);
+                }
+            });
+            selection.setFixed(true);
+            renderer.startSelection(selection);
+        }
+    }
+    
+    public void resetRoi(){
+        renderer.abortSelection();
+        if (server != null) {
+            try {
+                renderer.setShowReticle(false);
+                server.resetRoi();
+            } catch (IOException ex) {
+                showException(ex);
+            }
+        }
+    }
+
+    public void setCameraRoi(){
+        renderer.abortSelection();
+        if (server != null) {
+            try {
+                checkCanChangeCameraROI();
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }
+
+
+            final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMovingOverlay());
+            renderer.addListener(new RendererListener() {
+                @Override
+                public void onSelectionFinished(Renderer renderer, Overlay overlay) {
+                    try {
+                        renderer.setShowReticle(false);
+
+                        CameraClient cc = new CameraClient(getCameraServerUrl());
+                        Rectangle roi = overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds();
+                        int[] cur = cc.getRoi(getCameraName());
+                        if (cur != null) {
+                            cc.setRoi(getCameraName(), new int[]{roi.x + cur[0], roi.y + cur[1], roi.width, roi.height});
+                        } else {
+                            cc.setRoi(getCameraName(), new int[]{roi.x, roi.y, roi.width, roi.height});
+                        }
+                    } catch (Exception ex) {
+                        showException(ex);
+                    } finally {
+                        renderer.removeListener(this);
+                    }
+                }
+
+                @Override
+                public void onSelectionAborted(Renderer renderer, Overlay overlay) {
+                    renderer.removeListener(this);
+                }
+            });
+            selection.setFixed(true);
+            renderer.startSelection(selection);
+        }
+    }
+    
+    public void resetCameraRoi(){
+        renderer.abortSelection();
+        if (server != null) {
+            try {
+                checkCanChangeCameraROI();                        
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+
+            try {
+                renderer.setShowReticle(false);
+
+                CameraClient cc = new CameraClient(getCameraServerUrl());
+                cc.resetRoi(getCameraName());
+
+            } catch (IOException ex) {
+                showException(ex);
+            }
+        }        
+    }
+    
+    public void applyInstanceBackgroundToSaved(){    
+        if (server != null) {
+            try {
+                if (!server.isBackgroundSubtractionEnabled()){
+                    throw new Exception("Pipeline background subtraction is not enabled");
+                }
+                Object bg = getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background", null);
+                String image = (bg==null) ? "" : bg.toString().trim();
+                if (image.isBlank()){
+                    throw new Exception("Background subtraction image is undefined");
+                }
+                if (Boolean.FALSE.equals(getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background_ok", true))){
+                    throw new Exception("Background subtraction image is invalid: " + image);
+                }  
+
+                server.setSavedConfigValue("image_background_enable", server.getBackgroundSubtraction());                                
+                server.setSavedConfigValue("image_background", image);                                                
+
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+        }
+    }
+
+    public void applyInstanceRoiToSaved(){   
+        if (server != null) {
+            try {         
+                server.setSavedConfigValue("image_region_of_interest", server.getRoi());                                
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+        }
+    }
+    
+    public void resetSavedRoi(){  
+        if (server != null) {
+            try {         
+                server.setSavedConfigValue("image_region_of_interest", null);                                
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+        }
+    }
+    
+    public void resetSavedBackground(){  
+        if (server != null) {
+            try {
+                try{
+                    server.setSavedConfigValue("image_background_enable", false);
+                } catch (IOException ex){
+                    //Not persisted
+                }                        
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+        }
+    }
+
+    public void setSavedBackgroundToLatest(){  
+        if (server != null) {
+            try {
+                String last = server.getLastBackground();
+                if ((last==null) || (last.isBlank())){
+                    throw new Exception("No background image file is available");
+                }
+                server.setSavedConfigValue("image_background_enable", true);
+                server.setSavedConfigValue("image_background", null);
+
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+        }
+    }
+    
+    public void applyInstanceBackgroundToCamera(){  
+        if (server != null) {
+            try {
+                if (!server.isBackgroundSubtractionEnabled()){
+                    throw new Exception("Pipeline background subtraction is not enabled");
+                }
+                if (server.getBackgroundSubtraction().equals("signed")){
+                    throw new Exception("Camera only supports unsigned background subtraction");
+                }
+                Object bg = getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background", null);
+                String image = (bg==null) ? "" : bg.toString().trim();
+                if (image.isBlank()){
+                    throw new Exception("Background subtraction image is undefined");
+                }
+                if (Boolean.FALSE.equals(getProcessingParameters(getCurrentFrame().cache).getOrDefault("image_background_ok", true))){
+                    throw new Exception("Background subtraction image is invalid: " + image);
+                }  
+                server.setBackground(null);
+                server.setBackgroundSubtraction(false);
+                try{
+                    server.setSavedConfigValue("image_background_enable", false);
+                } catch (IOException ex){
+                    //Not persisted
+                }                        
+
+                CameraClient cc = new CameraClient(getCameraServerUrl());
+                cc.setBackground(getCameraName(), image);
+                updatePipelineControls();
+
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+        }
+    }
+    
+    public void resetCameraBackground(){
+        if (server != null) {
+            try {
+                CameraClient cc = new CameraClient(getCameraServerUrl());
+                cc.setBackground(getCameraName(), null);
+
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+        }
+    }
+    
+    public void setCameraBackgroundToLatest(){  
+        if (server != null) {
+            try {
+                String last = server.getLastBackground();
+                if ((last==null) || (last.isBlank())){
+                    throw new Exception("No background image file is available");
+                }
+
+                CameraClient cc = new CameraClient(getCameraServerUrl());
+                cc.setLatestBackground(getCameraName());
+                updatePipelineControls();                        
+            } catch (Exception ex) {
+                showException(ex);
+                return;
+            }                    
+        }                
+    }
+    
+    public void setFrameIntegration(){  
+        if (integration == 0) {
+            JPanel panel = new JPanel();
+            GridBagLayout layout = new GridBagLayout();
+            layout.columnWidths = new int[]{150, 50};   //Minimum width
+            layout.rowHeights = new int[]{30, 30};   //Minimum height
+            panel.setLayout(layout);
+            JCheckBox checkContinuous = new JCheckBox("");
+            checkContinuous.setSelected(true);
+            JTextField textFrames = new JTextField();
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 0;
+            panel.add(new JLabel("Number of frames:"), c);
+            c.gridy = 1;
+            panel.add(new JLabel("Continuous:"), c);
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.gridx = 1;
+            panel.add(checkContinuous, c);
+            c.gridy = 0;
+            panel.add(textFrames, c);
+            if (SwingUtils.showOption(getTopLevel(), "Multi-Frame Integration", panel, OptionType.OkCancel) == OptionResult.Yes) {
+                setIntegration(checkContinuous.isSelected() ? -(Integer.valueOf(textFrames.getText())) : (Integer.valueOf(textFrames.getText())));
+            }
+        } else {
+            if (SwingUtils.showOption(getTopLevel(), "Multi-Frame Integration",
+                    "Do you want to disable " + ((integration < 0) ? "continuous " : "") + "multi-frame integration (" + Math.abs(integration) + ")?", OptionType.YesNo) == OptionResult.Yes) {
+                setIntegration(0);
+            }
+        }
+    }
     
     protected CameraSource newCameraSource() throws IOException, InterruptedException {
         CameraSource srv = new CameraSource("CameraServer", getCameraServerUrl());
@@ -3439,6 +3524,40 @@ public class CamServerViewer extends MonitoredPanel {
         return (server!=null) ? server.getStream() : ((camera!=null) ? camera.getStream() : null);
     }
 
+    
+    public void apply(){
+        if (!updatingSelection) {
+            if (!comboName.isEnabled()) {
+                return;
+            }
+            comboName.setEnabled(false);
+            comboType.setEnabled(false);
+            final String name = (String) comboName.getSelectedItem();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (requestCameraListUpdate) {
+                        requestCameraListUpdate = false;
+                        try {
+                            updateNameList();
+                        } catch (Exception ex) {
+                            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                        }
+                    }
+                    try {
+                        setStream(name.trim().isEmpty() ? null : name);
+                    } catch (Exception ex) {
+                        Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                    } finally {
+                        updateButtons();
+                        comboName.setEnabled(true);
+                        comboType.setEnabled(true);
+                    }
+                }
+            }).start();
+        }        
+    }
+    
     ////////
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -4031,7 +4150,7 @@ public class CamServerViewer extends MonitoredPanel {
     panelPipelineLayout.setVerticalGroup(
         panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(panelPipelineLayout.createSequentialGroup()
-            .addContainerGap()
+            .addGap(4, 4, 4)
             .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(checkBackground)
                 .addComponent(spinnerBackground, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -4167,7 +4286,7 @@ public class CamServerViewer extends MonitoredPanel {
             .addGroup(panelZoomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                 .addComponent(buttonZoomStretch)
                 .addComponent(buttonZoom2))
-            .addContainerGap())
+            .addGap(4, 4, 4))
     );
 
     panelColormap.setBorder(javax.swing.BorderFactory.createTitledBorder("Colormap"));
@@ -4249,11 +4368,15 @@ public class CamServerViewer extends MonitoredPanel {
     panelColormapLayout.setHorizontalGroup(
         panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(panelColormapLayout.createSequentialGroup()
-            .addGap(4, 4, 4)
             .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(jLabel3)
-                .addComponent(jLabel4))
-            .addGap(4, 4, 4)
+                .addGroup(panelColormapLayout.createSequentialGroup()
+                    .addGap(4, 4, 4)
+                    .addComponent(jLabel3)
+                    .addGap(12, 12, 12))
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelColormapLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jLabel4)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
             .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addComponent(buttonAutomatic)
                 .addComponent(buttonFullRange)
@@ -4288,7 +4411,8 @@ public class CamServerViewer extends MonitoredPanel {
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                 .addComponent(buttonAutomatic)
-                .addComponent(btFixColormapRange, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(btFixColormapRange, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jLabel4))
             .addGap(2, 2, 2)
             .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                 .addComponent(buttonFullRange)
@@ -4298,11 +4422,8 @@ public class CamServerViewer extends MonitoredPanel {
             .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                 .addComponent(buttonManual)
                 .addComponent(labelMax)
-                .addComponent(spinnerMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-        .addGroup(panelColormapLayout.createSequentialGroup()
-            .addGap(38, 38, 38)
-            .addComponent(jLabel4)
-            .addGap(52, 52, 52))
+                .addComponent(spinnerMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(4, 4, 4))
     );
 
     panelColormapLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {btFixColormapRange, buttonAutomatic, buttonFullRange, buttonManual, labelMax, labelMin, spinnerMax, spinnerMin});
@@ -4704,202 +4825,6 @@ public class CamServerViewer extends MonitoredPanel {
         centralizeRenderer();
     }//GEN-LAST:event_buttonZoom2ActionPerformed
 
-    private void checkHistogramActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkHistogramActionPerformed
-        try {
-            setHistogramVisible(checkHistogram.isSelected());
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_checkHistogramActionPerformed
-
-    private void onChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onChangeColormap
-        try {
-            if ((camera != null) && (camera instanceof ColormapSource source) && !updatingColormap) {
-                Color colorReticule = new Color(16, 16, 16);
-                Color colorMarker = new Color(128, 128, 128);
-                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
-                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
-                switch (source.getConfig().colormap) {
-                    case Grayscale, Inverted, Red, Green, Blue -> {
-                        colorReticule = new Color(0, 192, 0);
-                        colorMarker = new Color(64, 255, 64);
-                    }
-                    case Flame -> {
-                        colorReticule = new Color(0, 192, 0);
-                        colorMarker = new Color(64, 255, 64);
-                    }
-                }
-
-                renderer.setPenReticle(new Pen(colorReticule));
-                renderer.setPenProfile(new Pen(colorReticule, 0));
-                renderer.setPenMarker(new Pen(colorMarker, 2));
-                updateReticle();
-                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
-                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
-                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
-                try {
-                    source.getConfig().save();
-                } catch (Exception ex) {
-                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
-                }
-                source.refresh();
-                if (buttonPause.isSelected()) {
-                    updatePause();
-                }
-                updateColormap();
-            }
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_onChangeColormap
-
-    private void buttonFullRangeonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonFullRangeonChangeColormap
-        try {
-            if ((camera != null) && (camera instanceof ColormapSource source) && !updatingColormap) {
-                Color colorReticule = new Color(16, 16, 16);
-                Color colorMarker = new Color(128, 128, 128);
-                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
-                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
-                switch (source.getConfig().colormap) {
-                    case Grayscale, Inverted, Red, Green, Blue -> {
-                        colorReticule = new Color(0, 192, 0);
-                        colorMarker = new Color(64, 255, 64);
-                    }
-                    case Flame -> {
-                        colorReticule = new Color(0, 192, 0);
-                        colorMarker = new Color(64, 255, 64);
-                    }
-                }
-
-                renderer.setPenReticle(new Pen(colorReticule));
-                renderer.setPenProfile(new Pen(colorReticule, 0));
-                renderer.setPenMarker(new Pen(colorMarker, 2));
-                updateReticle();
-                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
-                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
-                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
-                try {
-                    source.getConfig().save();
-                } catch (Exception ex) {
-                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
-                }
-                source.refresh();
-                if (buttonPause.isSelected()) {
-                    updatePause();
-                }
-                updateColormap();
-            }
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_buttonFullRangeonChangeColormap
-
-    private void buttonManualonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonManualonChangeColormap
-        try {
-            if ((camera != null) && (camera instanceof ColormapSource source) && !updatingColormap) {
-                Color colorReticule = new Color(16, 16, 16);
-                Color colorMarker = new Color(128, 128, 128);
-                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
-                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
-                switch (source.getConfig().colormap) {
-                    case Grayscale, Inverted, Red, Green, Blue -> {
-                        colorReticule = new Color(0, 192, 0);
-                        colorMarker = new Color(64, 255, 64);
-                    }
-                    case Flame -> {
-                        colorReticule = new Color(0, 192, 0);
-                        colorMarker = new Color(64, 255, 64);
-                    }
-                }
-
-                renderer.setPenReticle(new Pen(colorReticule));
-                renderer.setPenProfile(new Pen(colorReticule, 0));
-                renderer.setPenMarker(new Pen(colorMarker, 2));
-                renderer.setShowReticle(false);
-                checkReticle();
-                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
-                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
-                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
-                try {
-                    source.getConfig().save();
-                } catch (Exception ex) {
-                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
-                }
-                source.refresh();
-                if (buttonPause.isSelected()) {
-                    updatePause();
-                }
-                updateColormap();
-            }
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_buttonManualonChangeColormap
-
-    private void buttonAutomaticonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAutomaticonChangeColormap
-        try {
-            if ((camera != null) && (camera instanceof ColormapSource source) && !updatingColormap) {
-                Color colorReticule = new Color(16, 16, 16);
-                Color colorMarker = new Color(128, 128, 128);
-                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
-                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
-                switch (source.getConfig().colormap) {
-                    case Grayscale, Inverted, Red, Green, Blue -> {
-                        colorReticule = new Color(0, 192, 0);
-                        colorMarker = new Color(64, 255, 64);
-                    }
-                    case Flame -> {
-                        colorReticule = new Color(0, 192, 0);
-                        colorMarker = new Color(64, 255, 64);
-                    }
-                }
-
-                renderer.setPenReticle(new Pen(colorReticule));
-                renderer.setPenProfile(new Pen(colorReticule, 0));
-                renderer.setPenMarker(new Pen(colorMarker, 2));
-                updateReticle();
-                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
-                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
-                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
-                try {
-                    source.getConfig().save();
-                } catch (Exception ex) {
-                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
-                }
-                source.refresh();
-                if (buttonPause.isSelected()) {
-                    updatePause();
-                }
-                updateColormap();
-            }
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_buttonAutomaticonChangeColormap
-
-    private void spinnerMinonChangeColormapRange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerMinonChangeColormapRange
-        onChangeColormap(null);
-    }//GEN-LAST:event_spinnerMinonChangeColormapRange
-
-    private void spinnerMaxonChangeColormapRange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerMaxonChangeColormapRange
-        onChangeColormap(null);
-    }//GEN-LAST:event_spinnerMaxonChangeColormapRange
-
-    private void btFixColormapRangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btFixColormapRangeActionPerformed
-        try {
-            updatingColormap = true;
-            ArrayProperties properties = currentFrame.data.getProperties();
-            spinnerMax.setValue(properties.max.intValue());
-            spinnerMin.setValue(properties.min.intValue());
-            buttonManual.setSelected(true);
-        } catch (Exception ex) {
-            showException(ex);
-        } finally {
-            updatingColormap = false;
-            onChangeColormap(null);
-        }
-    }//GEN-LAST:event_btFixColormapRangeActionPerformed
-
     private void buttonSidePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSidePanelActionPerformed
         sidePanel.setVisible(buttonSidePanel.isSelected());
     }//GEN-LAST:event_buttonSidePanelActionPerformed
@@ -4946,36 +4871,7 @@ public class CamServerViewer extends MonitoredPanel {
 
     private void comboNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboNameActionPerformed
         try {
-            if (!updatingSelection) {
-                if (!comboName.isEnabled()) {
-                    return;
-                }
-                comboName.setEnabled(false);
-                comboType.setEnabled(false);
-                final String name = (String) comboName.getSelectedItem();
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (requestCameraListUpdate) {
-                            requestCameraListUpdate = false;
-                            try {
-                                updateNameList();
-                            } catch (Exception ex) {
-                                Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
-                            }
-                        }
-                        try {
-                            setStream(name.trim().isEmpty() ? null : name);
-                        } catch (Exception ex) {
-                            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
-                        } finally {
-                            updateButtons();
-                            comboName.setEnabled(true);
-                            comboType.setEnabled(true);
-                        }
-                    }
-                }).start();
-            }
+            apply();
         } catch (Exception ex) {
             showException(ex);
         }
@@ -5009,6 +4905,202 @@ public class CamServerViewer extends MonitoredPanel {
             }
         }
     }//GEN-LAST:event_spinnerBackgroundStateChanged
+
+    private void btFixColormapRangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btFixColormapRangeActionPerformed
+        try {
+            updatingColormap = true;
+            ArrayProperties properties = currentFrame.data.getProperties();
+            spinnerMax.setValue(properties.max.intValue());
+            spinnerMin.setValue(properties.min.intValue());
+            buttonManual.setSelected(true);
+        } catch (Exception ex) {
+            showException(ex);
+        } finally {
+            updatingColormap = false;
+            onChangeColormap(null);
+        }
+    }//GEN-LAST:event_btFixColormapRangeActionPerformed
+
+    private void spinnerMaxonChangeColormapRange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerMaxonChangeColormapRange
+        onChangeColormap(null);
+    }//GEN-LAST:event_spinnerMaxonChangeColormapRange
+
+    private void spinnerMinonChangeColormapRange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerMinonChangeColormapRange
+        onChangeColormap(null);
+    }//GEN-LAST:event_spinnerMinonChangeColormapRange
+
+    private void buttonAutomaticonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAutomaticonChangeColormap
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource source) && !updatingColormap) {
+                Color colorReticule = new Color(16, 16, 16);
+                Color colorMarker = new Color(128, 128, 128);
+                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
+                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
+                switch (source.getConfig().colormap) {
+                    case Grayscale, Inverted, Red, Green, Blue -> {
+                        colorReticule = new Color(0, 192, 0);
+                        colorMarker = new Color(64, 255, 64);
+                    }
+                    case Flame -> {
+                        colorReticule = new Color(0, 192, 0);
+                        colorMarker = new Color(64, 255, 64);
+                    }
+                }
+
+                renderer.setPenReticle(new Pen(colorReticule));
+                renderer.setPenProfile(new Pen(colorReticule, 0));
+                renderer.setPenMarker(new Pen(colorMarker, 2));
+                updateReticle();
+                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
+                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
+                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
+                try {
+                    source.getConfig().save();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                }
+                source.refresh();
+                if (buttonPause.isSelected()) {
+                    updatePause();
+                }
+                updateColormap();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonAutomaticonChangeColormap
+
+    private void buttonManualonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonManualonChangeColormap
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource source) && !updatingColormap) {
+                Color colorReticule = new Color(16, 16, 16);
+                Color colorMarker = new Color(128, 128, 128);
+                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
+                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
+                switch (source.getConfig().colormap) {
+                    case Grayscale, Inverted, Red, Green, Blue -> {
+                        colorReticule = new Color(0, 192, 0);
+                        colorMarker = new Color(64, 255, 64);
+                    }
+                    case Flame -> {
+                        colorReticule = new Color(0, 192, 0);
+                        colorMarker = new Color(64, 255, 64);
+                    }
+                }
+
+                renderer.setPenReticle(new Pen(colorReticule));
+                renderer.setPenProfile(new Pen(colorReticule, 0));
+                renderer.setPenMarker(new Pen(colorMarker, 2));
+                renderer.setShowReticle(false);
+                checkReticle();
+                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
+                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
+                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
+                try {
+                    source.getConfig().save();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                }
+                source.refresh();
+                if (buttonPause.isSelected()) {
+                    updatePause();
+                }
+                updateColormap();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonManualonChangeColormap
+
+    private void buttonFullRangeonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonFullRangeonChangeColormap
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource source) && !updatingColormap) {
+                Color colorReticule = new Color(16, 16, 16);
+                Color colorMarker = new Color(128, 128, 128);
+                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
+                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
+                switch (source.getConfig().colormap) {
+                    case Grayscale, Inverted, Red, Green, Blue -> {
+                        colorReticule = new Color(0, 192, 0);
+                        colorMarker = new Color(64, 255, 64);
+                    }
+                    case Flame -> {
+                        colorReticule = new Color(0, 192, 0);
+                        colorMarker = new Color(64, 255, 64);
+                    }
+                }
+
+                renderer.setPenReticle(new Pen(colorReticule));
+                renderer.setPenProfile(new Pen(colorReticule, 0));
+                renderer.setPenMarker(new Pen(colorMarker, 2));
+                updateReticle();
+                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
+                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
+                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
+                try {
+                    source.getConfig().save();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                }
+                source.refresh();
+                if (buttonPause.isSelected()) {
+                    updatePause();
+                }
+                updateColormap();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonFullRangeonChangeColormap
+
+    private void onChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onChangeColormap
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource source) && !updatingColormap) {
+                Color colorReticule = new Color(16, 16, 16);
+                Color colorMarker = new Color(128, 128, 128);
+                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
+                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
+                switch (source.getConfig().colormap) {
+                    case Grayscale, Inverted, Red, Green, Blue -> {
+                        colorReticule = new Color(0, 192, 0);
+                        colorMarker = new Color(64, 255, 64);
+                    }
+                    case Flame -> {
+                        colorReticule = new Color(0, 192, 0);
+                        colorMarker = new Color(64, 255, 64);
+                    }
+                }
+
+                renderer.setPenReticle(new Pen(colorReticule));
+                renderer.setPenProfile(new Pen(colorReticule, 0));
+                renderer.setPenMarker(new Pen(colorMarker, 2));
+                updateReticle();
+                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
+                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
+                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
+                try {
+                    source.getConfig().save();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                }
+                source.refresh();
+                if (buttonPause.isSelected()) {
+                    updatePause();
+                }
+                updateColormap();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_onChangeColormap
+
+    private void checkHistogramActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkHistogramActionPerformed
+        try {
+            setHistogramVisible(checkHistogram.isSelected());
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_checkHistogramActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
