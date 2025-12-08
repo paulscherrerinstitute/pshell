@@ -141,6 +141,12 @@ public abstract class App extends ObservableBase<AppListener> {
                 .desc(desc)
                 .build());    
     }
+    
+    static String helpFooter;
+    static public void setHelpFooter(String value){
+        helpFooter = value;
+    }
+    
     static public void init(String[] args) {
         init(args, null);
     }
@@ -250,7 +256,7 @@ public abstract class App extends ObservableBase<AppListener> {
                 sb.append(" (").append(command).append(")");
             }
             sb.append(":\n");
-            formatter.printHelp(sb.toString(), options);            
+            formatter.printHelp(sb.toString(), null, options, helpFooter);            
             Runtime.getRuntime().exit(0);
         }
         

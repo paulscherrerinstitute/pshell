@@ -3,6 +3,7 @@ package ch.psi.pshell.workbench;
 
 import ch.psi.pshell.app.Option;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 
 /**
@@ -20,14 +21,28 @@ import java.lang.reflect.Method;
         
         String options = System.getenv().get("PSHELL_EX_OPTIONS");
         if ((options!=null) && (!options.isBlank())){
-            for (String op: options.split(",")){
-                try{
-                    Class cls = Class.forName(op.trim());
-                    Method add = cls.getMethod("add");
-                    add.invoke(null);
-                } catch (Exception ex){
-                    ex.printStackTrace();
+            var additionalOptions = new ArrayList<String>();
+            for (String op: options.split("\\|")){                
+                if (!op.isBlank()){
+                    op = op.trim();
+                    try{
+                        Class cls = Class.forName(op);
+                        Method add = cls.getMethod("add");
+                        add.invoke(null);
+                    } catch (Exception ex){
+                        additionalOptions.add(op);
+                    }
                 }
+            }
+            if (!additionalOptions.isEmpty()){
+                var sb = new StringBuilder();
+                sb.append("Additional Options:\n");
+                for (String option: additionalOptions){
+                    sb.append(" ");
+                    sb.append(option);
+                    sb.append("\n");
+                }
+                App.setHelpFooter(sb.toString());
             }
         }
         
