@@ -64,6 +64,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -1142,6 +1143,38 @@ public class SwingUtils {
                 }
             }
         };
+    }
+    
+    //Menus
+    public static JMenuItem getMenuItem(JMenu menu, String text){
+        return getMenuItem(menu.getPopupMenu(), text);
+    }
+        
+    public static JMenuItem getMenuItem(JMenu menu, String text, boolean ignoreCase){
+        return getMenuItem(menu.getPopupMenu(), text, ignoreCase);
+    }
+        
+    public static JMenuItem getMenuItem(JPopupMenu menu, String text){       
+        return getMenuItem(menu, text, false);
+    }
+     
+    public static JMenuItem getMenuItem(JPopupMenu menu, String text, boolean ignoreCase){
+        for (Component c :menu.getComponents()){
+            if (c instanceof JMenuItem item){
+                if (item.getText()!=null){
+                    if (ignoreCase){
+                         if (item.getText().equalsIgnoreCase(text)){
+                             return item;
+                         }
+                    } else {
+                        if (item.getText().equals(text)){
+                            return item;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**

@@ -3529,6 +3529,21 @@ public class CamServerViewer extends MonitoredPanel {
     public JToolBar getToolBar() {
         return toolBar;
     }    
+    
+    public JPanel getPanelPipeline(){
+        return panelPipeline;
+        
+    }
+    
+    public JPanel getPanelZoom(){
+        return panelZoom;
+        
+    }
+    
+    public JPanel getPanelColormap(){
+        return panelColormap;
+        
+    }    
         
     public Stream getStreamDevice(){
         return (server!=null) ? server.getStream() : ((camera!=null) ? camera.getStream() : null);
