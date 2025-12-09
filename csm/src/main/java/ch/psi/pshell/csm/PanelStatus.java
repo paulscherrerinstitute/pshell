@@ -778,8 +778,9 @@ public class PanelStatus extends MonitoredPanel {
                 cfg = (Map) JsonSerializer.decode(json, Map.class);
                 
                 if (isPipeline){
-                    PipelineClient client = new PipelineClient(currentServer);
-                    client.setInstanceConfig(currentInstance, cfg);                    
+                    //PipelineClient client = new PipelineClient(currentServer);
+                    PipelineClient client = new PipelineClient(getUrl()); //Save throgh proxy as it persist config of permanent instance
+                    client.setInstanceConfig(currentInstance, cfg);                         
                 } else {
                     CameraClient client = new CameraClient(currentServer);
                     client.setConfig(currentInstance, cfg);
