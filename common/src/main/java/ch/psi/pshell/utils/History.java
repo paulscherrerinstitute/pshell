@@ -1,9 +1,11 @@
 package ch.psi.pshell.utils;
 
 import ch.psi.pshell.utils.IO.FilePermissions;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,10 +125,15 @@ public class History {
             synchronized (history) {
                 buf = Serializer.encode(history);
             }
-            Files.write(Paths.get(getFileName()), buf);
+            Path path = Paths.get(getFileName());
+            File file = path.toFile();
+            if (!file.exists()) {
+                file.getParentFile().mkdirs();
+            }            
+            Files.write(path, buf);
             IO.setFilePermissions(getFileName(), permissions);
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.log(Level.WARNING, null, ex);
         }
     }
 
