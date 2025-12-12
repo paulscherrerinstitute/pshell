@@ -92,7 +92,7 @@ public class App extends ch.psi.pshell.workbench.App{
             } else  {
                 super.launchApp();
             }
-            if (!hasMainFrame()){ //Execution with command
+            if (!hasMainFrame() && !Setup.isDetached()){ //Execution with command
                 startRestart();
             }
         } else {
