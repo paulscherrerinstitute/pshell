@@ -28,11 +28,22 @@ public class App extends ch.psi.pshell.devices.App{
         CamServerViewer viewer = new CamServerViewer();
         SwingUtilities.invokeLater(() -> {
             try {                
-                Window window = SwingUtils.showFrame(parent, dialogTitle, (size==null)? new Dimension(800, 600):size, viewer);
+                Window window;
+                if (parent!=null){
+                    window = SwingUtils.showDialog(parent, dialogTitle, (size==null)? new Dimension(800, 600):size, viewer);
+                } else {
+                    window = SwingUtils.showFrame(parent, dialogTitle, (size==null)? new Dimension(800, 600):size, viewer);
+                }               
                 SwingUtils.centerComponent(null, window);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
                 viewer.applyOptions();
-                viewer.initialize(App.getArgumentValue(Options.SP_MODE.getString(null)));     
+                SwingUtilities.invokeLater(() -> {
+                    try {     
+                        viewer.initialize(App.getArgumentValue(Options.SP_MODE.getString(null)));
+                    } catch (Exception ex) {
+                         Logger.getLogger(CamServerViewer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });                        
             } catch (Exception ex) {
                 Logger.getLogger(CamServerViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
