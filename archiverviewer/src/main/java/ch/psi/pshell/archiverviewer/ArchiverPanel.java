@@ -3296,7 +3296,11 @@ public class ArchiverPanel extends StandardDialog {
 
     private void buttonDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDeleteActionPerformed
         if (modelSeries.getRowCount() > 0) {
-            modelSeries.removeRow(Math.max(tableSeries.getSelectedRow(), 0));
+            int row = Math.max(tableSeries.getSelectedRow(),0);
+            modelSeries.removeRow(row);
+            if (row < modelSeries.getRowCount()) {
+                tableSeries.setRowSelectionInterval(row, row);
+            }   
             update();
         }
     }//GEN-LAST:event_buttonDeleteActionPerformed
