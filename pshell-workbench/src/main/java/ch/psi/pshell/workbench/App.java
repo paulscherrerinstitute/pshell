@@ -1,7 +1,6 @@
 package ch.psi.pshell.workbench;
 
 import ch.psi.pshell.framework.Setup;
-import ch.psi.pshell.framework.Task;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,26 +30,7 @@ public class App extends ch.psi.pshell.console.App {
         }
         launchApp(View.class);
     }    
-        
-    public static class Restart extends Task {
-
-        public Restart() {
-            super();
-            setTrackTime(false);
-        }
-
-        @Override
-        protected String doInBackground() throws Exception {
-            try {
-                getInstance().restart();            
-                return "Ok";
-            } catch (Exception ex) {
-                sendErrorApp(ex);
-                throw ex;
-            } finally {
-            }
-        }
-    }          
+            
         
     static public boolean hasStdio() {
         return Setup.isGui() && Options.STDIO.getBool(false);

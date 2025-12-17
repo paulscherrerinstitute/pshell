@@ -820,7 +820,7 @@ class EpicsServerUrl(ReadonlyRegisterBase, RegisterArray):
         if self.cas:
             self.cas.close()
             self.cas = None
-        super(EpicsServerURL, self).doClose()        
+        super(EpicsServerUrl, self).doClose()        
 
     def doRead(self):
         url = get_sequencer().server.interfaceURL

@@ -13,7 +13,8 @@ public class Restart extends Task {
     @Override
     protected String doInBackground() throws Exception {
         try {
-            Context.restart();            
+            //Context.restart();            
+            App.getInstance().restart();     
             return "Ok";
         } catch (Exception ex) {
             sendErrorApp(ex);

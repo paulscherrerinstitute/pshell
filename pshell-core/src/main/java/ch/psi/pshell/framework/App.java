@@ -299,7 +299,7 @@ public class App extends ch.psi.pshell.devices.App {
         
     }
     
-    public void restart() {
+    public void restart() {        
         try {            
             for (AutoCloseable ac : new AutoCloseable[]{}) {
                 try {

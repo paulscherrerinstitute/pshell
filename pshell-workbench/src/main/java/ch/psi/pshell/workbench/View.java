@@ -17,6 +17,7 @@ import ch.psi.pshell.framework.Options;
 import ch.psi.pshell.framework.Panel;
 import ch.psi.pshell.framework.Processor;
 import ch.psi.pshell.framework.QueueProcessor;
+import ch.psi.pshell.framework.Restart;
 import ch.psi.pshell.framework.ScriptEditor;
 import ch.psi.pshell.framework.ScriptProcessor;
 import ch.psi.pshell.framework.Setup;
@@ -3023,8 +3024,7 @@ public class View extends MainFrame{
     private void menuRestartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuRestartActionPerformed
         try {
             if (Context.getState() != State.Initializing) {
-                //Context.getApp().startTask(new Restart());
-                Context.getApp().startTask(new App.Restart()); //!!! Canot have if factorized in ch.psi.pshell.ui.Restart?
+                Context.getApp().startTask(new Restart());
                 shell.clear();
                 outputPanel.clear();
                 saveContext();

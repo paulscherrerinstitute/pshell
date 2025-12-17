@@ -905,10 +905,10 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         onCommand(Command.restart, null, source);
         boolean firstRun = (getState() == State.Invalid);
         
-        if (getState() == State.Invalid) { 
+        if (firstRun) { 
             //First run
             onCreation();
-        }
+        } 
             
         filePermissionsConfig = Context.getConfigFilePermissions();
         Config.setDefaultPermissions(filePermissionsConfig);

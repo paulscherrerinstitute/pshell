@@ -5,6 +5,7 @@ import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.State;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 /**
  * Base class for Positioner implementations.
@@ -163,20 +164,24 @@ public abstract class PositionerBase extends ControlledVariableBase implements P
     }
 
     protected void processState() {
-        if (getState().isNormal()) {
-            Double setpoint = take();
-            Double readout = getReadback().take();
-            if ((readout != null) && (setpoint != null)) {
-                Double offset = readout - setpoint;
-                if (getConfig().rotation) {
-                    offset = Convert.toDegreesOffset(offset);
-                }
-                if (Math.abs(offset) <= Math.abs(getDeadband())) {
-                    setState(State.Ready);
-                } else {
-                    setState(State.Busy);
+        try{
+            if (getState().isNormal()) {
+                Double setpoint = take();
+                Double readout = getReadback().take();
+                if ((readout != null) && (setpoint != null)) {
+                    Double offset = readout - setpoint;
+                    if (getConfig().rotation) {
+                        offset = Convert.toDegreesOffset(offset);
+                    }
+                    if (Math.abs(offset) <= Math.abs(getDeadband())) {
+                        setState(State.Ready);
+                    } else {
+                        setState(State.Busy);
+                    }
                 }
             }
+        } catch (Exception ex) {
+             getLogger().log(Level.WARNING, null, ex);
         }
     }
 }
