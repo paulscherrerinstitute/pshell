@@ -40,7 +40,8 @@ public class App extends ch.psi.pshell.framework.App{
         String dialogTitle = (title==null) ? Optional.ofNullable(Setup.getTitle()).orElse("StripChart") : title;
         Epics.create();
         java.awt.EventQueue.invokeLater(() -> {
-            File defaultFolderFinal = (defaultFolder==null) ? StripChart.getStripChartFolderArg() : defaultFolder;
+            File arg = StripChart.getStripChartFolderArg();
+            File defaultFolderFinal = (arg!=null) ? arg : defaultFolder;
             StripChart dialog = new StripChart(null, modal, defaultFolderFinal, dialogTitle);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             if (size!=null){

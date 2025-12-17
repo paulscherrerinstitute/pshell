@@ -166,7 +166,11 @@ public class App extends ch.psi.pshell.workbench.App{
             case COMAMND_SCREEN_PANEL -> ch.psi.pshell.screenpanel.Options.add();
             case COMAMND_DATA_VIEWER -> ch.psi.pshell.dataviewer.Options.add();
             case COMAMND_CONSOLE -> ch.psi.pshell.console.Options.add();
-            default -> ch.psi.pshell.workbench.Options.add();
+            default -> {
+                ch.psi.pshell.workbench.Options.add();
+                ch.psi.pshell.stripchart.Options.addGeneral();
+                ch.psi.pshell.archiverviewer.Options.addGeneral();
+            }
         }
     }    
     

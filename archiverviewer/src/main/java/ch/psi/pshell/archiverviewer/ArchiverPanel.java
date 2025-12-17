@@ -187,7 +187,8 @@ public class ArchiverPanel extends StandardDialog {
         initComponents();        
         ((SpinnerNumberModel)spinnerBins.getModel()).setMaximum(DEFAULT_MAX_SERIES_SIZE);
         //.setModel(new javax.swing.SpinnerNumberModel(200, 1, null, 10));
-        defaultFolder = (defaultFolder==null) ? getDaqbufFolderArg() : defaultFolder;
+        File arg = getDaqbufFolderArg();
+        defaultFolder = (arg!=null) ? arg: defaultFolder;
         this.defaultFolder = (defaultFolder == null) ?  new File(Sys.getUserHome()) : defaultFolder;        
         
         if ("default".equals(url) || "".equals(url)){

@@ -374,7 +374,8 @@ public abstract class App extends ObservableBase<AppListener> {
      * Returns true if argument value is set and not empty
      */
     static public boolean isArgumentDefined(String name) {
-        return ((getArgumentValue(name) != null) && !getArgumentValue(name).isBlank());
+        var value = getArgumentValue(name);
+        return ((value != null) && !value.isBlank());
     }
 
     /**
