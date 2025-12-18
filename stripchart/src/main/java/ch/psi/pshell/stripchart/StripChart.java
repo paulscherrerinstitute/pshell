@@ -146,6 +146,7 @@ public class StripChart extends StandardDialog {
 
     Color backgroundColor;
     Color gridColor;
+    boolean scanEnabled;
     
     class ChartElement {
 
@@ -169,6 +170,7 @@ public class StripChart extends StandardDialog {
 
     boolean persisting;
     StripScanExecutor persistenceExecutor;
+    String filePattern;
 
     public StripChart(Window parent, boolean modal, File defaultFolder) {
         this(parent, modal, defaultFolder, null);
@@ -245,13 +247,32 @@ public class StripChart extends StandardDialog {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+        
+        if (Options.FILE_PATTERN.hasValue()) {
+            try {
+                String pattern = Options.FILE_PATTERN.getString("");
+                if (!pattern.isBlank()) {
+                    filePattern = pattern.strip();
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+        
+        //TODO: Make StripScan work without Jython classes, otherwise Jython munst be included in stripchart distribution.
+        try{
+            Class.forName("org.python.core.PyException");
+        } catch (Throwable tx){
+            Logger.getLogger(StripChart.class.getName()).warning("Jython libraries missing: persistence is disabled");
+            scanEnabled=false;
+        }
 
         buttonStart.setEnabled(false);
         buttonStop.setEnabled(false);
         textFileName.setEnabled(false);
         comboFormat.setEnabled(false);
         comboLayout.setEnabled(false);
-        textFileName.setText((Context.getDataFilePattern()!= null) ? Context.getDataFilePattern() : "");
+        textFileName.setText(getFilePattern());
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
         toolBar.setRollover(true);
@@ -375,7 +396,15 @@ public class StripChart extends StandardDialog {
         onLafChange();
     }
     
-    
+    public String getFilePattern(){
+        String ret = Context.getDataFilePattern();
+        if (filePattern!=null){
+            ret = filePattern;
+        }        
+        return (ret!= null) ? ret : "";   
+    }
+            
+            
     public static File getStripChartFolderArg() {
         return Options.STRIPCHART_HOME.getPath();
     }    
@@ -722,7 +751,7 @@ public class StripChart extends StandardDialog {
 
         //tableSeries.setEnabled(editing);
         //tableCharts.setEnabled(editing);
-        ckPersistence.setEnabled(editing);
+        ckPersistence.setEnabled(editing && scanEnabled);
         textFileName.setEnabled(ckPersistence.isEnabled() && ckPersistence.isSelected());
         comboFormat.setEnabled(textFileName.isEnabled());
         comboLayout.setEnabled(textFileName.isEnabled());
@@ -808,7 +837,7 @@ public class StripChart extends StandardDialog {
         gridColor = defaultGridColor;
         panelColorBackground.setBackground(backgroundColor);
         panelColorGrid.setBackground(gridColor);
-        textFileName.setText((Context.getDataFilePattern()!= null) ? Context.getDataFilePattern() : "");
+        textFileName.setText(getFilePattern());
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
         spinnerPolling.setValue(1000);
@@ -972,7 +1001,7 @@ public class StripChart extends StandardDialog {
         panelColorBackground.setBackground(backgroundColor);
         panelColorGrid.setBackground(gridColor);
         ckPersistence.setSelected(false);
-        textFileName.setText((Context.getDataFilePattern()!= null) ? Context.getDataFilePattern() : "");
+        textFileName.setText(getFilePattern());
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
         if (state.length > 1) {
@@ -1194,6 +1223,7 @@ public class StripChart extends StandardDialog {
                 App.createSequencer();
             }
             String path = Setup.expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
+            Logger.getLogger(StripChart.class.getName()).info("Persisting data to: " + path);
             persistenceExecutor = new StripScanExecutor();                                    
             persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), true);
         }

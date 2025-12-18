@@ -946,7 +946,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }    
 
     protected void triggerEnded(Exception ex) {
-        result.completed = true;
+        if (result != null) {
+            result.completed = true;
+        }
         if (triggeredStart){
             for (ScanListener listener : getListeners()) {
                 try{

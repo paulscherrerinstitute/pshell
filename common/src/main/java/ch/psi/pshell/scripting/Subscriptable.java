@@ -12,7 +12,7 @@ import org.python.core.PyNone;
 import org.python.core.PySlice;
 
 /**
- * Utiliy interfaces to make objects subscriptable in Python.
+ * Utility interfaces to make objects subscriptable in Python.
  */
 public interface Subscriptable {
     int __len__();

@@ -947,7 +947,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             }
         }
 
-        logger.info("Initializing context");
+        logger.log(Level.INFO, "Initializing [Run count {0}]", runCount);
         restartThread = Thread.currentThread();
         try {
             if (!isLocalMode()) {

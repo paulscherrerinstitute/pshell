@@ -5,6 +5,7 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
+import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Sys;
@@ -104,16 +105,23 @@ public class App extends ch.psi.pshell.framework.App{
     }
     
     public static void createSequencer(){
-        try {                
+        try {                            
+            if (!Logging.hasInstance()){
+                Logging logging = new Logging();
+                logging.setLevel(Setup.getConsoleLogLevel());
+            }
+
             if (!Context.hasDataManager()){
                 DataManager dataManager = new DataManager();            
                 dataManager.initialize("h5", "table");                    
             }
             if (!Context.hasSequencer()){
+                ch.psi.pshell.framework.Options.DISABLED.set();
                 Sequencer sequencer = new Sequencer();
                 sequencer.disableStartupScriptsExecution(); 
                 sequencer.restart();
             }
+            
         } catch (Exception ex) {
             Logger.getLogger(ch.psi.pshell.framework.App.class.getName()).log(Level.SEVERE, null, ex);
         }

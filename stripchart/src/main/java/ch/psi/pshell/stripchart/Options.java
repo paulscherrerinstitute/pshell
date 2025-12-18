@@ -9,6 +9,7 @@ import ch.psi.pshell.app.Setup;
  */
 public enum Options implements Option {
     STRIPCHART_HOME,
+    FILE_PATTERN,
     ATTACH,
     BACKGROUND_COLOR,
     GRID_COLOR,
@@ -36,6 +37,7 @@ public enum Options implements Option {
         ch.psi.pshell.app.Options.FILE.add("f", "Open a StripChart configuration file (.scd)", "path");
         ch.psi.pshell.app.Options.CONFIG.add("cf", "JSON configuration string (as in .scd file) or list of channel names", "json");
         ch.psi.pshell.framework.Options.SERVER.add("v", "Create a StripChart server");
+        FILE_PATTERN.add("fp", "Data file name pattern");
         ATTACH.add("at", "Shared mode: try connecting to existing server, or create one if not available");
         ALARM_INTERVAL.add("ai", "Set the alarm timer interval (default 1000ms)");
         ALARM_FILE.add("af", "Set alarm sound file (default use system beep)");

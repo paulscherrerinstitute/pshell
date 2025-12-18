@@ -49,8 +49,9 @@ public class StripScanExecutor {
                 Context.getExecutionPars().setCommandOptions(scan, pars);
                 scans.put(name, scan);
                 try {
+                    Logger.getLogger(StripScanExecutor.class.getName()).finer("Starting StripScan for: " + name);
                     scan.start();
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     Logger.getLogger(StripScanExecutor.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
@@ -62,7 +63,11 @@ public class StripScanExecutor {
             persistenceExecutor.submit(() -> {
                 StripScan scan = scans.get(id);
                 if (scan!=null){
-                    scan.append(val, now, time);
+                    try {
+                        scan.append(val, now, time);
+                    } catch (Throwable ex) {
+                        Logger.getLogger(StripScanExecutor.class.getName()).log(Level.FINER, null, ex);
+                    }                        
                 }
             });
         }
@@ -77,8 +82,9 @@ public class StripScanExecutor {
             Future future = persistenceExecutor.submit(() -> {
                     for (StripScan scan : scans.values()) {
                         try {
+                            Logger.getLogger(StripScanExecutor.class.getName()).finer("Finished StripScan for: " + scan.getTag());
                             scan.end();
-                        } catch (Exception ex) {
+                        } catch (Throwable ex) {
                             Logger.getLogger(StripScanExecutor.class.getName()).log(Level.WARNING, null, ex);
                         }
                     }
