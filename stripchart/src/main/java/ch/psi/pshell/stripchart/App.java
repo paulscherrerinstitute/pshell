@@ -37,7 +37,7 @@ public class App extends ch.psi.pshell.framework.App{
     }
     
     public static void create(String title, File file, String config, File defaultFolder, boolean start, boolean modal, Dimension size) {
-        String dialogTitle = (title==null) ? Optional.ofNullable(Setup.getTitle()).orElse("StripChart") : title;
+        String dialogTitle = (title==null) ? Setup.getTitle() : title;
         Epics.create();
         java.awt.EventQueue.invokeLater(() -> {
             File arg = StripChart.getStripChartFolderArg();
