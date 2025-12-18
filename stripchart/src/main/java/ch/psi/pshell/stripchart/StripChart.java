@@ -259,9 +259,10 @@ public class StripChart extends StandardDialog {
             }
         }
         
-        //TODO: Make StripScan work without Jython classes, otherwise Jython munst be included in stripchart distribution.
+        //TODO: Make StripScan work without Jython classes, otherwise Jython must be included in stripchart distribution.
         try{
             Class.forName("org.python.core.PyException");
+            scanEnabled=true;
         } catch (Throwable tx){
             Logger.getLogger(StripChart.class.getName()).warning("Jython libraries missing: persistence is disabled");
             scanEnabled=false;
@@ -1194,7 +1195,7 @@ public class StripChart extends StandardDialog {
             pnGraphs.add(plot);
         }
         started = true;
-        persisting = ckPersistence.isSelected();
+        persisting = ckPersistence.isSelected() && scanEnabled;
         update();
         if (streamDevices > 0) {
             if (dispatcher == null) {
@@ -1218,7 +1219,7 @@ public class StripChart extends StandardDialog {
             }
         }
 
-        if (ckPersistence.isSelected()) {
+        if (persisting) {
             if (!Context.hasSequencer()){
                 App.createSequencer();
             }
