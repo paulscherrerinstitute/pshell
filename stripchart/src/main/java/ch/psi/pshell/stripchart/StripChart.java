@@ -19,7 +19,6 @@ import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotJFree;
 import ch.psi.pshell.plot.TimePlotSeries;
-import ch.psi.pshell.scan.StripScanExecutor;
 import ch.psi.pshell.stripchart.StripChartAlarmEditor.StripChartAlarmConfig;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.PatternFileChooserAuxiliary;
@@ -252,7 +251,7 @@ public class StripChart extends StandardDialog {
         textFileName.setEnabled(false);
         comboFormat.setEnabled(false);
         comboLayout.setEnabled(false);
-        textFileName.setText((Setup.getDataPath()!= null) ? Setup.getDataPath() : "");
+        textFileName.setText((Context.getDataFilePattern()!= null) ? Context.getDataFilePattern() : "");
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
         toolBar.setRollover(true);
@@ -723,7 +722,7 @@ public class StripChart extends StandardDialog {
 
         //tableSeries.setEnabled(editing);
         //tableCharts.setEnabled(editing);
-        ckPersistence.setEnabled(editing && (Context.hasDataManager()));
+        ckPersistence.setEnabled(editing);
         textFileName.setEnabled(ckPersistence.isEnabled() && ckPersistence.isSelected());
         comboFormat.setEnabled(textFileName.isEnabled());
         comboLayout.setEnabled(textFileName.isEnabled());
@@ -809,7 +808,7 @@ public class StripChart extends StandardDialog {
         gridColor = defaultGridColor;
         panelColorBackground.setBackground(backgroundColor);
         panelColorGrid.setBackground(gridColor);
-        textFileName.setText(Context.hasDataManager() ? Setup.getDataPath() : "");
+        textFileName.setText((Context.getDataFilePattern()!= null) ? Context.getDataFilePattern() : "");
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
         spinnerPolling.setValue(1000);
@@ -842,18 +841,8 @@ public class StripChart extends StandardDialog {
 
     String getInitLayout() {
         return "table";
-        /*
-        if (Context.getInstance() != null) {
-            switch (Context.getInstance().getDataManager().getLayout().getId()) {
-                case ("LayoutTable"):
-                    return "table";
-                case ("LayoutSF"):
-                    return "sf";
-            }
-        }
-        return "default";
-         */
     }
+    
 
     File file;
 
@@ -983,7 +972,7 @@ public class StripChart extends StandardDialog {
         panelColorBackground.setBackground(backgroundColor);
         panelColorGrid.setBackground(gridColor);
         ckPersistence.setSelected(false);
-        textFileName.setText((Setup.getDataPath()!= null) ? Setup.getDataPath() : "");
+        textFileName.setText((Context.getDataFilePattern()!= null) ? Context.getDataFilePattern() : "");
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
         if (state.length > 1) {
@@ -1200,13 +1189,15 @@ public class StripChart extends StandardDialog {
             }
         }
 
-        if (Context.hasDataManager()) {
-            if (ckPersistence.isSelected()) {
-                String path = Setup.expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
-                persistenceExecutor = new StripScanExecutor();                                    
-                persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), true);
+        if (ckPersistence.isSelected()) {
+            if (!Context.hasSequencer()){
+                App.createSequencer();
             }
+            String path = Setup.expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
+            persistenceExecutor = new StripScanExecutor();                                    
+            persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), true);
         }
+        
         boolean alarming = false;
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
         for (int i = 0; i < rows.length; i++) {
@@ -1828,23 +1819,6 @@ public class StripChart extends StandardDialog {
                         if (IO.getExtension(fileName).isEmpty() && format.equals("h5")) {
                             fileName += ".h5";
                         }        
-                        
-                        /*
-                        try {
-                            persistenceExecutor = new StripScanExecutor();
-                            persistenceExecutor.start(fileName, getNames(), format, layout, false);
-                            for (DeviceTask task : tasks) {
-                                try {
-                                    task.saveDataset();
-                                } catch (Exception ex) {
-                                    Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
-                                }
-                            }
-                        } finally {
-                            persistenceExecutor.finish(true);
-                        }
-                        */
-                          
                         JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + fileName);
 
                         try (DataManager dm = new DataManager(new File(fileName), format, layout)){

@@ -1,8 +1,11 @@
 
 package ch.psi.pshell.stripchart;
 
+import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.epics.Epics;
+import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
+import ch.psi.pshell.sequencer.Sequencer;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.Sys;
 import java.awt.Dimension;
@@ -100,12 +103,29 @@ public class App extends ch.psi.pshell.framework.App{
         return null;
     }
     
+    public static void createSequencer(){
+        try {                
+            if (!Context.hasDataManager()){
+                DataManager dataManager = new DataManager();            
+                dataManager.initialize("h5", "table");                    
+            }
+            if (!Context.hasSequencer()){
+                Sequencer sequencer = new Sequencer();
+                sequencer.disableStartupScriptsExecution(); 
+                sequencer.restart();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ch.psi.pshell.framework.App.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }    
+    
     
     /**
      */
     public static void main(String args[]) {
         Options.add();
         App.init(args);   
+        ch.psi.pshell.app.Options.LOCAL.set();
         create();
     }
 }

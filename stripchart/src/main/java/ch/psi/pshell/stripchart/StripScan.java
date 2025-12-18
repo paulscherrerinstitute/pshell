@@ -1,8 +1,10 @@
-package ch.psi.pshell.scan;
+package ch.psi.pshell.stripchart;
 
 import ch.psi.pshell.device.DummyPositioner;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
+import ch.psi.pshell.scan.ManualScan;
+import ch.psi.pshell.scan.ScanRecord;
 import java.io.IOException;
 
 /**

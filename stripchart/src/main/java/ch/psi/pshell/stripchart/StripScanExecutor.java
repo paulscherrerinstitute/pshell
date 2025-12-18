@@ -1,4 +1,4 @@
-package ch.psi.pshell.scan;
+package ch.psi.pshell.stripchart;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
@@ -17,7 +17,7 @@ public class StripScanExecutor {
     ExecutorService persistenceExecutor;
     Thread persistenceThread;    
     final Map<String, StripScan> scans = new HashMap<>();
-    
+        
     
     public void start(String path, String[] ids, String format, String layout, boolean flush) {
         if (persistenceExecutor != null){
@@ -44,7 +44,6 @@ public class StripScanExecutor {
                 pars.put("format", format);
                 pars.put("preserve", false); //Do not now types beforehand, cannot be true
                 pars.put("reset", true);
-                pars.put("setpoints", false);
                 pars.put("tag", name);
                 scan.setHidden(true);
                 Context.getExecutionPars().setCommandOptions(scan, pars);
