@@ -294,7 +294,7 @@ subprojects {
         d.exclude(d.dependency("jline:.*:.*"))            
         d.exclude(d.dependency("com.neuronrobotics:.*:.*"))
         d.exclude(d.dependency("com.github.sarxos:.*:.*"))
-        d.exclude(d.dependency("org.python:.*:.*"))        
+        d.exclude(d.dependency("org.python:jython-standalone:.*"))        
         d.exclude(d.dependency("org.glassfish.jersey.containers:.*:.*"))
         d.exclude(d.dependency("org.glassfish.jersey.media:jersey-media-sse:.*"))     
     }

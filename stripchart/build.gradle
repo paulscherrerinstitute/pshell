@@ -2,17 +2,26 @@ description = 'stripchart'
 
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.stripchart.App'
 
+configurations {
+    addJython
+}
+
 dependencies {
     implementation project(':common')
     implementation project(':devices')    
     implementation project(':pshell-core')    
     implementation project(':dataviewer')   
+    //In order StripScan to work must include Jython classes.
+    addJython('org.python:jython-slim:2.7.4') {
+        transitive = false
+    }
 }
 
 createDefaultTasks(project)
 
 tasks {
     shadowJar {
+        configurations = [ project.configurations.runtimeClasspath,project.configurations.addJython]
         shadowJarSetup(delegate)
         minimize{
              shadowJarMinimizeKeepFlatLaf(delegate)
