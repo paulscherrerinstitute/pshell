@@ -1084,60 +1084,62 @@ public class App extends ch.psi.pshell.devices.App {
 
     }
         
-    protected void setConsolePlotEnvironment(Window parent) {        
-        Context.getSequencer().setPlotListener(new PlotListener() {
-            @Override
-            public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
-                if (!SwingUtilities.isEventDispatchThread()){
-                    return SwingUtils.invokeAndWait(() -> {
-                        return plot(title, plots);
-                    });
-                }
-                ArrayList<Plot> ret = new ArrayList<>();
-                PlotPanel plotPanel = getPlotPanel(title, parent, true);
-                plotPanel.clear();
-                if ((plots != null) && (plots.length > 0)) {
-                    for (PlotDescriptor plot : plots) {
-                        try {
-                            if (plot != null) {
-                                ret.add(plotPanel.addPlot(plot));
-                            } else {
-                                ret.add(null);
-                            }
-                        } catch (Exception ex) {
-                            if (plot == null) {
-                            } else {
-                                System.err.println("Error creating plot: " + String.valueOf((plot != null) ? plot.name : null));
+    protected void setConsolePlotEnvironment(Window parent) {    
+        if (Setup.getPlotServer() == null ){
+            Context.getSequencer().setPlotListener(new PlotListener() {
+                @Override
+                public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
+                    if (!SwingUtilities.isEventDispatchThread()){
+                        return SwingUtils.invokeAndWait(() -> {
+                            return plot(title, plots);
+                        });
+                    }
+                    ArrayList<Plot> ret = new ArrayList<>();
+                    PlotPanel plotPanel = getPlotPanel(title, parent, true);
+                    plotPanel.clear();
+                    if ((plots != null) && (plots.length > 0)) {
+                        for (PlotDescriptor plot : plots) {
+                            try {
+                                if (plot != null) {
+                                    ret.add(plotPanel.addPlot(plot));
+                                } else {
+                                    ret.add(null);
+                                }
+                            } catch (Exception ex) {
+                                if (plot == null) {
+                                } else {
+                                    System.err.println("Error creating plot: " + String.valueOf((plot != null) ? plot.name : null));
+                                }
                             }
                         }
                     }
+                    return ret;
                 }
-                return ret;
-            }
 
-            @Override
-            public List<Plot> getPlots(String title) {
-                title = checkPlotsTitle(title);
-                PlotPanel plotPanel = plotPanels.get(title);
-                if (plotPanel != null) {
-                    return plotPanel.getPlots();
+                @Override
+                public List<Plot> getPlots(String title) {
+                    title = checkPlotsTitle(title);
+                    PlotPanel plotPanel = plotPanels.get(title);
+                    if (plotPanel != null) {
+                        return plotPanel.getPlots();
+                    }
+                    return new ArrayList<Plot>();
                 }
-                return new ArrayList<Plot>();
-            }
 
-            @Override
-            public void onTitleClosed(String title) {
-                if (Setup.isOffscreenPlotting()) {
-                    removePlotPanel(title);
-                    logger.log(Level.INFO, "Plot context closed: {0}", title);
+                @Override
+                public void onTitleClosed(String title) {
+                    if (Setup.isOffscreenPlotting()) {
+                        removePlotPanel(title);
+                        logger.log(Level.INFO, "Plot context closed: {0}", title);
+                    }
                 }
-            }
 
-            @Override
-            public List<String> getTitles() {
-                return new ArrayList(plotPanels.keySet());
-            }
-        });
+                @Override
+                public List<String> getTitles() {
+                    return new ArrayList(plotPanels.keySet());
+                }
+            });
+        }
     }
     
     

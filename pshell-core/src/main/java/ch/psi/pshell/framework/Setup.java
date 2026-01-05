@@ -598,7 +598,7 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     }
     
     
-    public static  String getPlotServer() {
+    public static String getPlotServer() {
         String ret = Options.PLOT_SERVER.getString(null);        
         if ((ret!=null) && ret.isBlank()){
             ret = null;
