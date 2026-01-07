@@ -6,7 +6,7 @@ def read(fname):
 
 setup(
     name='psi-pshell',
-    version="2.0.1",
+    version="2.1.0",
     author='Paul Scherrer Institute',
     author_email="daq@psi.ch",
     description="Python client to PShell REST API",
