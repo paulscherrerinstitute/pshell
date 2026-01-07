@@ -110,7 +110,10 @@ public class Provider extends DeviceBase {
     }
     
     public static Provider getDefault() {        
-        return DevicePool.getInstance().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
+        if (DevicePool.hasInstance()){
+            return DevicePool.getInstance().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
+        } 
+        return null;
     }
     
     public static Provider getOrCreateDefault() {
