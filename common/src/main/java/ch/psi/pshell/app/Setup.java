@@ -385,7 +385,11 @@ public class Setup{
      * running from the jar, check if getJarFile()!=null.
      */
     public static boolean isRunningInIde(String project) {
-        return Paths.get(getSourceAssemblyFolder(project)).toFile().isDirectory();
+        try{
+            return Paths.get(getSourceAssemblyFolder(project)).toFile().isDirectory();
+        } catch (Exception ex){
+            return false;
+        }
     }            
             
     public static boolean isRunningInIde() {
@@ -402,7 +406,6 @@ public class Setup{
     }    
     
     public static String getAppSourceAssemblyFolder() {
-        File cur = new File(Sys.getCurDir());
         return Paths.get("src", "main", "assembly").toString(); 
     }    
     

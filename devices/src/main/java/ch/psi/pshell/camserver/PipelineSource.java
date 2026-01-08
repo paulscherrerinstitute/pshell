@@ -4,6 +4,7 @@ import ch.psi.pshell.bs.StreamCamera;
 import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.imaging.ColormapSourceConfig;
 import ch.psi.pshell.utils.EncoderJson;
+import ch.psi.pshell.utils.Str;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.util.Map;
 /**
  * Imaging Source implementation connecting to a CameraServer.
  */
-public class PipelineSource extends StreamCamera {
+    public class PipelineSource extends StreamCamera {
 
     //final PipelineClient client;
     final DefaultProcessingPipelineClient client; //Using instead of PipelineClient to easilly add methods to access stadndard processing pipeline
@@ -30,8 +31,11 @@ public class PipelineSource extends StreamCamera {
      * Optional persisted configuration of CameraServer objects.
      */
     public static class PipelineSourceConfig extends ColormapSourceConfig {
-
-        public String serverURL = Setup.getPipelineServer();
+        public String serverURL; 
+        
+        public String getServerUrl(){
+            return (Str.toString(serverURL).equals(Str.toString(null)) || serverURL.isBlank())? Setup.getPipelineServer() : serverURL;
+        }
     }
     
     public DefaultProcessingPipelineClient getClient() {
@@ -53,7 +57,7 @@ public class PipelineSource extends StreamCamera {
     protected PipelineSource(String name, String url, ColormapSourceConfig cfg) {
         super(name, null, cfg);
         if (cfg instanceof PipelineSourceConfig pipelineSourceConfig) {
-            url = pipelineSourceConfig.serverURL;
+            url = pipelineSourceConfig.getServerUrl();
         }
         client = new DefaultProcessingPipelineClient(url);
     }

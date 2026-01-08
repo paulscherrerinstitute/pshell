@@ -249,7 +249,9 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                     !config.isVersioningManual(),
                     new String[] {Setup.getDevicesPath(), Setup.getScriptsPath(), Setup.getConfigPath(), Setup.getPluginsPath()});
                 versionControl = new VersionControl(versionControlConfig);
-                versionControl.setUserInterface(Context.getUserInterface());
+                if (Context.hasUserInterface()){
+                    versionControl.setUserInterface(Context.getUserInterface());
+                }
             }
             if (extensions != null) {
                 extensions.onInitialize(interpreter.getRunCount());
