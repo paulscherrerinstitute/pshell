@@ -23,13 +23,17 @@ public enum Options implements Option {
      TIMEOUT,
      LOOKUP_WINDOW;  
          
+    public static void addHome(){  
+        ARCHIVER_VIEWER_HOME.add("ah", "Archiver Viewer default configuration folder", "path");  
+    }
+    
     public static void addGeneral(){  
+        addHome();                        
         BACKGROUND_COLOR.add("bg", "Set default plot background color");
         GRID_COLOR.add("gc", "Set default plot grid color");
         LABEL_FONT.add("tf", "Set font for tick labels");
         PLOT_HEIGHT.add("ph", "Set the minimum plot height");
-        LOOKUP_WINDOW.add("lw", "Display the channel lookup window (true by default)");
-        ARCHIVER_VIEWER_HOME.add("ah", "Archiver Viewer default configuration folder", "path");                
+        LOOKUP_WINDOW.add("lw", "Display the channel lookup window (true by default)");        
     }
     public static void add(){  
         ch.psi.pshell.app.Options.addBasic();

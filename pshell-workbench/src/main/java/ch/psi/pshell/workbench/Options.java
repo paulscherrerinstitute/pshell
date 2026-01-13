@@ -18,6 +18,8 @@ import java.util.ArrayList;
         ch.psi.pshell.xscan.Options.addSpecific();
         STDIO.add("dual", "Start GUI command line interface (not allowed if running in the background)");                        
         PREFERENCES.add("pref", "Override the view preferences file", "path");                
+        ch.psi.pshell.stripchart.Options.addHome();
+        ch.psi.pshell.archiverviewer.Options.addHome();
         
         String options = System.getenv().get("PSHELL_EX_OPTIONS");
         if ((options!=null) && (!options.isBlank())){

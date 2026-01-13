@@ -18,12 +18,16 @@ public enum Options implements Option {
     ALARM_INTERVAL,
     ALARM_FILE;
     
+    public static void addHome(){  
+        STRIPCHART_HOME.add("sh", "StripChart default configuration folder", "path");          
+    }
+    
     public static void addGeneral(){  
+        addHome();          
         BACKGROUND_COLOR.add("bg", "Set default plot background color");
         GRID_COLOR.add("gc", "Set default plot grid color");
         LABEL_FONT.add("tf", "Set font for time plot tick labels");
-        DEFAULT_DURATION.add("dd", "Set the plots defaut duration (default 60000ms)");
-        STRIPCHART_HOME.add("sh", "StripChart default configuration folder", "path");          
+        DEFAULT_DURATION.add("dd", "Set the plots defaut duration (default 60000ms)");        
     }
     
     public static void add(){           
