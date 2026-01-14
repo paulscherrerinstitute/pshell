@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 public class Python {    
     public static final String BASE_URL = "https://www.python.org/ftp/python/";
     public static final String DEFAULT_VERSION = "3.13.7";
+    public static final String JEP_VERSION = "4.3.1";
     
     
     static Logger logger = Logger.getLogger(Python.class.getName());
@@ -395,7 +396,7 @@ private static boolean hasZlibHeaders() {
         
         String options = "--no-build-isolation --force-reinstall --no-cache-dir";
     
-        return installPackages(folder, env, options, new String[]{"jep"});
+        return installPackages(folder, env, options, new String[]{"jep==" + JEP_VERSION});
     }    
 
     public static String getVersion(Path folder) {        
