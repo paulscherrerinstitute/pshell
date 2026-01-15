@@ -31,8 +31,9 @@ import java.util.ArrayList;
                         Class cls = Class.forName(op);
                         Method add = cls.getMethod("add");
                         add.invoke(null);
-                    } catch (Exception ex){
                         additionalOptions.add(op);
+                    } catch (Exception ex){       
+                        System.err.println("Error loading options from " + op + ": " + ex.toString());
                     }
                 }
             }
