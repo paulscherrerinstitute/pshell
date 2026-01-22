@@ -168,11 +168,25 @@ public class Context {
     
     public static ScriptType getScriptType() {                
         return Setup.getScriptType();
-    }       
+    }      
+    
     public static Scan getCurrentScan(){
         return getExecutionPars().getScan();
     }
+
+    public static Scan[] getCurrentScans(){
+        return getExecutionPars().getCurrentScans();
+    }
+
+    public static Scan getForegroundScan(){
+        return getSequencer().getExecutionParsForeground().getScan();
+    }
     
+    public static Scan[] getForegroundScans(){
+        return getSequencer().getExecutionParsForeground().getCurrentScans();
+    }
+
+
     public static ScanConfig getScanConfig(){
         if (hasConfig()){
             return getConfig().getScanConfig();
