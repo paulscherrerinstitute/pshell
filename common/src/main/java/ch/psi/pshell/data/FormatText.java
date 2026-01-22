@@ -1102,7 +1102,7 @@ public class FormatText implements Format {
         int[] dims = null;
 
         // check for colon (type separator)
-        int colon = left.indexOf(':');
+        int colon = left.lastIndexOf(':');
         if (colon >= 0) {
             name = left.substring(0, colon).trim();
             String rest = left.substring(colon + 1).trim();
