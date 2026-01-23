@@ -174,18 +174,17 @@ public class Context {
         return getExecutionPars().getScan();
     }
 
-    public static Scan[] getCurrentScans(){
-        return getExecutionPars().getCurrentScans();
-    }
-
     public static Scan getForegroundScan(){
         return getSequencer().getExecutionParsForeground().getScan();
-    }
+    }    
     
-    public static Scan[] getForegroundScans(){
-        return getSequencer().getExecutionParsForeground().getCurrentScans();
+    public static Scan[] getScans(){
+        return getSequencer().getRunningScans();
+    }    
+    
+    public static void abortScans() throws InterruptedException{
+        getSequencer().abortScans();
     }
-
 
     public static ScanConfig getScanConfig(){
         if (hasConfig()){

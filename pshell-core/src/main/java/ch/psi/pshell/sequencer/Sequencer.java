@@ -1856,9 +1856,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 cmd.setAborted();
             }
             //TODO: This is also killing background acans. Should not be only foreground?
-            for (Scan scan : getRunningScans()) {
-                scan.abort();
-            }
+            abortScans();
             synchronized (runningScans) {
                 runningScans.clear();
             }
@@ -1870,6 +1868,18 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         if (interpreter != null) {
             interpreter.resetInterpreter();
         }
+    }
+    
+    public void abortScans() throws InterruptedException{
+        for (Scan scan : getRunningScans()) {
+            scan.abort();
+        }        
+    }
+
+    public void abortVisibleScans() throws InterruptedException{
+        for (Scan scan : getVisibleScans()) {
+            scan.abort();
+        }        
     }
 
     public boolean isAborted() {
