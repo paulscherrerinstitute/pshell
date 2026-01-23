@@ -1351,17 +1351,39 @@ public class View extends MainFrame{
         return shell;
     }
     
+    public StripChart openStripChart(File f) throws Exception  {
+        StripChart stripChart = new StripChart(View.this, false, null);
+        openComponent(f.getName().trim(), stripChart.getPlotPanel());
+        stripChart.open(f);
+        stripChart.start();
+        return stripChart;        
+    }
+    
     @Override
     public Object openFile(File f, Processor processor) throws Exception {
         String ext = IO.getExtension(f);
         if (StripChart.FILE_EXTENSION.equals(ext)) {
-            StripChart stripChart = new StripChart(View.this, false, null);
-            openComponent(f.getName().trim(), stripChart.getPlotPanel());
-            stripChart.open(f);
-            stripChart.start();
+            try {
+                return openStripChart(f);
+            } catch (Exception ex) {
+                showException(ex);
+            }                
         }
         return super.openFile(f, processor);
     }    
+    
+    @Override
+    public JPanel openScriptOrProcessor(String file) throws IOException, InstantiationException, IllegalAccessException {
+        String ext = IO.getExtension(file);
+        if (StripChart.FILE_EXTENSION.equals(ext)) {
+            try {
+                return openStripChart(new File(file)).getPlotPanel();
+            } catch (Exception ex) {
+                showException(ex);
+            }
+        }
+        return super.openScriptOrProcessor(file);
+    }
     
 
     //Drag and drop
