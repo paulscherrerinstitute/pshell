@@ -515,13 +515,11 @@ public class CamServerViewer extends MonitoredPanel {
         if (Options.CAM_NAME.hasValue()) {
             setStartupStream(Options.CAM_NAME.getString(null));
         }
-        if (Options.PERSIST.defined()) {
-            if (!"image".equals(Options.PERSIST.getString(null))){
-                if (Options.PERSIST.getBool(false)){
-                    setPersistCameraState(true);
-                } else{
-                    GenericDeviceBase.setPersistenceEnabled(false);
-                }
+        if (Options.PERSIST_STATE.defined()) {
+            if ("individual".equals(Options.PERSIST_STATE.getString(null))){
+                setPersistCameraState(true);
+            } else if (!Options.PERSIST_STATE.getBool(false)){
+                GenericDeviceBase.setPersistenceEnabled(false);
             }
         }               
         if (Options.LOCAL_FIT.getBool(false)) {

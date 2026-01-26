@@ -94,7 +94,7 @@ public enum Options implements Option {
         TOOLBAR.add("tbar", "Append tool bar to detached processors");                
         DETACHED_PLOTS.add("dplt", "Create plots for detached windows");  
         HIDE_COMPONENT.add("hcmp", "Hide component in GUI given its name");      
-        PERSIST.add("pers", "Persist state of frames");                
+        PERSIST.add("pers", "Persist state of windows");                
         PLOT_SERVER.add("psrv", "URL of a plot server (plots are externalized adding '-dspl -hcmp tabPlots')", "url");     
         DISABLE_SESSIONS.add("diss", "Disable session management");        
     }

@@ -4,9 +4,19 @@ from pshell import PShellClient
 import socket
 from threading import Thread
 import os
+from requests import HTTPError
+import requests
 one_quit = False
 ps = PShellClient("http://" + socket.gethostname() + ":8080")
 print(ps.get_state())
+
+try:
+    ps.eval("1/0")
+except requests.HTTPError as e:
+    print(str(e))  # ZeroDivisionError: integer division or modulo by zero \n 500 Server Error: Internal Server Error for url: http://ag.local:8080/eval/1/0
+    print(e.response.status_code)  # 500
+    print(e.response.text)  # ZeroDivisionError: integer division or modulo by zero
+
 
 
 def create_task(duration=0.1):
