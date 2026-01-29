@@ -212,7 +212,7 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
                     if ((name == null)) {
                         getLogger().fine("Annonymous device configuration cannot be persisted");
                     } else {
-                        getLogger().warning("Configuration file name not set");
+                        getLogger().warning("Configuration file name not set: " + name);
                     }
                 }
             }

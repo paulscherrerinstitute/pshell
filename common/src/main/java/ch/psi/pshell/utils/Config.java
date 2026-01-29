@@ -35,13 +35,43 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         default void onLoad(Config config) {
         }
 
-        default void onSaving(Config config) {
+        default void onSaving(Config config) throws Exception{
         }
 
         default void onSave(Config config) {
         }
     }
+    
+    protected void triggerConfigLoaded() {
+        for (ConfigListener listener : getListeners()) {
+            try {
+                listener.onLoad(this);
+            } catch (Exception ex) {
+                Logger.getLogger(Config.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+    }    
 
+    protected void triggerConfigSaving()  throws IOException {
+        for (ConfigListener listener : getListeners()) {
+            try {
+                listener.onSaving(this);
+            } catch (Exception ex) {
+                throw new IOException ("Cannot save config: " + ex.getMessage()+ " [" + getFileName() + "]");
+            }                
+        }
+    }    
+
+    protected void triggerConfigSaved() {
+        for (ConfigListener listener : getListeners()) {
+            try {
+                listener.onSave(this);
+            } catch (Exception ex) {
+                Logger.getLogger(Config.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+    }    
+    
     public static final String ARRAY_SEPARATOR = "|";
     final Properties properties = new SortedProperties();
     final FilePermissions permissions;
@@ -102,6 +132,10 @@ public class Config extends ObservableBase<Config.ConfigListener> {
 
     public String getFileName() {
         return fileName;
+    }
+
+    public boolean isPersisted() {
+        return getFileName() != null;
     }
 
     protected Object convertStringToField(Class type, String str) {
@@ -219,9 +253,7 @@ public class Config extends ObservableBase<Config.ConfigListener> {
             } catch (Exception ex) {
                 Logger.getLogger(Config.class.getName()).log(Level.WARNING, null, ex);
             }
-            for (ConfigListener listener : getListeners()) {
-                listener.onLoad(this);
-            }
+            triggerConfigLoaded();
             try {
                 save();
             } catch (IOException ex) {
@@ -236,25 +268,22 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         load(this.fileName);        
     }
 
-    public void save() throws IOException {
-        if (fileName != null) {
-            //To avoid changing the property file timestamp if no change has been made
-            boolean changed = updateProperties() || !fileSync;
-            if (changed) {
-                for (ConfigListener listener : getListeners()) {
-                    listener.onSaving(this);
-                }
+    public void save() throws IOException {        
+        //To avoid changing the property file timestamp if no change has been made
+        boolean changed = updateProperties() || !fileSync;
+        if (changed) {
+            triggerConfigSaving();
+            //Allows save events if not persisted, as listeners can use backup feature,
+            if (fileName != null) {
                 try (FileOutputStream out = new FileOutputStream(fileName)) {
                     properties.store(out, null);
                 }
                 IO.setFilePermissions(fileName, permissions);
-                for (ConfigListener listener : getListeners()) {
-                    listener.onSave(this);
-                }
             }
-            if (backup != null) {
-                backup();
-            }
+            triggerConfigSaved();
+        }
+        if (backup != null) {
+            backup();
         }
     }
 
