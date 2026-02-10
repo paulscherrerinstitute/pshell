@@ -72,7 +72,7 @@
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="jScrollPane2" alignment="0" pref="290" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane2" alignment="0" pref="294" max="32767" attributes="0"/>
                                   <Component id="textInstalledVersion" alignment="0" max="32767" attributes="0"/>
                                   <Component id="textPythonHome" alignment="0" max="32767" attributes="0"/>
                               </Group>
@@ -187,6 +187,7 @@
                           <Component id="labelDownloadURLMiniconda" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="labelInstallerMiniconda" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel7" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="labelBasePython" alignment="1" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -194,6 +195,8 @@
                               <Component id="radioPyhtonOrg" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Component id="radioMiniconda" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <Component id="radioEnvironment" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                           </Group>
                           <Component id="textJavaHome" alignment="0" max="32767" attributes="0"/>
@@ -204,11 +207,12 @@
                           <Component id="textInstallationVersion" alignment="1" max="32767" attributes="0"/>
                           <Component id="textInstallerMiniconda" max="32767" attributes="0"/>
                           <Component id="textDownloadURLMiniconda" max="32767" attributes="0"/>
+                          <Component id="textBasePython" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="1" attributes="0">
-                      <EmptySpace pref="107" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                       <Component id="buttonDefaults" linkSize="3" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Component id="butonInstall" linkSize="3" min="-2" max="-2" attributes="0"/>
@@ -238,6 +242,7 @@
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="radioPyhtonOrg" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="radioMiniconda" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="radioEnvironment" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
@@ -250,18 +255,23 @@
                           <Component id="textDownloadVersion" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="labelDownloadURLMiniconda" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="textDownloadURLMiniconda" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="labelDownloadURLMiniconda" min="-2" max="-2" attributes="0"/>
+                          <Component id="textDownloadURLMiniconda" min="-2" pref="23" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="labelInstallerMiniconda" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="textInstallerMiniconda" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="labelBasePython" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="textBasePython" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane1" pref="84" max="32767" attributes="0"/>
+                          <Component id="jScrollPane1" pref="55" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
@@ -403,6 +413,29 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="radioMinicondaActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JRadioButton" name="radioEnvironment">
+              <Properties>
+                <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
+                  <ComponentRef name="buttonGroup1"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Environment"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="radioEnvironmentActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="labelBasePython">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Base Python:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="textBasePython">
+              <Events>
+                <EventHandler event="mouseReleased" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="textBasePythonMouseReleased"/>
+                <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="textBasePythonKeyReleased"/>
               </Events>
             </Component>
           </SubComponents>

@@ -6,9 +6,11 @@ import ch.psi.pshell.utils.Sys.OSFamily;
 import static ch.psi.pshell.utils.Sys.OSFamily.Linux;
 import static ch.psi.pshell.utils.Sys.OSFamily.Mac;
 import static ch.psi.pshell.utils.Sys.OSFamily.Windows;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,7 +67,7 @@ public class Python {
 
     
     public static void install(String version, Path folder) throws IOException, InterruptedException{        
-        String installationPath = getInstallationPath(folder);
+        String installationPath =  getInstallationPath(folder);
         String currentInstall = getVersion(folder);
         if (!currentInstall.isEmpty()){
             throw new IOException(currentInstall + " already installed in " + folder);
@@ -322,25 +324,35 @@ private static boolean hasZlibHeaders() {
         }
     }    
     
+    public static String execute(String cmd) throws IOException, InterruptedException{
+        return execute(null, cmd);
+    }
+    
     public static String execute(Path folder,String cmd) throws IOException, InterruptedException{
         return execute(folder,null, cmd);
     }
     
     public static String execute(Path folder, Map<String,String> env, String cmd) throws IOException, InterruptedException{
         logger.log(Level.INFO, "Executing: {0}", cmd);
-        String installationPath = getInstallationPath(folder);
+        String installationPath = (folder==null) ? null : getInstallationPath(folder);
         ProcessBuilder processBuilder;       
-        if (Sys.isWindows()) {            
-            String path = installationPath + "\\";
-            if (!cmd.startsWith("python")){
-                path +=  "Scripts\\";
+        String path = "";
+        if (Sys.isWindows()) {  
+            if (installationPath!=null){
+                path = installationPath + "\\";
+                if (!cmd.startsWith("python")){
+                    path +=  "Scripts\\";
+                }
             }
             processBuilder = new ProcessBuilder("cmd.exe", "/c", path + cmd);
-        } else {            
-            if (cmd.startsWith("python ")) {
-                cmd = cmd.replaceFirst("^python", "python3");
-            }            
-            processBuilder = new ProcessBuilder("sh", "-c", installationPath + "/bin/" + cmd);
+        } else {         
+            if (installationPath!=null){
+                if (cmd.startsWith("python ")) {
+                    cmd = cmd.replaceFirst("^python", "python3");
+                }            
+                path = installationPath + "/bin/";
+            }
+            processBuilder = new ProcessBuilder("sh", "-c",  path + cmd);
         }   
         if (env!=null){
             logger.log(Level.INFO, "With env: " + Str.toString(env));
@@ -385,7 +397,12 @@ private static boolean hasZlibHeaders() {
         installPackages(folder, new String[]{"setuptools", "wheel"});
         Map env = new HashMap();
         env.put("JAVA_HOME", java_home); 
-        env.put("PYTHONHOME",  folder.toString());                
+        
+        if (isEnvironment(folder.toFile())){
+            env.put("PYTHONHOME",  "");    
+        } else {
+            env.put("PYTHONHOME",  folder.toString());                
+        }
         
         String includeDir = folder.resolve("include").toString();
 
@@ -396,13 +413,32 @@ private static boolean hasZlibHeaders() {
         
         String options = "--no-build-isolation --force-reinstall --no-cache-dir";
     
-        return installPackages(folder, env, options, new String[]{"jep==" + JEP_VERSION});
+        String jep = "jep==" + JEP_VERSION;
+        String version = getShortVersion(folder);
+        if (version.startsWith("3.9.")){
+            jep = "jep"; //More recent JEP does not support Python 3.9 
+        }
+        return installPackages(folder, env, options, new String[]{jep});
     }    
 
+    public static String getShortVersion(Path folder) {        
+        String version = Python.getVersion(folder);
+        if (version.contains(" ")){
+            return version.substring(version.lastIndexOf(" ")+1);
+        }
+        return version;
+    }
+    
     public static String getVersion(Path folder) {        
         try {
-            String cmd = "python --version";
-            String version = execute(folder, cmd);        
+            String version = null;            
+            if (folder.toFile().isFile()){
+                String cmd = folder.toString() + " --version";
+                version = execute(cmd);        
+            } else {
+                String cmd = "python --version";
+                version = execute(folder, cmd);        
+            }
             return (version == null) ? "" : version;
         } catch (Exception ex) {
             return "";
@@ -411,28 +447,30 @@ private static boolean hasZlibHeaders() {
     
     public static String[] getInstalledPackages(Path folder) {        
         var list = new ArrayList<String>();
-        try {            
-            String cmd = "pip3 list";
-            String ret = execute(folder, cmd);        
-            if (ret != null){
-                String[] rows = ret.split("\\r?\\n");
-                for (int i=2; i< rows.length; i++){
-                    String row = rows[i].trim();
-                    if (!row.isEmpty()){           
-                        list.add(row);
-                        /*
-                        if (!row.contains(" ")){
+        if (folder!=null){
+            try {            
+                String cmd = "pip3 list";
+                String ret = execute(folder, cmd);        
+                if (ret != null){
+                    String[] rows = ret.split("\\r?\\n");
+                    for (int i=2; i< rows.length; i++){
+                        String row = rows[i].trim();
+                        if (!row.isEmpty()){           
                             list.add(row);
-                        } else {
-                            String name = row.substring(0, row.indexOf(" "));
-                            String ver = row.substring(row.lastIndexOf(" ")).trim();
-                            list.add(name+"=="+ver);
+                            /*
+                            if (!row.contains(" ")){
+                                list.add(row);
+                            } else {
+                                String name = row.substring(0, row.indexOf(" "));
+                                String ver = row.substring(row.lastIndexOf(" ")).trim();
+                                list.add(name+"=="+ver);
+                            }
+                            */
                         }
-                        */
                     }
-                }
-            }            
-        } catch (Exception ex) {            
+                }            
+            } catch (Exception ex) {            
+            }
         }
         return list.toArray(new String[0]);
     }
@@ -449,18 +487,67 @@ private static boolean hasZlibHeaders() {
         return false;
     }     
            
+    //Find system Python
+    public static String findSystemPythonFolder() throws Exception {
+        String bin = findSystemPython();
+        if (bin.contains("/bin/")){
+            return bin.substring(0, bin.lastIndexOf("/bin/"));         
+        }
+        return new File(bin).getParent();
+    }
+    
+    public static String findSystemPython() throws Exception {
+        ProcessBuilder pb = new ProcessBuilder("which", "python3");
+        Process p = pb.start();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String path = reader.readLine();
+        int exit = p.waitFor();            
+        if (exit == 0 && path != null) {
+            return path;
+        } else {
+            return null;
+        }
+    }
+    
+    //Creating environment 
+    public static void createEnvironment(File python, File envPath) throws Exception {
+        envPath.mkdirs();
+        runProcess(Setup.expandPath(python.toString()), "-m",  "venv", Setup.expandPath(envPath.toString()));
+        try{
+            //Update pip
+            logger.log(Level.INFO, "Trying to upgarde pip");  
+            execute (envPath.toPath(), "python -m pip install --upgrade pip");                                                            
+            logger.log(Level.INFO, "Created environment of " + getVersion(envPath.toPath()));     
+        } catch (Exception ex){
+            logger.log(Level.WARNING, null, ex); 
+        }                    
+        
+    }
+    
+    public static boolean isEnvironment(File path) {
+        return Paths.get(path.toString(), "pyvenv.cfg").toFile().isFile();
+    }
+    
     public static void main(String[] args) throws Exception {
         //String folder = ((args.length > 0) && (args[0] != null) & (!args[0].isBlank())) ?  args[0] : "~";
+        /*
         String folder = "~/temp/cpython";
         Path path = Paths.get(folder);
         if (!hasZlibHeaders()){
             Path zlibPath  = installZlib(path);
              System.out.println(zlibPath);
+        }        
+        install(path);
+        */
+        Path path = Paths.get("~/test/python/envs/test1");
+        String sysPy = findSystemPython();
+        System.out.println(sysPy);
+        if (sysPy!=null){
+            createEnvironment(new File(sysPy), path.toFile());
         }
         
-        install(path);
-        installPackages(path, getDefaultPackages());              
-        installPackage(path, "jep");             
+        //installPackages(path, getDefaultPackages());              
+        //installPackage(path, "jep");             
         System.out.println(getVersion(path));
     }
 }
