@@ -312,7 +312,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             CommandInfo info = null;
             String msg = "Running " + getFileName();
             try {
-                info = Context.getSequencer().startExecution(CommandSource.ui, file, null, true);                
+                info = Context.getSequencer().startExecution(CommandSource.ui, (file == null) ? "Unknown": file, null, true);                
                 setEnabled(false);
                 setMessage(msg);
                 setProgress(0);
