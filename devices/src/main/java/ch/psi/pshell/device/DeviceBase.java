@@ -820,7 +820,7 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
     private static final ExecutorService DEVICE_ASYNC_EXECUTOR = //Executors.newCachedThreadPool(new NamedThreadFactory("Device async task", true));    
             //Like newCachedThreadPool, but with a maximum number of threads (100)
             new ThreadPoolExecutor( 0, 100,
-                                    60L, TimeUnit.SECONDS,
+                                    10L, TimeUnit.SECONDS,
                                     new SynchronousQueue<Runnable>(),
                                     new NamedThreadFactory("Device async task", true, true),
                                     new ThreadPoolExecutor.CallerRunsPolicy() // ensures no tasks rejected, blocks caller
