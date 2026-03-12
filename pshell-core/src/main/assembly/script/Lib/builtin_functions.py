@@ -1740,17 +1740,28 @@ def exec_cmd(cmd, stderr_raise_ex = True):
         raise Exception(err)
     return ret
 
-def exec_cpython(script_name, args = [], method_name = None, python_name = "python"):
+def exec_cpython(script_name, args = [], method_name = None, python_name = None):
     """Executes an external cpython process.
 
     Args:
         script_name (str): name of the script (can be absolute or relative to script folder).
         args(list, optional): arguments to python process (or parameters to method, if not None)
         method_name (str, optional): if defined indicates a method to be called.
-        python_name (str, optional): name of executable
+        python_name (str, optional): name of executable.
+                                     Default is PYTHONHOME if defined, or else "python".
     Returns:
         Return of python process.
     """
+    if python_name is None:
+        python_name = "python"
+        python_home = Setup.getPythonHome()
+        if python_home: 
+            for name in ["/bin/python", "/bin/python3"]:
+                if os.path.exists(python_home + name):
+                        python_name = python_home + name
+                        break
+        else:
+            python_name = "python"
     if method_name is None:
         script = get_interpreter().library.resolveFile(script_name)
         if script is None :
