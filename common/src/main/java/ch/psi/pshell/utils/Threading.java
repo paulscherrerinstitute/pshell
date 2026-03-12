@@ -42,7 +42,7 @@ public class Threading {
         List<Future> futures = new ArrayList<>();
         if (threads>0){
             ExecutorService executor = (poolName != null)
-                    ? Executors.newFixedThreadPool(threads, new NamedThreadFactory(poolName))
+                    ? Executors.newFixedThreadPool(threads, new NamedThreadFactory(poolName, null, true))
                     : Executors.newFixedThreadPool(threads);
 
 

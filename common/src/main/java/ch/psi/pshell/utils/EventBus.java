@@ -104,16 +104,16 @@ public class EventBus extends ObservableBase<EventBusListener> implements AutoCl
         ExecutorService _executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("EventBus Thread"){
             @Override
             public void onCreateThread(Thread thread){   
-                ExecutorService executor = executors.get(listener);
+                ExecutorService executor = (executors==null) ? null : executors.get(listener);
                 if (executor!=null){
                     threads.put(executors.get(listener), thread);
                 }
             }
         });
 
-        if (listener!=null){
+        if (listener!=null){ //PARALLEL            
             executors.put(listener, _executor);
-        } else {
+        } else {    //ASYNC
             executor = _executor;
         }
         return _executor;
