@@ -13,10 +13,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 
@@ -810,6 +816,23 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
             }
         }
     }
+    
+    private static final ExecutorService DEVICE_ASYNC_EXECUTOR = //Executors.newCachedThreadPool(new NamedThreadFactory("Device async task", true));    
+            //Like newCachedThreadPool, but with a maximum number of threads (100)
+            new ThreadPoolExecutor( 0, 100,
+                                    60L, TimeUnit.SECONDS,
+                                    new SynchronousQueue<Runnable>(),
+                                    new NamedThreadFactory("Device async task", true, true),
+                                    new ThreadPoolExecutor.CallerRunsPolicy() // ensures no tasks rejected, blocks caller
+                                   );            
+    
+    protected <T> CompletableFuture<T> asyncRun(Supplier<T> task) {
+        return CompletableFuture.supplyAsync(task, DEVICE_ASYNC_EXECUTOR);
+    }        
+
+    protected <T> void asyncLoad(Supplier<T> reader, Consumer<T> setter) {
+        asyncRun(reader).thenAccept(setter);
+    }    
 
     Device[] triggers;
 

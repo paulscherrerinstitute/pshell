@@ -5,6 +5,7 @@ import ch.psi.pshell.device.ProcessVariableBase;
 import ch.psi.pshell.device.ReadonlyRegisterBase;
 import ch.psi.pshell.device.Register.RegisterString;
 import ch.psi.pshell.device.RegisterBase;
+import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.utils.Convert;
 import ch.psi.pshell.utils.State;
 import ch.psi.pshell.utils.Str;
@@ -205,7 +206,7 @@ public final class RegisterPanel extends DevicePanel {
         if (getDevice() == null){
             txtRegisterReadout.setToolTipText(null);
         } else if (getDevice() instanceof ProcessVariableBase pv){
-            txtRegisterReadout.setToolTipText(getDevice().getName() + " range: " + pv.getMinValue() + " to " + pv.getMaxValue() + " " + pv.getUnit());
+            txtRegisterReadout.setToolTipText(getDevice().getName() + " range: " + pv.getMinValue() + " to " + pv.getMaxValue() + DevicePool.getUnitsSuffix(pv));
         } else {
             txtRegisterReadout.setToolTipText(getDeviceTooltip());
         }

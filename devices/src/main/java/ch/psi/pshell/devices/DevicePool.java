@@ -861,12 +861,9 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
             info = "Polled";
         }
         String units = "";
-        if (dev instanceof ReadonlyProcessVariable readonlyProcessVariable){
-            try {
-                units = " " + readonlyProcessVariable.getUnit();
-            } catch (Exception ex) {
-            }
-        }
+        
+        units = getUnitsSuffix(dev);
+
         try {
             if (dev instanceof ReadbackDevice) {
                 dev = ((ReadbackDevice) dev).getReadback();
@@ -880,5 +877,20 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         }
         return new String[]{"", "", info};
     }
+    
+    public static String getDescription(GenericDevice device) {
+        String desc =  (device instanceof Device dev) ? dev.getDescription() : "";
+        return ((desc != null) && (!desc.isBlank())) ? desc : "";
+    }
+
+    public static String getUnits(GenericDevice device) {
+        String units = (device instanceof ReadonlyProcessVariable pv) ? pv.getUnit() : "";
+        return ((units != null) && (!units.isBlank())) ? units : "";
+    }
+    
+    public static String getUnitsSuffix(GenericDevice device) {
+        String units =getUnits(device);        
+        return ((units != null) && (!units.isBlank())) ? " " + units : "";
+    }    
     
 }

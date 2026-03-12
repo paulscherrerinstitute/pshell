@@ -163,7 +163,7 @@ public final class MotorReadoutPanel extends DevicePanel {
         if (getDevice() == null) {
             txtMotorReadout.setToolTipText(null);
         } else {
-            txtMotorReadout.setToolTipText(getDevice().getName()+ " range: " + getDevice().getMinValue() + " to " + getDevice().getMaxValue() + " " + getDevice().getUnit());
+            txtMotorReadout.setToolTipText(getDevice().getName()+ " range: " + getDevice().getMinValue() + " to " + getDevice().getMaxValue() + getDeviceUnitsSuffix());
         }
     }//GEN-LAST:event_txtMotorReadoutMouseEntered
 

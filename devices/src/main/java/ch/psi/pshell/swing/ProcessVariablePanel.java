@@ -197,7 +197,7 @@ public final class ProcessVariablePanel extends DevicePanel {
             valueSelection.setStep((Double) spinnerStep.getValue());
             int decimals = getDisplayDecimals(getDecimals());
             valueSelection.setDecimals(decimals);
-            valueSelection.setUnit(((ProcessVariable) device).getUnit());        
+            valueSelection.setUnit(getDeviceUnits());        
         }
     }
 

@@ -7,6 +7,7 @@ import ch.psi.pshell.device.Motor;
 import ch.psi.pshell.device.MotorListener;
 import ch.psi.pshell.device.MotorStatus;
 import ch.psi.pshell.device.ReadbackDevice;
+import ch.psi.pshell.device.ReadonlyProcessVariable;
 import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Startable;
 import ch.psi.pshell.devices.App;
@@ -26,7 +27,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
@@ -205,6 +205,14 @@ public class DevicePanel extends MonitoredPanel {
             return "";
         }
         return deviceName;
+    }
+    
+    public String getDeviceUnits() {
+        return DevicePool.getUnits(getDevice());
+    }
+    
+    public String getDeviceUnitsSuffix() {
+        return DevicePool.getUnitsSuffix(getDevice());
     }
 
     //Background device update

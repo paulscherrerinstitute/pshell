@@ -24,7 +24,8 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     
     final protected InvalidValueAction invalidAction;
     volatile Severity severity;
-    String description, unit;
+    volatile String description;
+    volatile String unit;    
 
     public static class EpicsRegisterConfig extends RegisterConfig {
 
@@ -41,7 +42,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
         this.channelName = channelName;
         timestamped = getConfig().timestamped;
         requestMetadata = getConfig().status || timestamped;
-        invalidAction = getConfig().status ? getConfig().invalidValueAction : null;
+        invalidAction = getConfig().status ? getConfig().invalidValueAction : null;        
     }
 
     /*
@@ -75,6 +76,15 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     public String getChannelName() {
         return channelName;
     }
+    
+    public String getBaseChannelName() {
+        return isRbv() ? channelName.substring(0, channelName.length()-4): channelName;
+    }
+    
+    public boolean isRbv(){
+        return channelName==null ? false : channelName.endsWith(".RBV");
+    }
+        
 
     @Override
     protected T doRead() throws IOException, InterruptedException {
@@ -227,27 +237,15 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
                 maximumSize = channel.getSize();
                 
                 if (getPrecision() == RESOLVE_PRECISION) {
-                    try {
-                        setPrecision(readPrecision());
-                    } catch (Exception ex) {
-                        getLogger().log(Level.WARNING, null, ex);
-                        setPrecision(UNDEFINED_PRECISION);
-                    }
+                    setPrecision(readPrecision());
                 }
-                //Only read description/units from top-level 
-                if (getParent()==null){
-                    try {
-                        description = readDescription();
-                    } catch (Exception ex) {
-                        getLogger().log(Level.WARNING, null, ex);
+                
+                //Only read description/units from top-level device
+                if (getParent() == null) {
+                    asyncLoad(this::readDescription, d -> description = d);
+                    if (this instanceof EpicsRegisterNumber) {
+                        asyncLoad(this::readUnit, u -> unit = u);
                     }
-                    if (this instanceof EpicsRegisterNumber){
-                        try {
-                            unit = readUnit();
-                        } catch (Exception ex) {
-                            getLogger().log(Level.WARNING, null, ex);
-                        }    
-                    }    
                 }
             } else {
                 if (getPrecision() == RESOLVE_PRECISION) {
@@ -268,7 +266,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
             throw new DeviceException("Error creating channel: " + getChannelName(), ex);
         }
     }
-
+    
     @Override
     public String getDescription() {
         return description;
@@ -278,35 +276,37 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     public String getUnit() {
         return unit;
     }
+    
+    
+    public Integer test(int val) {
+        return 0;
+    }    
 
-    public int readPrecision() throws DeviceException, InterruptedException {
-        try {
-            return Epics.get(channelName + ".PREC", Integer.class);
-        } catch (InterruptedException ex) {
-            throw ex;
+    protected int readPrecision() {
+        try {            
+            return Epics.get(getBaseChannelName() + ".PREC", Integer.class);
         } catch (Exception ex) {
-            throw new DeviceException("Error reading precision: " + getChannelName(), ex);
+            getLogger().warning("Error reading precision of " + getChannelName() + ": " + ex.getMessage());            
         }
+        return UNDEFINED_PRECISION;
     }
 
-    public String readDescription() throws DeviceException, InterruptedException {
+    protected String readDescription() {
         try {
-            return Epics.get(channelName + ".DESC", String.class);
-        } catch (InterruptedException ex) {
-            throw ex;
+            return Epics.get(getBaseChannelName() + ".DESC", String.class);
         } catch (Exception ex) {
-            throw new DeviceException("Error reading description: " + getChannelName(), ex);
+            getLogger().warning("Error reading description of " + getChannelName() + ": " + ex.getMessage());
         }
+        return "";
     }
 
-    public String readUnit() throws DeviceException, InterruptedException {
+    protected String readUnit(){
         try {
-            return Epics.get(channelName + ".EGU", String.class);
-        } catch (InterruptedException ex) {
-            throw ex;
+            return Epics.get(getBaseChannelName() + ".EGU", String.class);
         } catch (Exception ex) {
-            throw new DeviceException("Error reading unit: " + getChannelName(), ex);
+            getLogger().warning("Error reading unit of " + getChannelName() + ": " + ex.getMessage());
         }
+        return "";
     }
 
     @Override

@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -209,6 +210,19 @@ public class Epics {
             closeChannel(channel);
         }
     }
+    
+    public static <T> Future<T> getAsync(String channelName, Class<T> type) throws ChannelException, InterruptedException, TimeoutException {
+        return getAsync(channelName, type, null);
+    }
+
+    public static <T> Future<T> getAsync(String channelName, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException {
+        Channel<T> channel = newChannel(channelName, type, size);
+        try {
+            return channel.getValueAsync();
+        } finally {
+            closeChannel(channel);
+        }
+    }    
 
     public static <T> Map<String, Object> getMeta(String channelName, Class<T> type) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
         return getMeta(channelName, type, null);

@@ -302,7 +302,7 @@ public class CAS extends ProcessVariable implements AutoCloseable {
             double max = pv.getMaxValue();
             double min = pv.getMinValue();
             if (dbr instanceof GR gr) {
-                if (units != null) {
+                if ((units != null)&&(!units.isBlank())){
                     gr.setUnits(units);
                 }
                 if (!Double.isNaN(max)) {
