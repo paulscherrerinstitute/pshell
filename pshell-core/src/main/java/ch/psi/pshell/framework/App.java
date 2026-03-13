@@ -186,7 +186,6 @@ public class App extends ch.psi.pshell.devices.App {
 
                 @Override
                 public String getString(String message, String defaultValue, String[] alternatives) {
-
                     return SwingUtils.getString(getMainFrame(), message, alternatives, defaultValue);
                 }
 

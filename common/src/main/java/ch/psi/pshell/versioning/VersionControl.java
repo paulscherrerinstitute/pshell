@@ -98,6 +98,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
     final boolean autoCommit;
     final ArrayList<String> addedFolders;
     final String secret;
+    final boolean readOnly;
     
 
     Repository localRepo;
@@ -114,14 +115,16 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         this.localPath = config.localPath();
         this.remotePath = config.remotePath();
         this.remoteLogin = config.remoteLogin();
-        this.autoCommit = config.autoCommit();
+        File gitFolder = Paths.get(localPath, ".git").toFile();
+        readOnly = gitFolder.exists() && !gitFolder.canWrite();
+        
+        this.autoCommit = config.autoCommit() && !readOnly;
         this.addedFolders = new ArrayList();        
         for (String folder: config.addedFolders()){
             if (IO.isSubPath(folder, localPath)) {
                 this.addedFolders.add(IO.getRelativePath(folder, localPath));
             }
-        }
-
+        }        
         String secret = getKeyFileSecret(remoteLogin);
         if (secret == null) {
             File secretFile = new File(Setup.expandPath("{context}/secret"));
@@ -134,7 +137,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
             }
         }
         this.secret = secret;        
-        
+
         if (getConnectionType() == ConnectionType.ssh) {
             //Evaluating here in order startPush to work in different process (no context)
             privateKeyFile = (secret == null)
@@ -143,69 +146,77 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         } else {
             privateKeyFile = null;
         }        
-                
-        try {
-            //Lock file check
-            Path lockFile = Paths.get(localPath, ".git", "index.lock");
-            Chrono chrono = new Chrono();
+        
 
-            //Give extra 10s to lock file disappear because a push upstream may be going on
-            if (lockFile.toFile().exists()) {
-                logger.warning("Waiting lock file");
-            }
-            try {
-                chrono.waitCondition(new Condition() {
-                    @Override
-                    public boolean evaluate() throws InterruptedException {
-                        return !lockFile.toFile().exists();
-                    }
-                }, 10000, 100);
-            } catch (TimeoutException ex) {
-            }
-
-            if (lockFile.toFile().exists()) {
-                logger.log(Level.WARNING, "Cleaning lock file: {0}", lockFile.toString());
-                try {
-                    if (!lockFile.toFile().delete()) {
-                        logger.log(Level.SEVERE, "Cannot delete lock file: {0}", lockFile.toString());
-                    }
-                } catch (Exception ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-            }
-
-            //Initialization
-            boolean createNewRepo = createLocalRepo();
+        if (readOnly){
+            logger.log(Level.WARNING, "Repository is read-only");
+            createLocalRepo();
             git = new Git(localRepo);
+        } else {        
+            try {
+                //Lock file check
+                Path lockFile = Paths.get(localPath, ".git", "index.lock");
+                Chrono chrono = new Chrono();
 
-            if (createNewRepo) {
-                add(".gitignore");
-                if (autoCommit) {
-                    startAddCommitAll("Creation");
+                //Give extra 10s to lock file disappear because a push upstream may be going on
+                if (lockFile.toFile().exists()) {
+                    logger.warning("Waiting lock file");
                 }
-            } else if (autoCommit) {
-                List<DiffEntry> diffs = diff();
-                if ((diffs.size() > 0)) {
-                    logger.log(Level.INFO, "Working tree has changes: {0}", diffs.size());
-                    startAddCommitAll("Startup");
-                } else {
-                    logger.info("Working tree has no change");
+                try {
+                    chrono.waitCondition(new Condition() {
+                        @Override
+                        public boolean evaluate() throws InterruptedException {
+                            return !lockFile.toFile().exists();
+                        }
+                    }, 10000, 100);
+                } catch (TimeoutException ex) {
+                }
+
+                if (lockFile.toFile().exists()) {
+                    logger.log(Level.WARNING, "Cleaning lock file: {0}", lockFile.toString());
+                    try {
+                        if (!lockFile.toFile().delete()) {
+                            logger.log(Level.SEVERE, "Cannot delete lock file: {0}", lockFile.toString());
+                        }
+                    } catch (Exception ex) {
+                        logger.log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                //Initialization
+                boolean createNewRepo = createLocalRepo();
+                git = new Git(localRepo);
+
+                if (createNewRepo) {
+                    add(".gitignore");
+                    if (autoCommit) {
+                        startAddCommitAll("Creation");
+                    }
+                } else if (autoCommit) {
+                    List<DiffEntry> diffs = diff();
+                    if ((diffs.size() > 0)) {
+                        logger.log(Level.INFO, "Working tree has changes: {0}", diffs.size());
+                        startAddCommitAll("Startup");
+                    } else {
+                        logger.info("Working tree has no change");
+                    }
+                }
+
+                if (remotePath != null) {
+                    StoredConfig storedConfig = git.getRepository().getConfig();
+                    storedConfig.setString("remote", "origin", "url", remotePath);
+                    storedConfig.setString("remote", "origin", "fetch", "+refs/heads/*:refs/remotes/origin/*");
+                    storedConfig.save();
+                    //startPush();
                 }
             }
-
-            if (remotePath != null) {
-                StoredConfig storedConfig = git.getRepository().getConfig();
-                storedConfig.setString("remote", "origin", "url", remotePath);
-                storedConfig.setString("remote", "origin", "fetch", "+refs/heads/*:refs/remotes/origin/*");
-                storedConfig.save();
-                //startPush();
-            }
-            //watchService = FileSystems.getDefault().newWatchService();
-            //registerFolderEvents(Paths.get(localPath, "devices"));
-            logger.log(Level.INFO, "Finished {0} initialization", getClass().getSimpleName());
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
+            catch (Exception ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }            
+        } 
+        //watchService = FileSystems.getDefault().newWatchService();
+        //registerFolderEvents(Paths.get(localPath, "devices"));
+        logger.log(Level.INFO, "Finished {0} initialization", getClass().getSimpleName());
     }
 
     enum ConnectionType {
@@ -237,8 +248,8 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         return null;
     }
     
-    UserInterface userInterface ;
-    public UserInterface getUserInterface(){
+    static UserInterface userInterface ;
+    static public UserInterface getUserInterface(){
         if (userInterface == null) {
             userInterface = new DefaultUserInterface();
         }
@@ -273,7 +284,10 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
                 return false;
             }
         }
-        return secret == null;
+        if (!hasRemoteLogin()){
+            return  (token == null);
+        }
+        return (secret == null) && (token == null);
     }
 
     boolean isKeyFileEncripted() {
@@ -307,14 +321,14 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         this.autoCommit = false;
         this.addedFolders = null;
         this.secret = secret;
-
+        this.readOnly = false;
+                
         File gitFolder = Paths.get(localPath, ".git").toFile();
         localRepo = new FileRepository(gitFolder);
         if (!existsLocalRepo()) {
             throw new Exception("No local repo: " + gitFolder.getPath());
         }
         git = new Git(localRepo);
-
     }
 
     void logException(Exception ex) {
@@ -324,14 +338,13 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
     final boolean existsLocalRepo() {
         return new File(localPath, ".git").isDirectory();
     }
-
-    final boolean createLocalRepo() {
+    
+    final boolean createLocalRepo() {        
         try {
             localRepo = new FileRepository(Paths.get(localPath, ".git").toFile());
 
             if (!existsLocalRepo()) {
                 //TODO: try to pull, else create                
-
                 createIgnore();
                 localRepo.create();
                 return true;
@@ -342,8 +355,9 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         return false;
     }
 
-    void createIgnore() {
+    void createIgnore() {        
         try {
+            assertNotReadonly();
             StringBuilder sb = new StringBuilder();
             sb.append("/*\n");
             for (String folder: addedFolders){
@@ -375,6 +389,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
 
     public void commit(String message) {
         try {
+            assertNotReadonly();
             logger.log(Level.INFO, "Commit: {0}", message);
             git.commit().setMessage(message).call();
         } catch (Exception ex) {
@@ -384,6 +399,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
 
     public void commitAll(String message) {
         try {
+            assertNotReadonly();
             logger.log(Level.INFO, "Commit all: {0}", message);
             git.commit().setAll(true).setMessage(message).call();
         } catch (Exception ex) {
@@ -393,6 +409,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
     
     
     public void addCommitAll(String message, boolean force) throws IOException {
+        assertNotReadonly();
         if (!force) {
             int diffs = diff().size();
             if (diffs == 0) {
@@ -408,6 +425,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
 
     public void push(boolean allBranches, boolean force) {
         try {
+            assertNotReadonly();
             logger.log(Level.INFO, "Push: allBranches={0} force={1}", new Object[]{allBranches, force});
             pushToUpstream(allBranches, force);
         } catch (Exception ex) {
@@ -422,6 +440,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
     public void trackBranch(String branch) {
         try {
             if (hasRemoteRepo()) {
+                assertNotReadonly();
                 logger.log(Level.INFO, "Branch create: {0}", branch);
                 git.branchCreate().setName(branch)
                         .setUpstreamMode(SetupUpstreamMode.SET_UPSTREAM)
@@ -434,6 +453,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
 
     public void cleanupRepository() throws Exception {
         try {
+            assertNotReadonly();
             logger.info("Cleanup repository");
             Properties p = git.gc().call();
         } catch (Exception ex) {
@@ -588,37 +608,43 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
     final ForkJoinPool executorService = new ForkJoinPool(1, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true);
 
     public void startCheckCommitFile(final String fileName, final String message) {
-        executorService.execute(() -> {
-            List<DiffEntry> diff = diffFile(fileName);
-            for (DiffEntry entry : diff) {
-                if (entry.getNewPath().equals(fileName)) {
-                    //if ((entry.getChangeType()==ChangeType.MODIFY)||(entry.getChangeType()==ChangeType.ADD)||(entry.getChangeType()==ChangeType.RENAME)){
-                    try {
-                        add(fileName);
-                    } catch (Exception ex) {
-                        logException(ex);
+        if (!readOnly){
+            executorService.execute(() -> {
+                List<DiffEntry> diff = diffFile(fileName);
+                for (DiffEntry entry : diff) {
+                    if (entry.getNewPath().equals(fileName)) {
+                        //if ((entry.getChangeType()==ChangeType.MODIFY)||(entry.getChangeType()==ChangeType.ADD)||(entry.getChangeType()==ChangeType.RENAME)){
+                        try {
+                            add(fileName);
+                        } catch (Exception ex) {
+                            logException(ex);
+                        }
+                        commit(message);
+                        break;
+                        //}
                     }
-                    commit(message);
-                    break;
-                    //}
                 }
-            }
-        });
+            });
+        }
     }
 
     public void startAddCommitAll(final String message) {
-        executorService.execute(() -> {
-            if (addedFolders!=null){
-                addFolders(addedFolders.toArray(new String[0]));
-            }
-            commitAll(message);
-        });
+        if (!readOnly){
+            executorService.execute(() -> {
+                if (addedFolders!=null){
+                    addFolders(addedFolders.toArray(new String[0]));
+                }
+                commitAll(message);
+            });
+        }
     }
 
     public void startPush(final boolean allBranches, final boolean force) {
-        executorService.execute(() -> {
-            push(allBranches, force);
-        });
+        if (!readOnly){
+            executorService.execute(() -> {
+                push(allBranches, force);
+            });
+        }
     }
 
     @Override
@@ -676,27 +702,25 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         };
         return transportConfigCallback;
     }
+    
+    static String getPassword() throws IOException, InterruptedException{
+        String pwd = getUserInterface().getPassword("Enter password:", "Authentication");
+        if (pwd == null) {
+            throw new IOException("Canceled");
+        }
+        return pwd;        
+    }
+            
     String passphrase;
-
     CredentialsProvider getCredentialsProvider() throws Exception {
         String usr = "";
         String pwd = "";
         passphrase = null;
         CredentialsProvider credentialsProvider = null;
-        if ((remoteLogin != null) && (!remoteLogin.isBlank())) {
+        if (hasRemoteLogin()) {
             if (requiresPassword()) {
-                if ((remoteLogin != null) && (remoteLogin.length() > 0)) {
-                    usr = remoteLogin;
-                } else {
-                    usr = getUserInterface().getString("Enter user name:", "", null);
-                    if (usr == null) {
-                        throw new IOException("Canceled");
-                    }
-                }
-                pwd = getUserInterface().getPassword("Enter password:", "Authentication");
-                if (pwd == null) {
-                    throw new IOException("Canceled");
-                }
+                usr = remoteLogin;
+                pwd = getPassword();
             } else {                
                 if (remoteLogin.contains(":")) {
                     usr = remoteLogin.substring(0, remoteLogin.lastIndexOf(":")).trim();
@@ -715,42 +739,68 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
                 pwd = "";
             }
             credentialsProvider = new UsernamePasswordCredentialsProvider(usr, pwd);
-        }
-
-        if (usr.length() == 0) {
+        } 
+        
+        if ((usr==null) || (usr.length() == 0)) {
             credentialsProvider = getDefaultCredentialsProvider();
         }
         return credentialsProvider;
     }
     //Public interface
     
-    public static CredentialsProvider getDefaultCredentialsProvider()  {        
+    public static CredentialsProvider getDefaultCredentialsProvider()  throws IOException, InterruptedException {        
         if (token!=null){
             return new UsernamePasswordCredentialsProvider("bot", token);
         }
+        
+        String usr = getUserInterface().getString("Enter user name:", "");
+        if (usr != null) {
+            return new UsernamePasswordCredentialsProvider(usr, getPassword());
+        }                
+        
         return CredentialsProvider.getDefault();
     }
 
-    /**
-     * Force to overwrite remote history
-     */
-    public boolean hasRemoteRepo() {
-        return ((remotePath != null) && (!remotePath.trim().isEmpty()));
+    public boolean isReadOnly(){
+        return readOnly;
     }
     
+    public void assertNotReadonly()  throws IOException {
+        if (isReadOnly()) {
+            throw new IOException("Repository is readonly");
+        }
+    }    
+    
+    public boolean hasRemoteRepo() {
+        return ((remotePath != null) && (!remotePath.trim().isEmpty()));
+    }    
     
     public void assertHasRemoteRepo()  throws IOException {
         if (!hasRemoteRepo()) {
             throw new IOException("Remote repository not enabled");
         }
-    }    
+    }
 
+    public boolean hasRemoteLogin() {
+        return ((remoteLogin != null) && (!remoteLogin.isBlank())) ;
+    }
+   
+    public void assertHasRemoteLogin()  throws IOException {
+        if (!hasRemoteLogin()) {
+            throw new IOException("Remote login not defined");
+        }
+    }
+
+    /**
+     * Force to overwrite remote history
+     */
     public void pushToUpstream(final boolean allBranches, final boolean force) throws Exception {
         pushToUpstream(allBranches, force, false);
     }
     
     public void pushToUpstream(final boolean allBranches, final boolean force, final boolean pushTags) throws Exception {
         if (hasRemoteRepo()) {
+            assertNotReadonly();
             logger.log(Level.INFO, "Push to upstream all={0} force={1} tags={2}", new Object[]{allBranches, force, pushTags});
             CredentialsProvider credentialsProvider = getCredentialsProvider();
             TransportConfigCallback transportConfigCallback = getTransportConfigCallback();
@@ -800,6 +850,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
 
     public void pullFromUpstream() throws Exception {
         if (hasRemoteRepo()) {
+            assertNotReadonly();
             logger.info("Pull from upstream");
             CredentialsProvider credentialsProvider = getCredentialsProvider(); 
             PullCommand cmd = git.pull();
@@ -821,9 +872,10 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
      * Executes in different process so can be called when shutting down.
      */
     public void startPushUpstream(final boolean allBranches, final boolean force) {
-        if ((remotePath != null) && (!remotePath.trim().isEmpty())
-                && (remoteLogin != null) && (!remoteLogin.isBlank())
-                && (!requiresPassword())) {
+        if (hasRemoteRepo() && !requiresPassword() && !readOnly) {
+            String remoteLogin = this.hasRemoteLogin() ? this.remoteLogin : "bot";
+            String secret = (this.secret == null) ? this.token : this.secret;
+            
             Process p = ProcessFactory.createProcess(VersionControl.class, new String[]{localPath, remotePath, remoteLogin,
                 privateKeyFile, secret, 
                 String.valueOf(allBranches), String.valueOf(force)});
@@ -857,6 +909,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
 
     public void checkoutRemoteBranch(String branch) throws Exception {
         if (hasRemoteRepo()) {
+            assertNotReadonly();
             logger.log(Level.INFO, "Checkout remote branch: {0}", branch);
             CredentialsProvider credentialsProvider = getCredentialsProvider();
             git.pull().setCredentialsProvider(credentialsProvider).call();
@@ -1096,7 +1149,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
     public static void main(String[] args) throws FileNotFoundException {                
         //Debugging
         //java.io.File logFile = new File("output.log");
-        //java.io.PrintStream ps = new java.io.PrintStream(new java.io.FileOutputStream(logFile, false)); 
+        //java.io.PrintStream ps = new java.io.PrintStream(new java.io.FileOutputStream(logFile, false));
         //System.setOut(ps);
         //System.setErr(ps);
                 
