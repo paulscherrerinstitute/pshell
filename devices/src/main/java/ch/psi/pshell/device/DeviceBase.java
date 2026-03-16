@@ -13,7 +13,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 
@@ -825,14 +829,26 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
                                     new NamedThreadFactory("Device async task", true, true),
                                     new ThreadPoolExecutor.CallerRunsPolicy() // ensures no tasks rejected, blocks caller
                                    );            
+    private final static Set<CompletableFuture<?>> runningAsyncTasks =ConcurrentHashMap.newKeySet();                                   
     
-    protected <T> CompletableFuture<T> asyncRun(Supplier<T> task) {
-        return CompletableFuture.supplyAsync(task, DEVICE_ASYNC_EXECUTOR);
+    protected <T> CompletableFuture<T> asyncRun(Supplier<T> task) {        
+        CompletableFuture<T> f = CompletableFuture.supplyAsync(task, DEVICE_ASYNC_EXECUTOR);
+        runningAsyncTasks.add(f);
+        f.whenComplete((r, e) -> runningAsyncTasks.remove(f));
+        return f;
     }        
 
     protected <T> void asyncLoad(Supplier<T> reader, Consumer<T> setter) {
         asyncRun(reader).thenAccept(setter);
     }    
+        
+    public static void waitAsyncTasks(int timeout) throws InterruptedException, java.util.concurrent.TimeoutException{
+        try {
+            CompletableFuture.allOf(runningAsyncTasks.toArray(new CompletableFuture[0])).get(timeout, TimeUnit.SECONDS);
+        } catch (ExecutionException ex) {
+            Logger.getLogger(DeviceBase.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
 
     Device[] triggers;
 

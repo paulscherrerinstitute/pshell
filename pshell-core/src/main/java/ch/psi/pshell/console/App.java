@@ -4,6 +4,7 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataServer;
 import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.FormatText;
+import ch.psi.pshell.device.DeviceBase;
 import ch.psi.pshell.device.Interlock;
 import ch.psi.pshell.devices.DevicePool;
 import ch.psi.pshell.epics.Epics;
@@ -253,6 +254,13 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                     versionControl.setUserInterface(Context.getUserInterface());
                 }
             }
+            
+            try {
+                DeviceBase.waitAsyncTasks(3);
+            } catch ( java.util.concurrent.TimeoutException ex) {
+                logger.log(Level.WARNING, "Timeout waiting for devices async tasks");
+            }            
+            
             if (extensions != null) {
                 extensions.onInitialize(interpreter.getRunCount());
             }
