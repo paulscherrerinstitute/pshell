@@ -28,7 +28,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 public class DataBuffer {
     static String dataSourcesRepoFolder;
     
-    public static Git cloneDataSourcesRepo(boolean imageBuffer) throws GitAPIException, IOException{
+    public static Git cloneDataSourcesRepo(boolean imageBuffer) throws GitAPIException, IOException, InterruptedException{
         CredentialsProvider credentialsProvider = getCredentialsProvider();
         String path = getDataSourcesRepoFolder(imageBuffer);
         File gitFile =  new File(path + "/.git");
@@ -47,7 +47,7 @@ public class DataBuffer {
         return git;
     }
     
-    static CredentialsProvider getCredentialsProvider(){
+    static CredentialsProvider getCredentialsProvider() throws IOException, InterruptedException{
         return VersionControl.getDefaultCredentialsProvider();
     }
     static CredentialsProvider getCredentialsProvider(String usr, String pwd){
@@ -69,7 +69,7 @@ public class DataBuffer {
         git.push().setDryRun(true).setCredentialsProvider(getCredentialsProvider(usr, pwd)).setForce(true).call();
     }        
     
-    public static Git updateDataSourcesRepo(boolean imageBuffer) throws GitAPIException, IOException{        
+    public static Git updateDataSourcesRepo(boolean imageBuffer) throws GitAPIException, IOException, InterruptedException{       
         try{
             return cloneDataSourcesRepo(imageBuffer);
         } catch (Exception ex){

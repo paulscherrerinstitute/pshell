@@ -752,7 +752,7 @@ public class VersionControl extends ObservableBase<VersionControlListener> imple
         if (token!=null){
             return new UsernamePasswordCredentialsProvider("bot", token);
         }
-        
+            
         String usr = getUserInterface().getString("Enter user name:", "");
         if (usr != null) {
             return new UsernamePasswordCredentialsProvider(usr, getPassword());
