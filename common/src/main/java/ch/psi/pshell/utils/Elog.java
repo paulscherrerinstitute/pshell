@@ -1,24 +1,72 @@
 package ch.psi.pshell.utils;
 
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  */
 public class Elog {
-    public static void log(String logbook, String title, String message, String[] attachments) throws Exception {
-        String domain = "";
-        String category = "Info";
-        String entry = "";
-        StringBuffer cmd = new StringBuffer();
+    
+    public static void log(String logbook, String title, String message) throws Exception {
+         log(logbook, title, message, null, null);
+    }
+    
+    public static void log(String logbook, String title, String message,  Map<String, String> atributes) throws Exception {
+        log(logbook, title, message, null, atributes);
+    }
 
-        cmd.append("G_CS_ELOG_add -l \"").append(logbook).append("\" ");
-        cmd.append("-a \"Author=").append(Sys.getUserName()).append("\" ");
-        cmd.append("-a \"Type=pshell\" ");
-        cmd.append("-a \"Entry=").append(entry).append("\" ");
+    public static void log(String logbook, String title, String message, String[] attachments) throws Exception {
+        log(logbook, title, message, attachments, null);
+    }
+    
+    public static void log(String logbook, String title, String message, String[] attachments, Map<String, String> atributes) throws Exception {        
+        String hostname =  System.getenv().getOrDefault("ELOG_HOST", "elog-gfa.psi.ch") ;            
+        String port =  System.getenv().getOrDefault("ELOG_PORT", "443") ;            
+        String whenLabel =  System.getenv().getOrDefault("ELOG_DATE_ATTR", "When") ;            
+        if ((logbook==null || (logbook.isBlank()))){
+            logbook = System.getenv().getOrDefault("ELOG_BOOK", "") ;      
+            if ((logbook==null || (logbook.isBlank()))){
+                throw new Exception ("Undefined logbook");
+            }
+        }
+
+        
+        long date = Instant.now().getEpochSecond(); //Secondes since epoch
+        StringBuffer cmd = new StringBuffer();
+        //cmd.append("G_CS_ELOG_add -l \"").append(logbook).append("\" ");
+        cmd.append("elog -h \"").append(hostname).append("\" ");
+        cmd.append("-p \"").append(port).append("\" ");
+        cmd.append("-s "); //SSL
+        cmd.append("-u robot robot ");
+        cmd.append("-l \"").append(logbook).append("\" ");        
+        cmd.append("-a ").append(whenLabel).append("=\"").append(date).append("\" ");        
+        
+        if (atributes==null){
+            atributes = new HashMap<>();
+        }
+        if (!atributes.containsKey("Author")){
+            atributes.put("Author", Sys.getUserName());
+        }
+        if (!atributes.containsKey("Application")){
+            atributes.put("Application", "PShell");
+        }
+        if (!atributes.containsKey("Category")){
+            atributes.put("Category", "Info");
+        }
+
         cmd.append("-a \"Title=").append(title).append("\" ");
-        cmd.append("-a \"Category=").append(category).append("\" ");
-        cmd.append("-a \"Domain=").append(domain).append("\" ");
-        for (String attachment : attachments) {
-            cmd.append("-f \"").append(attachment).append("\" ");
+
+        for (String key : atributes.keySet()) {
+            String value = atributes.get(key);
+            cmd.append("-a ").append(key).append("=\"").append(value).append("\" ");
+        }
+        
+        if (attachments!=null){
+            for (String attachment : attachments) {
+                cmd.append("-f \"").append(attachment).append("\" ");
+            }
         }
         cmd.append("-n 1 ");
         cmd.append("\"").append(message).append("\" ");
@@ -43,6 +91,6 @@ public class Elog {
             } catch (Exception ex) {
                 System.err.println(ex);
             }
-        }).start();
+        }).start(); 
     }    
 }
