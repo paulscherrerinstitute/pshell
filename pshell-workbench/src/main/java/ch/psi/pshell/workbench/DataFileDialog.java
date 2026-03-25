@@ -111,8 +111,8 @@ public class DataFileDialog extends StandardDialog {
             new Object[]{Setup.TOKEN_EXEC_INDEX, "", "Scan index  (formatter can be appended: " + Setup.TOKEN_EXEC_INDEX + "%02d )"},
             new Object[]{Setup.TOKEN_FILE_SEQUENTIAL_NUMBER, "", "Execution sequential number (formatter can be appended: " + Setup.TOKEN_FILE_SEQUENTIAL_NUMBER + "%02d )"},
             new Object[]{Setup.TOKEN_DAY_SEQUENTIAL_NUMBER, "", "Daily run index (formatter can be appended: " + Setup.TOKEN_DAY_SEQUENTIAL_NUMBER + "%02d )"},
-            new Object[]{Setup.TOKEN_SYS_HOME, "", "System user name"},
-            new Object[]{Setup.TOKEN_SYS_USER, "", "System user home folder"},
+            new Object[]{Setup.TOKEN_SYS_USER, "", "System user name"},
+            new Object[]{Setup.TOKEN_SYS_HOME, "", "System user home folder"},
             new Object[]{Setup.TOKEN_SESSION_ID, "", "Session ID (formatter can be appended: " + Setup.TOKEN_SESSION_ID + "%02d )"},
             new Object[]{Setup.TOKEN_SESSION_NAME, "", "Session Name"},};
 
