@@ -898,6 +898,16 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
+    
+    @GET
+    @Path("restart")
+    public void restart() throws ExecutionException {
+        try {
+            sequencer.restart(CommandSource.server);
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }    
 
     public void sendEvent(String name, Object value) {
         sendEvent(name, value, MediaType.APPLICATION_JSON_TYPE);
