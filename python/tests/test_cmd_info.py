@@ -10,13 +10,28 @@ one_quit = False
 ps = PShellClient("http://" + socket.gethostname() + ":8080")
 print(ps.get_state())
 
+
+def task():
+    try:
+        ps.eval("task()&")
+        time.sleep(0.2)
+    except requests.HTTPError as e:
+        print(str(e))  # ZeroDivisionError: integer division or modulo by zero \n 500 Server Error: Internal Server Error for url: http://ag.local:8080/eval/1/0
+        print(e.response.status_code)  # 500
+        print(e.response.text)  # ZeroDivisionError: integer division or modulo by zero
+
+
+#while True:
+#    task()
+
+
+
 try:
     ps.eval("1/0")
 except requests.HTTPError as e:
     print(str(e))  # ZeroDivisionError: integer division or modulo by zero \n 500 Server Error: Internal Server Error for url: http://ag.local:8080/eval/1/0
     print(e.response.status_code)  # 500
     print(e.response.text)  # ZeroDivisionError: integer division or modulo by zero
-
 
 
 def create_task(duration=0.1):
@@ -29,6 +44,11 @@ def run(index):
     while (True):
         count = count+1
         id = create_task()
+        task()
+        try:
+            ps.eval_then("time.sleep(0.2)")
+        except:
+            ps.start_eval("time.sleep(0.3)")
         sts = ps.get_result(id)
         if sts['status'] == "unlaunched":
             break

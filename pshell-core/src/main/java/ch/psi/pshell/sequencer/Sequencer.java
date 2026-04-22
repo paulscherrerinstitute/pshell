@@ -1950,9 +1950,10 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     //These methods are made public in order to plugins control state
     //Start execution in interpreter thread (foreground task)
     @Hidden
-    public void startExecution(final CommandSource source, String fileName, String command, Object args, boolean background) throws StateException {
+    public CommandInfo startExecution(final CommandSource source, String fileName, String command, Object args, boolean background) throws StateException {
         CommandInfo info = new CommandInfo(source, fileName, command, args, background);
         startExecution(source, fileName, info);
+        return info;
     }
 
     @Hidden
@@ -2043,21 +2044,25 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     public String getThen(CommandInfo info) {
-        ExecutionStage then = getExecutionPars().getThen();
-        if (then != null) {
-            boolean success = (!info.isError()) && (!info.isAborted());
-            if (success && (then.onSuccess != null)) {
-                return then.onSuccess;
+        if (info!=null){
+            ExecutionStage then = getExecutionPars().getThen();
+            if (then != null) {
+                boolean success = (!info.isError()) && (!info.isAborted());
+                if (success && (then.onSuccess != null)) {
+                    return then.onSuccess;
+                }
+                if (!success && (then.onException != null)) {
+                    return then.onException;
+                }
             }
-            if (!success && (then.onException != null)) {
-                return then.onException;
-            }
-        }
 
-        if (!info.background) {
-            if (next != null) {
-                return next;
+            if (!info.background) {
+                if (next != null) {
+                    return next;
+                }
             }
+        } else {
+            logger.log(Level.FINE, "Null info getting 'then'");
         }
         return null;
     }
