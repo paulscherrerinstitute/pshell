@@ -13,7 +13,7 @@ function plot_function(plot, func, name, range, show_points, show_lines, color){
         name(str): name of the series
         range(list or array of floats): x values to plot
     Returns:
-        Tuples of harmonic parameters: (amplitude, angular_frequency, phase)
+       Series
     */    
     if (!is_defined(show_points))    show_points =true
     if (!is_defined(show_lines))    show_lines = true
@@ -101,12 +101,12 @@ function plot_circle(plot, cx, cy, radius, width, color, name){
     s.setLineWidth(width)
     s.setPointsVisible(false) 
     res=radius / 100.0
-    epson = 1e-12
-    for (var xp = cx+radius-epson ; xp >= ( cx-radius+epson) ; xp-=res){
+    epsilon = 1e-12
+    for (var xp = cx+radius-epsilon ; xp >= ( cx-radius+epsilon) ; xp-=res){
         yp = Math.sqrt(Math.pow(radius, 2) - Math.pow(xp - cx, 2)) + cy
         s.appendData(xp, yp)        
     }
-    for (var xp = cx-radius+epson ; xp <= ( cx+radius-epson) ; xp+=res){
+    for (var xp = cx-radius+epsilon ; xp <= ( cx+radius-epsilon) ; xp+=res){
         yp = -Math.sqrt(Math.pow(radius, 2) - Math.pow(xp - cx, 2)) + cy
         s.appendData(xp, yp)  
     }     
@@ -114,3 +114,32 @@ function plot_circle(plot, cx, cy, radius, width, color, name){
         s.appendData(s.getX()[0], s.getY()[0])  
     return s
 }        
+
+function plot_ellipse(plot, cx, cy, rx, ry, width, color, name){
+    if (!is_defined(width)) width = 1
+    if (!is_defined(name))  name = "Ellipse"
+    if (!is_defined(color)) color = null
+    s = new LinePlotSeries(name, color)
+    plot.addSeries(s)
+    s.setLineWidth(width)
+    s.setPointsVisible(false)    
+    res = Math.min(rx, ry) / 100.0
+    epsilon = 1e-12
+    // Upper half
+    for (var xp = cx + rx - epsilon; xp >= cx - rx + epsilon; xp -= res){
+        yp = ry * Math.sqrt(1 - Math.pow((xp - cx) / rx, 2)) + cy
+        s.appendData(xp, yp)
+    }
+
+    // Lower half
+    for (var xp = cx - rx + epsilon; xp <= cx + rx - epsilon; xp += res){
+        yp = -ry * Math.sqrt( 1 - Math.pow((xp - cx) / rx, 2)) + cy
+        s.appendData(xp, yp)
+    }
+
+    // Close shape
+    if (s.getCount() > 0)
+        s.appendData(s.getX()[0], s.getY()[0])
+
+    return s
+}

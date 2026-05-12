@@ -107,13 +107,42 @@ def plot_circle(plot, cx, cy, radius, width = 1, color = None, name = "Circle"):
     s.setLineWidth(width)
     s.setPointsVisible(False) 
     res=float(radius) / 100.0
-    epson = 1e-12
-    for xp in frange (cx+radius-epson , cx-radius+epson , -res):
+    epsilon = 1e-12
+    for xp in frange (cx+radius-epsilon , cx-radius+epsilon , -res):
         yp = math.sqrt(math.pow(radius, 2) - math.pow(xp - cx, 2)) + cy
         s.appendData(xp, yp)        
-    for xp in frange (cx-radius+epson , cx+radius-epson, res):
+    for xp in frange (cx-radius+epsilon , cx+radius-epsilon, res):
         yp = -math.sqrt(math.pow(radius, 2) - math.pow(xp - cx, 2)) + cy
         s.appendData(xp, yp)       
     if s.getCount()>0:
         s.appendData(s.getX()[0], s.getY()[0])  
     return s
+
+def plot_ellipse(plot, cx, cy, rx, ry,width = 1, color = None, name = "Ellipse"):
+    s = LinePlotSeries(name, color)
+    plot.addSeries(s)
+    s.setLineWidth(width)
+    s.setPointsVisible(False)
+    res = float(min(rx, ry)) / 100.0
+    epsilon = 1e-12
+
+    # Upper half
+    for xp in frange(cx + rx - epsilon, cx - rx + epsilon, -res):
+        term = 1.0 - math.pow((xp - cx) / float(rx), 2)        
+        term = max(term, 0.0)
+        yp = ry * math.sqrt(term) + cy
+        s.appendData(xp, yp)
+
+    # Lower half
+    for xp in frange(cx - rx + epsilon, cx + rx - epsilon, res):
+        term = 1.0 - math.pow((xp - cx) / float(rx), 2)
+        term = max(term, 0.0)
+        yp = -ry * math.sqrt(term) + cy
+        s.appendData(xp, yp)
+
+    # Close curve
+    if s.getCount() > 0:
+        s.appendData(s.getX()[0], s.getY()[0])
+
+    return s
+
