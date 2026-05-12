@@ -103,6 +103,9 @@ public class Str {
     public static String toString(Object obj, int maxElements) {
         StringJoiner sj = new StringJoiner(", ", "[", "]");
         if (obj != null) {
+            if (obj instanceof Throwable t){
+                return t.getMessage() != null ? t.getMessage() : t.toString();
+            }            
             if (obj instanceof List list) {
                 obj = list.toArray();
             } else if (obj instanceof Map map) {

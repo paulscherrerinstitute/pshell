@@ -446,7 +446,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         }
     }
 
-    protected void triggerShellResult(final CommandSource source, Object result) {
+    protected void triggerShellResult(final CommandSource source, Object result) {        
+        onResult(result, source);        
         for (SequencerListener listener : getListeners()) {
             try {
                 listener.onShellResult(source, result);
@@ -891,10 +892,18 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         Level level = source.getLogLevel(sb.toString());                
         sb.append(" ");
         source.putLogTag(sb);
-        String cmd = sb.toString();
-        logger.log(level, cmd);
-        //TODO: Could add security check here?
+        logger.log(level, sb.toString());
     }
+    
+    protected void onResult(Object result, CommandSource source) {
+        StringBuilder sb = new StringBuilder();
+        Level level = (result instanceof Throwable) ? Level.WARNING : Level.FINER;         
+        sb.append(Str.toString(result));
+        sb.append(" ");
+        source.putLogTag(sb);
+        logger.log(level, sb.toString());
+    }    
+    
 
     public void shutdown(final CommandSource source) {
         onCommand(Command.shutdown, null, source);
