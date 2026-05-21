@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -854,6 +856,21 @@ public class IO {
                 }
             }
         });
+    }
+
+    public static void copyPermissions(File source, File target) throws IOException {
+        Path src = source.toPath();
+        Path dst = target.toPath();
+        try {
+            // Linux/macOS (POSIX)
+            Set<PosixFilePermission> perms = Files.getPosixFilePermissions(src);
+            Files.setPosixFilePermissions(dst, perms);
+        } catch (UnsupportedOperationException e) {
+            // Fallback for Windows
+            dst.toFile().setReadable(source.canRead(), false);
+            dst.toFile().setWritable(source.canWrite(), false);
+            dst.toFile().setExecutable(source.canExecute(), false);
+        }
     }
 
     public enum FilePermissions {

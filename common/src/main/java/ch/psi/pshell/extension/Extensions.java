@@ -430,6 +430,12 @@ public class Extensions implements AutoCloseable {
             }
             // Compile source file.       
             cls = Loader.compileClass(file);
+            //Set the same permissions to .class and .form files, so they can be edite/compiled if public
+            IO.copyPermissions(file, classFile);
+            File formFile = new File(file.getPath().replace(".java", ".form"));
+            if (formFile.exists()){
+                IO.copyPermissions(file, formFile);
+            }
         }         
         return cls;
     }
