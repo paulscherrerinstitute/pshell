@@ -274,7 +274,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     }
                
     public void restartLogger() {        
-        setupLogger(config.getLogPath(), config.getLogLevel(), config.logDaysToLive, config.filePermissionsLogs);
+        setupLogger(config.getLogPath(), config.getLogLevel(), config.logDaysToLive, config.logMaxFileSize, config.filePermissionsLogs);
     }
     
     @Override

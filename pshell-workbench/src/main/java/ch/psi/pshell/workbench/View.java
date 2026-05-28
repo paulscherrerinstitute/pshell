@@ -3994,7 +3994,7 @@ public class View extends MainFrame{
             int rVal = logQueryChooser.showOpenDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
                 File[] files = logQueryChooser.getSelectedFiles();
-                if (files.length > 0) {
+                if (files.length > 0) {                    
                     JPanel panel = new JPanel(new BorderLayout());
                     if (logQueryText == null) {
                         logQueryText = new JTextField();

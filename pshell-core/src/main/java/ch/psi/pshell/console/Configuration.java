@@ -47,6 +47,7 @@ public class Configuration extends Config {
     public SessionHandling sessionHandling = SessionHandling.Off;    
     public String logPath = DEFAULT_LOG_PATH ;
     public int logDaysToLive = -1;
+    public int logMaxFileSize = -1;
     public LogLevel logLevel = LogLevel.Info;
     public NotificationLevel notificationLevel = NotificationLevel.Off;
     public String notificationTasks = "";
@@ -66,7 +67,7 @@ public class Configuration extends Config {
     public String versionTrackingRemote = "";
     public String versionTrackingLogin = "";        
     public int commandQueueSize  = Sequencer.DEFAULT_COMMAND_BUS_SIZE;      
-    public int commandTimeToLive  = Sequencer.DEFAULT_COMMAND_BUS_TIME_TO_LIVE; 
+    public int commandTimeToLive  = Sequencer.DEFAULT_COMMAND_BUS_TIME_TO_LIVE;
     public boolean commandStatistics;
     public boolean serverEnabled;    
     public boolean serverCommandsHidden = false;

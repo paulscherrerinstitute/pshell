@@ -61,7 +61,7 @@ public class View extends MainFrame {
         //loggerPanel.setInverted(true);
         loggerPanel.start();
         logging = new Logging();
-        logging.start(null, 0);
+        logging.start();
         logging.setLevel(Level.FINE);
         logging.setConsoleLoggerLevel(Level.OFF);
         loggerPanel.setVisible(false);

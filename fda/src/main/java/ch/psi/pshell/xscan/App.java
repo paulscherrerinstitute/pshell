@@ -72,7 +72,7 @@ public class App extends ch.psi.pshell.framework.App {
     
     @Override
     protected void onRestart() {                
-        setupLogger(Setup.TOKEN_LOGS + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME, Level.INFO, 7, FilePermissions.Default);        
+        setupLogger(Setup.TOKEN_LOGS + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME, Level.INFO, 7, -1, FilePermissions.Default);        
         try {
             initializeData();
             sequencer.restart(); 

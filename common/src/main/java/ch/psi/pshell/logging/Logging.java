@@ -18,8 +18,10 @@ import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
@@ -41,7 +43,9 @@ public class Logging {
     public static final String FILE_SEPARATOR = " - ";
 
     public static int LAST_LOGS_SIZE = 100;
+    public static int MAX_NUMBER_OF_FILES = 1000;
     ArrayList<String[]> lastLogs = new ArrayList();
+    int maxFileSize = -1;
 
     public static Logging INSTANCE;
     
@@ -120,16 +124,42 @@ public class Logging {
             return sb.toString();
         }
     };       
+        
+    
+    public String getFileName(){
+        if (maxFileSize>1){
+            File dir = new File(fileName).getParentFile();
+            File[] files = dir.listFiles((d, name) ->name.startsWith( IO.getPrefix(fileName)));
+            if (files == null || files.length == 0) {
+                return null;
+            }
+            return Arrays.stream(files)
+                    .max(Comparator.comparingLong(File::lastModified))
+                    .map(File::getAbsolutePath)
+                    .orElse(null);
+
+        }
+        return fileName;
+    }
+    
+    public String getFilePattern(){
+        String ext = IO.getExtension(fileName);
+        return  ext.isEmpty() ? fileName : fileName.substring(0, fileName.length()-ext.length()-1) + "_%g." + ext;        
+    }
+    
+    public void start() {
+        this.start(null);
+    }
+
+    public void start(String fileName) {
+        this.start(fileName, -1, -1);
+    }
     
     
     String fileName;
-    
-    public String getFileName(){
-        return fileName;
-    }
-
-    public void start(String fileName, int daysToLive) {
+    public void start(String fileName, int daysToLive, int maxFileSize) {
         this.fileName = fileName;
+        this.maxFileSize = maxFileSize;
         try {
             if (fileName != null) {
                 String folder = IO.getFolder(fileName);
@@ -149,11 +179,11 @@ public class Logging {
                         ex.printStackTrace();
                     }
                 }
-
-                logFile = new FileHandler(fileName);
+                logFile = maxFileSize<1 ? new FileHandler(fileName) : new FileHandler(getFilePattern(), maxFileSize, MAX_NUMBER_OF_FILES, false);
                 logFile.setFormatter(formatter);
                 IO.setFilePermissions(fileName, filePermissions);
                 addHandler(logFile);
+                       
                 if (daysToLive > 0) {
                     long millisToLive = ((long)daysToLive) * 24 * 3600 * 1000;
                     new Folder(folder).cleanup(millisToLive, true, false, false);
@@ -258,7 +288,12 @@ public class Logging {
     }
 
     public static List<String[]> search(List<String> files, Level level, String origin, String text, Calendar start, Calendar end) throws IOException {
-        Collections.sort(files);
+        //Collections.sort(files);
+        files.sort(Comparator
+                    .comparingLong((String path) -> new File(path).lastModified())
+                    //.reversed()
+                    );
+
         List<String[]> ret = new ArrayList<String[]>();
         for (String file : files) {
             search(file, level, origin, text, start, end, ret);

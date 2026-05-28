@@ -268,19 +268,21 @@ public class App extends ch.psi.pshell.devices.App {
     }
     
     
-    String logFileName;
     public String getLogFileName() {
-        return logFileName;
+        if (Logging.hasInstance()){
+            return Logging.getInstance().getFileName();
+        } 
+        return null;
     }    
                 
-    public void setupLogger(String path, Level level, int daysToLive, FilePermissions permissions) {
+    public void setupLogger(String path, Level level, int daysToLive, int logMaxFileSize, FilePermissions permissions) {
         if (Logging.hasInstance()){
             //!!! Should change permissions if changed?
         } else {
             logging = new Logging(permissions);
         }
-        logFileName = Setup.expandPath(path + ".log");
-        Logging.getInstance().start(logFileName, Setup.isLocal() ? -1 : daysToLive);
+        String logFileName = Setup.expandPath(path + ".log");
+        Logging.getInstance().start(logFileName, Setup.isLocal() ? -1 : daysToLive, logMaxFileSize);
         Logging.getInstance().setLevel(level);
     }
    
