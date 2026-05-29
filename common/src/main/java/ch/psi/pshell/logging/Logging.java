@@ -258,8 +258,15 @@ public class Logging {
 
         String level = Str.capitalizeFirst(record.getLevel().toString().toLowerCase());
         String description = record.getMessage();
-        if (record.getThrown() != null) {
-            description = record.getThrown().toString();
+        Throwable t = record.getThrown();
+        if (t!= null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(t.toString());
+            sb.append("\nStack trace:");
+            StringWriter stackTrace = new StringWriter();
+            t.printStackTrace(new PrintWriter(stackTrace));
+            sb.append("\n").append(stackTrace.toString());
+            description = sb.toString();
         } else {
             Object[] parameters = record.getParameters();
             if (parameters != null && parameters.length > 0) {

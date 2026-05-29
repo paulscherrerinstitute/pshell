@@ -5,6 +5,7 @@ import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.utils.Str;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.io.BufferedReader;
@@ -89,6 +90,25 @@ public class LoggerPanel extends MonitoredPanel {
                 }
 
                 table.setToolTipText(tooltip);
+            }
+        });
+        
+        table.addMouseListener(new MouseAdapter(){
+            public void mousePressed(MouseEvent e) {
+                if (e.getClickCount() == 2)  {
+                    try {
+                        int row = table.rowAtPoint(e.getPoint());
+                        if ((row >= 0) && (row < table.getRowCount())) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("Timestamp: ").append(table.getValueAt(row, 0));
+                            sb.append(" ").append(table.getValueAt(row, 1));
+                            sb.append("\nOrigin: ").append(table.getValueAt(row, 2));
+                            sb.append("\nLevel: ").append(table.getValueAt(row, 3));
+                            SwingUtils.showScrollableMessage(getTopLevelAncestor(), "Log Details", sb.toString(), String.valueOf(table.getValueAt(row, 4)));
+                        }
+                    } catch (Exception ex) {
+                    }                    
+                }
             }
         });
     }
