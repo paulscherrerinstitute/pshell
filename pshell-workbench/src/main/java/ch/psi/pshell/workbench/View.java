@@ -10,11 +10,14 @@ import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePanelFactory;
+import ch.psi.pshell.extension.Extensions;
+import ch.psi.pshell.extension.Plugin;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Executor;
 import ch.psi.pshell.framework.MainFrame;
 import ch.psi.pshell.framework.Options;
 import ch.psi.pshell.framework.Panel;
+import ch.psi.pshell.framework.CommandsPanel;
 import ch.psi.pshell.framework.Processor;
 import ch.psi.pshell.framework.QueueProcessor;
 import ch.psi.pshell.framework.Restart;
@@ -1713,6 +1716,7 @@ public class View extends MainFrame{
         menuViewPanels1 = new javax.swing.JMenu();
         menuOutput = new javax.swing.JCheckBoxMenuItem();
         menuScanPanel = new javax.swing.JCheckBoxMenuItem();
+        checkShowCommands = new javax.swing.JCheckBoxMenuItem();
         menuTerminal = new javax.swing.JCheckBoxMenuItem();
         jSeparator8 = new javax.swing.JPopupMenu.Separator();
         menuCloseAllPlots = new javax.swing.JMenuItem();
@@ -2886,6 +2890,15 @@ public class View extends MainFrame{
             }
         });
         menuViewPanels1.add(menuScanPanel);
+
+        checkShowCommands.setText(bundle.getString("View.checkShowCommands.text")); // NOI18N
+        checkShowCommands.setName("checkShowCommands"); // NOI18N
+        checkShowCommands.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkShowCommandsActionPerformed(evt);
+            }
+        });
+        menuViewPanels1.add(checkShowCommands);
 
         menuView.add(menuViewPanels1);
 
@@ -4440,6 +4453,21 @@ public class View extends MainFrame{
         }
     }//GEN-LAST:event_menuXscanActionPerformed
 
+    Plugin commandsPlugin;
+    private void checkShowCommandsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkShowCommandsActionPerformed
+        try {
+            if (commandsPlugin!=null){
+                Extensions.getInstance().unloadPlugin(commandsPlugin);
+            }
+            if (checkShowCommands.isSelected()){
+                commandsPlugin = Extensions.getInstance().loadPluginClass(CommandsPanel.class);
+                Extensions.getInstance().startPlugin(commandsPlugin);
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_checkShowCommandsActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -4453,6 +4481,7 @@ public class View extends MainFrame{
     private javax.swing.JButton buttonSave;
     private javax.swing.JButton buttonStep;
     private javax.swing.JButton buttonStopAll;
+    private javax.swing.JCheckBoxMenuItem checkShowCommands;
     private ch.psi.pshell.swing.DataPanel dataPanel;
     private ch.psi.pshell.swing.DevicePoolPanel devicesPanel;
     private javax.swing.Box.Filler filler1;

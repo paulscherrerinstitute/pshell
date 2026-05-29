@@ -39,6 +39,11 @@ import java.awt.image.FilteredImageSource;
 import java.awt.image.RGBImageFilter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -88,6 +93,7 @@ import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.Element;
 import javax.swing.text.JTextComponent;
@@ -1550,6 +1556,55 @@ public class SwingUtils {
         pCons.setConstraint(SpringLayout.SOUTH, y);
         pCons.setConstraint(SpringLayout.EAST, x);
     }
+    
+    //Table saving
+    public static void writeTableToCsv(JTable table, Writer writer) throws IOException {
+        TableModel model = table.getModel();
+        try (BufferedWriter bw = new BufferedWriter(writer)) {
+            // Write column headers
+            for (int i = 0; i < model.getColumnCount(); i++) {
+                bw.write(escapeCSV(model.getColumnName(i)));
+
+                if (i < model.getColumnCount() - 1) {
+                    bw.write(",");
+                }
+            }
+            bw.newLine();
+            for (int row = 0; row < model.getRowCount(); row++) {
+                for (int col = 0; col < model.getColumnCount(); col++) {
+                    Object value = model.getValueAt(row, col);
+                    bw.write(escapeCSV(value == null ? "" : value.toString()));
+                    if (col < model.getColumnCount() - 1) {
+                        bw.write(",");
+                    }
+                }
+                bw.newLine();
+            }
+        }
+    }
+
+    public static void saveTableToCsv(JTable table, String filePath) throws IOException {
+        try (Writer writer = new FileWriter(filePath)) {
+            writeTableToCsv(table, writer);
+        }        
+    }
+        
+    public static void copyTableAsCsv(JTable table) throws IOException {
+        try (Writer writer = new StringWriter()) {
+            writeTableToCsv(table, writer);
+            StringSelection selection = new StringSelection(writer.toString());
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
+        }
+    }
+
+    // Handles commas, quotes, and newlines properly
+    private static String escapeCSV(String value) {
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            value = value.replace("\"", "\"\"");
+            return "\"" + value + "\"";
+        }
+        return value;
+    }    
 
     //Color 
     public static int getLuminance(Color color) {

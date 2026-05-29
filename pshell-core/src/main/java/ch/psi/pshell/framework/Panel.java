@@ -485,7 +485,11 @@ public class Panel extends MonitoredPanel implements Plugin {
             if (updating.compareAndSet(false, true)) {
                 SwingUtilities.invokeLater(() -> {
                     updating.set(false);
-                    doUpdate();
+                    try{
+                        doUpdate();
+                    } catch (Exception ex){
+                        getLogger().log(Level.WARNING, null, ex);
+                    }
                 });
             }
             disregardedUpdateRequest = false;

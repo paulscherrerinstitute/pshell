@@ -162,7 +162,10 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     public final void update(boolean deferred) {
         if ((!deferred) && (isOffscreen() || SwingUtilities.isEventDispatchThread())) {
             updating.set(false);
-            doUpdate();
+            try {
+                doUpdate();
+            } catch (Exception ex) {
+            }                
         } else {
             if (updating.compareAndSet(false, true)) {
                 invokeLater(() -> {

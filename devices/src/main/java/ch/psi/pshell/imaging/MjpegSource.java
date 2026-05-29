@@ -68,17 +68,18 @@ public class MjpegSource extends SourceBase {
     protected void doSetMonitored(boolean value) {
         if (value && (monitoringThread == null)) {
             monitoringThread = new Thread(() -> {
-                try {
-                    while (true) {
-                        try {
-                            doUpdate();
-                            Thread.sleep(1);
-                        } catch (IOException ex) {
-                            getLogger().log(Level.FINER, null, ex);
-                        }
+                while (true) {
+                    try {
+                        doUpdate();
+                        Thread.sleep(1);
+                    } catch (InterruptedException ex) {
+                        return;
+                    } catch (IOException ex) {
+                        getLogger().log(Level.FINER, null, ex);
+                    } catch (Exception ex) {
+                        getLogger().log(Level.WARNING, null, ex);
+                        return;
                     }
-                } catch (InterruptedException ex) {
-                    return;
                 }
             });
             monitoringThread.setDaemon(true);

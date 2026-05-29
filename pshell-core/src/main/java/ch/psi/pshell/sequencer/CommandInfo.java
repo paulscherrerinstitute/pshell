@@ -78,6 +78,26 @@ public class CommandInfo {
             parent.setAborted();
         }        
     }      
+    
+    public enum Status{
+        Running,
+        Aborted,
+        Error,
+        Success
+    }
+    
+    public Status getStatus(){
+        if (isRunning()){
+            return Status.Running;
+        }
+        if (isAborted()){
+            return Status.Aborted;
+        }
+        if (isError()){
+            return Status.Error;
+        }
+        return Status.Success;
+    }
 
     public Object getResult() {
         return result;

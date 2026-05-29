@@ -152,13 +152,17 @@ public class Extensions implements AutoCloseable {
     public Plugin loadPluginClass(String className) {
         try {
             Class c = Class.forName(className, true, Sys.getDynamicClassLoader());
-            return loadPluginClass(c, null);
+            return loadPluginClass(c);
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Error resolving plugin class: {0} - {1}", new Object[]{className, ex.getMessage()});
         }
         return null;
     }
-
+    
+    public Plugin loadPluginClass(Class cls) {
+        return loadPluginClass(cls, null);
+    }
+    
     public Plugin loadPluginClass(Class cls, File file) {
         try {
             if (loadedPluginClass(cls.getName())) {
