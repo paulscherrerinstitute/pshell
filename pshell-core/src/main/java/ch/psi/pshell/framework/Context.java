@@ -184,6 +184,10 @@ public class Context {
     
     public static void abortScans() throws InterruptedException{
         getSequencer().abortScans();
+    }        
+    
+    public static boolean isForegroundScan(Scan scan){
+        return getSequencer().isForegroundScan(scan);
     }
 
     public static ScanConfig getScanConfig(){
@@ -752,6 +756,12 @@ public class Context {
         }
     }
     
+    public static void abortAll() throws InterruptedException {      
+        if (hasSequencer()){
+             getSequencer().abortAll();
+        }
+    }
+
     public static boolean isAborted(){
         return hasSequencer() ? getSequencer().isAborted() : false;
     }        

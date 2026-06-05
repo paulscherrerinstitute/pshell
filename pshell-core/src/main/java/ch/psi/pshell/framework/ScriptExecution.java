@@ -30,7 +30,7 @@ public class ScriptExecution extends Task {
                     if (!isDone() && statements != null) {
                         //if ((Context.hasView()) && (!Context.getView().hasOngoingScan())) {
                         //!!! Test
-                        if (Context.getSequencer().getVisibleScans().length==0){  
+                        if (Context.getSequencer().getRunningScans().length==0){  
                             //Scan progress has priority
                             setProgress((int) (((double) statement.number) * 100 / statements.length));
                         }

@@ -116,6 +116,9 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
     }
 
     public static final String INTERPRETER_THREAD = "MainThread";    
+    public static final String INTERPRETER_THREAD_GROUP = "interpreter";    
+    
+    final ThreadGroup interpreterThreadGroup;    
 
     public Sequencer() {
         this(DEFAULT_COMMAND_BUS_SIZE,DEFAULT_COMMAND_BUS_TIME_TO_LIVE);
@@ -156,6 +159,8 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         executionPars.put(null, new ExecutionParameters());
         builtinFunctionsNames = new String[0];
         builtinFunctionsDoc = new HashMap<>();
+        
+        interpreterThreadGroup = new ThreadGroup(INTERPRETER_THREAD_GROUP);
     }
     
     //Configuration
@@ -848,6 +853,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         debug,
         then,
         abort,
+        abortAll,
         updateAll,
         stopAll,
         stopDevice,
@@ -1030,7 +1036,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             injections.put("run_count", runCount);
 
             interpreterExecutor = Executors.newSingleThreadExecutor((Runnable runnable) -> {
-                interpreterThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, INTERPRETER_THREAD);
+                interpreterThread = new Thread(interpreterThreadGroup, runnable, INTERPRETER_THREAD);
                 return interpreterThread;
             });
 
@@ -1123,7 +1129,12 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     public boolean abort(final CommandSource source, long commandId) throws InterruptedException {
         onCommand(Command.abort, new Object[]{commandId}, source);
-        return commandBus.abort(source, commandId);
+        CommandInfo cmd = commandBus.getCommand(commandId);
+        if (cmd != null) {        
+            abortScans(cmd.thread);
+            return commandBus.abort(commandId);
+        }
+        return false;
     }
 
     boolean join(long commandId) throws InterruptedException {
@@ -1847,9 +1858,19 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                     .getName()).log(Level.WARNING, null, ex);
         }
     }
-
+    
     public void abort(final CommandSource source) throws InterruptedException {
         onCommand(Command.abort, null, source);
+        abort(false);
+    }
+    
+    public void abortAll(final CommandSource source) throws InterruptedException {
+        onCommand(Command.abortAll, null, source);
+        abort(true);
+    }
+
+    
+    protected void abort(boolean all) throws InterruptedException {
         if ((getState() == State.Initializing)) {
             try {
                 if (restartThread != null) {
@@ -1865,13 +1886,16 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
                 cmd.setAborted();
             }
             //TODO: This is also killing background acans. Should not be only foreground?
-            abortScans();
+            abortScans(all);
             synchronized (runningScans) {
                 runningScans.clear();
             }
             if (interpreter != null) {
                 interpreter.abort();
             }
+        } else if (all){
+            abortScans(true);            
+            commandBus.abortBackground();
         }
 
         if (interpreter != null) {
@@ -1879,17 +1903,37 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         }
     }
     
+    public boolean isForegroundScan(Scan scan){
+        ThreadGroup t = scan.getThread().getThreadGroup();
+        while (t!=null){
+            if (t.getName().equals(INTERPRETER_THREAD_GROUP)){
+                return true;
+            }
+            t=t.getParent();
+        }
+        return false;
+    }
+    
     public void abortScans() throws InterruptedException{
+        abortScans(true);
+    }
+    
+    public void abortScans(boolean background) throws InterruptedException{
         for (Scan scan : getRunningScans()) {
-            scan.abort();
+            if (background || isForegroundScan(scan)){
+                scan.abort();
+            }
         }        
     }
-
-    public void abortVisibleScans() throws InterruptedException{
-        for (Scan scan : getVisibleScans()) {
-            scan.abort();
+    
+    public void abortScans(Thread thread) throws InterruptedException{
+        for (Scan scan : getRunningScans()) {
+            if (scan.getThread().equals(thread)){
+                scan.abort();
+            }
         }        
     }
+    
 
     public boolean isAborted() {
         return aborted;
@@ -2480,10 +2524,12 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         return false;
     }
 
-    public boolean hasPausableScan() {
+    public boolean hasForegroundPausableScan() {
         for (Scan scan : getRunningScans()) {
-            if (!scan.isPaused() && !scan.isAborted() && scan.canPause()) {
-                return true;
+            if (isForegroundScan(scan)){
+                if (!scan.isPaused() && !scan.isAborted() && scan.canPause()) {
+                    return true;
+                }
             }
         }
         return false;
@@ -2491,7 +2537,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
 
     @Hidden
     public boolean canPause() {
-        if (hasPausableScan()) {
+        if (hasForegroundPausableScan()) {
             return true;
         }
         if (isRunningStatements()) {
@@ -2860,16 +2906,27 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         }
     }
     
-    public Scan[] getVisibleScans() {
+    public Scan[] getInterpreterThreadScans() {
+        return getThreadScans(getInterpreterThread());
+    }
+    
+    public Scan[] getThreadScans(Thread t) {
         var ret = new ArrayList<Scan>();
         for (Scan scan: getRunningScans()){
-            if (!scan.isHidden()){
+            if (scan.getThread()==t){
                 ret.add(scan);
-            }
+            } else {
+                 var tct = commandBus.getThreadCommand(t, true);
+                 var tcs = commandBus.getThreadCommand(scan.getThread(), true);
+                
+                if ((tct!=null) && (tct.equals(tcs))){
+                    ret.add(scan);
+                }
+            }     
         }
         return ret.toArray(new Scan[0]);            
     }    
-
+    
     Thread restartThread;
     RandomAccessFile lockFile;
 
@@ -3309,8 +3366,14 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
         injectVars(getPublicCommandSource());
     }
 
+    //Abort forground task and scans
     public void abort() throws InterruptedException {
         abort(getPublicCommandSource());
+    }
+
+    //Abort forground task and scans
+    public void abortAll() throws InterruptedException {
+        abortAll(getPublicCommandSource());
     }
 
     public boolean abort(long commandId) throws InterruptedException {

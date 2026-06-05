@@ -6,6 +6,8 @@ import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Time;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.List;
 import javax.swing.AbstractAction;
@@ -13,6 +15,8 @@ import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
@@ -45,6 +49,37 @@ public class CommandsPanel extends Panel{
         });            
     }
 
+    void checkPopup(MouseEvent evt) {
+        try {
+            if (evt.isPopupTrigger()) {
+                int row = table.getSelectedRow();
+                if (row >=0){
+                    int i = table.convertRowIndexToModel(row);       
+                    Long cmdId = ((Number) model.getValueAt(i, 0)).longValue();
+                    String status = Str.toString(model.getValueAt(i, 7));                    
+                    JPopupMenu popupMenu = new JPopupMenu();
+                    JMenuItem menuAbort = new JMenuItem("Abort");
+                    menuAbort.addActionListener((ActionEvent e) -> {
+                        try {
+                            Context.getSequencer().abort(cmdId);
+                            update();
+                        } catch (Exception ex) {
+                            showException(ex);
+                        }
+                    });
+                    menuAbort.setEnabled(status.equals(CommandInfo.Status.Running.toString()));
+                    popupMenu.add(menuAbort);
+                    popupMenu.show(evt.getComponent(), evt.getX(), evt.getY());
+                }
+
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }
+
+    
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -123,6 +158,9 @@ public class CommandsPanel extends Panel{
         });
         table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                tableMousePressed(evt);
+            }
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 tableMouseReleased(evt);
             }
@@ -375,6 +413,7 @@ public class CommandsPanel extends Panel{
 
     private void tableMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMouseReleased
         updateDetails();
+        checkPopup(evt);
     }//GEN-LAST:event_tableMouseReleased
 
     private void ckeckDetailsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckeckDetailsActionPerformed
@@ -388,6 +427,10 @@ public class CommandsPanel extends Panel{
             showException(ex);
         }     
     }//GEN-LAST:event_buttonCopyActionPerformed
+
+    private void tableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMousePressed
+        checkPopup(evt);
+    }//GEN-LAST:event_tableMousePressed
 
     @Override
     public void onStart() {
@@ -455,7 +498,7 @@ public class CommandsPanel extends Panel{
                 updateText(txtParent,(model.getValueAt(i, 1)==null) ? "" : Str.toString(model.getValueAt(i, 1)));
                 updateText(txtThread,Str.toString(model.getValueAt(i, 2)));
                 updateText(txtSource,Str.toString(model.getValueAt(i, 3)));
-                checkBack.setSelected(Str.toString(model.getValueAt(i, 3)).equalsIgnoreCase("true"));
+                checkBack.setSelected(Str.toString(model.getValueAt(i, 4)).equalsIgnoreCase("true"));
                 updateText(txtCmd,Str.toString(model.getValueAt(i, 5)));
                 updateText(txtArgs,Str.toString(model.getValueAt(i, 6)));
                 updateText(txtStatus,Str.toString(model.getValueAt(i, 7)));

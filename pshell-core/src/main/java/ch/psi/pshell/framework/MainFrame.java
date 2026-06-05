@@ -265,6 +265,15 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
     
     public void startScanPlot(Scan scan, String title){
         synchronized (plotTitles) {
+            //Priority to running foreground plots
+            if (!Context.isForegroundScan(scan)){
+                for (Scan s : plotTitles.keySet()){
+                    if (s.isRunning() && Context.isForegroundScan(s)){
+                        return;
+                    }
+                }
+            }
+                                
             plotTitles.put(scan, title);
             if (!Context.getExecutionPars().isScanDisplayed(scan)){
                 return;
@@ -344,8 +353,13 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
                     currentProcessor = null;
                 }
                 if ((state == State.Busy) && !former.isProcessing()) {
-                    synchronized (plotTitles) {
-                        plotTitles.clear();
+                    var foregroundScans = new ArrayList<Scan>();
+                    synchronized (plotTitles) {                    
+                        //plotTitles.clear();                        
+                        //Keeping background scan plots if state changes
+                        plotTitles.entrySet().removeIf(
+                            entry -> Context.isForegroundScan(entry.getKey())
+                        );                        
                     }
                 }
                 

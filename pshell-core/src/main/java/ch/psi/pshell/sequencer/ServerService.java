@@ -818,6 +818,16 @@ public class ServerService {
     }
 
     @GET
+    @Path("abortAll")
+    public void abortAll() throws ExecutionException {
+        try {
+            sequencer.abortAll(CommandSource.server);
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+
+    @GET
     @Path("pause")
     public void pause() throws ExecutionException {
         try {
@@ -845,7 +855,7 @@ public class ServerService {
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
-    }
+    }       
 
     @GET
     @Path("result")

@@ -2,6 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
+import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.logging.Logging;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
@@ -49,7 +50,13 @@ public class ScanPanel extends MonitoredPanel {
         if (!Sequencer.getInstance().getExecutionPars().isScanDisplayed(scan)){
             return;
         }
-
+        
+        if (!Context.isForegroundScan(scan)){
+            if ((this.scan!=null) && this.scan.isRunning() && Context.isForegroundScan(this.scan)){
+                return;
+            }
+        }
+        
         ArrayList<String> columns = new ArrayList<>();
         columns.add("Time");
         columns.add("Index");

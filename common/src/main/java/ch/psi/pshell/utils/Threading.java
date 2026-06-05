@@ -41,9 +41,10 @@ public class Threading {
         }
         List<Future> futures = new ArrayList<>();
         if (threads>0){
-            ExecutorService executor = (poolName != null)
-                    ? Executors.newFixedThreadPool(threads, new NamedThreadFactory(poolName, null, true))
-                    : Executors.newFixedThreadPool(threads);
+            ExecutorService executor = Executors.newFixedThreadPool(threads, new NamedThreadFactory(poolName, null, Thread.currentThread().getThreadGroup(), true));
+            //ExecutorService executor = (poolName != null)
+            //        ? Executors.newFixedThreadPool(threads, new NamedThreadFactory(poolName, null, Thread.currentThread().getThreadGroup(), true))
+            //        : Executors.newFixedThreadPool(threads);
 
 
             for (Callable callable : callables) {

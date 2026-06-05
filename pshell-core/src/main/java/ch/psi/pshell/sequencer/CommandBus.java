@@ -296,12 +296,35 @@ public class CommandBus implements AutoCloseable {
                 .toList(); 
     }    
     
+    public boolean abortForeground() throws InterruptedException {
+        boolean aborted = false;
+        for (CommandInfo ci : getQueue()) {
+            if (ci.background == false) {
+                ci.abort();
+                aborted = true;
+            }
+        }
+        return aborted;        
+    }
     
-    public boolean abort(final CommandSource source, long id) throws InterruptedException {
+    public boolean abortBackground() throws InterruptedException {
+        boolean aborted = false;
+        for (CommandInfo ci : getQueue()) {
+            if (ci.background == true) {
+                if (ci.isRunning() && ! ci.isAborted()){
+                    ci.abort();
+                    aborted = true;
+                }
+            }
+        }
+        return aborted;        
+    }
+
+    public boolean abort(long id) throws InterruptedException {
         boolean aborted = false;
         for (CommandInfo ci : getQueue()) {
             if (id == -1) {
-                if (ci.background == false) {
+                if (ci.isRunning() && ! ci.isAborted()){
                     ci.abort();
                     aborted = true;
                 }

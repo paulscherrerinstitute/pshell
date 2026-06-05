@@ -195,14 +195,16 @@ public class StatusBar extends ch.psi.pshell.app.StatusBar{
 
         @Override
         public void onScanStarted(Scan scan, final String plotTitle) {
-            setProgress(0);
-            int records = scan.getNumberOfRecords();
-            if (records > 0) {
-                setProgressStep(1.0 / (double) records);
-            } else {
-                setProgressStep(0);
+            if (Context.isForegroundScan(scan)){
+                setProgress(0);
+                int records = scan.getNumberOfRecords();
+                if (records > 0) {
+                    setProgressStep(1.0 / (double) records);
+                } else {
+                    setProgressStep(0);
+                }
+                progressScan = scan;
             }
-            progressScan = scan;
         }
 
         @Override
