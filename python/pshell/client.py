@@ -159,7 +159,19 @@ class PShellClient:
             Format of each log: [date, time, origin, level, description]
 
         """        
-        return self._get_response(self._get("logs"))   
+        return self._get_response(self._get("logs"))
+
+    def get_cmds(self):
+        """Return application commands.
+
+        Args:
+
+        Returns:
+            List of cmds.
+            Format of each log: [id, parent, thread, source, back, command, args, status, start, end, result]
+
+        """
+        return self._get_response(self._get("cmds"))
         
     def get_history(self, index):
         """Access console command history.
@@ -197,20 +209,25 @@ class PShellClient:
         """          
         return self._get_response(self._get("devices"))   
         
-    def abort(self, command_id=None):
+    def abort(self, command_id=None, all=False):
         """Abort execution of command
 
         Args:
             command_id(optional, int): id of the command to be aborted.
-                                       if None (default), aborts the foreground execution. 
+                                       if None (default), aborts the foreground execution.
+           all(optional, bool): Only relevant id id is undefined
+                            If true, aborts all running tasks (foreground and background)
 
         Returns:
 
         """          
         if command_id is None:
-            self._get("abort") 
+            if all:
+                self._get("abortAll")
+            else:
+                self._get("abort")
         else:
-            return self._get("abort/"+str(command_id)) 
+            return self._get("abort/"+str(command_id))
     
     def pause(self):
         """Pause execution of command
