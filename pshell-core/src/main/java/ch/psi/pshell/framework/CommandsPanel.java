@@ -1,11 +1,9 @@
 package ch.psi.pshell.framework;
 
-import ch.psi.pshell.sequencer.CommandBus;
 import ch.psi.pshell.sequencer.CommandInfo;
 import ch.psi.pshell.swing.SwingUtils;
 import ch.psi.pshell.utils.IO;
 import ch.psi.pshell.utils.Str;
-import ch.psi.pshell.utils.Time;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -46,19 +44,24 @@ public class CommandsPanel extends Panel{
                     trs.setSortKeys(null);
                 }
             }
-        });            
+        });  
+        checkUpdateActionPerformed(null);
     }
 
     void checkPopup(MouseEvent evt) {
         try {
             if (evt.isPopupTrigger()) {
-                int row = table.getSelectedRow();
-                if (row >=0){
+                int row = table.rowAtPoint(evt.getPoint());
+                if (row >= 0) {
+                    table.setRowSelectionInterval(row, row);
+                }
+
+                JPopupMenu popupMenu = new JPopupMenu();                                
+                JMenuItem menuAbort = new JMenuItem("Abort Selected");
+                if (row >= 0){
                     int i = table.convertRowIndexToModel(row);       
                     Long cmdId = ((Number) model.getValueAt(i, 0)).longValue();
                     String status = Str.toString(model.getValueAt(i, 7));                    
-                    JPopupMenu popupMenu = new JPopupMenu();
-                    JMenuItem menuAbort = new JMenuItem("Abort");
                     menuAbort.addActionListener((ActionEvent e) -> {
                         try {
                             Context.getSequencer().abort(cmdId);
@@ -68,10 +71,35 @@ public class CommandsPanel extends Panel{
                         }
                     });
                     menuAbort.setEnabled(status.equals(CommandInfo.Status.Running.toString()));
-                    popupMenu.add(menuAbort);
-                    popupMenu.show(evt.getComponent(), evt.getX(), evt.getY());
+                } else {
+                    menuAbort.setEnabled(false);
                 }
 
+                JMenuItem menuAbortAll = new JMenuItem("Abort All");
+                menuAbortAll.addActionListener((ActionEvent e) -> {
+                    try {
+                        Context.getSequencer().abortAll();
+                        update();
+                    } catch (Exception ex) {
+                        showException(ex);
+                    }
+                });
+
+                JMenuItem menuAbortFg = new JMenuItem("Abort Foreground");
+                menuAbortFg.addActionListener((ActionEvent e) -> {
+                    try {
+                        Context.getSequencer().abort();
+                        update();
+                    } catch (Exception ex) {
+                        showException(ex);
+                    }
+                });
+                
+                popupMenu.add(menuAbort);
+                popupMenu.addSeparator();
+                popupMenu.add(menuAbortAll);
+                popupMenu.add(menuAbortFg);
+                popupMenu.show(evt.getComponent(), evt.getX(), evt.getY());
             }
         } catch (Exception ex) {
             showException(ex);
@@ -455,28 +483,13 @@ public class CommandsPanel extends Panel{
     }
     
     protected void doUpdate() {
-        CommandBus cb = Context.getCommandBus();
-        List<CommandInfo> commands = cb.getCommands();
-        model.setRowCount(commands.size());
-        for (int i=0; i<commands.size(); i++){
-            CommandInfo cmd = commands.get(i);
-            model.setValueAt(cmd.id, i, 0);
-            model.setValueAt((cmd.parent==null) ? null : cmd.parent.id, i, 1);            
-            model.setValueAt(cmd.thread.getName(), i, 2);
-            model.setValueAt(cmd.source.toString(), i, 3);
-            model.setValueAt(cmd.background, i, 4);            
-            if ((cmd.script!=null) && (!cmd.script.isBlank())){
-                model.setValueAt(cmd.script, i, 5);
-                model.setValueAt(Str.toString(cmd.args), i, 6);                
-            } else {
-                model.setValueAt(cmd.command, i, 5);
-                model.setValueAt("", i, 6);
+        List<Object[]> ci = Context.getCommandBus().getCommandInfo();
+        model.setRowCount(ci.size());
+        for (int i=0; i<ci.size(); i++){
+            Object[] cmd = ci.get(i);
+            for (int j=0; j<11; j++){
+                model.setValueAt(cmd[j], i, j);
             }
-            CommandInfo.Status status = cmd.getStatus();
-            model.setValueAt(status.toString(), i, 7);
-            model.setValueAt((cmd.start<=0) ? "": Time.timestampToStr(cmd.start), i, 8);
-            model.setValueAt((cmd.end<=0) ? "": Time.timestampToStr(cmd.end), i, 9);
-            model.setValueAt((status==CommandInfo.Status.Running) ? "" : Str.toString(cmd.getResult()), i, 10);            
         }
         updateDetails();
     }    

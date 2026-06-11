@@ -64,6 +64,7 @@
                     updateProgress(0)
                     updateTable($("#table_devices tbody"), [])
                     updateTable($("#table_logs tbody"), [])
+                    updateTable($("#table_cmds tbody"), [])
                     closeScriptMenu()
                     closeDataMenu()
                     enableButtons(false)
@@ -381,10 +382,18 @@
                 });                  
             }
             
+            function abortAll() {
+                $.get(base + '/abortAll', function (data) {
+                }).error(function (xhr, textStatus, errorThrown) {
+                    console.log("Error aborting: ", errorThrown)
+                });                  
+            }
+
             function deselectTab() {
                 $("#console").hide()
                 $("#plots").hide()
                 $("#logs").hide()
+                $("#cmds").hide()
                 $("#devices").hide()
                 $("#scripts").hide()
                 $("#data").hide()                
@@ -392,6 +401,7 @@
                 $("#tab_plots").removeClass("active");                
                 $("#tab_devices").removeClass("active");
                 $("#tab_logs").removeClass("active");                
+                $("#tab_cmds").removeClass("active"); 
                 $("#tab_scripts").removeClass("active");
                 $("#tab_data").removeClass("active");                
             }
@@ -433,6 +443,13 @@
                 $("#logs").show()
                 $("#tab_logs").addClass("active");
                 getLogs();
+            }
+            
+            function onCmds() {
+                deselectTab()
+                $("#cmds").show()
+                $("#tab_cmds").addClass("active");
+                getCmds();
             }
 
             function onScripts() {
@@ -617,6 +634,14 @@
                     console.log("Error getting logs ", errorThrown)
                 });
             }
+            
+            function getCmds() {
+                $.get(base + '/cmds', function (data) {
+                    updateTable($("#table_cmds tbody"), data)
+                }, 'json').error(function (xhr, textStatus, errorThrown) {
+                    console.log("Error getting commands ", errorThrown)
+                });
+            }            
 
             function openLog() {
                 if ($("#openlog").hasClass('active')) {
@@ -992,6 +1017,8 @@
                         getDevices();
                     } else if ($("#logs").is(":visible")) {
                         getLogs();
+                    } else if ($("#cmds").is(":visible")) {
+                        //getCmds();
                     } else if ($("#plots").is(":visible")) {
                         if ((counter%2)==0){
                             getPlotsContexts()                        
@@ -1175,6 +1202,7 @@
                             <li id="tab_plots"><a href="#" onclick="onPlots()">Plots</a></li>
                             <li id="tab_devices"><a href="#" onclick="onDevices()">Devices</a></li>
                             <li id="tab_logs"><a href="#" onclick="onLogs()">Logs</a></li>
+                            <li id="tab_cmds"><a href="#" onclick="onCmds()">Commands</a></li>
                             <li id="tab_scripts"><a href="#" onclick="onScripts()">Scripts</a></li>                            
                             <li id="tab_data"><a href="#" onclick="onData()">Data</a></li>
                         </ul>
@@ -1290,7 +1318,36 @@
                     <tbody></tbody>
                 </table>                        
             </div>                                                                         
-        </div>        
+        </div>       
+        
+        <div id="cmds" class="container-fluid flex-margin" style="display:none">
+            <div class="row borderless-container">                            
+                <button id="abortFg" type="button" class="btn btn-default pull-right header_button" onclick="abort();this.blur()" style="">Abort</button>                                                   
+                <button id="abortAll" type="button" class="btn btn-default pull-right header_button" onclick="abortAll();this.blur()" style="margin-right:10px">KillAll</button>                                                   
+                <button id="updateCmd" type="button" class="btn btn-default pull-right header_button" onclick="getCmds();this.blur()" style="margin-right:10px">Update</button>                                                   
+            </div>   
+            
+            <div class="row table-container">
+                <table id = "table_cmds" class="table row horizontalscroll">                        
+                    <thead><tr>
+                            <th>ID</th>
+                            <th>Parent</th>
+                            <th>Thread</th>
+                            <th>Source</th>
+                            <th>Back</th>
+                            <th>Command</th>
+                            <th>Args</th>
+                            <th>Status</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Result</th>
+                            <th></th>
+                        </tr>   
+                    </thead> 
+                    <tbody></tbody>
+                </table>                        
+            </div>                                                                         
+        </div>                
 
         <div id="scripts" class="container-fluid flex-margin" style="display:none">           
             <div class="row">

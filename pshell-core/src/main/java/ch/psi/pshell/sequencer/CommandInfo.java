@@ -2,6 +2,8 @@ package ch.psi.pshell.sequencer;
 
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.utils.Str;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -70,14 +72,25 @@ public class CommandInfo {
     public boolean isAborted() {
         return aborted;
     }
-    
-    public void setAborted(){
+       
+
+    protected void setAborted(){
         aborted = true;
-        CommandInfo parent = this.parent;
-        if (parent != null){
+        end = System.currentTimeMillis();        
+        if ((parent != null) && (!parent.aborted)){
             parent.setAborted();
         }        
+        for (CommandInfo child : getChildren()){
+            if (!child.aborted){
+                child.setAborted();
+            }
+        }
     }      
+        
+    protected void setResult(Object result){
+        this.result = result;
+        end = System.currentTimeMillis();        
+    }
     
     public enum Status{
         Running,
@@ -108,7 +121,7 @@ public class CommandInfo {
     }
 
     public void abort() throws InterruptedException {
-        aborted = true;
+        setAborted();
         if (background) {
             this.thread.interrupt();
         } else {
@@ -134,6 +147,16 @@ public class CommandInfo {
             return System.currentTimeMillis() - start;
         }
         return end - start;
+    }
+    
+    public List<CommandInfo> getChildren(){
+        var ret = new ArrayList<CommandInfo>();
+        for (CommandInfo ci : Context.getCommandBus().getCommands()){
+            if (ci.parent == this){
+                ret.add(ci);
+            }
+        }
+        return ret;
     }
 
     

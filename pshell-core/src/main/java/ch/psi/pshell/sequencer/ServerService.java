@@ -191,6 +191,18 @@ public class ServerService {
         }
     }
 
+    @GET
+    @Path("cmds")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Object[]> getCommands() {
+        try {
+            List<Object[]> ret = Context.getCommandBus().getCommandInfo();
+            return ret;
+        } catch (Exception ex) {
+        }
+        return new ArrayList<>();
+    }    
+    
     String formatIncomingText(String text) {
         //TODO: I'm not able to encode backslash directly, %5C is not accepted by server.
         //Workaround replacing by a  double dagger is quite ugly.

@@ -3,7 +3,9 @@ package ch.psi.pshell.sequencer;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.pshell.utils.Chrono;
+import ch.psi.pshell.utils.Str;
 import ch.psi.pshell.utils.Threading;
+import ch.psi.pshell.utils.Time;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -89,8 +91,7 @@ public class CommandBus implements AutoCloseable {
                 if (result instanceof PyBaseException) {
                     result = new Exception(result.toString());
                 }
-                info.result = result;
-                info.end = System.currentTimeMillis();
+                info.setResult(result);
 
                 int threshold = (int) ((size>0) ? (size * 0.9) : 100);
                 if (queue.size() >= threshold) {
@@ -432,5 +433,39 @@ public class CommandBus implements AutoCloseable {
     protected void onCommandFinished(CommandInfo info) { 
     }
     
+    public List<Object[]>  getCommandInfo(){
+        List<CommandInfo> commands = getCommands();
+        List<Object[]> ret = new ArrayList<>(commands.size());
+         for (CommandInfo cmd : commands) {
+            Object[] row = new Object[11];
+            row[0] = cmd.id;
+            row[1] = (cmd.parent==null) ? null : cmd.parent.id;
+            row[2] = cmd.thread.getName();
+            row[3] = cmd.source.toString();
+            row[4] = cmd.background;
+            if ((cmd.script!=null) && (!cmd.script.isBlank())){
+                row[5] = cmd.script;
+                row[6] = Str.toString(cmd.args);             
+            } else {
+                row[5] = cmd.command;
+                row[6] = "";
+            }
+            CommandInfo.Status status = cmd.getStatus();
+            row[7] = status.toString();
+            row[8] = (cmd.start<=0) ? "": Time.timestampToStr(cmd.start);
+            row[9] = (cmd.end<=0) ? "": Time.timestampToStr(cmd.end);
+            if  (status==CommandInfo.Status.Running){
+                row[10] = "";
+            } else {
+                String str= Str.toString(cmd.getResult());
+                //Only retiurn 1st line od resuld
+                //int pos = str.indexOf('\n');
+                //str =  pos < 0 ? str : str.substring(0, pos);                
+                row[10] = str;   
+            }
+            ret.add(row);
+        }
+        return ret;
+    }
     
 }
