@@ -39,6 +39,8 @@ public class SerializerTXT implements EventBusListener{
 	private boolean showDimensionHeader = true;
         
         public static final String ITEM_SEPARATOR = "\t";
+        public static final String ARRAY_SEPARATOR = " ";
+        public static final String LINE_SEPARATOR = "\n";
 
 	public SerializerTXT(File file) {
 		this.file = file;
@@ -129,7 +131,7 @@ public class SerializerTXT implements EventBusListener{
 						if (o instanceof double[] oa) {
 							for (double o1 : oa) {
 								buffer.append(o1);
-								buffer.append(" "); // Use space instead of tab
+								buffer.append(ARRAY_SEPARATOR); // Use space instead of tab
 							}
                                                         // Replace last space with tab
 							buffer.replace(buffer.length() - 1, buffer.length() - 1, ITEM_SEPARATOR); 
@@ -137,7 +139,7 @@ public class SerializerTXT implements EventBusListener{
 						else if (o instanceof Object[] oa) {
 							for (Object o1 : oa) {
 								buffer.append(o1);
-								buffer.append(" "); // Use space instead of tab
+								buffer.append(ARRAY_SEPARATOR); // Use space instead of tab
 							}
                                                         // Replace last space with tab
 							buffer.replace(buffer.length() - 1, buffer.length() - 1, ITEM_SEPARATOR);	
@@ -156,7 +158,7 @@ public class SerializerTXT implements EventBusListener{
 					buffer.deleteCharAt(buffer.length() - 1); // Remove last
 																// character
 																// (i.e. \t)
-					buffer.append("\n"); // Append newline
+					buffer.append(LINE_SEPARATOR); // Append newline
 				}
 				writer.write(buffer.toString());
                                 if (flush){                                             

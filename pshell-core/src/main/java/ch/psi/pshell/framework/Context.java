@@ -2,6 +2,7 @@ package ch.psi.pshell.framework;
 
 import ch.psi.pshell.crlogic.CrlogicConfig;
 import ch.psi.pshell.data.DataAddress;
+import ch.psi.pshell.data.DataConfig;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Format;
 import ch.psi.pshell.data.Layout;
@@ -195,6 +196,13 @@ public class Context {
             return getConfig().getScanConfig();
         }
         return new ScanConfig();
+    }     
+
+    public static DataConfig getDataConfig(){
+        if (hasConfig()){
+            return getConfig().getDataConfig();
+        }
+        return new DataConfig();
     }     
     
     public static ch.psi.pshell.extension.Plugin[] getPlugins() {

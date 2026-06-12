@@ -1,6 +1,7 @@
 package ch.psi.pshell.workbench;
 
 import ch.psi.pshell.console.Configuration;
+import ch.psi.pshell.data.DataConfig;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataStore;
 import ch.psi.pshell.data.Format;
@@ -25,6 +26,7 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import ch.psi.pshell.sequencer.SequencerListener;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  *
@@ -147,11 +149,28 @@ public class DataFileDialog extends StandardDialog {
     boolean changedPermissions() {
         return !comboPermissions.getSelectedItem().equals(config.filePermissionsData);
     }    
+    
+    String getItemSep(){
+        return StringEscapeUtils.unescapeJava(txtItemSep.getText());
+    }
   
+    String getArraySep(){
+        return StringEscapeUtils.unescapeJava(txtArraySep.getText());
+    }
+
+    String getLineSep(){
+        return StringEscapeUtils.unescapeJava(txtLineSep.getText());
+    }
     boolean changedData() {
+        DataConfig dc = Context.getDataConfig();
         return (changedFormat() || changedLayout() || changedTruncate()
-                || (checkEmbeddedAttributes.isSelected() != config.dataEmbeddedAttributes)                 
-                || !spinnerDepthDim.getValue().equals(config.dataDepthDimension));
+                || !spinnerDepthDim.getValue().equals(config.dataDepthDimension) 
+                || (checkEmbeddedAttributes.isSelected() != config.dataTextEmbedded)                 
+                || (checkFinalSep.isSelected() != config.dataTextSeparatorFinal)                 
+                || !(getItemSep().equals((dc.textItemSeparator()==null) ? "" : dc.textItemSeparator()))               
+                || !(getArraySep().equals((dc.textArraySeparator()==null) ? "" : dc.textArraySeparator()))               
+                || !(getLineSep().equals((dc.textLineSeparator()==null) ? "" : dc.textLineSeparator()))               
+                );
 
     }
 
@@ -336,18 +355,28 @@ public class DataFileDialog extends StandardDialog {
         jLabel6 = new javax.swing.JLabel();
         textDayIndex = new javax.swing.JTextField();
         jPanel3 = new javax.swing.JPanel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        comboFormat = new javax.swing.JComboBox<>();
-        comboLayout = new javax.swing.JComboBox<>();
-        jLabel7 = new javax.swing.JLabel();
-        spinnerDepthDim = new javax.swing.JSpinner();
-        jLabel16 = new javax.swing.JLabel();
-        comboPermissions = new javax.swing.JComboBox<>();
+        jPanel7 = new javax.swing.JPanel();
         jLabel10 = new javax.swing.JLabel();
         checkEmbeddedAttributes = new javax.swing.JCheckBox();
-        jLabel12 = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
+        checkFinalSep = new javax.swing.JCheckBox();
+        jLabel20 = new javax.swing.JLabel();
+        jLabel21 = new javax.swing.JLabel();
+        jLabel22 = new javax.swing.JLabel();
+        txtItemSep = new javax.swing.JTextField();
+        txtArraySep = new javax.swing.JTextField();
+        txtLineSep = new javax.swing.JTextField();
+        jPanel8 = new javax.swing.JPanel();
+        spinnerDepthDim = new javax.swing.JSpinner();
+        comboFormat = new javax.swing.JComboBox<>();
         checkTruncate = new javax.swing.JCheckBox();
+        comboLayout = new javax.swing.JComboBox<>();
+        jLabel7 = new javax.swing.JLabel();
+        comboPermissions = new javax.swing.JComboBox<>();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel12 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel16 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         ckAutoSave = new javax.swing.JCheckBox();
         ckConvert = new javax.swing.JCheckBox();
@@ -473,7 +502,7 @@ public class DataFileDialog extends StandardDialog {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(buttonTokens)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 193, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 216, Short.MAX_VALUE)
                         .addComponent(buttonPathDefault))
                     .addComponent(textPathExpansion)
                     .addComponent(textPathConfig)
@@ -523,16 +552,127 @@ public class DataFileDialog extends StandardDialog {
 
         jTabbedPane1.addTab("Location", jPanel2);
 
-        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel3.setText("File format:");
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("Text Formats"));
 
-        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel4.setText("Data layout:");
+        jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel10.setText("Embedded:");
+
+        checkEmbeddedAttributes.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkEmbeddedAttributesActionPerformed(evt);
+            }
+        });
+
+        jLabel17.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel17.setText("Final separator:");
+
+        checkFinalSep.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkFinalSepActionPerformed(evt);
+            }
+        });
+
+        jLabel20.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel20.setText("Item separator:");
+
+        jLabel21.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel21.setText("Line separator:");
+
+        jLabel22.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel22.setText("Array Separator:");
+
+        txtItemSep.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtItemSepActionPerformed(evt);
+            }
+        });
+        txtItemSep.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtItemSepKeyReleased(evt);
+            }
+        });
+
+        txtArraySep.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtArraySepKeyReleased(evt);
+            }
+        });
+
+        txtLineSep.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtLineSepKeyReleased(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel17)
+                    .addComponent(jLabel20)
+                    .addComponent(jLabel22)
+                    .addComponent(jLabel21)
+                    .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(checkEmbeddedAttributes)
+                    .addComponent(checkFinalSep)
+                    .addComponent(txtArraySep, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
+                    .addComponent(txtItemSep, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtLineSep, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+
+        jPanel7Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel17, jLabel20, jLabel21, jLabel22});
+
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel20)
+                    .addComponent(txtItemSep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel22)
+                    .addComponent(txtArraySep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel21)
+                    .addComponent(txtLineSep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel17)
+                    .addComponent(checkFinalSep))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel10)
+                    .addComponent(checkEmbeddedAttributes))
+                .addGap(4, 4, 4))
+        );
+
+        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder("General"));
+
+        spinnerDepthDim.setModel(new javax.swing.SpinnerNumberModel(0, 0, 2, 1));
+        spinnerDepthDim.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                spinnerDepthDimStateChanged(evt);
+            }
+        });
 
         comboFormat.setEditable(true);
         comboFormat.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 comboFormatActionPerformed(evt);
+            }
+        });
+
+        checkTruncate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkTruncateActionPerformed(evt);
             }
         });
 
@@ -546,16 +686,6 @@ public class DataFileDialog extends StandardDialog {
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel7.setText("Depth dimension:");
 
-        spinnerDepthDim.setModel(new javax.swing.SpinnerNumberModel(0, 0, 2, 1));
-        spinnerDepthDim.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                spinnerDepthDimStateChanged(evt);
-            }
-        });
-
-        jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel16.setText("File permissions");
-
         comboPermissions.setEditable(true);
         comboPermissions.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -563,81 +693,97 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
-        jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel10.setText("Embedded attributes:");
-
-        checkEmbeddedAttributes.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkEmbeddedAttributesActionPerformed(evt);
-            }
-        });
+        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel4.setText("Data layout:");
 
         jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel12.setText("Truncate:");
 
-        checkTruncate.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkTruncateActionPerformed(evt);
-            }
-        });
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel3.setText("File format:");
+
+        jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel16.setText("File permissions");
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addComponent(jLabel12)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(checkTruncate)
+                        .addGap(101, 101, 101))
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel7)
+                            .addComponent(jLabel16))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(comboLayout, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(comboFormat, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap())
+        );
+
+        jPanel8Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel3, jLabel4, jLabel7});
+
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel3)
+                    .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel4)
+                    .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel16)
+                    .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(checkTruncate)
+                    .addComponent(jLabel12))
+                .addContainerGap())
+        );
+
+        jPanel8Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {comboFormat, comboLayout});
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel7)
-                    .addComponent(jLabel16)
-                    .addComponent(jLabel10)
-                    .addComponent(jLabel12))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(checkEmbeddedAttributes)
-                    .addComponent(checkTruncate))
+                .addContainerGap()
+                .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
-
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel3, jLabel4, jLabel7});
-
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(16, 16, 16)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel3)
-                    .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel4)
-                    .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel16)
-                    .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel7)
-                    .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(checkEmbeddedAttributes)
-                    .addComponent(jLabel10))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(checkTruncate)
-                    .addComponent(jLabel12))
-                .addContainerGap(58, Short.MAX_VALUE))
+                .addGap(14, 14, 14)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {comboFormat, comboLayout});
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jPanel7, jPanel8});
 
         jTabbedPane1.addTab("Format", jPanel3);
 
@@ -712,7 +858,7 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(ckAutoSave)
                     .addComponent(ckScanLazy)
                     .addComponent(ckSaveTimestamps))
-                .addContainerGap(91, Short.MAX_VALUE))
+                .addContainerGap(114, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -733,7 +879,7 @@ public class DataFileDialog extends StandardDialog {
                 .addComponent(ckSaveTimestamps)
                 .addGap(0, 0, 0)
                 .addComponent(ckScanLazy)
-                .addContainerGap(51, Short.MAX_VALUE))
+                .addContainerGap(8, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Scans", jPanel4);
@@ -836,7 +982,7 @@ public class DataFileDialog extends StandardDialog {
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel18)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textTransferPath, javax.swing.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE))
+                        .addComponent(textTransferPath, javax.swing.GroupLayout.DEFAULT_SIZE, 415, Short.MAX_VALUE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel19)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -906,7 +1052,7 @@ public class DataFileDialog extends StandardDialog {
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addComponent(comboNotification, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 265, Short.MAX_VALUE))
+                                .addGap(0, 288, Short.MAX_VALUE))
                             .addComponent(textRecipients)))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(jLabel15)
@@ -932,7 +1078,7 @@ public class DataFileDialog extends StandardDialog {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel15)
                     .addComponent(textTasks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(113, Short.MAX_VALUE))
+                .addContainerGap(70, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Notification", jPanel6);
@@ -999,7 +1145,11 @@ public class DataFileDialog extends StandardDialog {
                 config.dataFormat = String.valueOf(comboFormat.getSelectedItem()).trim();
                 config.dataLayout = String.valueOf(comboLayout.getSelectedItem()).trim();
                 config.dataTruncate = checkTruncate.isSelected();
-                config.dataEmbeddedAttributes = checkEmbeddedAttributes.isSelected();
+                config.dataTextEmbedded = checkEmbeddedAttributes.isSelected();
+                config.dataTextSeparatorFinal = checkFinalSep.isSelected();
+                config.dataTextSeparatorItem = getItemSep();
+                config.dataTextSeparatorArray = getArraySep();
+                config.dataTextSeparatorLine = getLineSep();
                 config.filePermissionsData= (FilePermissions)comboPermissions.getSelectedItem();
                 config.scanAutoSave = ckAutoSave.isSelected();
                 config.scanPreserveTypes = !ckConvert.isSelected();
@@ -1016,12 +1166,10 @@ public class DataFileDialog extends StandardDialog {
                 config.notificationLevel = (NotificationLevel) comboNotification.getSelectedItem();
                 config.notificationTasks = textTasks.getText().trim();               
                 config.save();
-                
-                DataStore.setDefaultDepthDimension(config.dataDepthDimension);
+                                
                 Context.setDataFilePattern(config.getDataPath());                 
                 if (changedData) {
-                    Context.getDataManager().setTruncate(config.getDataTruncate());
-                    Context.getDataManager().initialize(config.getDataFormat(), config.getDataLayout(), config.dataEmbeddedAttributes);
+                    Context.getDataManager().initialize(config.getDataConfig());
                 } 
                 if (changedPermissions){
                     Context.getDataManager().setFilePermissions((FilePermissions)comboPermissions.getSelectedItem());
@@ -1048,11 +1196,16 @@ public class DataFileDialog extends StandardDialog {
 
     private void buttonUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonUndoActionPerformed
         boolean changedFormat = (format == null) || (changedFormat());
+        DataConfig dc = Context.getDataConfig();
         textPathConfig.setText(config.dataPath);
         comboFormat.setSelectedItem(config.dataFormat);
         comboLayout.setSelectedItem(config.dataLayout);
         checkTruncate.setSelected(config.dataTruncate);
-        checkEmbeddedAttributes.setSelected(config.dataEmbeddedAttributes);
+        checkEmbeddedAttributes.setSelected(config.dataTextEmbedded);
+        checkFinalSep.setSelected(config.dataTextSeparatorFinal);
+        txtItemSep.setText((dc.textItemSeparator()==null) ? "" : dc.textItemSeparator());
+        txtArraySep.setText((dc.textArraySeparator()==null) ? "" : dc.textArraySeparator());
+        txtLineSep.setText((dc.textLineSeparator()==null) ? "" : dc.textLineSeparator());
         comboPermissions.setSelectedItem(config.filePermissionsData);
         spinnerSeq.setValue(Context.getFileSequentialNumber());
         int depthDimension = this.config.dataDepthDimension;
@@ -1179,6 +1332,26 @@ public class DataFileDialog extends StandardDialog {
         update();
     }//GEN-LAST:event_checkTruncateActionPerformed
 
+    private void checkFinalSepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkFinalSepActionPerformed
+        update();
+    }//GEN-LAST:event_checkFinalSepActionPerformed
+
+    private void txtItemSepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtItemSepActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtItemSepActionPerformed
+
+    private void txtItemSepKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtItemSepKeyReleased
+        update();
+    }//GEN-LAST:event_txtItemSepKeyReleased
+
+    private void txtArraySepKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtArraySepKeyReleased
+        update();
+    }//GEN-LAST:event_txtArraySepKeyReleased
+
+    private void txtLineSepKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtLineSepKeyReleased
+        update();
+    }//GEN-LAST:event_txtLineSepKeyReleased
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonApply;
     private javax.swing.JButton buttonCancel;
@@ -1190,6 +1363,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JButton buttonTokens;
     private javax.swing.JButton buttonUndo;
     private javax.swing.JCheckBox checkEmbeddedAttributes;
+    private javax.swing.JCheckBox checkFinalSep;
     private javax.swing.JCheckBox checkRSyncAuthorized;
     private javax.swing.JCheckBox checkTruncate;
     private javax.swing.JCheckBox ckAutoSave;
@@ -1213,9 +1387,13 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1228,6 +1406,8 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JSpinner spinnerDepthDim;
     private javax.swing.JSpinner spinnerSeq;
@@ -1238,5 +1418,8 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JTextField textTasks;
     private javax.swing.JTextField textTransferPath;
     private javax.swing.JTextField textTransferUser;
+    private javax.swing.JTextField txtArraySep;
+    private javax.swing.JTextField txtItemSep;
+    private javax.swing.JTextField txtLineSep;
     // End of variables declaration//GEN-END:variables
 }

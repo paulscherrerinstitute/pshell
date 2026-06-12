@@ -1,5 +1,6 @@
 package ch.psi.pshell.xscan;
 
+import ch.psi.pshell.data.DataConfig;
 import ch.psi.pshell.data.LayoutFDA;
 import ch.psi.pshell.framework.App;
 import ch.psi.pshell.framework.Context;
@@ -23,6 +24,10 @@ public class Config extends ch.psi.pshell.utils.Config{
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
     public boolean dataEmbeddedAttributes = false;
+    public String dataSeparatorItem;
+    public String dataSeparatorArray;
+    public String dataSeparatorLine;
+    public boolean dataSeparatorFinal = false;    
     public String dataPath = Setup.TOKEN_DATA + "/" + Setup.TOKEN_YEAR + "_" + Setup.TOKEN_MONTH + "/" + 
                     Setup.TOKEN_DATE + "/" + Setup.TOKEN_DATE + "_" + Setup.TOKEN_TIME + "_" + Setup.TOKEN_EXEC_NAME;
     
@@ -92,6 +97,20 @@ public class Config extends ch.psi.pshell.utils.Config{
     public String getDataLayout() {
         String layout = Setup.getDataLayout();
         return layout == null ? dataLayout : layout;
+    }    
+        
+    public DataConfig getDataConfig(){
+        return new DataConfig(
+            dataFormat,
+            dataLayout,
+            true,
+            0,
+            dataEmbeddedAttributes,
+            dataSeparatorItem,
+            dataSeparatorArray,
+            dataSeparatorLine,
+            dataSeparatorFinal
+        );
     }    
 
 }

@@ -109,18 +109,12 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         super(outputFile, format);
         setLayout(layout);
     }       
-    
+
 
     /**
      * Configures the application data manager for scan persistence
      */
-    public void initialize(String format, String layout) throws Exception {
-        initialize(format, layout, null);
-    }
-    public void initialize(String format, String layout, Boolean embeddedAttributes) throws Exception {
-        initialize(format, layout, embeddedAttributes, null);
-    }
-    public void initialize(String format, String layout, Boolean embeddedAttributes, Boolean truncate) throws Exception {
+    public void initialize(DataConfig config) throws Exception {
         initialized = false;        
         logger.log(Level.INFO, "Initializing {0}", getClass().getSimpleName());
         Context.setDataManager(this);
@@ -128,17 +122,34 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             Context.getSequencer().addScanListener(scanListener);
         }
         closeOutput();
-        if (truncate != null){
+        if (config.truncate() != null){
             setTruncate(truncate);
         }
-        if (embeddedAttributes != null){            
-            if (embeddedAttributes != FormatText.getDefaultEmbeddedAttributes()){                
-                FormatText.setDefaultEmbeddedAttributes(embeddedAttributes);
-                this.format = null; //Forces re-creation
-            }
+        if ((config.textEmbededAttrs() != null) &&(config.textEmbededAttrs() != FormatText.getDefaultEmbeddedAttributes())){                
+            FormatText.setDefaultEmbeddedAttributes(config.textEmbededAttrs());
+            this.format = null; //Forces re-creation
         }
-        setFormat(format);
-        setLayout(layout);
+        if ((config.textItemSeparator()!= null) && (config.textItemSeparator() != FormatText.getDefaultItemSeparator())){                
+            FormatText.setDefaultItemSeparator(config.textItemSeparator());
+            this.format = null; 
+        }
+        if ((config.textArraySeparator()!= null) && (config.textArraySeparator() != FormatText.getDefaultArraySeparator())){                
+            FormatText.setDefaultArraySeparator(config.textArraySeparator());
+            this.format = null; 
+        }
+        if ((config.textLineSeparator()!= null) && (config.textLineSeparator() != FormatText.getDefaultLineSeparator())){                
+            FormatText.setDefaultLineSeparator(config.textLineSeparator());
+            this.format = null; 
+        }
+        if ((config.textFinalSeparator() != null) &&(config.textEmbededAttrs() != FormatText.getDefaultEmbeddedAttributes())){                
+            FormatText.setDefaultEmbeddedAttributes(config.textEmbededAttrs());
+            this.format = null; //Forces re-creation
+        }        
+        if (config.depthDimension()!=null){
+            setDefaultDepthDimension(config.depthDimension());
+        }
+        setFormat(config.format());
+        setLayout(config.layout());        
         logger.log(Level.INFO, "Finished {0} initialization", getClass().getSimpleName());
         initialized = true;
     }

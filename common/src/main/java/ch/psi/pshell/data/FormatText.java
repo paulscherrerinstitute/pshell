@@ -87,6 +87,7 @@ public class FormatText implements Format {
     static String ITEM_SEPARATOR;
     static String ARRAY_SEPARATOR;
     static String LINE_SEPARATOR;
+    static boolean FINAL_SEPARATOR;
 
 
     static boolean EMBEDDED_ATTRIBUTES = false;
@@ -119,8 +120,6 @@ public class FormatText implements Format {
         return NULL_VALUE;
     }
     
-    static boolean IDENTIFY_SEPARATOR = true;
-
     public static void setDefaultItemSeparator(String str) {
         ITEM_SEPARATOR = str;
     }
@@ -153,14 +152,15 @@ public class FormatText implements Format {
         }
         return LINE_SEPARATOR;
     }
-
-    public static void setIdentifySeparator(boolean str) {
-        IDENTIFY_SEPARATOR = str;
+    
+    public static void setDefaultFinalSeparator(String str) {
+        ITEM_SEPARATOR = str;
     }
 
-    public static boolean getIdentifySeparator() {
-        return IDENTIFY_SEPARATOR;
+    public static boolean getDefaultFinalSeparator() {
+        return FINAL_SEPARATOR;
     }
+    
 
     String itemSeparator = getDefaultItemSeparator();
     String arraySeparator = getDefaultArraySeparator();
@@ -187,7 +187,7 @@ public class FormatText implements Format {
         orderedAtributes = value;
     }
     
-    boolean finalSeparator = false;
+    boolean finalSeparator = FINAL_SEPARATOR;
 
     public boolean getFinalSeparator() {
         return finalSeparator;
@@ -785,7 +785,7 @@ public class FormatText implements Format {
                             if (composite) {
                                 String separator = getItemSeparator();
                                 Object sep = info.get(INFO_ITEM_SEPARATOR);
-                                if ((sep instanceof String s) && !s.isBlank()) {
+                                if ((sep instanceof String s) && !s.isEmpty()) {
                                     separator = s;
                                 }                     
                                 Object[] record = getRecord(line, separator, fieldTypes);

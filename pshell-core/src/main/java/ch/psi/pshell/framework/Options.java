@@ -75,8 +75,8 @@ public enum Options implements Option {
     public static void addInterpreter(){   
         USER.add("user", "Set the startup user");        
         SCRIPT_TYPE.add("type", "Set the script type, overriding the setup: py, cpy, jv or groovy");        
-        DATA_FORMAT.add("dfmt", "Set the data format, overriding the configuration: h5, txt, csv or fda");        
-        DATA_LAYOUT.add("dlay", "Set the data layout, overriding the configuration: default, table, sf or fda");
+        DATA_FORMAT.add("dfmt", "Set the data format, overriding the configuration: h5, txt, csv or tiff");        
+        DATA_LAYOUT.add("dlay", "Set the data layout, overriding the configuration: default, table, sf");
         DATA_TRUNCATE.add("dtru", "Set if truncate existing data files (default=true)");        
         DISABLE_PLOT.add("dspl", "Disable scan plots");
         DISABLE_PRINT.add("dspr", "Disable printing scans to console");   

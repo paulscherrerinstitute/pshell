@@ -1,5 +1,6 @@
 package ch.psi.pshell.console;
 
+import ch.psi.pshell.data.DataConfig;
 import ch.psi.pshell.framework.Config;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Context.DataTransferMode;
@@ -33,7 +34,11 @@ public class Configuration extends Config {
     public String dataFormat = "h5";
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
-    public boolean dataEmbeddedAttributes = false;
+    public boolean dataTextEmbedded = false;
+    public String dataTextSeparatorItem;
+    public String dataTextSeparatorArray;
+    public String dataTextSeparatorLine;
+    public boolean dataTextSeparatorFinal = false;
     public boolean dataTruncate = true;
     public int dataDepthDimension = 0;    
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
@@ -121,11 +126,13 @@ public class Configuration extends Config {
             pythonHome= "";
         }
         updateScanConfig();
+        updateDataConfig();
     }
     
     public void save() throws IOException {
         super.save();
         updateScanConfig();
+        updateDataConfig();
     }
 
     public Level getLogLevel() {
@@ -196,7 +203,30 @@ public class Configuration extends Config {
         return scanConfig;
     }
     
+    private DataConfig dataConfig;
+    private void updateDataConfig(){
+        dataConfig = new DataConfig(
+            dataFormat,
+            dataLayout,
+            dataTruncate,
+            dataDepthDimension,
+            dataTextEmbedded,
+            dataTextSeparatorItem,
+            dataTextSeparatorArray,
+            dataTextSeparatorLine,
+            dataTextSeparatorFinal);
+    }
+    
+    
+    @Override
+    public DataConfig getDataConfig(){
+        if (dataConfig==null){
+            updateDataConfig();
+        }
+        return dataConfig;
+    }
 
+    
     public boolean isServerEnabled() {
         return (Setup.isServerMode() || serverEnabled) && (serverPort > 0) && !Setup.isLocal();
     }

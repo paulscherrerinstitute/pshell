@@ -1,6 +1,7 @@
 
 package ch.psi.pshell.stripchart;
 
+import ch.psi.pshell.data.DataConfig;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.framework.Context;
@@ -113,7 +114,7 @@ public class App extends ch.psi.pshell.framework.App{
 
             if (!Context.hasDataManager()){
                 DataManager dataManager = new DataManager();            
-                dataManager.initialize("h5", "table");                    
+                dataManager.initialize(new DataConfig("h5", "table"));                    
             }
             if (!Context.hasSequencer()){
                 ch.psi.pshell.framework.Options.DISABLED.set();

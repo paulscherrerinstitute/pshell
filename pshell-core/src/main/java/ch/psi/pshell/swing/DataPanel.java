@@ -1854,7 +1854,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     if (file.isFile()){
                         format = "h5";
                     } else {
-                        format = "txt";
+                        format = "tiff";
                     }
                 } else {                    
                     format = DataStore.getGlobal().getFormat().getId();

@@ -24,8 +24,8 @@ import ch.psi.pshell.app.Option;
         ch.psi.pshell.framework.Options.VOLATILE.add("z", "Home folder is volatile (created in tmp folder)");              
         ch.psi.pshell.app.Options.addPath();
         addSpecific();
-        ch.psi.pshell.framework.Options.DATA_FORMAT.add("dfmt", "Set the data format, overriding the configuration: h5, txt, csv or fda");        
-        ch.psi.pshell.framework.Options.DATA_LAYOUT.add("dlay", "Set the data layout, overriding the configuration: default, table, sf or fda");                        
+        ch.psi.pshell.framework.Options.DATA_FORMAT.add("dfmt", "Set the data format, overriding the configuration: h5, txt, csv or tiff");        
+        ch.psi.pshell.framework.Options.DATA_LAYOUT.add("dlay", "Set the data layout, overriding the configuration: default, table or sf");                        
     }    
         
 }

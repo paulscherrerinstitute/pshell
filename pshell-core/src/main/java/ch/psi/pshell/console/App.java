@@ -133,9 +133,7 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
     
     void initializeData() throws Exception{
         Context.setDataFilePattern(config.getDataPath()); 
-        FormatText.setDefaultEmbeddedAttributes(config.dataEmbeddedAttributes);
-        dataManager.initialize(config.getDataFormat(), config.getDataLayout(), config.dataEmbeddedAttributes, config.getDataTruncate());                                
-        DataStore.setDefaultDepthDimension(config.getDepthDim());
+        dataManager.initialize(config.getDataConfig());                                        
     }
         
      
