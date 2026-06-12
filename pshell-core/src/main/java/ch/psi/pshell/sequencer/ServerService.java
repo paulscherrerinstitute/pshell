@@ -113,7 +113,8 @@ public class ServerService {
     @Path("version")
     @Produces(MediaType.TEXT_PLAIN)
     public String getVersion() {
-        String version = getClass().getPackage().getImplementationVersion();
+        //String version = getClass().getPackage().getImplementationVersion();
+        String version = Context.getApp().getApplicationVersion();
         if (version == null) {
             version = "0.0.0";
         }
