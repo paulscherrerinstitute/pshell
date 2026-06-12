@@ -205,7 +205,9 @@ public class Logging {
         @Override
         public void publish(LogRecord record) {
             synchronized (lastLogs) {
-                lastLogs.add(parseLogRecord(record));
+                String[] log = parseLogRecord(record);
+                log[4] = Str.toHtml(log[4]);
+                lastLogs.add(log);
                 if (lastLogs.size() >= LAST_LOGS_SIZE) {
                     lastLogs.remove(0);
                 }
@@ -237,6 +239,7 @@ public class Logging {
             return (ArrayList<String[]>) lastLogs.clone();
         }
     }
+    
     public static void setConsoleLoggerLevel(Level level) {
         for (Handler handler : Logger.getLogger("").getHandlers()) {
             if (handler instanceof ConsoleHandler) {

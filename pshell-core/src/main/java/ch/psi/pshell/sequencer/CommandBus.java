@@ -434,6 +434,10 @@ public class CommandBus implements AutoCloseable {
     }
     
     public List<Object[]>  getCommandInfo(){
+        return getCommandInfo(false);
+    }
+    
+    public List<Object[]>  getCommandInfo(boolean html){
         List<CommandInfo> commands = getCommands();
         List<Object[]> ret = new ArrayList<>(commands.size());
          for (CommandInfo cmd : commands) {
@@ -444,10 +448,11 @@ public class CommandBus implements AutoCloseable {
             row[3] = cmd.source.toString();
             row[4] = cmd.background;
             if ((cmd.script!=null) && (!cmd.script.isBlank())){
-                row[5] = cmd.script;
-                row[6] = Str.toString(cmd.args);             
+                row[5] = html ? Str.toHtml(cmd.script) : cmd.script;
+                String args = Str.toString(cmd.args);
+                row[6] = html ? Str.toHtml(args) : args;          
             } else {
-                row[5] = cmd.command;
+                row[5] = html ? Str.toHtml(cmd.command) : cmd.command;
                 row[6] = "";
             }
             CommandInfo.Status status = cmd.getStatus();
@@ -460,7 +465,10 @@ public class CommandBus implements AutoCloseable {
                 String str= Str.toString(cmd.getResult());
                 //Only retiurn 1st line od resuld
                 //int pos = str.indexOf('\n');
-                //str =  pos < 0 ? str : str.substring(0, pos);                
+                //str =  pos < 0 ? str : str.substring(0, pos);    
+                if (html){
+                    str = Str.toHtml(str);
+                }
                 row[10] = str;   
             }
             ret.add(row);

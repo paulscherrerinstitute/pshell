@@ -379,14 +379,22 @@
                 $.get(base + '/abort', function (data) {
                 }).error(function (xhr, textStatus, errorThrown) {
                     console.log("Error aborting: ", errorThrown)
-                });                  
+                }).complete(function(xhr, textStatus){
+                    if ($("#cmds").is(":visible")) {
+                        getCmds();
+                    }                     
+                })               
             }
             
             function abortAll() {
                 $.get(base + '/abortAll', function (data) {
                 }).error(function (xhr, textStatus, errorThrown) {
                     console.log("Error aborting: ", errorThrown)
-                });                  
+                }).complete(function(xhr, textStatus){
+                    if ($("#cmds").is(":visible")) {
+                        getCmds();
+                    }                     
+                })               
             }
 
             function deselectTab() {

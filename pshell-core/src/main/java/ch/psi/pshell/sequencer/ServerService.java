@@ -196,7 +196,7 @@ public class ServerService {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Object[]> getCommands() {
         try {
-            List<Object[]> ret = Context.getCommandBus().getCommandInfo();
+            List<Object[]> ret = Context.getCommandBus().getCommandInfo(true);
             return ret;
         } catch (Exception ex) {
         }
