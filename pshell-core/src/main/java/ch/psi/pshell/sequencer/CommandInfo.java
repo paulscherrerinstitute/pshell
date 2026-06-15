@@ -25,19 +25,31 @@ public class CommandInfo {
     private boolean aborted;
 
     private CommandInfo(CommandSource source, String script, String command, Object args, boolean background, CommandInfo parent) {
+        boolean isRun = false;
         //run command sets script name and arguments so standard name 
         if ((script == null) && (command != null)) {
             String aux = command.trim();
             if (aux.startsWith("run(")) {
                 aux = aux.substring(4);
                 if (aux.contains(")")) {
-                    aux = aux.substring(0, aux.indexOf(")"));
-                    if (aux.contains(",")) {
-                        script = aux.substring(0, aux.indexOf(",")).trim();
-                        args = aux.substring(aux.indexOf(",")+1).trim();
-
-                    } else {
-                        script = aux.trim();
+                    aux = aux.substring(0, aux.indexOf(")"));                    
+                    String[] tokens = Str.splitWithQuotes(aux, ",");
+                    script = tokens[0].trim();
+                    aux = tokens.length>1 ? tokens[1].trim() : null;
+                    if ((aux!=null) && (!aux.isBlank())) {
+                        if (aux.startsWith("locals") && aux.substring(6).trim().startsWith("=")){
+                        } else {
+                            if (aux.startsWith("args") && aux.substring(4).trim().startsWith("=")){
+                                aux = aux.substring(aux.indexOf("=")+1).trim();
+                            }
+                            if ((!aux.isBlank()) && !aux.equals("None")){
+                                if ((aux.startsWith("[") && aux.endsWith("]")) ||
+                                    (aux.startsWith("{") && aux.endsWith("}"))){
+                                     aux = aux.substring(1, aux.length() - 1).trim();
+                                }                           
+                                args = aux;
+                            }                             
+                        }
                     }
                     script = Str.removeQuotes(script);
                 }

@@ -25,7 +25,7 @@ public class InterpreterResult {
         } else if (exception!=null){
             sb.append(" -> exception: ").append(exception.getMessage());
         } else {
-            sb.append(" -> ").append(result);
+                sb.append(" -> ").append(result);
         }
         return sb.toString();
     }

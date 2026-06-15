@@ -770,6 +770,26 @@ public class ExecutionParameters {
         return (cmd == null) ? null : cmd.args;
     }
 
+    public boolean hasArgs() {
+        CommandInfo cmd = getCommandInfo();
+        if ((cmd != null) && (cmd.args!=null)){
+            if (cmd.args instanceof Map map){
+                if (!map.isEmpty()){
+                    return true;
+                }
+            } else  if (cmd.args instanceof List list){
+                if (!list.isEmpty()){
+                    return true;
+                }
+            } else  if (cmd.args instanceof String str){ //Run
+                if (!str.isEmpty()){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public CommandInfo getCommandInfo() {
         return getCommand(true);
     }

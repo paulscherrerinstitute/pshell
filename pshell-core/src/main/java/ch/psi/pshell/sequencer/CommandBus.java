@@ -447,13 +447,16 @@ public class CommandBus implements AutoCloseable {
             row[2] = cmd.thread.getName();
             row[3] = cmd.source.toString();
             row[4] = cmd.background;
-            if ((cmd.script!=null) && (!cmd.script.isBlank())){
+            if ((cmd.command!=null) && (!cmd.command.isBlank())){ 
+                row[5] = html ? Str.toHtml(cmd.command) : cmd.command;
+                row[6] = "";                
+            } else if ((cmd.script!=null) && (!cmd.script.isBlank())){
                 row[5] = html ? Str.toHtml(cmd.script) : cmd.script;
                 String args = Str.toString(cmd.args);
                 row[6] = html ? Str.toHtml(args) : args;          
             } else {
-                row[5] = html ? Str.toHtml(cmd.command) : cmd.command;
-                row[6] = "";
+                row[5] = "";
+                row[6] = "";          
             }
             CommandInfo.Status status = cmd.getStatus();
             row[7] = status.toString();
@@ -462,7 +465,15 @@ public class CommandBus implements AutoCloseable {
             if  (status==CommandInfo.Status.Running){
                 row[10] = "";
             } else {
-                String str= Str.toString(cmd.getResult());
+                Object result = cmd.getResult();
+                if (result instanceof InterpreterResult interpreterResult) {
+                    if (((InterpreterResult) result).exception != null) {
+                        result = interpreterResult.exception;
+                    } else {
+                        result = interpreterResult.result;
+                    }
+                }                
+                String str= Str.toString(result);
                 //Only retiurn 1st line od resuld
                 //int pos = str.indexOf('\n');
                 //str =  pos < 0 ? str : str.substring(0, pos);    
