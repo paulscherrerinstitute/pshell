@@ -147,17 +147,36 @@ def run(script_name, args = None, locals = None):
             raise ex
     raise IOError("Invalid script: " + str(script_name))
 
-def abort():
-    """Abort the execution of ongoing task. It can be called from the script to quit.
+
+def abort(all=False, id=None):
+    """Abort the execution of an ongoing task. By default aborts foreground task.
+       Any script (foreground or background) can quit with: abort(id=0)
 
     Args:
-        None
+        all(bool, optional): If true aborts all tasks (also background tasks)
+        id(int, optional): If defined aborts a task having a specific command id.
+                           If 0 then aborts the ongoing command id. 
 
     Returns:
         None
     """
-    fork(get_sequencer().abort) #Cannot be on script execution thread
-    while True: sleep(10.0)
+    if id is not None:
+        if id<=0:
+            id = get_exec_pars().commandInfo.id
+        bg = get_sequencer().commandBus.getCommand(id).background
+        if bg: 
+            get_sequencer().abort(id)
+            sleep(0.01) #Chance to quit current thread
+        else:
+            abort()
+    else:
+        #Cannot be on script execution thread
+        if all:
+            fork(get_sequencer().abortAll) 
+        else:
+            fork(get_sequencer().abort) 
+        if not get_exec_pars().isBackground():
+            while True: sleep(10.0)
 
 def is_aborted():
     """Checks if ongoing task has been aborted.
@@ -182,7 +201,7 @@ def check_aborted():
         None
     """
     if is_aborted():
-        abort()
+        abort(id=0)
 
 def set_return(value):
     """Sets the script return value. This value is returned by the "run" function.
