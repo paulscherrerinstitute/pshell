@@ -7,6 +7,7 @@ from time import sleep
 from array import array
 import jarray
 
+import java.lang.Thread as Thread
 import java.lang.Class as Class
 import java.lang.Object as Object
 import java.lang.System as System
@@ -208,3 +209,24 @@ def get_extensions():
 
 def get_state():
     return Context.getState()
+
+###################################################################################################
+#Debugging
+###################################################################################################
+
+def print_stack_trace(thread_name="MainThread"):
+    """Prints a thread stack trace.
+         
+    Args:
+        thread_name(str): name of the thread.
+
+    Returns:
+        None
+    """
+    for thread in java.lang.Thread.getAllStackTraces().keySet():
+        if thread.getName() == thread_name:
+            print ("Thread: " + thread.getName());    
+            for ste in thread.getStackTrace():
+                print("\tat " + str(ste));
+            return
+    print ("No running thread named: " + thread_name);   

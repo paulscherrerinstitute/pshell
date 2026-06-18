@@ -995,7 +995,7 @@ def run(script_name, args = None, locals = None):
             ret = get_return()
             get_sequencer().finishScriptExecution(info, ret)
             return ret
-        except Exception as ex:
+        except BaseException as ex:
             get_sequencer().finishScriptExecution(info, ex)
             raise ex
     raise IOError("Invalid script: " + str(script_name))

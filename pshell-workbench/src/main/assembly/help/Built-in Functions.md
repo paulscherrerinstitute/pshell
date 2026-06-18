@@ -62,6 +62,7 @@ These functions provide the script API to many aspects of PShell:
     - abort
     - is_aborted
     - check_aborted
+    - print_stack_trace
     - set_return
     - start_task
     - stop_task

@@ -78,7 +78,15 @@ public class CommandInfo {
     }
 
     public boolean isRunning() {
-        return end == 0;
+        if (end == 0){
+            if ((parent != null) && (!parent.isRunning())){
+                return false;
+            }
+            if ((thread!=null) && thread.isAlive()){
+                return true;
+            }
+        }
+        return false;   
     }
 
     public boolean isAborted() {
