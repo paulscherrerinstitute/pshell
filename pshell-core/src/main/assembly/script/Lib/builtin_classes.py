@@ -734,9 +734,9 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
                                             
             #self.val = cmd   
             if self.background:     
-                cf = get_sequencer().evalLineBackgroundAsync(cmd)
+                cf = get_sequencer().evalLineBackgroundAsync(CommandSource.server, cmd)
             else:
-                cf = get_sequencer().evalLineAsync(cmd)
+                cf = get_sequencer().evalLineAsync(CommandSource.server, cmd)
             id = get_sequencer().waitAsyncCommand(cf)
             cf.handle(eval_callback())
             self.val = "Id: " + str(id)
