@@ -110,6 +110,11 @@ public class CommandInfo {
     protected void setResult(Object result){
         this.result = result;
         end = System.currentTimeMillis();        
+        for (CommandInfo child : getChildren()){
+            if (child.end == 0){
+                child.end = end;
+            }
+        }        
     }
     
     public enum Status{
