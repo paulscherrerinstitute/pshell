@@ -3029,19 +3029,7 @@ public class Sequencer extends ObservableBase<SequencerListener> implements Auto
             logger.warning("Disabled mode: interpreter is not started");
         } else if (isGenericMode()) {
             logger.warning("Generic mode: local startup script is not executed");
-        }
-
-        if (Context.hasExtensions()) {
-            if (Setup.isBare()) {
-                logger.warning("Bare mode: plugins folder is not loaded");
-            } else {                
-                //Load  plugins
-                Context.getExtensions().loadPluginFolder(Setup.getPluginsConfigurationFile());
-            }
-            //Even if isBareMode because plugins may be loaded by command line        
-            Context.getExtensions().startPlugins();
-        }
-        
+        }        
         
         if (isLocalMode()) {
             logger.warning("Local mode");

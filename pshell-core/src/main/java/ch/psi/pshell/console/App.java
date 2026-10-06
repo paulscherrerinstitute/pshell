@@ -2,8 +2,6 @@ package ch.psi.pshell.console;
 
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataServer;
-import ch.psi.pshell.data.DataStore;
-import ch.psi.pshell.data.FormatText;
 import ch.psi.pshell.device.DeviceBase;
 import ch.psi.pshell.device.Interlock;
 import ch.psi.pshell.devices.DevicePool;
@@ -228,7 +226,18 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             interpreter.setNotifiedTasks(config.getNotifiedTasks());
             
             Epics.create(Setup.getDefaultEpicsConfigFile());
-                        
+            
+            if (extensions != null) {
+                if (Setup.isBare()) {
+                    logger.warning("Bare mode: plugins folder is not loaded");
+                } else {                
+                    //Load  plugins
+                    extensions.loadPluginFolder(Setup.getPluginsConfigurationFile());
+                }
+                //Even if isBareMode because plugins may be loaded by command line        
+                extensions.startPlugins();
+            }
+                                    
             devicePool = new DevicePool();
             logger.log(Level.INFO, "Loading Device Pool");
             try {
@@ -237,7 +246,6 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
                 logger.log(Level.FINER, null, ex);
             }
             
-            //interpreter.restart(source); //!!! TODO: Solve source crap
             interpreter.restart(); 
             interpreter.setSaveCommandStatistics(config.commandStatistics);
             if (config.isVersioningEnabled()) {        
