@@ -14,6 +14,7 @@ public enum Options implements Option {
      RANGE,
      BINS,
      AUTO_RANGE,
+     MATRIX_TIME_DOMAIN,
      CHANNEL,
      LOCK_ZOOMS, 
      BACKGROUND_COLOR,
@@ -21,6 +22,7 @@ public enum Options implements Option {
      LABEL_FONT,
      PLOT_HEIGHT,
      TIMEOUT,
+     
      LOOKUP_WINDOW;  
          
     public static void addHome(){  
@@ -46,6 +48,7 @@ public enum Options implements Option {
         RANGE.add("rg", "Set query range: Last 1min, Last 10min, Last 1h, Last 12h, Last 24h, Last 7d, Yesterday, Today, Last Week, This Week, Last Month, This Month");
         BINS.add("bn", "Set the number of bins (0 for unbinned)");
         AUTO_RANGE.add("ar", "Set auto-range plots: based on the data, and not fixed to the given time range");
+        MATRIX_TIME_DOMAIN.add("td", "Set if matrix plots of events have time as domain, and not index (default true)");
         CHANNEL.add("ch", "Add a channel in the format: <NAME>@<BACKEND> or <NAME> (default backend)");
         LOCK_ZOOMS.add("lz", "Set the default state of the zoom lock button");
         TIMEOUT.add("tm", "Set the server timeout (default 15s)");

@@ -180,6 +180,7 @@ public class ArchiverPanel extends StandardDialog {
     final int ERROR_RANGE_ALPHA= 0x60;        
     Range queryRange;
     volatile boolean lockZoomLevels;
+    volatile boolean matrixEventsTimeDomain = true;
     JDialog channelSearchDialog; 
 
     public ArchiverPanel(Window parent, String url, String backend, String title, boolean modal, File defaultFolder) {
@@ -244,6 +245,14 @@ public class ArchiverPanel extends StandardDialog {
                 Logger.getLogger(ArchiverPanel.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+        
+        if (Options.MATRIX_TIME_DOMAIN.hasValue()) {
+            try {
+                matrixEventsTimeDomain = Options.MATRIX_TIME_DOMAIN.getBool(matrixEventsTimeDomain);
+            } catch (Exception ex) {
+                Logger.getLogger(ArchiverPanel.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }        
         
         if (Options.LOCK_ZOOMS.hasValue()) {
             try {
@@ -1648,7 +1657,7 @@ public class ArchiverPanel extends StandardDialog {
     
     MatrixPlotJFree addMatrixPlot(boolean binned) {
         MatrixPlotJFree plot = new MatrixPlotJFree();
-        if (binned) {
+        if (binned || matrixEventsTimeDomain) {
             setDateDomainAxis(plot);
             plot.setZoomListener(zoomListener);
         }
@@ -1746,10 +1755,16 @@ public class ArchiverPanel extends StandardDialog {
 
     void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index) {
         try {
+            String name = null;
             boolean binned = (series instanceof MatrixPlotBinnedSeries);
-            double time = series.getX()[index][0];
-            String timestr = Time.getTimeString(time, false, false);
-            String name = series.getName() + " " + timestr + " [" + index + "]";
+            if (binned || matrixEventsTimeDomain){
+                double time = series.getX()[0][index];
+                String timestr = Time.getTimeString(time, false, false);
+                name = series.getName() + " " + timestr + " [" + index + "]";
+            } else {
+                name = series.getName() + " [" + index + "]";
+            }
+                    
             LinePlotJFree lplot = new LinePlotJFree();
             LinePlotSeries lseries;
             if (binned) {
@@ -1787,6 +1802,44 @@ public class ArchiverPanel extends StandardDialog {
         }
 
     }
+    
+    void setMatrixEventseries(MatrixPlotBase plot, MatrixPlotSeries series, List values, List<Long> timestamps) {
+        if ((values.size() > 0) && (timestamps.size() == values.size())) {            
+            double[][] data = (double[][]) Convert.toPrimitiveArray(values, Double.class);            
+            synchronized(plot){
+                try{
+                    plot.disableUpdates();           
+                    if (matrixEventsTimeDomain){
+                        double maxTime = timestamps.get(timestamps.size()-1);
+                        double minTime = timestamps.get(0);
+                        series.setNumberOfBinsX(data.length);
+                        series.setNumberOfBinsY(data[0].length);
+
+                        if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
+                            plot.getAxis(AxisId.X).setRange(queryRange.min, queryRange.max);
+                            series.setRangeX(queryRange.min, queryRange.max);
+                        } else {
+                            plot.getAxis(AxisId.X).setRange(minTime, maxTime);                        
+                            series.setRangeX(minTime, maxTime);
+                        }                                       
+                        series.setRangeY(0, timestamps.size() - 1);
+                    }
+                    series.setData(Convert.transpose(data));                                                
+
+                } finally {
+                     plot.reenableUpdates();
+                }                    
+            }
+        }
+        if (plot instanceof MatrixPlotJFree matrixPlotJFree){
+            if (!matrixEventsTimeDomain && (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null))){
+                matrixPlotJFree.zoomDomain(new Range(queryRange.min, queryRange.max));
+            } else{
+                matrixPlotJFree.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
+            }                
+        }        
+    }
+    
 
     MatrixPlotSeries addMatrixSeries(MatrixPlotBase plot, SeriesInfo si) {
         return addMatrixSeries(plot, si.name, si.backend, si.start, si.end, si.colormap);
@@ -1816,22 +1869,8 @@ public class ArchiverPanel extends StandardDialog {
             }).handle((ret, ex) -> {
                 if (ex != null) {
                     showException((Exception) ex);
-                };
-                if (value.size() > 0) {
-                    double[][] data = (double[][]) Convert.toPrimitiveArray(value, Double.class);
-                                        
-                    synchronized(plot){
-                        try{
-                            plot.disableUpdates();
-                            series.setData(Convert.transpose(data));
-                        } finally {
-                             plot.reenableUpdates();
-                        }                    
-                    }
-                }
-                if (plot instanceof MatrixPlotJFree matrixPlotJFree){
-                     matrixPlotJFree.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
-                }
+                };                                
+                setMatrixEventseries(plot, series, value, timestamp);                
                 return ret;
             });
         } catch (Exception ex) {
@@ -1849,7 +1888,7 @@ public class ArchiverPanel extends StandardDialog {
         double[][] min;
         double[][] max;
     }
-
+        
     void setMatrixBinnedSeries(MatrixPlotBase plot, MatrixPlotBinnedSeries series, List<List> average, List<List> min, List<List> max, List<Long> t1, List<Long> t2) {
         int bins = average.size();
         if (bins > 0) {
@@ -1904,29 +1943,6 @@ public class ArchiverPanel extends StandardDialog {
         plotSeries.add(series);
 
         try {
-            /*
-            daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret,ex)->{
-                if (ex!=null){
-                    showException((Exception)ex);
-                } else {
-                    Map<String, List>  map = (Map<String, List>) ret;                                
-                    List average   = map.get(Daqbuf.FIELD_AVERAGE);
-                    List min   = map.get(Daqbuf.FIELD_MIN);
-                    List max   = map.get(Daqbuf.FIELD_MAX);
-                    List<Long> t1   = map.get(Daqbuf.FIELD_START);
-                    List<Long> t2   = map.get(Daqbuf.FIELD_END);
-                    long now = System.currentTimeMillis();                                    
-
-                    try{
-                        plot.disableUpdates();
-                    } finally{
-                        plot.reenableUpdates();
-                    }
-                }
-                return ret;
-            });
-             */
-
             List value = new ArrayList();
             List<Long> timestamp = new ArrayList<>();
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
@@ -1937,38 +1953,37 @@ public class ArchiverPanel extends StandardDialog {
                     value.addAll(values);
                     timestamp.addAll(timestamps);
                 }
-            }/*,bins*/).handle((ret, ex) -> {
+            }, bins).handle((ret, ex) -> {
                 if (ex != null) {
-                    //showException((Exception)ex);
-                };                
-                //List<List> average = value;
-                List<List> average = new ArrayList<>();
-                List<List> min = new ArrayList<>();
-                List<List> max = new ArrayList<>();
-                List<Long> t1 = new ArrayList<>();
-                List<Long> t2 = new ArrayList<>();
-                long s = Time.getTimestamp(start);
-                long e = Time.getTimestamp(end);  
-                double w = ((double)e-s)/bins;
-                for (int i=0; i<bins; i++){
-                    average.add(((List)value.get(i % value.size())));
-                    t1.add(s+(long)(i * w));
-                    t2.add(s+(long)((i+1) * w));
-                }
-                double off = 20.0;
-                for (List l : average) {
-                    List lmin = new ArrayList();
-                    List lmax = new ArrayList();
-                    for (double n : (double[])Convert.toPrimitiveArray(l, Double.class)) {
-                        lmin.add(n - off);
-                        lmax.add(n + off);
+                    showException((Exception)ex);
+                };  
+                if (ret!=null) {
+                    Map<String, List>  map = (Map<String, List>) ret;                                
+                    List average   = map.get(Daqbuf.FIELD_AVERAGE);
+                    List min   = map.get(Daqbuf.FIELD_MIN);
+                    List max   = map.get(Daqbuf.FIELD_MAX);
+                    List<Long> t1   = map.get(Daqbuf.FIELD_START);
+                    List<Long> t2   = map.get(Daqbuf.FIELD_END);               
+                    setMatrixBinnedSeries(plot, series, average, min, max, t1, t2);
+                } else {
+                    List<List> average = new ArrayList<>();
+                    List<List> min = new ArrayList<>();
+                    List<List> max = new ArrayList<>();
+                    List<Long> t1 = new ArrayList<>();
+                    List<Long> t2 = new ArrayList<>();
+                    long s = Time.getTimestamp(start);
+                    long e = Time.getTimestamp(end);  
+                    double w = ((double)e-s)/bins;
+                    for (int i=0; i<bins; i++){
+                        average.add(List.of(Double.NaN));
+                        min.add(List.of(Double.NaN));
+                        max.add(List.of(Double.NaN));
+                        t1.add(s+(long)(i * w));
+                        t2.add(s+(long)((i+1) * w));
                     }
-                    min.add(lmin);
-                    max.add(lmax);
+                    setMatrixBinnedSeries(plot, series, average, min, max, t1, t2);
                 }
-                setMatrixBinnedSeries(plot, series, average, min, max, t1, t2);
-
-                return ret;
+                return ret;                
             });
         } catch (Exception ex) {
             showException((Exception) ex);
