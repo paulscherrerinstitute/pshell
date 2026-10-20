@@ -175,6 +175,9 @@ public class ColormapPanel extends MonitoredPanel {
                         if (Double.isInfinite(size)) {
                             return super.getCeilingTickUnit(AUTO_RANGE_MINIMUM_SIZE);
                         }
+                        if (size < AUTO_RANGE_MINIMUM_SIZE) {
+                            return super.getCeilingTickUnit(AUTO_RANGE_MINIMUM_SIZE);
+                        }
                         return super.getCeilingTickUnit(size);
                     }
                 });
