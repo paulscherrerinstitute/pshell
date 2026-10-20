@@ -876,12 +876,16 @@ public class Daqbuf implements ChannelQueryAPI {
                 @Override
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     ((List) ret.get(FIELD_VALUE)).addAll(values);
-                    ((List<Long>) ret.get(FIELD_TIMESTAMP)).addAll(ids);
-                    ((List<Long>) ret.get(FIELD_ID)).addAll(timestamps);
+                    if (ids!=null){
+                        ((List<Long>) ret.get(FIELD_TIMESTAMP)).addAll(ids);
+                    } 
+                    if (timestamps!=null){
+                        ((List<Long>) ret.get(FIELD_ID)).addAll(timestamps);
+                    }
                 }
             };
         }
-        query(channel, start, end, listener, bins);
+        query(channel, start, end, listener, bins);        
         return ret;
     }
 
