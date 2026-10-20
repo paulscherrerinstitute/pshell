@@ -1142,6 +1142,7 @@ public class ArchiverPanel extends StandardDialog {
         }
         DateAxis axis = setDateDomainAxis(plot);        
         plot.getAxis(AxisId.Y).setLabel(null);
+        plot.getAxis(AxisId.X).setLabel(null);
         //plot.setTimeAxisLabel(null);
         plot.setLegendVisible(true);
         //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
@@ -1803,7 +1804,7 @@ public class ArchiverPanel extends StandardDialog {
 
     }
     
-    void setMatrixEventseries(MatrixPlotBase plot, MatrixPlotSeries series, List values, List<Long> timestamps) {
+    void setMatrixEventSeries(MatrixPlotBase plot, MatrixPlotSeries series, List values, List<Long> timestamps) {
         if ((values.size() > 0) && (timestamps.size() == values.size())) {            
             double[][] data = (double[][]) Convert.toPrimitiveArray(values, Double.class);            
             synchronized(plot){
@@ -1870,7 +1871,7 @@ public class ArchiverPanel extends StandardDialog {
                 if (ex != null) {
                     showException((Exception) ex);
                 };                                
-                setMatrixEventseries(plot, series, value, timestamp);                
+                setMatrixEventSeries(plot, series, value, timestamp);                
                 return ret;
             });
         } catch (Exception ex) {

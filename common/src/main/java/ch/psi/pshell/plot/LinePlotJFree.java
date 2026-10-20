@@ -73,6 +73,7 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYItemRendererState;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.chart.renderer.xy.XYStepRenderer;
 import org.jfree.chart.ui.Drawable;
 import org.jfree.chart.ui.Layer;
 import org.jfree.chart.ui.RectangleAnchor;
@@ -544,6 +545,7 @@ public class LinePlotJFree extends LinePlotBase {
         return chartPanel;
     }
 
+    
     void createY2() {
         if (dataY2 == null) {
             XYPlot plot = (XYPlot) chart.getPlot();
@@ -567,12 +569,17 @@ public class LinePlotJFree extends LinePlotBase {
                 ((XYErrorRenderer)renderer2).setDrawXError(false);
             } else if (getStyle()==Style.ErrorX){
                 ((XYErrorRenderer)renderer2).setDrawYError(false);
-            }            
+            } else if (getStyle()==Style.Step){
+                renderer2 = new XYStepRenderer();
+            } else if (getStyle()==Style.Spline){
+                renderer2 = new XYSplineRenderer();
+            }
             plot.setRenderer(1, renderer2);
             plot.setDataset(1, dataY2);
             plot.mapDatasetToRangeAxis(1, 1);
             axis2.setLabelPaint(getAxisTextColor());
             axis2.setTickLabelPaint(getAxisTextColor());
+                
         }
     }
     
@@ -879,13 +886,12 @@ public class LinePlotJFree extends LinePlotBase {
         
         tickLabelFont = TICK_LABEL_FONT;
         labelFont = LABEL_FONT;
-        legendVisible = false;
         dataY1 = new XYSeriesCollection();
         // Create chart
         chart = newChart();
         chart.setBackgroundPaint(new Color(0,0,0,0));                  
         // Customize legend
-        chart.getLegend().setVisible(false);
+        chart.getLegend().setVisible(legendVisible);
         chart.getLegend().setBackgroundPaint(null);
         chart.getLegend().setBorder(0, 0, 0, 0);
 
@@ -900,7 +906,7 @@ public class LinePlotJFree extends LinePlotBase {
         chartPanel.setMaximumDrawWidth(2000);
 
         // Remove border
-        chart.setBorderVisible(false);
+        chart.setBorderVisible(false);        
 
         // Set size of chart
         chartPanel.setPreferredSize(new java.awt.Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
@@ -917,22 +923,23 @@ public class LinePlotJFree extends LinePlotBase {
         // Include zeros in range (x) axis
         ((NumberAxis) plot.getRangeAxis()).setAutoRangeIncludesZero(false);
 
-        ((NumberAxis) plot.getRangeAxis()).setAutoRangeMinimumSize(AUTO_RANGE_MINIMUM_SIZE);
-        ((NumberAxis) plot.getDomainAxis()).setAutoRangeMinimumSize(AUTO_RANGE_MINIMUM_SIZE);
+        ((NumberAxis) plot.getRangeAxis()).setAutoRangeMinimumSize(AUTO_RANGE_MINIMUM_SIZE);        
         //((NumberAxis) plot.getRangeAxis()).setStandardTickUnits(new StandardTickUnitSource()); //Scirntific notation
         //((NumberAxis) plot.getRangeAxis()).setStandardTickUnits(new NumberTickUnitSource()); //Scirntific notation if more than 5 deciamals
 
-        //This is to avoid an exception with JFreeChart 1.0.19 when using NumberTickUnitSource and zooming to dx=0
-        ((NumberAxis) plot.getDomainAxis()).setStandardTickUnits(new NumberTickUnitSource() {
-            @Override
-            public TickUnit getCeilingTickUnit(double size) {
-                if (Double.isInfinite(size)) {
-                    return super.getCeilingTickUnit(AUTO_RANGE_MINIMUM_SIZE);
+        if (plot.getDomainAxis() instanceof NumberAxis numberAxis){
+            numberAxis.setAutoRangeMinimumSize(AUTO_RANGE_MINIMUM_SIZE);
+            //This is to avoid an exception with JFreeChart 1.0.19 when using NumberTickUnitSource and zooming to dx=0
+            numberAxis.setStandardTickUnits(new NumberTickUnitSource() {
+                @Override
+                public TickUnit getCeilingTickUnit(double size) {
+                    if (Double.isInfinite(size)) {
+                        return super.getCeilingTickUnit(AUTO_RANGE_MINIMUM_SIZE);
+                    }
+                    return super.getCeilingTickUnit(size);
                 }
-                return super.getCeilingTickUnit(size);
-            }
-        });
-
+            });
+        }
         if (!isOffscreen()) {
             //Activate (arrow) keys
             addKeyBindings();
@@ -1233,23 +1240,27 @@ public class LinePlotJFree extends LinePlotBase {
 
     protected JFreeChart newChart() {
         JFreeChart ret = null;
+        ValueAxis xAxis = new NumberAxis(getAxis(AxisId.X).getLabel());
+        //Preserve DateAxis if was used
+        if (chart!=null) {
+            if (chart.getPlot() instanceof XYPlot xyplot){
+                if (xyplot.getDomainAxis() instanceof DateAxis dataAxis){
+                    xAxis = dataAxis;
+                }
+            }
+        }
+        if (xAxis instanceof NumberAxis numberAxis){
+            numberAxis.setAutoRangeIncludesZero(false);
+        }
+        NumberAxis yAxis = new NumberAxis(getAxis(AxisId.Y).getLabel());
+        XYItemRenderer renderer = null;
+        
         switch (getStyle()) {
             case Step:
-                ret = ChartFactory.createXYStepChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, showTooltips, false);
-                NumberAxis axis = new NumberAxis();
-                axis.setAutoRangeIncludesZero(false);
-                ret.getXYPlot().setDomainAxis(axis);
+                renderer = new XYStepRenderer();            
                 break;
-            case Spline: {
-                NumberAxis xAxis = new NumberAxis(getAxis(AxisId.X).getLabel());
-                xAxis.setAutoRangeIncludesZero(false);
-                NumberAxis yAxis = new NumberAxis(getAxis(AxisId.Y).getLabel());
-                XYSplineRenderer renderer = new XYSplineRenderer();
-                XYPlot plot = new XYPlot(dataY1, xAxis, yAxis, renderer);
-                plot.setOrientation(PlotOrientation.VERTICAL);
-                ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, true);               
-                ChartFactory.getChartTheme().apply(ret);
-            }
+            case Spline: 
+                renderer = new XYSplineRenderer();                   
                 break;
             case ErrorX:
             case ErrorY:
@@ -1264,35 +1275,23 @@ public class LinePlotJFree extends LinePlotBase {
                     dataY1 = new XYIntervalSeriesCollection();
                 }
 
-                NumberAxis xAxis = new NumberAxis(getAxis(AxisId.X).getLabel());
-                xAxis.setAutoRangeIncludesZero(false);
-                NumberAxis yAxis = new NumberAxis(getAxis(AxisId.Y).getLabel());
-                XYErrorRenderer renderer = new ErrorRenderer();
-                    if (getStyle()==Style.ErrorY){
-                    renderer.setDrawXError(false);
+                renderer = new ErrorRenderer();
+                if (getStyle()==Style.ErrorY){
+                    ((ErrorRenderer)renderer).setDrawXError(false);
                 } else if (getStyle()==Style.ErrorX){
-                    renderer.setDrawYError(false);
-                }
-                
-                XYPlot plot = new XYPlot(dataY1, xAxis, yAxis, renderer);
-                plot.setOrientation(PlotOrientation.VERTICAL);
-                ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
-                ChartFactory.getChartTheme().apply(ret);
+                    ((ErrorRenderer)renderer).setDrawYError(false);
+                }                
                 break;
             default:
-                //ret = ChartFactory.createXYLineChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, showTooltips, false);
-                NumberAxis xa = new NumberAxis(getAxis(AxisId.X).getLabel());
-                xa.setAutoRangeIncludesZero(false);
-                NumberAxis ya = new NumberAxis(getAxis(AxisId.Y).getLabel());
-                XYLineAndShapeRenderer r = new LineAndShapeRenderer();                
-                XYPlot xyplot = new XYPlot(dataY1, xa, ya, r);
-                xyplot.setOrientation(PlotOrientation.VERTICAL);
-                if (showTooltips) {
-                    r.setDefaultToolTipGenerator(new StandardXYToolTipGenerator());
-                }
-                ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, xyplot, true);
-                ChartFactory.getChartTheme().apply(ret);                
+                renderer = new LineAndShapeRenderer();                
         }
+        if (showTooltips) {
+            renderer.setDefaultToolTipGenerator(new StandardXYToolTipGenerator());
+        }
+        XYPlot plot = new XYPlot(dataY1, xAxis, yAxis, renderer);        
+        plot.setOrientation(PlotOrientation.VERTICAL);
+        ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+        ChartFactory.getChartTheme().apply(ret);                
                     
         return ret;
     }
@@ -1761,7 +1760,7 @@ public class LinePlotJFree extends LinePlotBase {
     }
 
     @Override
-    protected void setLineWidth(LinePlotSeries series, int value) {
+    protected void setLineWidth(LinePlotSeries series, int value) {        
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
         renderer.setSeriesStroke(getSeriesIndex(series), new BasicStroke(value));
     }
