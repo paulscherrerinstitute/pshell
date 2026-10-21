@@ -1761,13 +1761,21 @@ public class ArchiverPanel extends StandardDialog {
     void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index) {
         try {
             String name = null;
-            boolean binned = (series instanceof MatrixPlotBinnedSeries);
+            long id = index;
+            boolean binned =  (series instanceof MatrixPlotBinnedSeries);
+            
+            if (series instanceof MatrixPlotEventsSeries matrixPlotEventsSeries){
+                if (index <= matrixPlotEventsSeries.ids.length){
+                    id = matrixPlotEventsSeries.ids[index];
+                }
+            }            
+            
             if (binned || matrixEventsTimeDomain){
                 double time = series.getX()[0][index];
                 String timestr = Time.getTimeString(time, false, false);
-                name = series.getName() + " " + timestr + " [" + index + "]";
+                name = series.getName() + " " + timestr + " [" + id + "]";
             } else {
-                name = series.getName() + " [" + index + "]";
+                name = series.getName() + " [" + id + "]";
             }
                     
             LinePlotJFree lplot = new LinePlotJFree();
@@ -1808,7 +1816,7 @@ public class ArchiverPanel extends StandardDialog {
 
     }
     
-    void setMatrixEventSeries(MatrixPlotBase plot, MatrixPlotSeries series, List values, List<Long> timestamps) {
+    void setMatrixEventSeries(MatrixPlotBase plot, MatrixPlotEventsSeries series, List values, List<Long> timestamps) {
         if ((values.size() > 0) && (timestamps.size() == values.size())) {            
             double[][] data = (double[][]) Convert.toPrimitiveArray(values, Double.class);            
             synchronized(plot){
@@ -1848,11 +1856,12 @@ public class ArchiverPanel extends StandardDialog {
         return addMatrixSeries(plot, si.name, si.backend, si.start, si.end, si.colormap);
     }
 
-    MatrixPlotSeries addMatrixSeries(MatrixPlotBase plot, String name, String backend, String start, String end, Colormap colormap) {
+    MatrixPlotEventsSeries addMatrixSeries(MatrixPlotBase plot, String name, String backend, String start, String end, Colormap colormap) {
         List value = new ArrayList();
         List<Long> timestamp = new ArrayList<>();
+        List<Long> id = new ArrayList<>();
         long maxSize = getMaxSeriesSize();
-        MatrixPlotSeries series = new MatrixPlotSeries(name);
+        MatrixPlotEventsSeries series = new MatrixPlotEventsSeries(name);
         if (colormap != null) {
             plot.setColormap(colormap);
         }        
@@ -1865,6 +1874,9 @@ public class ArchiverPanel extends StandardDialog {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     value.addAll(values);
                     timestamp.addAll(timestamps);
+                    if (ids!=null){
+                        id.addAll(ids);
+                    }
                     if ((value.size() > 0) && (((List) value.get(0)).size() * value.size()) > maxSize) {
                         throw new RuntimeException("Series too big for plotting: " + name);
                     }
@@ -1873,6 +1885,9 @@ public class ArchiverPanel extends StandardDialog {
                 if (ex != null) {
                     showException((Exception) ex);
                 };                                
+                if (id.size()>0){
+                    series.ids = (long[]) Convert.toPrimitiveArray(id, Long.class);
+                } 
                 setMatrixEventSeries(plot, series, value, timestamp);                
                 return ret;
             });
@@ -1882,6 +1897,14 @@ public class ArchiverPanel extends StandardDialog {
         return series;
     }
 
+    static class MatrixPlotEventsSeries extends MatrixPlotSeries {
+
+        MatrixPlotEventsSeries(String name) {
+            super(name);
+        }
+        long[] ids;
+    }
+    
     static class MatrixPlotBinnedSeries extends MatrixPlotSeries {
 
         MatrixPlotBinnedSeries(String name) {
