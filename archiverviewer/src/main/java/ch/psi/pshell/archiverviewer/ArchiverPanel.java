@@ -165,6 +165,7 @@ public class ArchiverPanel extends StandardDialog {
     
     volatile boolean started = false;
     volatile boolean updating = false;
+    volatile boolean autoRange = false;
     DefaultComboBoxModel modelComboY = new DefaultComboBoxModel();
     ChannelSelector selector = new ChannelSelector();
 
@@ -1297,7 +1298,7 @@ public class ArchiverPanel extends StandardDialog {
                     }
                 }
             }
-            setNumberDomainAxis(plot);
+            //setNumberDomainAxis(plot);
         }
         for (SeriesInfo seriesInfo : formerInfo) {
             seriesInfo = new SeriesInfo(seriesInfo, start, end, null);
@@ -1631,9 +1632,6 @@ public class ArchiverPanel extends StandardDialog {
                     } catch (Exception e) {
                         showException(e);
                     }
-                    if (series.getCount() >= series.getMaxItemCount()) {
-                        throw new RuntimeException("Series too big for plotting: " + name);
-                    }
                     if ((x != null) && (x.size() == y.size())) {
                         synchronized(plot){
                             try {
@@ -1647,6 +1645,9 @@ public class ArchiverPanel extends StandardDialog {
                             }
                         }
                     }
+                    if (series.getCount() >= series.getMaxItemCount()) {
+                        throw new RuntimeException("Series too big for plotting: " + name);
+                    }                    
                 }
                 return ret;
             });
@@ -1719,20 +1720,23 @@ public class ArchiverPanel extends StandardDialog {
     }
     
     void setMatrixPlotPopupMenu(MatrixPlotJFree plot, boolean binned){
-        
-        plot.addPopupMenuItem(null);
-        JMenuItem menuUnbin = new JMenuItem("Unbinned");
-        menuUnbin.addActionListener((ActionEvent e) -> {
-            unbin(plot);
-        });
-        plot.addPopupMenuItem(menuUnbin);
-        menuUnbin.setVisible(binned);
-        
-        JMenuItem menuRequery = new JMenuItem("Requery");
-        menuRequery.addActionListener((ActionEvent e) -> {
-            requery(plot);                        
-        });
-        plot.addPopupMenuItem(menuRequery);    
+        /* TODO
+        if (binned) {
+            plot.addPopupMenuItem(null);
+            JMenuItem menuUnbin = new JMenuItem("Unbinned");
+            menuUnbin.addActionListener((ActionEvent e) -> {
+                unbin(plot);
+            });
+            plot.addPopupMenuItem(menuUnbin);
+
+            JMenuItem menuRequery = new JMenuItem("Requery");
+            menuRequery.addActionListener((ActionEvent e) -> {
+                requery(plot);                        
+            });
+
+            plot.addPopupMenuItem(menuRequery);    
+        }
+        */
     }
     
     boolean isBinnedPlot(PlotBase plot){
@@ -1812,28 +1816,26 @@ public class ArchiverPanel extends StandardDialog {
                     plot.disableUpdates();           
                     if (matrixEventsTimeDomain){
                         double maxTime = timestamps.get(timestamps.size()-1);
-                        double minTime = timestamps.get(0);
-                        series.setNumberOfBinsX(data.length);
-                        series.setNumberOfBinsY(data[0].length);
-
-                        if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
-                            plot.getAxis(AxisId.X).setRange(queryRange.min, queryRange.max);
-                            series.setRangeX(queryRange.min, queryRange.max);
-                        } else {
+                        double minTime = timestamps.get(0);                        
+                        int length = data[0].length;
+                        series.setNumberOfBinsY(length);
+                        series.setRangeY(0, Math.max(length - 1, 0));                                                                        
+                        //if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
+                        //    //TODO?
+                        //} else {
                             plot.getAxis(AxisId.X).setRange(minTime, maxTime);                        
-                            series.setRangeX(minTime, maxTime);
-                        }                                       
-                        series.setRangeY(0, timestamps.size() - 1);
-                    }
-                    series.setData(Convert.transpose(data));                                                
-
+                            series.setNumberOfBinsX(data.length);
+                            series.setRangeX(minTime, maxTime);                           
+                            series.setData(Convert.transpose(data));                                                
+                        //}                                 
+                    }                    
                 } finally {
                      plot.reenableUpdates();
                 }                    
             }
         }
         if (plot instanceof MatrixPlotJFree matrixPlotJFree){
-            if (!matrixEventsTimeDomain && (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null))){
+            if ( !autoRange && (queryRange!=null)){
                 matrixPlotJFree.zoomDomain(new Range(queryRange.min, queryRange.max));
             } else{
                 matrixPlotJFree.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
@@ -1854,18 +1856,18 @@ public class ArchiverPanel extends StandardDialog {
         if (colormap != null) {
             plot.setColormap(colormap);
         }        
-        plot.getAxis(AxisId.X).setAutoRange();
+        //plot.getAxis(AxisId.X).setAutoRange();
         plot.addSeries(series);                
         plotSeries.add(series);
 
         try {
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
+                    value.addAll(values);
+                    timestamp.addAll(timestamps);
                     if ((value.size() > 0) && (((List) value.get(0)).size() * value.size()) > maxSize) {
                         throw new RuntimeException("Series too big for plotting: " + name);
                     }
-                    value.addAll(values);
-                    timestamp.addAll(timestamps);
                 }
             }).handle((ret, ex) -> {
                 if (ex != null) {
@@ -3414,6 +3416,7 @@ public class ArchiverPanel extends StandardDialog {
 
     private void buttonPlotDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPlotDataActionPerformed
         try {
+            autoRange = ckAutoRange.isSelected();
             plotData();
         } catch (Exception ex) {
             showException(ex);
