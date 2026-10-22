@@ -152,6 +152,7 @@ public class ArchiverPanel extends StandardDialog {
     public static final int AXIS_X = -1;
     
     public static final int DEFAULT_BINS = 200;
+    public static final boolean INDEX_BASED_MATRIX_PLOT = true;
 
     Color defaultBackgroundColor = null;
     Color defaultGridColor = null;
@@ -1688,19 +1689,36 @@ public class ArchiverPanel extends StandardDialog {
                     DefaultXYZDataset xyDataset = (DefaultXYZDataset) xyplot.getDataset();
                     int seriesIndex = 0;
                     int itemCount = xyDataset.getItemCount(seriesIndex);
-                    int closestIndex = -1;
+                    int closestPlotIndex = -1;
                     double minDistance = Double.MAX_VALUE;
+                    
                     for (int i = 0; i < itemCount; i++) {
                         double x = xyDataset.getXValue(seriesIndex, i);
                         double distance = Math.abs(x - chartX);
                         if (distance < minDistance) {
                             minDistance = distance;
-                            closestIndex = i;
+                            closestPlotIndex = i;
                         }
                     }
+                    
                     MatrixPlotSeries series = plot.getSeries(seriesIndex);
+                    int closestDataIndex = closestPlotIndex;
+                    
+                    if (series instanceof MatrixPlotEventsSeries matrixPlotEventsSeries){                        
+                        minDistance = Double.MAX_VALUE;
+                        closestDataIndex = -1;
+                        for (int i=0; i<matrixPlotEventsSeries.plotIndex.length; i++){
+                              double x = matrixPlotEventsSeries.plotIndex[i];
+                              double distance = Math.abs(x - closestPlotIndex);
+                              if (distance < minDistance) {
+                                  minDistance = distance;
+                                  closestDataIndex = i;
+                              }                            
+                        }
+                    }
+                    
                     //double time = series.getMinX() + closestIndex * series.getBinWidthX();
-                    onMatrixSeriesClicked(plot, series, chartX, closestIndex);
+                    onMatrixSeriesClicked(plot, series, chartX, closestPlotIndex, closestDataIndex);
                 }
             }
 
@@ -1758,25 +1776,24 @@ public class ArchiverPanel extends StandardDialog {
         return false;
     }
 
-    void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index) {
+    void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int plot_index, int data_index) {
         try {
             String name = null;
-            long id = index;
+            double time = series.getX()[0][plot_index];
+            long id = plot_index;
             boolean binned =  (series instanceof MatrixPlotBinnedSeries);
             
-            if (series instanceof MatrixPlotEventsSeries matrixPlotEventsSeries){
-                if (index <= matrixPlotEventsSeries.ids.length){
-                    id = matrixPlotEventsSeries.ids[index];
+            if ((!INDEX_BASED_MATRIX_PLOT) && (series instanceof MatrixPlotEventsSeries matrixPlotEventsSeries)){
+                if (data_index <= matrixPlotEventsSeries.ids.length){
+                    id = matrixPlotEventsSeries.ids[data_index];
+                    time = matrixPlotEventsSeries.timestamps[data_index];
+                } else {
+                    id = -1;
                 }
             }            
             
-            if (binned || matrixEventsTimeDomain){
-                double time = series.getX()[0][index];
-                String timestr = Time.getTimeString(time, false, false);
-                name = series.getName() + " " + timestr + " [" + id + "]";
-            } else {
-                name = series.getName() + " [" + id + "]";
-            }
+            String timestr = Time.getTimeString(time, false, false);
+            name = series.getName() + " " + timestr + " [" + id + "]";
                     
             LinePlotJFree lplot = new LinePlotJFree();
             LinePlotSeries lseries;
@@ -1795,14 +1812,14 @@ public class ArchiverPanel extends StandardDialog {
                 try {
                     plot.disableUpdates();
                     if (binned) {
-                        double[] min = ((MatrixPlotBinnedSeries) series).min[index];
-                        double[] max = ((MatrixPlotBinnedSeries) series).max[index];
-                        double[] average = ((MatrixPlotBinnedSeries) series).average[index];
+                        double[] min = ((MatrixPlotBinnedSeries) series).min[plot_index];
+                        double[] max = ((MatrixPlotBinnedSeries) series).max[plot_index];
+                        double[] average = ((MatrixPlotBinnedSeries) series).average[plot_index];
                         double[] indexes = Arr.indexesDouble(average.length);
                         ((LinePlotErrorSeries) lseries).appendData(indexes, average, min, max);
                         plot.getChartPanel().restoreAutoBounds();
                     } else {
-                        double[] row = Convert.transpose(series.getData())[index];
+                        double[] row = Convert.transpose(series.getData())[plot_index];
                         lseries.setData(row);
                     }
                 } finally {
@@ -1816,8 +1833,16 @@ public class ArchiverPanel extends StandardDialog {
 
     }
     
-    void setMatrixEventSeries(MatrixPlotBase plot, MatrixPlotEventsSeries series, List values, List<Long> timestamps) {
+    void setMatrixEventSeries(MatrixPlotBase plot, MatrixPlotEventsSeries series, List values, List<Long> timestamps, List<Long> ids) {
         if ((values.size() > 0) && (timestamps.size() == values.size())) {            
+            series.timestamps = (long[]) Convert.toPrimitiveArray(timestamps, Long.class);
+            if (ids.size()>0){
+                series.ids = (long[]) Convert.toPrimitiveArray(ids, Long.class);
+            } else {
+                series.ids = Arr.indexesLong(series.timestamps.length);
+            }
+            series.plotIndex = new int[timestamps.size()];
+            
             double[][] data = (double[][]) Convert.toPrimitiveArray(values, Double.class);            
             synchronized(plot){
                 try{
@@ -1828,14 +1853,29 @@ public class ArchiverPanel extends StandardDialog {
                         int length = data[0].length;
                         series.setNumberOfBinsY(length);
                         series.setRangeY(0, Math.max(length - 1, 0));                                                                        
-                        //if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
-                        //    //TODO?
-                        //} else {
-                            plot.getAxis(AxisId.X).setRange(minTime, maxTime);                        
-                            series.setNumberOfBinsX(data.length);
-                            series.setRangeX(minTime, maxTime);                           
-                            series.setData(Convert.transpose(data));                                                
-                        //}                                 
+
+                        if (INDEX_BASED_MATRIX_PLOT){
+                            series.setNumberOfBinsX(data.length); //For index-based, continuus plot
+                        } else {
+                            //Seting bins for 100Hz
+                            series.setNumberOfBinsX((int)(( maxTime - minTime) / 10));
+                        }
+
+                        plot.getAxis(AxisId.X).setRange(minTime, maxTime);                                 
+                        series.setRangeX(minTime, maxTime);                              
+                        
+                        if (INDEX_BASED_MATRIX_PLOT){
+                            series.setData(Convert.transpose(data));    
+                        } else {
+                            series.initializeData();
+                            for (int x=0; x<timestamps.size(); x++) {
+                                double time = timestamps.get(x).doubleValue();
+                                series.plotIndex[x] = series.getIndexX(time);
+                                for (int y=0; y< data[0].length; y++) {
+                                   series.appendData(time, y, data[x][y]);
+                                }                                
+                            }
+                        }
                     }                    
                 } finally {
                      plot.reenableUpdates();
@@ -1885,10 +1925,7 @@ public class ArchiverPanel extends StandardDialog {
                 if (ex != null) {
                     showException((Exception) ex);
                 };                                
-                if (id.size()>0){
-                    series.ids = (long[]) Convert.toPrimitiveArray(id, Long.class);
-                } 
-                setMatrixEventSeries(plot, series, value, timestamp);                
+                setMatrixEventSeries(plot, series, value, timestamp, id);                
                 return ret;
             });
         } catch (Exception ex) {
@@ -1903,6 +1940,8 @@ public class ArchiverPanel extends StandardDialog {
             super(name);
         }
         long[] ids;
+        long[] timestamps;
+        int[] plotIndex;
     }
     
     static class MatrixPlotBinnedSeries extends MatrixPlotSeries {

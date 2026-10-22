@@ -40,7 +40,7 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
         super.addSeries(series);
 
     }
-   
+    
     final MatrixPlotSeriesListener seriesListener = new MatrixPlotSeriesListener() {
         @Override
         public void onSeriesAppendData(MatrixPlotSeries series, double x, double y, double z) {

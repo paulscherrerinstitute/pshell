@@ -387,6 +387,22 @@ public class Arr {
         }
         return ret;
     }
+    
+    public static long[] onesLong(int size) {
+        long[] ret = new long[size];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = 1;
+        }
+        return ret;
+    }
+
+    public static long[] indexesLong(int size) {
+        long[] ret = new long[size];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = i;
+        }
+        return ret;
+    }    
 
     public static int[] onesInt(int size) {
         int[] ret = new int[size];

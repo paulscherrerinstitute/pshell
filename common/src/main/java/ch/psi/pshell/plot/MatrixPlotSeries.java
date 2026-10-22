@@ -66,9 +66,7 @@ public class MatrixPlotSeries extends PlotSeries<MatrixPlot> {
                 setNumberOfBinsY(data.length);
                 setRangeY(0, data.length);
             }
-            if (plot != null) {
-                setToken(((MatrixPlotBase) plot).onAddedSeries(this));
-            }
+            initializeData();
         }
 
         if ((data == null) || (data.length != numberOfBinsY) || (data[0].length != numberOfBinsX)) {
@@ -80,6 +78,13 @@ public class MatrixPlotSeries extends PlotSeries<MatrixPlot> {
         if (plot != null) {
             ((MatrixPlotBase) plot).seriesListener.onSeriesSetData(this, data, x, y);
         }
+    }
+    
+    public void initializeData() {
+        MatrixPlot plot = getPlot();
+        if (plot != null) {
+            setToken(((MatrixPlotBase) plot).onAddedSeries(this));
+        }    
     }
 
     public void setNumberOfBinsX(int bins) {
@@ -220,6 +225,15 @@ public class MatrixPlotSeries extends PlotSeries<MatrixPlot> {
     public int getNumberOfBinsY() {
         return numberOfBinsY;
     }
+    
+    public int getIndexX(double valueX){
+        return (int) Math.round((valueX - getMinX()) / getBinWidthX());
+    }
+   
+    public int getIndexY(double valueY){
+        return (int) Math.round((valueY - getMinY()) / getBinWidthY());
+    }
+    
 
     //Utilities
     public boolean contains(int indexX, int indexY) {
