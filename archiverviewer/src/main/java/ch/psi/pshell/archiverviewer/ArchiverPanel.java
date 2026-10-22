@@ -152,7 +152,6 @@ public class ArchiverPanel extends StandardDialog {
     public static final int AXIS_X = -1;
     
     public static final int DEFAULT_BINS = 200;
-    public static final boolean INDEX_BASED_MATRIX_PLOT = true;
 
     Color defaultBackgroundColor = null;
     Color defaultGridColor = null;
@@ -182,7 +181,27 @@ public class ArchiverPanel extends StandardDialog {
     final int ERROR_RANGE_ALPHA= 0x60;        
     Range queryRange;
     volatile boolean lockZoomLevels;
-    volatile boolean matrixEventsTimeDomain = true;
+    
+    enum MatrixPlotDomain{
+        index,
+        time_regular,
+        time_optimal,
+        time_10ms;
+        boolean isRegular(){
+            return this==MatrixPlotDomain.index || this==MatrixPlotDomain.time_regular;
+        }
+        boolean isRightTime(){
+            return this==MatrixPlotDomain.time_optimal || this==MatrixPlotDomain.time_10ms;
+        }
+        boolean isIndex(){
+            return this==MatrixPlotDomain.index;
+        }
+        boolean isTime(){
+            return !isIndex();
+        }
+    }
+    
+    volatile MatrixPlotDomain matrixPlotDomain = MatrixPlotDomain.time_optimal;
     JDialog channelSearchDialog; 
 
     public ArchiverPanel(Window parent, String url, String backend, String title, boolean modal, File defaultFolder) {
@@ -248,9 +267,9 @@ public class ArchiverPanel extends StandardDialog {
             }
         }
         
-        if (Options.MATRIX_TIME_DOMAIN.hasValue()) {
+        if (Options.MATRIX_DOMAIN_TYPE.hasValue()) {
             try {
-                matrixEventsTimeDomain = Options.MATRIX_TIME_DOMAIN.getBool(matrixEventsTimeDomain);
+                matrixPlotDomain = MatrixPlotDomain.valueOf(Options.MATRIX_DOMAIN_TYPE.getString(null));
             } catch (Exception ex) {
                 Logger.getLogger(ArchiverPanel.class.getName()).log(Level.WARNING, null, ex);
             }
@@ -1660,7 +1679,7 @@ public class ArchiverPanel extends StandardDialog {
     
     MatrixPlotJFree addMatrixPlot(boolean binned) {
         MatrixPlotJFree plot = new MatrixPlotJFree();
-        if (binned || matrixEventsTimeDomain) {
+        if (binned || matrixPlotDomain.isTime()) {
             setDateDomainAxis(plot);
             plot.setZoomListener(zoomListener);
         }
@@ -1782,8 +1801,7 @@ public class ArchiverPanel extends StandardDialog {
             double time = series.getX()[0][plot_index];
             long id = plot_index;
             boolean binned =  (series instanceof MatrixPlotBinnedSeries);
-            
-            if ((!INDEX_BASED_MATRIX_PLOT) && (series instanceof MatrixPlotEventsSeries matrixPlotEventsSeries)){
+            if (matrixPlotDomain.isTime() && (series instanceof MatrixPlotEventsSeries matrixPlotEventsSeries)){
                 if (data_index <= matrixPlotEventsSeries.ids.length){
                     id = matrixPlotEventsSeries.ids[data_index];
                     time = matrixPlotEventsSeries.timestamps[data_index];
@@ -1847,24 +1865,43 @@ public class ArchiverPanel extends StandardDialog {
             synchronized(plot){
                 try{
                     plot.disableUpdates();           
-                    if (matrixEventsTimeDomain){
+                    int length = data[0].length;
+                    series.setNumberOfBinsY(length);
+                    series.setRangeY(0, Math.max(length - 1, 0));                                                                        
+                    if (matrixPlotDomain.isIndex()){
+                        series.setNumberOfBinsX(data.length); //For index-based, continuus plot                        }
+                        plot.getAxis(AxisId.X).setRange(0, data.length-1);                                 
+                        series.setRangeX(0, data.length-1);                                                      
+                        series.setData(Convert.transpose(data));                              
+                    } else {
                         double maxTime = timestamps.get(timestamps.size()-1);
                         double minTime = timestamps.get(0);                        
-                        int length = data[0].length;
-                        series.setNumberOfBinsY(length);
-                        series.setRangeY(0, Math.max(length - 1, 0));                                                                        
 
-                        if (INDEX_BASED_MATRIX_PLOT){
+                        if (matrixPlotDomain.isRegular()){
                             series.setNumberOfBinsX(data.length); //For index-based, continuus plot
                         } else {
-                            //Seting bins for 100Hz
-                            series.setNumberOfBinsX((int)(( maxTime - minTime) / 10));
+                            double selectedPeriodMs = 10.0;
+                            if (matrixPlotDomain ==  MatrixPlotDomain.time_optimal){
+                                double minInterval = Double.MAX_VALUE;
+                                for (int i=1; i< timestamps.size(); i++){
+                                    double interval = timestamps.get(i) - timestamps.get(i-1);
+                                    if (interval< minInterval){
+                                        minInterval = interval;
+                                    }
+                                }                            
+                                int roundedPeriodMs = Math.max(10, (int) Math.round(minInterval));
+                                int frequencyHz = Math.min(100, 1000 / roundedPeriodMs);
+                                selectedPeriodMs = 1000 / frequencyHz;
+                            }
+                            
+                           int bins = (int)(( maxTime - minTime) / selectedPeriodMs) ;
+                           series.setNumberOfBinsX(bins);                            
                         }
 
                         plot.getAxis(AxisId.X).setRange(minTime, maxTime);                                 
                         series.setRangeX(minTime, maxTime);                              
                         
-                        if (INDEX_BASED_MATRIX_PLOT){
+                        if (matrixPlotDomain.isRegular()){
                             series.setData(Convert.transpose(data));    
                         } else {
                             series.initializeData();
@@ -1876,7 +1913,7 @@ public class ArchiverPanel extends StandardDialog {
                                 }                                
                             }
                         }
-                    }                    
+                    }                  
                 } finally {
                      plot.reenableUpdates();
                 }                    
