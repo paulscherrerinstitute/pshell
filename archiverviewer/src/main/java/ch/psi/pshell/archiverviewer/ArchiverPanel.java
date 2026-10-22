@@ -1947,15 +1947,24 @@ public class ArchiverPanel extends StandardDialog {
         plotSeries.add(series);
 
         try {
-            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {                
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     value.addAll(values);
                     timestamp.addAll(timestamps);
                     if (ids!=null){
                         id.addAll(ids);
                     }
-                    if ((value.size() > 0) && (((List) value.get(0)).size() * value.size()) > maxSize) {
-                        throw new RuntimeException("Series too big for plotting: " + name);
+                    
+                    if (value.size() > 0)  {
+                        int elementSize = ((List) value.get(0)).size();
+                        int curSize = elementSize * value.size();
+                        if  (curSize > maxSize){
+                            int fit = (int) (maxSize / elementSize);
+                            value.subList(fit, value.size()).clear();
+                            timestamp.subList(fit, timestamp.size()).clear();
+                            id.subList(fit, id.size()).clear();
+                            throw new RuntimeException("Series too big for plotting: " + name);
+                        }
                     }
                 }
             }).handle((ret, ex) -> {
