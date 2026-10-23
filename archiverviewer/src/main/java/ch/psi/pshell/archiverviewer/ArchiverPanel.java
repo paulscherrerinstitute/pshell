@@ -1890,7 +1890,7 @@ public class ArchiverPanel extends StandardDialog {
                                     }
                                 }                            
                                 int roundedPeriodMs = Math.max(10, (int) Math.round(minInterval));
-                                int frequencyHz = Math.min(100, 1000 / roundedPeriodMs);
+                                int frequencyHz =Math.max(1,  Math.min(100, 1000 / roundedPeriodMs));
                                 selectedPeriodMs = 1000 / frequencyHz;
                             }
                             
@@ -1961,8 +1961,12 @@ public class ArchiverPanel extends StandardDialog {
                         if  (curSize > maxSize){
                             int fit = (int) (maxSize / elementSize);
                             value.subList(fit, value.size()).clear();
-                            timestamp.subList(fit, timestamp.size()).clear();
-                            id.subList(fit, id.size()).clear();
+                            if(timestamp.size() > fit){
+                                timestamp.subList(fit, timestamp.size()).clear();
+                            }
+                            if(id.size() > fit){
+                                id.subList(fit, id.size()).clear();
+                            }
                             throw new RuntimeException("Series too big for plotting: " + name);
                         }
                     }
