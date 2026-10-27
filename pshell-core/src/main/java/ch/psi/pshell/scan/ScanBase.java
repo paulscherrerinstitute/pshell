@@ -239,12 +239,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         settleTimeout = value;
     }
 
-    void assertFieldsOk() {
+    protected void assertFieldsOk() {
         if ((writables == null) || (readables == null)) {
             throw new IllegalArgumentException();
         }
 
-        for (int i = 0; i < writables.length; i++) {
+        for (int i = 0; i < stepSize.length; i++) {
             if (isPositiveDirection(i) && (stepSize[i] < 0)) {
                 //throw new IllegalArgumentException();
                 stepSize[i] *= -1;
