@@ -483,8 +483,6 @@ public class StripChart extends StandardDialog {
     }
 
     public void initializeTable() {
-        //Fix bug of nimbus rendering Boolean in table
-        ((JComponent) tableSeries.getDefaultRenderer(Boolean.class)).setOpaque(true);
         tableSeries.getColumnModel().getColumn(0).setResizable(true);
 
         TableColumn colEnabled = tableSeries.getColumnModel().getColumn(0);
