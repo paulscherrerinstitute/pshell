@@ -1,7 +1,6 @@
 package ch.psi.pshell.bs;
 
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
-import ch.psi.pshell.devices.Options;
 import ch.psi.pshell.devices.Setup;
 import ch.psi.pshell.utils.EncoderJson;
 import ch.psi.pshell.utils.Str;
@@ -26,10 +25,10 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  * Extension to Provider class, managing the creation and disposal of streams at the Dispatcher
  * layer.
  */
-public class Dispatcher extends Provider {
+public class Dispatcher extends Provider{
     public static final String DEFAULT_URL = "https://dispatcher-api.psi.ch/sf";
 
-    Client client;
+    final Client client;
 
     public Dispatcher(String name) {
         this(name, Setup.getDispatcher());
@@ -56,6 +55,7 @@ public class Dispatcher extends Provider {
     @Override
     protected void doClose() throws IOException {
         super.doClose();
+        client.close();        
         for (Stream stream : streamSockets.keySet()) {
             closeStream(stream);
         }
@@ -89,7 +89,7 @@ public class Dispatcher extends Provider {
         HashMap map = new HashMap();
         map.put("sources", sources);
         String json = EncoderJson.encode(map, false);
-        Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
+        resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json)).close();
     }
 
     public void removeSources(List<Map> sources) throws IOException {
@@ -97,7 +97,7 @@ public class Dispatcher extends Provider {
         HashMap map = new HashMap();
         map.put("sources", sources);
         String json = EncoderJson.encode(map, false);
-        Response r = resource.request().accept(MediaType.TEXT_PLAIN).method("DELETE", Entity.json(json));
+        resource.request().accept(MediaType.TEXT_PLAIN).method("DELETE", Entity.json(json)).close();
     }
 
     public List<Map> getSources() {
@@ -112,7 +112,7 @@ public class Dispatcher extends Provider {
 
     public void removeStream(String stream) throws IOException {
         WebTarget resource = client.target(getAddress() + "/stream");
-        Response r = resource.request().accept(MediaType.TEXT_PLAIN).method("DELETE", Entity.text(stream));
+        resource.request().accept(MediaType.TEXT_PLAIN).method("DELETE", Entity.text(stream)).close();
     }
 
     public String addStream(List channels) throws IOException {
@@ -193,17 +193,18 @@ public class Dispatcher extends Provider {
 
         WebTarget resource = client.target(getAddress() + "/stream");
         String json = EncoderJson.encode(config, false);
-        Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
-        Map streamData = r.readEntity(Map.class);
-        Object url = streamData.get("stream");
-        getLogger().log(Level.FINE, "Creating stream from: {0}", json);
-        if ((r.getStatus() == Response.Status.OK.getStatusCode()) && (url != null)) {
-            getLogger().log(Level.FINE, "Created stream: {0}", url);
-            return url.toString();
+        try (Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json))){
+            Map streamData = r.readEntity(Map.class);
+            Object url = streamData.get("stream");
+            getLogger().log(Level.FINE, "Creating stream from: {0}", json);
+            if ((r.getStatus() == Response.Status.OK.getStatusCode()) && (url != null)) {
+                getLogger().log(Level.FINE, "Created stream: {0}", url);
+                return url.toString();
+            }
+            String message = "Error creating stream: " + Str.toString(streamData.get("message"))  + " status: " + r.getStatus();
+            getLogger().warning(message);
+            throw new DeviceException(message);
         }
-        String message = "Error creating stream: " + Str.toString(streamData.get("message"))  + " status: " + r.getStatus();
-        getLogger().warning(message);
-        throw new DeviceException(message);
     }
 
     final Map<Stream, String> streamSockets = new HashMap<>();
@@ -247,5 +248,6 @@ public class Dispatcher extends Provider {
              Logger.getLogger(Provider.class.getName()).log(Level.SEVERE, null, ex);
         }
         return dispatcher;
-    }                            
+    }          
+    
 }

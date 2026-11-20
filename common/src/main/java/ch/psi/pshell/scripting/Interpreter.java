@@ -40,7 +40,7 @@ import javax.script.ScriptException;
  *
  */
 public class Interpreter implements AutoCloseable {
-    static  Interpreter INSTANCE;    
+    private static volatile Interpreter INSTANCE;    
     public static boolean hasInstance(){  
         return INSTANCE!=null;
     }

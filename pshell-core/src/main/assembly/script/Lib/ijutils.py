@@ -134,7 +134,7 @@ def save_image(ip, path=None, format = None, metadata={}):
     if path == None: fs.save()
     else:
         try:
-            path = expandPath(path)
+            path = expand_path(path)
         except:
             pass           
         if format == "bmp": fs.saveAsBmp(path) 
@@ -311,7 +311,7 @@ def binary_open(ip, dark_background=False, iterations=1, count=1, in_place=True)
     return binary_op(ip, "open", dark_background, iterations, count, in_place)
 
 def binary_close(ip, dark_background=False, iterations=1, count=1, in_place=True):
-    return binary_op(ip, "close", dark_background, iterations, count)
+    return binary_op(ip, "close", dark_background, iterations, count, in_place)
 
 def binary_outline(ip, dark_background=False, in_place=True):
     return binary_op(ip, "outline", dark_background, in_place=in_place)
@@ -527,8 +527,8 @@ def unsharp_mask(ip, sigma, weight, in_place=True):
     ip = ip if in_place else ip.duplicate()
     ip.getProcessor().snapshot()
     unsharp=UnsharpMask()
-    USmask.setup("  ", ip)
-    USmask.sharpenFloat( ip.getProcessor(),sigma, weight)
+    unsharp.setup("  ", ip)
+    unsharp.sharpenFloat( ip.getProcessor(),sigma, weight)
     return ip
 
 def subtract_background(ip, radius = 50, create_background=False, dark_background=False, use_paraboloid =True, do_presmooth = True, correctCorners = True, rgb_brightness=False, in_place=True):

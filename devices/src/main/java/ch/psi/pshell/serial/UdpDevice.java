@@ -72,7 +72,7 @@ public class UdpDevice extends SerialDeviceBase {
         }
         if (getMode() == Mode.FullDuplex) {
             waitThread = new Thread(() -> {
-                while (!Thread.currentThread().isInterrupted()) {
+                while ((!Thread.currentThread().isInterrupted()) && (socket!=null)) {
                     try {
                         buffer = receive();
                         onString(new String(buffer));
@@ -94,18 +94,17 @@ public class UdpDevice extends SerialDeviceBase {
     }
     
     void closeSocket(){
+        DatagramSocket s = socket;
+        socket = null;
+        if (!isSimulated()) {
+            if (s != null) {
+                s.close(); // unblocks receive()
+            }
+        }
         if (waitThread != null) {
             waitThread.interrupt();
             waitThread = null;
         }
-        
-        if (isSimulated()) {
-            return;
-        }
-        if (socket != null) {
-            socket.close();
-            socket = null;
-        }        
     }
 
     @Override

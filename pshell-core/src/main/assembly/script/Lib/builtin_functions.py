@@ -986,7 +986,7 @@ def _adjust_channel_value(value, var_type=None):
             var_type = var_type.replace(',','').replace('[','')
             ret = []
             for item in value:
-               ret.append(_adjust_channel_value(item), var_type)
+               ret.append(_adjust_channel_value(item, var_type))
             value = ret
         else:
             var_type = var_type.lower()

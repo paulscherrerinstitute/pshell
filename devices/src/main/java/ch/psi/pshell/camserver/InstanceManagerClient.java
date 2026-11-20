@@ -79,10 +79,11 @@ public abstract class InstanceManagerClient extends CamServerClient {
         checkName(name);
         String json = EncoderJson.encode(config, true);
         WebTarget resource = client.target(prefix + "/" + name + "/config");
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json))){
+            json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+        }
     }
     
     public Object getConfigValue(String name, String entry) throws IOException {

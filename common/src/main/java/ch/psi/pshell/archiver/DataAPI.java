@@ -17,10 +17,11 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 /**
  * Access to DataAPI service, which performs queries on the DataBuffer
  */
-public class DataAPI implements ChannelQueryAPI {
+public class DataAPI implements ChannelQueryAPI, AutoCloseable {
 
     final String url;
     final Client client;
+
     
     public enum Ordering {
         none,
@@ -59,11 +60,13 @@ public class DataAPI implements ChannelQueryAPI {
         }
         String json = EncoderJson.encode(data, false);
         WebTarget resource = client.target(url + "/channels");
-        Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        //List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
-        List<String> ret = (List) EncoderJson.decode(json, List.class);
-        return ret;
+
+        try (Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json))) {
+            json = r.readEntity(String.class);
+            //List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
+            List<String> ret = (List) EncoderJson.decode(json, List.class);
+            return ret;
+        }
     }
 
     public List<String> queryNames(String regex, String backend, Ordering ordering, Boolean reload) throws IOException {
@@ -98,10 +101,11 @@ public class DataAPI implements ChannelQueryAPI {
         
         String json = EncoderJson.encode(data, false);
         WebTarget resource = client.target(url + "/query");
-        Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
-        return ret;
+        try (Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json))) {
+            json = r.readEntity(String.class);
+            List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
+            return ret;
+        }
     }
     
     
@@ -109,6 +113,11 @@ public class DataAPI implements ChannelQueryAPI {
     @Override
     public List<String> queryChannels(String text, String backend, int limit) throws IOException{
         return queryNames(text, backend, DataAPI.Ordering.desc, Boolean.FALSE);
+    }
+
+    @Override
+    public void close() throws Exception {
+        client.close();
     }
     
 }

@@ -162,16 +162,19 @@ public abstract class App extends ObservableBase<AppListener> {
             try {
                 //URL url = App.class.getClassLoader().getResource("META-INF/MANIFEST.MF");
                 //Manifest manifest = new Manifest(url.openStream());              
-                JarInputStream jarStream = new JarInputStream(new FileInputStream(new File(jarFile)));
-                Manifest manifest = jarStream.getManifest();
-                Attributes attr = manifest.getMainAttributes();
-                String buildTime = attr.getValue("Build-Time");
-                if (buildTime != null) {
-                    System.setProperty("build.time", buildTime);
-                }
-                String buildType = attr.getValue("Build-Type");
-                if (buildType != null) {
-                    System.setProperty("build.type", buildType);
+                try (JarInputStream jarStream = new JarInputStream(new FileInputStream(new File(jarFile)))) {
+                    Manifest manifest = jarStream.getManifest();
+                    if (manifest != null) {
+                        Attributes attr = manifest.getMainAttributes();
+                        String buildTime = attr.getValue("Build-Time");
+                        if (buildTime != null) {
+                            System.setProperty("build.time", buildTime);
+                        }
+                        String buildType = attr.getValue("Build-Type");
+                        if (buildType != null) {
+                            System.setProperty("build.type", buildType);
+                        }
+                    }
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();

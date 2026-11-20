@@ -123,7 +123,7 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
         }
         closeOutput();
         if (config.truncate() != null){
-            setTruncate(truncate);
+            setTruncate(config.truncate());
         }
         if ((config.textEmbededAttrs() != null) &&(config.textEmbededAttrs() != FormatText.getDefaultEmbeddedAttributes())){                
             FormatText.setDefaultEmbeddedAttributes(config.textEmbededAttrs());
@@ -141,8 +141,8 @@ public class DataManager extends ch.psi.pshell.data.DataStore {
             FormatText.setDefaultLineSeparator(config.textLineSeparator());
             this.format = null; 
         }
-        if ((config.textFinalSeparator() != null) &&(config.textEmbededAttrs() != FormatText.getDefaultEmbeddedAttributes())){                
-            FormatText.setDefaultEmbeddedAttributes(config.textEmbededAttrs());
+        if ((config.textFinalSeparator() != null) &&(config.textFinalSeparator() != FormatText.getDefaultFinalSeparator())){
+            FormatText.setDefaultFinalSeparator(config.textFinalSeparator());
             this.format = null; //Forces re-creation
         }        
         if (config.depthDimension()!=null){

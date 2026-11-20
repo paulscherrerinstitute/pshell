@@ -83,10 +83,11 @@ public class ProxyClient extends CamServerClient{
         checkName(name);
         WebTarget resource = client.target(prefix + "/" + name + "/config");
         Map<String, Object> map = (Map) EncoderJson.decode(config, Map.class); //Check if serializable
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(config));
-        String json = json = r.readEntity(String.class);
-        map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(config))){
+            String json = json = r.readEntity(String.class);
+            map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+        }
     }
     
     public void deleteNamedConfig(String name) throws IOException {
@@ -104,10 +105,11 @@ public class ProxyClient extends CamServerClient{
     public void setConfig(Map<String, Object> config) throws IOException {
         String json = EncoderJson.encode(config, true);
         WebTarget resource = client.target(prefix + "/config");
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json))){
+            json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+        }
     }    
     
     
@@ -170,10 +172,11 @@ public class ProxyClient extends CamServerClient{
     public void setPemanentInstances(Map<String, String> config) throws IOException {
         String json = EncoderJson.encode(config, false);
         WebTarget resource = client.target(prefix + "/permanent");
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json))){
+            json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+        }
     }    
     
      /**

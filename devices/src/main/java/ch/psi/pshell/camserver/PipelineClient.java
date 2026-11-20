@@ -90,10 +90,11 @@ public class PipelineClient extends InstanceManagerClient{
         checkName(instanceId);
         String json = EncoderJson.encode(config, false);
         WebTarget resource = client.target(prefix + "/instance/" + instanceId + "/config");
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json))){
+            json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+        }
     }
 
     /**
@@ -141,11 +142,12 @@ public class PipelineClient extends InstanceManagerClient{
             
             resource = resource.queryParam("additional_config", URLEncoder.encode(json, "UTF-8"));
         }
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(null);
-        String json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
-        return Arrays.asList(new String[]{(String) map.get("instance_id"), (String) map.get("stream")});
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(null)){
+            String json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+            return Arrays.asList(new String[]{(String) map.get("instance_id"), (String) map.get("stream")});
+        }
     }
 
     public List<String> createReadonlyFromName(String pipelineName, String id) throws IOException {
@@ -165,11 +167,12 @@ public class PipelineClient extends InstanceManagerClient{
         if (id != null) {
             resource = resource.queryParam("instance_id", id);
         }
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
-        return Arrays.asList(new String[]{(String) map.get("instance_id"), (String) map.get("stream")});
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json))){
+            json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+            return Arrays.asList(new String[]{(String) map.get("instance_id"), (String) map.get("stream")});
+        }
     }
 
     public List<String> createReadonlyFromConfig(Map<String, Object> config, String id) throws IOException {
@@ -184,11 +187,12 @@ public class PipelineClient extends InstanceManagerClient{
         checkName(pipelineName);
         String json = EncoderJson.encode(config, false);
         WebTarget resource = client.target(prefix + "/" + pipelineName + "/config");
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
-        return (String) map.get("stream");
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json))){
+            json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+            return (String) map.get("stream");
+        }
     }
 
     /**
@@ -200,11 +204,12 @@ public class PipelineClient extends InstanceManagerClient{
         if (images != null) {
             resource = resource.queryParam("n_images", images);
         }
-        Response r = resource.request().accept(MediaType.TEXT_HTML).post(null);
-        String json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
-        return (String) map.get("background_id");
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(null)){
+            String json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+            return (String) map.get("background_id");
+        }
     }
 
     public String getLastBackground(String cameraName) throws IOException {
@@ -330,10 +335,11 @@ public class PipelineClient extends InstanceManagerClient{
     
     public void setScript(String name, String script) throws IOException {
         WebTarget resource = client.target(prefix+ "/script/" + name + "/script_bytes");
-        Response r = resource.request().accept(MediaType.TEXT_HTML).put(Entity.text(script));
-        String json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);   
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).put(Entity.text(script))){
+            String json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);   
+        }
     }               
 
     public void deleteScript(String name) throws IOException {
@@ -393,10 +399,11 @@ public class PipelineClient extends InstanceManagerClient{
     
     public void setLib(String name, byte[] lib) throws IOException {
         WebTarget resource = client.target(prefix+ "/lib/" + name + "/lib_bytes");
-        Response r = resource.request().accept(MediaType.TEXT_HTML).put(Entity.text(lib));
-        String json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);   
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).put(Entity.text(lib))){
+            String json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);   
+        }
     }               
 
     public void deleteLib(String name) throws IOException {

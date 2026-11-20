@@ -131,7 +131,9 @@ public class TcpDevice extends SerialDeviceBase {
 
     @Override
     public synchronized void flush() throws IOException {
-        client.flush();
+        if (client!=null) {
+            client.flush();
+        }
         buffer = new StringBuffer(1024);
     }
 

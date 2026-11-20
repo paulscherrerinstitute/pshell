@@ -15,7 +15,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 /**
  * Base class for all CamServer clients.
  */
-public class CamServerClient {
+public class CamServerClient implements AutoCloseable{
     final String url;
     final Client client;
     final String prefix;
@@ -98,9 +98,15 @@ public class CamServerClient {
 
     public void reset() throws IOException {
         WebTarget resource = client.target(getUrl() + "/api/v1/reset");
-        Response r = resource.request().accept(MediaType.TEXT_HTML).get();
-        String json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
+        try (Response r = resource.request().accept(MediaType.TEXT_HTML).get()){
+            String json = r.readEntity(String.class);
+            Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+            checkReturn(map);
+        }
     }  
+
+    @Override
+    public void close() throws Exception {
+        client.close();
+    }
 }

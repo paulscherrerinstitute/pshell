@@ -32,25 +32,24 @@ public abstract class StreamDevice extends SerialDeviceBase {
 
     @Override
     protected void doClose() throws IOException {
-        if (isSimulated()) {
-            return;
-        }
-        if (inputStream != null) {
-            try {
-                inputStream.close();
-            } catch (Exception ex) {
-                getLogger().log(Level.WARNING, null, ex);
+        if (!isSimulated()) {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (Exception ex) {
+                    getLogger().log(Level.WARNING, null, ex);
+                }
             }
-        }
-        if (outputStream != null) {
-            try {
-                outputStream.close();
-            } catch (Exception ex) {
-                getLogger().log(Level.WARNING, null, ex);
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (Exception ex) {
+                    getLogger().log(Level.WARNING, null, ex);
+                }
             }
+            inputStream = null;
+            outputStream = null;
         }
-        inputStream = null;
-        outputStream = null;
         super.doClose();
     }
 

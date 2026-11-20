@@ -105,7 +105,7 @@ public class PanelStatus extends MonitoredPanel {
 
    public void setPipeline(boolean value){
        isPipeline = value;
-       buttonFunction.setText(isPipeline ? "Script" : "Delete");
+       updateControls();
    }
 
    @Override
@@ -260,7 +260,7 @@ public class PanelStatus extends MonitoredPanel {
             buttonInstanceStop.setEnabled(instanceSelected);
             buttonRead.setEnabled(instanceSelected);
             buttonConfig.setEnabled(instanceSelected);
-            buttonFunction.setEnabled(instanceSelected);
+            buttonFunction.setEnabled(instanceSelected && isPipeline);
             buttonInstanceLogs.setEnabled(instanceSelected);
         } catch (Exception ex){
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
@@ -724,13 +724,16 @@ public class PanelStatus extends MonitoredPanel {
             }
             if (currentInstance==null){
                 throw new Exception("No insatance selected");
-            }
-                        
+            }                                   
+            
+            boolean pipeline = isPipeline;
             schedulerPolling.submit(()->{
                 try{
-                    //InstanceManagerClient client = new InstanceManagerClient(currentServer, PipelineClient.prefix);
-                    //client.stopInstance(currentInstance);                    
+                    if (pipeline){
                         proxy.stopInstance(currentInstance);
+                    } else {
+                        proxy.deleteInstance(currentInstance);
+                    }
                 } catch (Exception ex){
                     SwingUtils.showException(this, ex);
                 }                    
@@ -830,14 +833,6 @@ public class PanelStatus extends MonitoredPanel {
                 if (script!=null){
                     client.setFunction(currentInstance, script);
                 }
-            } else {                        
-                schedulerPolling.submit(()->{
-                    try{
-                        proxy.deleteInstance(currentInstance);
-                    } catch (Exception ex){
-                        SwingUtils.showException(this, ex);
-                    }                    
-                });             
             }        
         } catch (Exception ex){
             SwingUtils.showException(this, ex);

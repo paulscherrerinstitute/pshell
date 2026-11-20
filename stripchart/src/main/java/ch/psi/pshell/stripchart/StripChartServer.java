@@ -206,19 +206,21 @@ public class StripChartServer implements AutoCloseable {
     public static String create(File file, String config, boolean start) {
         String url = "http://" + DEFAULT_URL + ":" + DEFAULT_PORT + "/";
         ClientConfig cfg = new ClientConfig().register(JacksonFeature.class);
-        Client client = ClientBuilder.newClient(cfg);
-        String ret = null;
-        if ((file==null) &&(config==null)){
-            WebTarget resource = client.target(url + "new");
-            ret = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);
-        } else if (file!=null){
-            WebTarget resource = client.target(url + (start ? "run" : "open") + "/" + file.getPath());
-            ret = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);     
-        } else {
-            WebTarget resource = client.target(url + (start ? "run" : "open"));
-            Response r = resource.request().accept(MediaType.TEXT_PLAIN).put(Entity.json(config));          
-            ret = r.readEntity(String.class);
-        } 
+        try(Client client = ClientBuilder.newClient(cfg)){
+            String ret = null;
+            if ((file==null) &&(config==null)){
+                WebTarget resource = client.target(url + "new");
+                ret = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);
+            } else if (file!=null){
+                WebTarget resource = client.target(url + (start ? "run" : "open") + "/" + file.getPath());
+                ret = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);     
+            } else {
+                WebTarget resource = client.target(url + (start ? "run" : "open"));
+                try (Response r = resource.request().accept(MediaType.TEXT_PLAIN).put(Entity.json(config))) {
+                    ret = r.readEntity(String.class);
+                }
+            } 
         return ret;
+        }
     }    
 }

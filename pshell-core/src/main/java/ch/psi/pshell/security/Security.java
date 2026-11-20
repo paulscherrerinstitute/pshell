@@ -30,7 +30,7 @@ import ch.psi.pshell.sequencer.SequencerListener;
  *
  */
  public class Security extends ObservableBase<SecurityListener> implements AutoCloseable {
-    static Security INSTANCE;
+    private static volatile Security INSTANCE;
     
     public static Security getInstance(){
         if (INSTANCE == null){

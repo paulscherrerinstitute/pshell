@@ -157,7 +157,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
         BufferedReader bufferedReader = new BufferedReader(reader);
         String line;
         while ((line = bufferedReader.readLine()) != null) {
-            sb.append(line);
+            sb.append(line).append('\n');
         }
         return sb.toString();        
     }    
@@ -189,36 +189,36 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
 
     @Override
     public Object eval(Reader reader) throws ScriptException {
-        return runInInterpreterThread(() -> eval(reader, this.context, this.bindings));
+        return eval(reader, this.context, this.bindings);
     }
 
     @Override
     public Object eval(Reader reader, ScriptContext context) throws ScriptException {
-        return runInInterpreterThread(() -> eval(reader, context, this.bindings));
+        return eval(reader, context, this.bindings);
     }
 
     @Override
     public Object eval(Reader reader, Bindings bindings) throws ScriptException {
-        return runInInterpreterThread(() -> eval(reader, context, bindings));
+        return eval(reader, context, bindings);
     }
     
     public Object eval(File file) throws ScriptException {
-        return runInInterpreterThread(() -> eval(file, this.context, this.bindings));
+        return eval(file, this.context, this.bindings);
     }
 
     @Override
     public Object eval(String line) throws ScriptException {
-        return runInInterpreterThread(() -> eval(line, this.context, this.bindings));
+        return eval(line, this.context, this.bindings);
     }
 
     @Override
     public Object eval(String line, ScriptContext context) throws ScriptException {
-        return runInInterpreterThread(() -> eval(line, context, this.bindings));
+        return eval(line, context, this.bindings);
     }
 
     @Override
     public Object eval(String line, Bindings b) throws ScriptException {
-        return runInInterpreterThread(() -> eval(line, this.context, b));
+        return eval(line, this.context, b);
     }
 
     private Object eval(String line, ScriptContext context, Bindings b) throws ScriptException {
@@ -324,9 +324,11 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
     public void setBindings(Bindings bindings, int scope) {
         if (scope == ScriptContext.ENGINE_SCOPE) {
             this.bindings = bindings;
+        } else if (scope == ScriptContext.GLOBAL_SCOPE) {
+            this.globalBindings = bindings;
+        } else {
+            throw new IllegalArgumentException("Invalid scope: " + scope);
         }
-
-        this.globalBindings = bindings;
     }
 
     @Override
@@ -389,16 +391,17 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
     public static boolean sendCtrCmd(String cmd){
         try{
             //!!! TEST
-            DatagramSocket socket = new DatagramSocket();
-            socket.setSoTimeout(3000);
-            InetAddress address = InetAddress.getByName("localhost");
-            byte[] bytes = cmd.getBytes();
-            DatagramPacket txPack = new DatagramPacket(bytes, bytes.length, address, CTRL_CMD_PORT);
-            socket.send(txPack);
-            byte[] buffer = new byte[10000];
-            DatagramPacket rxPack = new DatagramPacket(buffer, buffer.length);
-            socket.receive(rxPack);
-            return true;
+            try ( DatagramSocket socket = new DatagramSocket()) {
+                socket.setSoTimeout(3000); //!!! Can be smaller?
+                InetAddress address = InetAddress.getByName("localhost");
+                byte[] bytes = cmd.getBytes();
+                DatagramPacket txPack = new DatagramPacket(bytes, bytes.length, address, CTRL_CMD_PORT);
+                socket.send(txPack);
+                byte[] buffer = new byte[10000];
+                DatagramPacket rxPack = new DatagramPacket(buffer, buffer.length);
+                socket.receive(rxPack);
+                return true;
+            }
         } catch (Exception ex){
             return false;
         }

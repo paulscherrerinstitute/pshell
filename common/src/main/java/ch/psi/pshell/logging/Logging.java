@@ -47,7 +47,7 @@ public class Logging {
     ArrayList<String[]> lastLogs = new ArrayList();
     int maxFileSize = -1;
 
-    public static Logging INSTANCE;
+    private static volatile Logging INSTANCE;
     
     public static Logging getInstance(){
         if (INSTANCE == null){
@@ -97,6 +97,9 @@ public class Logging {
             sb.append(date).append(FILE_SEPARATOR);
             sb.append(time).append(FILE_SEPARATOR);
             String logger = record.getLoggerName();
+            if (logger == null || logger.isBlank()) {
+                logger = "Unknown";
+            }
             int simpleNameIndex = logger.lastIndexOf(".") + 1;
             if (simpleNameIndex >= (logger.length() - 1)) {
                 simpleNameIndex = 0;
@@ -127,6 +130,9 @@ public class Logging {
         
     
     public String getFileName(){
+        if (fileName == null) {
+            return null;
+        }
         if (maxFileSize>1){
             File dir = new File(fileName).getParentFile();
             File[] files = dir.listFiles((d, name) ->name.startsWith( IO.getPrefix(fileName)));
@@ -181,7 +187,11 @@ public class Logging {
                 }
                 logFile = maxFileSize<1 ? new FileHandler(fileName) : new FileHandler(getFilePattern(), maxFileSize, MAX_NUMBER_OF_FILES, false);
                 logFile.setFormatter(formatter);
-                IO.setFilePermissions(fileName, filePermissions);
+                if (maxFileSize<1) {
+                    IO.setFilePermissions(fileName, filePermissions);
+                } else {
+                    //TODO: Cannot (easily)  set file permissions for rolling file handler
+                }
                 addHandler(logFile);
                        
                 if (daysToLive > 0) {
@@ -208,7 +218,7 @@ public class Logging {
                 String[] log = parseLogRecord(record);
                 log[4] = Str.toHtml(log[4]);
                 lastLogs.add(log);
-                if (lastLogs.size() >= LAST_LOGS_SIZE) {
+                if (lastLogs.size() > LAST_LOGS_SIZE) {
                     lastLogs.remove(0);
                 }
             }
@@ -236,7 +246,7 @@ public class Logging {
 
     public List<String[]> getLastLogs() {
         synchronized (lastLogs) {
-            return (ArrayList<String[]>) lastLogs.clone();
+            return new ArrayList<>(lastLogs);
         }
     }
     
@@ -252,6 +262,9 @@ public class Logging {
         String date = Chrono.getTimeStr(record.getMillis(), "dd/MM/YY");
         String time = Chrono.getTimeStr(record.getMillis(), "HH:mm:ss.SSS");
         String logger = record.getLoggerName();
+        if (logger == null || logger.isBlank()) {
+            logger = "Unknown";
+        }
         int simpleNameIndex = logger.lastIndexOf(".") + 1;
         if (simpleNameIndex >= (logger.length() - 1)) {
             simpleNameIndex = 0;

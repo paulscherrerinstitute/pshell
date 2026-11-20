@@ -117,8 +117,6 @@ public class PluginsEditor extends Editor {
         @Override
         public void clear() {
             editor.model.setNumRows(0);
-            //Fix bug of nimbus rendering Boolean in table
-            ((JComponent) editor.table.getDefaultRenderer(Boolean.class)).setOpaque(true);
             editor.table.getColumnModel().getColumn(0).setResizable(true);
             editor.table.getColumnModel().getColumn(0).setPreferredWidth(70);
             editor.table.getColumnModel().getColumn(1).setPreferredWidth(280);

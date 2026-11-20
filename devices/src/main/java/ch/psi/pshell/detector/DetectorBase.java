@@ -68,19 +68,18 @@ public class DetectorBase extends DeviceBase {
         SettingsWrapper obj = new SettingsWrapper();
         obj.settings = getConfig();
         String json = EncoderJson.encode(obj, false);
-        Response r = target.path("state").path("configure").request().
-                accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
+        target.path("state").path("configure").request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json)).close();
     }
 
     public void start() throws IOException {
         assertInitialized();
         writeSettings();
-        Response r = target.path("state").path("start").request().post(null);
+        target.path("state").path("start").request().post(null).close();
     }
 
     public void stop() throws IOException {
         assertInitialized();
-        Response r = target.path("state").path("stop").request().post(null);
+        target.path("state").path("stop").request().post(null).close();
     }
     
     void closeClient(){

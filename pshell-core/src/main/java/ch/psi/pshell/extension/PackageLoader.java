@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  *
  */
 public class PackageLoader implements AutoCloseable{
-    public static  PackageLoader INSTANCE; 
+    private static volatile  PackageLoader INSTANCE; 
     
     public static PackageLoader getInstance(){
         if (INSTANCE == null){

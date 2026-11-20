@@ -69,7 +69,7 @@ import org.eclipse.jgit.util.FS;
  */
 public class VersionControl extends ObservableBase<VersionControlListener> implements AutoCloseable {
     
-    static VersionControl INSTANCE;    
+    private static volatile VersionControl INSTANCE;    
     
     public static VersionControl getInstance(){
         if (INSTANCE == null){

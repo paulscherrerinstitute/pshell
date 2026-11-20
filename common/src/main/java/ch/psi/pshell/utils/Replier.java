@@ -47,8 +47,19 @@ public abstract class Replier implements AutoCloseable {
 
                 }
             } finally {
-                socket.close();
-                context.term();
+                try {
+                    if (socket != null) {
+                        socket.close();
+                    }
+                } catch (Exception ignored) {
+                }
+
+                try {
+                    if (context != null) {
+                        context.term();
+                    }
+                } catch (Exception ignored) {
+                }
             }
             Logger.getLogger(Replier.class.getName()).log(Level.INFO, "Quitting");
 
@@ -127,7 +138,7 @@ public abstract class Replier implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        socket.close();
-    }
+        thread.interrupt();
+}
 
 }

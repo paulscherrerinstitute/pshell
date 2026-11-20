@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  */
 public class Extensions implements AutoCloseable {
 
-    static  Extensions INSTANCE;    
+    private static volatile Extensions INSTANCE;    
     static  int runCount = -1;
     
     public static Extensions getInstance(){
@@ -66,14 +66,18 @@ public class Extensions implements AutoCloseable {
         boolean started;
         boolean updating;
     }
-    static HashMap<String, PluginProperties> propertiesMap = new HashMap<>();
+    final static HashMap<String, PluginProperties> propertiesMap = new HashMap<>();
 
     static PluginProperties getProperties(Plugin plugin) {
-        return propertiesMap.get(plugin.getClass().getName());
+        synchronized(propertiesMap) {
+            return propertiesMap.get(plugin.getClass().getName());
+        }
     }
     
     public Plugin[] getLoadedPlugins() {
-        return plugins.toArray(new Plugin[0]);
+        synchronized(plugins) {
+            return plugins.toArray(new Plugin[0]);
+        }
     }
 
     public Class[] getDynamicClasses() {
@@ -140,9 +144,11 @@ public class Extensions implements AutoCloseable {
     
 
     public boolean loadedPluginClass(String className) {
-        for (Plugin plugin : plugins) {
-            if (plugin.getClass().getName().equals(className)) {
-                return true;
+        synchronized(plugins) {
+            for (Plugin plugin : plugins) {
+                if (plugin.getClass().getName().equals(className)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -171,7 +177,9 @@ public class Extensions implements AutoCloseable {
             }
             Plugin plugin = (Plugin) cls.newInstance();
             initPlugin(plugin, file);
-            plugins.add(plugin);
+            synchronized(plugins) {
+                plugins.add(plugin);
+            }
             return plugin;
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Error instantiating plugin class: {0} - {1}", new Object[]{cls.getName(), ex.getMessage()});
@@ -199,7 +207,7 @@ public class Extensions implements AutoCloseable {
         String fileName = file.getPath();
         logger.log(Level.INFO, "Load plugin: {0}", fileName);
         try {
-            for (Plugin p : plugins) {
+            for (Plugin p : getLoadedPlugins()) {
                 if ((p.getPluginFile() != null) && (p.getPluginFile().getCanonicalFile().equals(file.getCanonicalFile()))) {
                     throw new Exception("Plugin file already loaded: " + fileName);
                 }
@@ -214,6 +222,7 @@ public class Extensions implements AutoCloseable {
                             }
                         }
                     }
+                    throw new IllegalArgumentException("No public Plugin implementation found in jar: " + fileName);
 
                 case "py":
                     return loadPythonPlugin(file);
@@ -405,7 +414,9 @@ public class Extensions implements AutoCloseable {
         org.python.core.PyObject py_script = interp.eval(class_name + "()");
         Plugin plugin = (Plugin) py_script.__tojava__(Plugin.class);
         initPlugin(plugin, file);
-        plugins.add(plugin);
+        synchronized(plugins) {
+            plugins.add(plugin);
+        }
         return plugin;
     }
     
@@ -467,7 +478,9 @@ public class Extensions implements AutoCloseable {
         if (Plugin.class.isAssignableFrom(cls)) {
             Plugin plugin = (Plugin) cls.newInstance();
             initPlugin(plugin, file);
-            plugins.add(plugin);            
+            synchronized(plugins) {
+                plugins.add(plugin);
+            }
             return plugin;
         } else {
             //Make dynamic class avilable in system class loader
@@ -486,7 +499,9 @@ public class Extensions implements AutoCloseable {
         if (Plugin.class.isAssignableFrom(cls)) {
             Plugin plugin = (Plugin) cls.newInstance();
             initPlugin(plugin, file);
-            plugins.add(plugin);
+            synchronized(plugins) {
+                plugins.add(plugin);
+            }
             return plugin;
         } else {
             addDynamicClass(cls);
@@ -496,7 +511,7 @@ public class Extensions implements AutoCloseable {
 
     public void startPlugins() {
         logger.info("Start plugins");
-        for (Plugin plugin : plugins) {
+        for (Plugin plugin : getLoadedPlugins()) {
             startPlugin(plugin);
         }
     }
@@ -517,7 +532,7 @@ public class Extensions implements AutoCloseable {
 
     public void stopPlugins() {
         logger.info("Stop plugins");
-        for (Plugin plugin : plugins) {
+        for (Plugin plugin : getLoadedPlugins()) {
             stopPlugin(plugin);
         }
     }
@@ -538,14 +553,21 @@ public class Extensions implements AutoCloseable {
         PluginProperties properties = new PluginProperties();
         properties.file = file;
         properties.name = (file != null) ? file.getName() : plugin.getClass().getSimpleName();
-        propertiesMap.put(plugin.getClass().getName(), properties);
+        synchronized(propertiesMap) {
+            propertiesMap.put(plugin.getClass().getName(), properties);
+        }
     }
 
     public void loadPlugin(Plugin plugin, String name) {
         PluginProperties properties = new PluginProperties();
         properties.file = null;
         properties.name = name;
-        propertiesMap.put(plugin.getClass().getName(), properties);
+        synchronized(plugins) {
+            plugins.add(plugin);
+        }
+        synchronized(propertiesMap) {
+            propertiesMap.put(plugin.getClass().getName(), properties);
+        }
     }
     
     public void restartPlugins() {
@@ -557,7 +579,9 @@ public class Extensions implements AutoCloseable {
     public void reloadPlugins() {
         logger.info("Reload plugins");
         stopPlugins();
-        plugins.clear();
+        synchronized(plugins) {
+            plugins.clear();
+        }
         loadExtensionsFolder();
         reloadPluginFolder();
         startPlugins();
@@ -574,7 +598,9 @@ public class Extensions implements AutoCloseable {
     public void unloadPlugin(Plugin p) {
         logger.log(Level.INFO, "Unload plugin: {0}", p.getPluginName());
         stopPlugin(p);
-        plugins.remove(p);
+        synchronized(plugins) {
+            plugins.remove(p);
+        }
     }
 
     public Plugin reloadPlugin(Plugin p) {
@@ -584,7 +610,9 @@ public class Extensions implements AutoCloseable {
         }
         logger.log(Level.INFO, "Reload plugin file: {0}", p.getPluginFile().getPath());
         stopPlugin(p);
-        plugins.remove(p);
+        synchronized(plugins) {
+            plugins.remove(p);
+        }
         Plugin ret = loadPlugin(p.getPluginFile());
         if (ret != null) {
             startPlugin(ret);
@@ -618,7 +646,8 @@ public class Extensions implements AutoCloseable {
                 file = Paths.get(Setup.getPluginsPath(), fileName).toFile();
             }
             for (Plugin p : getLoadedPlugins()) {
-                if (p.getPluginFile().getCanonicalPath().equals(file.getCanonicalPath())) {
+                File pluginFile = p.getPluginFile();
+                if (pluginFile != null && pluginFile.getCanonicalPath().equals(file.getCanonicalPath())) {
                     return true;
                 }
             }
@@ -628,7 +657,7 @@ public class Extensions implements AutoCloseable {
     }
 
     public void onInitialize(int runCount) {
-        for (Plugin p : plugins) {
+        for (Plugin p : getLoadedPlugins()) {
             try {
                 p.onInitialize(runCount);
             } catch (Exception ex) {
@@ -638,7 +667,7 @@ public class Extensions implements AutoCloseable {
     }
 
     public void onUpdatedDevices() {
-        for (Plugin p : plugins) {
+        for (Plugin p : getLoadedPlugins()) {
             try {
                 p.onUpdatedDevices();
             } catch (Exception ex) {
@@ -648,7 +677,7 @@ public class Extensions implements AutoCloseable {
     }
 
     public void onStoppedDevices() {
-        for (Plugin p : plugins) {
+        for (Plugin p : getLoadedPlugins()) {
             try {
                 p.onStoppedDevices();
             } catch (Exception ex) {
@@ -658,7 +687,7 @@ public class Extensions implements AutoCloseable {
     }
 
     public void onStateChange(State state, State former) {
-        for (Plugin p : plugins) {
+        for (Plugin p : getLoadedPlugins()) {
             try {
                 p.onStateChange(state, former);
             } catch (Exception ex) {
@@ -669,7 +698,7 @@ public class Extensions implements AutoCloseable {
     }
 
     public void onExecutedFile(String fileName, Object result) {
-        for (Plugin p : plugins) {
+        for (Plugin p : getLoadedPlugins()) {
             try {
                 p.onExecutedFile(fileName, result);
             } catch (Exception ex) {

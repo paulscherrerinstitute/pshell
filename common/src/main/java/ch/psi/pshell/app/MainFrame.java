@@ -57,7 +57,7 @@ import javax.swing.table.TableColumn;
  * 296).
  */
 public abstract class MainFrame extends StandardFrame{
-    protected static MainFrame INSTANCE;
+    private static volatile MainFrame INSTANCE;
     public static MainFrame getInstance(){
         return INSTANCE;
     }

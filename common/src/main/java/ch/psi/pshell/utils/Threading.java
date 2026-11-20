@@ -187,9 +187,9 @@ public class Threading {
         
         public void interrupt(){
             try {
-                Thread runningThread = waitRunningThread(0);
+                Thread runningThread = waitRunningThread(3000);
                 runningThread.interrupt();
-            } catch (InterruptedException ex) {                
+            } catch (Exception ex) {
             }            
         }
     }

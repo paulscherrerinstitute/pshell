@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class Terminal extends MonitoredPanel implements AutoCloseable{
 
@@ -94,6 +95,9 @@ public class Terminal extends MonitoredPanel implements AutoCloseable{
             }
             try{
                 process.destroy();
+                if (!process.waitFor(3, TimeUnit.SECONDS)) {
+                    process.destroyForcibly();
+                }
             } catch (Exception ex){                
             }
             closed = true;

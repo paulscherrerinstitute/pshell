@@ -20,23 +20,21 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  *
  */
 //Move to base?
-public class Inventory {
+public class Inventory{
     
 
     public static <T> T inventoryRequest(String url, Map attributes, Class<T> type) throws IOException {
         String json = EncoderJson.encode(attributes, false);
-        Client client = ClientBuilder.newClient(new ClientConfig().register(JacksonFeature.class));
-        try {
+        try (Client client = ClientBuilder.newClient(new ClientConfig().register(JacksonFeature.class))){
             WebTarget resource = client.target(url);
-            Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
-            json = r.readEntity(String.class);
-            if (r.getStatus() != Response.Status.OK.getStatusCode()) {
-                throw new IOException("Inventory returned error: " + json);
+            try (Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json))){
+                json = r.readEntity(String.class);
+                if (r.getStatus() != Response.Status.OK.getStatusCode()) {
+                    throw new IOException("Inventory returned error: " + json);
+                }
+                Map ret = (Map) EncoderJson.decode(json, Map.class);
+                return (T) ret.get("d");
             }
-            Map ret = (Map) EncoderJson.decode(json, Map.class);
-            return (T) ret.get("d");
-        } finally {
-            client.close();
         }
     }
 
@@ -130,7 +128,7 @@ public class Inventory {
         }
 
         return Arrays.asList(new Double[]{horizontal_dist, vertical_dist, horizontal_tilt, vertical_tilt});
-    }
+    }     
 
     public static void main(String[] args) throws IOException {
         System.out.println(getCalibFromInventory("SINEG01-DSCR190", "SINEG01-DSCR190"));

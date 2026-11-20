@@ -43,7 +43,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 /**
  * Access to Daqbuf service.
  */
-public class Daqbuf implements ChannelQueryAPI {
+public class Daqbuf implements ChannelQueryAPI, AutoCloseable {
 
     final static boolean SEARCH_HANDLES_BACKEND = true;
     final String url;
@@ -104,7 +104,7 @@ public class Daqbuf implements ChannelQueryAPI {
 
 
     public String getAvailableDefaultBackend() {
-        if (availableBackends!=null){
+        if (availableBackends != null && availableBackends.length > 0) {
             if (!Arr.containsEqual(availableBackends, backend)){
                 return availableBackends[0];
             }
@@ -117,16 +117,17 @@ public class Daqbuf implements ChannelQueryAPI {
         try {
             Map<String, Object> params = new HashMap<>();
             WebTarget resource = client.target(url + "/backend/list");
-            Response r = resource.request().accept(MediaType.APPLICATION_JSON).get();
-            String json = r.readEntity(String.class);
-            Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
-            List<Map<String, Object>> list = (List<Map<String, Object>>) ret.getOrDefault("backends_available", null);
+            try (Response r = resource.request().accept(MediaType.APPLICATION_JSON).get()){
+                String json = r.readEntity(String.class);
+                Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
+                List<Map<String, Object>> list = (List<Map<String, Object>>) ret.getOrDefault("backends_available", null);
 
-            List<String> backends = new ArrayList();
-            for (Map m : list) {
-                backends.add((String) m.get("name"));
+                List<String> backends = new ArrayList();
+                for (Map m : list) {
+                    backends.add((String) m.get("name"));
+                }
+                return backends.toArray(new String[0]);
             }
-            return backends.toArray(new String[0]);
         } catch (Exception ex) {
             return null;
         }         
@@ -255,23 +256,24 @@ public class Daqbuf implements ChannelQueryAPI {
         for (String paramName : params.keySet()) {
             resource = resource.queryParam(paramName, params.get(paramName));
         }
-        Response r = resource.request().accept(MediaType.APPLICATION_JSON).get();
-        String json = r.readEntity(String.class);
-        Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
-        List<Map<String, Object>> list = (List<Map<String, Object>>) ret.getOrDefault("channels", null);
+        try (Response r = resource.request().accept(MediaType.APPLICATION_JSON).get()) {
+            String json = r.readEntity(String.class);
+            Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
+            List<Map<String, Object>> list = (List<Map<String, Object>>) ret.getOrDefault("channels", null);
 
-        if (!SEARCH_HANDLES_BACKEND) {
-            if ((backend != null) && (!backend.isBlank())) {
-                list = list.stream()
-                        .filter(map -> backend.equals(map.get("backend")))
-                        .collect(Collectors.toList());
+            if (!SEARCH_HANDLES_BACKEND) {
+                if ((backend != null) && (!backend.isBlank())) {
+                    list = list.stream()
+                            .filter(map -> backend.equals(map.get("backend")))
+                            .collect(Collectors.toList());
+                }
             }
+            if ((limit != null) && (limit >= 0) && (list.size() > limit)) {
+                list = list.subList(0, limit);
+            }
+            lastSearch = list;
+            return list;
         }
-        if ((limit != null) && (limit >= 0) && (list.size() > limit)) {
-            list = list.subList(0, limit);
-        }
-        lastSearch = list;
-        return list;
     }
 
     public CompletableFuture startSearch(String regex) {
@@ -515,89 +517,58 @@ public class Daqbuf implements ChannelQueryAPI {
 
         WebTarget resource = client.target(url + path);
         resource = query.setResourceParams(resource);
-        Response response = resource.request().header("Accept", accept).get();
-        IOException e = null;
+        try (Response response = resource.request().header("Accept", accept).get()) {
+            IOException e = null;
 
-        if (response.getStatus() != 200) {
-            try{
-                String json = response.readEntity(String.class);
-                Map body = (Map) EncoderJson.decode(json, Map.class);                
-                String message = (String) body.get("message");
-                String id =  (String) body.get("requestid");                
-                if (message.isBlank()){
-                    throw new Exception();
-                }
-                message = Str.capitalizeFirst(message);                
-                e = new IOException(String.format("%s\nChannel: %s\nRequest ID: %s", message , channel, id));
-            } catch (Exception ex){
-                e = new IOException(String.format("Error retrieving data: %s [%d]\nChannel: %s",  response.getStatusInfo().getReasonPhrase(), response.getStatus(), channel));
-            } finally{
-                throw e;
-            }
-        }
-
-        listener.onStarted(query);
-        Exception queryException = null;
-        try {
-            if (cbor) {
-                final QueryRecordListener recordListener = (listener instanceof QueryRecordListener) ? (QueryRecordListener) listener : null;
-                try (InputStream inputStream = response.readEntity(InputStream.class)) {
-
-                    while (true) {
-                        byte[] sizeBytes = null;
-                        try {
-                            sizeBytes = readStream(inputStream, 4);
-                        } catch (EndOfStreamException ex) {
-                            if (ex.bytesRead > 0) {
-                                throw ex;
-                            }
-                            break;
-                        }
-                        int dataSize = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
-                        byte[] padding = readStream(inputStream, 12);
-                        // Read the data blob of the specified size
-                        byte[] data = readStream(inputStream, dataSize);
-                        padding = readStream(inputStream, (8 - (dataSize % 8)) % 8);
-
-                        Map<String, Object> frame = mapper.readValue(new ByteArrayInputStream(data), Map.class);
-                        String error = (String) frame.getOrDefault("error", null);
-                        if ((error != null) && (!error.isEmpty())) {
-                            throw new IOException(error.trim());
-                        }
-                        if (!frame.getOrDefault("type", "").equals("keepalive")) {
-                            Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
-                            readCborEvents(query, listener, recordListener, frame);
-                            if (rangeFinal == true) {
-                                break;
-                            }
-                            if (Thread.currentThread().isInterrupted()) {
-                                throw new InterruptedException("Query has been aborted");
-                            }
-                        }
+            if (response.getStatus() != 200) {
+                try{
+                    String json = response.readEntity(String.class);
+                    Map body = (Map) EncoderJson.decode(json, Map.class);                
+                    String message = (String) body.get("message");
+                    String id =  (String) body.get("requestid");                
+                    if (message.isBlank()){
+                        throw new Exception();
                     }
+                    message = Str.capitalizeFirst(message);                
+                    e = new IOException(String.format("%s\nChannel: %s\nRequest ID: %s", message , channel, id));
+                } catch (Exception ex){
+                    e = new IOException(String.format("Error retrieving data: %s [%d]\nChannel: %s",  response.getStatusInfo().getReasonPhrase(), response.getStatus(), channel));
+                } finally{
+                    throw e;
                 }
-            } else {
-                if (isStreamed()){
+            }
+
+            listener.onStarted(query);
+            Exception queryException = null;
+            try {
+                if (cbor) {
+                    final QueryRecordListener recordListener = (listener instanceof QueryRecordListener) ? (QueryRecordListener) listener : null;
                     try (InputStream inputStream = response.readEntity(InputStream.class)) {
+
                         while (true) {
-                            int dataSize=0;                            
+                            byte[] sizeBytes = null;
                             try {
-                                String line = readStreamLine(inputStream).trim();
-                                dataSize = Integer.valueOf(line);
+                                sizeBytes = readStream(inputStream, 4);
                             } catch (EndOfStreamException ex) {
+                                if (ex.bytesRead > 0) {
+                                    throw ex;
+                                }
                                 break;
                             }
-                            byte[] bytes = readStream(inputStream, dataSize);
-                            byte[] lf  = readStream(inputStream, 1);
-                            String json = new String(bytes);
-                            Map<String, Object>  frame = (Map<String, Object> ) EncoderJson.decode(json, Map.class);                                    
+                            int dataSize = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
+                            byte[] padding = readStream(inputStream, 12);
+                            // Read the data blob of the specified size
+                            byte[] data = readStream(inputStream, dataSize);
+                            padding = readStream(inputStream, (8 - (dataSize % 8)) % 8);
+
+                            Map<String, Object> frame = mapper.readValue(new ByteArrayInputStream(data), Map.class);
                             String error = (String) frame.getOrDefault("error", null);
                             if ((error != null) && (!error.isEmpty())) {
                                 throw new IOException(error.trim());
                             }
                             if (!frame.getOrDefault("type", "").equals("keepalive")) {
                                 Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
-                                readJsonBinned(query, listener, frame);
+                                readCborEvents(query, listener, recordListener, frame);
                                 if (rangeFinal == true) {
                                     break;
                                 }
@@ -605,23 +576,55 @@ public class Daqbuf implements ChannelQueryAPI {
                                     throw new InterruptedException("Query has been aborted");
                                 }
                             }
-                        }                   
+                        }
                     }
                 } else {
-                    String json = response.readEntity(String.class);
-                    Map<String, Object>  frame = (Map<String, Object> ) EncoderJson.decode(json, Map.class);
-                    readJsonBinned(query, listener, frame);
+                    if (isStreamed()){
+                        try (InputStream inputStream = response.readEntity(InputStream.class)) {
+                            while (true) {
+                                int dataSize=0;                            
+                                try {
+                                    String line = readStreamLine(inputStream).trim();
+                                    dataSize = Integer.valueOf(line);
+                                } catch (EndOfStreamException ex) {
+                                    break;
+                                }
+                                byte[] bytes = readStream(inputStream, dataSize);
+                                byte[] lf  = readStream(inputStream, 1);
+                                String json = new String(bytes);
+                                Map<String, Object>  frame = (Map<String, Object> ) EncoderJson.decode(json, Map.class);                                    
+                                String error = (String) frame.getOrDefault("error", null);
+                                if ((error != null) && (!error.isEmpty())) {
+                                    throw new IOException(error.trim());
+                                }
+                                if (!frame.getOrDefault("type", "").equals("keepalive")) {
+                                    Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
+                                    readJsonBinned(query, listener, frame);
+                                    if (rangeFinal == true) {
+                                        break;
+                                    }
+                                    if (Thread.currentThread().isInterrupted()) {
+                                        throw new InterruptedException("Query has been aborted");
+                                    }
+                                }
+                            }                   
+                        }
+                    } else {
+                        String json = response.readEntity(String.class);
+                        Map<String, Object>  frame = (Map<String, Object> ) EncoderJson.decode(json, Map.class);
+                        readJsonBinned(query, listener, frame);
+                    }
                 }
+            } catch (InterruptedException|IOException ex) {
+                queryException = ex;
+                throw ex;
+            } catch (Exception ex) {
+                queryException = ex;
+                throw new IOException(ex);
+            } finally {
+                listener.onFinished(query, queryException);
+                Logger.getLogger(Daqbuf.class.getName()).finer("Quit query task for channel: " + channel);
             }
-        } catch (InterruptedException|IOException ex) {
-            queryException = ex;
-            throw ex;
-        } catch (Exception ex) {
-            queryException = ex;
-            throw new IOException(ex);
-        } finally {
-            listener.onFinished(query, queryException);
-            Logger.getLogger(Daqbuf.class.getName()).finer("Quit query task for channel: " + channel);
         }
     }
     
@@ -877,10 +880,10 @@ public class Daqbuf implements ChannelQueryAPI {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     ((List) ret.get(FIELD_VALUE)).addAll(values);
                     if (ids!=null){
-                        ((List<Long>) ret.get(FIELD_TIMESTAMP)).addAll(ids);
+                        ((List<Long>) ret.get(FIELD_ID)).addAll(ids);
                     } 
                     if (timestamps!=null){
-                        ((List<Long>) ret.get(FIELD_ID)).addAll(timestamps);
+                        ((List<Long>) ret.get(FIELD_TIMESTAMP)).addAll(timestamps);
                     }
                 }
             };
@@ -1121,6 +1124,12 @@ public class Daqbuf implements ChannelQueryAPI {
         long millis = pulseIdToMillis(pulseId);
         return Time.millisToStr(millis, utc);
     }
+    
+    @Override
+    public void close() throws Exception {
+        client.close();
+    }
+    
 
 
     public static void main(String[] args) throws Exception {

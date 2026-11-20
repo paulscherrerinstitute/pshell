@@ -153,8 +153,8 @@ public class FormatText implements Format {
         return LINE_SEPARATOR;
     }
     
-    public static void setDefaultFinalSeparator(String str) {
-        ITEM_SEPARATOR = str;
+    public static void setDefaultFinalSeparator(boolean value) {
+        FINAL_SEPARATOR = value;
     }
 
     public static boolean getDefaultFinalSeparator() {
@@ -221,7 +221,7 @@ public class FormatText implements Format {
         return lineSeparator;
     }
     
-    static int headerVersion = HEADER_VERSION;
+    int headerVersion = HEADER_VERSION;
 
     public void setHeaderVersion(int version) {
         headerVersion = version;
@@ -980,12 +980,12 @@ public class FormatText implements Format {
 
     @Override
     public void createDataset(String path, Class type, int[] dimensions, boolean unsigned, Map features) throws IOException {
-        Path filePath = getFilePath(path);
-        PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
         OutputFile of;
         synchronized (openFiles) {
             of = openFiles.get(path);
             if (of == null) {
+                Path filePath = getFilePath(path);
+                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
                 of = new OutputFile(filePath, out);
                 openFiles.put(path, of);
             }
@@ -994,7 +994,7 @@ public class FormatText implements Format {
             of.composite = false;
             of.dimensions = dimensions;
             of.indeterminateSize = ((dimensions!=null) && (dimensions.length>1) &&(dimensions[0]==0));
-            writeSingleDatasetHeader(out, type, dimensions, unsigned, of.indeterminateSize);
+            writeSingleDatasetHeader(of.out, type, dimensions, unsigned, of.indeterminateSize);
         }
     }
     

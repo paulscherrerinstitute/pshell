@@ -64,6 +64,7 @@ import ch.psi.pshell.security.SecurityListener;
 import ch.psi.pshell.utils.State.StateException;
 import java.io.IOException;
 import javax.script.ScriptException;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Definition of the application REST API.
@@ -399,9 +400,9 @@ public class ServerService {
     public byte[] bsDataRequest(@PathParam("request") final String request) throws ExecutionException {
         try {
             List<byte[]> req = (List<byte[]>) DataServer.execute(request, "bs");
-            int size = 16;
+            int size = 0;
             for (byte[] arr : req) {
-                size += arr.length;
+                size += Integer.BYTES + arr.length;
             }
             byte[] ret = new byte[size];
             int index = 0;
@@ -676,8 +677,8 @@ public class ServerService {
             if (background) {
                 script = script.substring(0, script.length() - 1);
             }
-            List args = parseArgs(script);
-            return runScript(script, args, false, background).toString();
+            Pair<String, List> parsed = parseArgs(script);
+            return runScript(parsed.getLeft(), parsed.getRight(), false, background).toString();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -694,8 +695,8 @@ public class ServerService {
             if (background) {
                 script = script.substring(0, script.length() - 1);
             }
-            List args = parseArgs(script);
-            return runScript(script, args, true, background).toString();
+            Pair<String, List> parsed = parseArgs(script);            
+            return runScript(parsed.getLeft(), parsed.getRight(), true, background).toString();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -744,7 +745,7 @@ public class ServerService {
         }               
     }
     
-    List parseArgs(String script){    
+    Pair<String, List>  parseArgs(String script){    
         List argList = null;
         if (script.contains("(")) {
             String args = script.substring(script.indexOf("(") + 1);
@@ -758,7 +759,7 @@ public class ServerService {
                 }
             }
         }
-        return argList;
+        return  Pair.of(script, argList);
     }
     
 

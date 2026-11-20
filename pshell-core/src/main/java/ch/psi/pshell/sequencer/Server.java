@@ -96,7 +96,6 @@ public class Server implements AutoCloseable {
         ResourceConfig resourceConfig = new ResourceConfig(SseFeature.class, JacksonFeature.class);
         resourceConfig.register(ServerService.class);
         resourceConfig.register(new ServerResourceBinder());
-        HttpServer server = null;
         if (https) {
             //Generate keystore with: keytool -genkeypair -alias server -keyalg RSA -keysize 2048  -keystore keystore.jks -validity 3650  -storepass changeit
             SSLContextConfigurator sslConfig = new SSLContextConfigurator();

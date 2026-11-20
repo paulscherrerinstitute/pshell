@@ -105,8 +105,6 @@ public class UsersEditor extends Editor {
         @Override
         public void clear() {
             editor.model.setNumRows(0);
-            //Fix bug of nimbus rendering Boolean in table
-            ((JComponent) editor.table.getDefaultRenderer(Boolean.class)).setOpaque(true);
             setChanged(false);
         }
 

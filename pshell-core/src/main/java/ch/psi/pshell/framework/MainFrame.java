@@ -97,7 +97,7 @@ public abstract class MainFrame extends ch.psi.pshell.app.MainFrame{
     }            
     
     public static MainFrame getInstance(){
-        return (MainFrame) INSTANCE;
+        return (MainFrame) ch.psi.pshell.app.MainFrame.getInstance();
     }
     
     private SwingUtils.CloseableTabListener closableTabListener;

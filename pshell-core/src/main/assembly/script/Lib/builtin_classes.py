@@ -665,7 +665,7 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable, DeviceBase)
 
 
 class EpicsCmdAPI(RegisterBase, RegisterArray):
-    def __init__(self, name, channel, as_string=True, background=False, max_size=10000):
+    def __init__(self, name, channel, as_string=True, background=False, max_size=10000, allowed=None):
         RegisterBase.__init__(self, name)
         self.channel=channel
         self.background=background
@@ -673,6 +673,7 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
         self.val = "Unknown"
         self.debug=False
         self.max_size = 10000
+        self.allowed=allowed
         self.cas = None
 
     def doInitialize(self):   
@@ -715,6 +716,14 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
                     cmd=cmd[0:-1]
             if self.debug:            
                 print "WRITE: ", cmd
+            if self.allowed is not None:
+                allowed = False
+                for item in self.allowed:
+                    if cmd.startswith(item):
+                        allowed=True
+                        break
+                if not allowed:
+                    raise Exception("Command is not allowed on " + self.name + ": " + str(cmd))
             class eval_callback(BiFunction):
                 def apply(self_callback, ret, ex):
                     try:

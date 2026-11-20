@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  *
  */
 public class Notifier implements AutoCloseable{
-    public static  Notifier INSTANCE;    
+    private static volatile  Notifier INSTANCE;    
     
     public static Notifier getInstance(){
         if (INSTANCE == null){

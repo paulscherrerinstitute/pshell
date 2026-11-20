@@ -33,7 +33,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 public class Sessions extends ObservableBase<Sessions.SessionsListener> {
 
-    static  Sessions INSTANCE;    
+    private static volatile Sessions INSTANCE;    
     public Sessions(){        
         INSTANCE  = this;
     }

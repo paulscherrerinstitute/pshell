@@ -16,7 +16,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  * Access to IOC info
  * http://iocinfo.psi.ch/swagger-ui.html#!/iocinfo45query45controller/findRecordsUsingGET
  */
-public class IocInfoAPI implements ChannelQueryAPI{
+public class IocInfoAPI implements ChannelQueryAPI, AutoCloseable{
 
     final String url;
     final Client client;
@@ -51,10 +51,11 @@ public class IocInfoAPI implements ChannelQueryAPI{
             text=".*" +text + ".*";
         }
         resource = resource.queryParam("pattern", text);
-        Response r = resource.request().accept(MediaType.APPLICATION_JSON).get();
-        String json = r.readEntity(String.class);
-        List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
-        return ret;
+        try (Response r = resource.request().accept(MediaType.APPLICATION_JSON).get()){
+            String json = r.readEntity(String.class);
+            List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
+            return ret;
+        }
     }
     
     public List<String> queryNames(String text, String facility, boolean regex, Integer limit) throws IOException {
@@ -73,5 +74,11 @@ public class IocInfoAPI implements ChannelQueryAPI{
     public List<String> queryChannels(String text, String backend, int limit) throws IOException {
         return queryNames(text, backend, false, limit);
     }
+    
+    
+    @Override
+    public void close() throws Exception {
+        client.close();
+    }    
     
 }

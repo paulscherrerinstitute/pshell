@@ -1,7 +1,7 @@
 package ch.psi.pshell.utils;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -36,8 +36,8 @@ public class EventBus extends ObservableBase<EventBusListener> implements AutoCl
         if (mode==Mode.ASYNC){
             createExecutor(null);
         } else if (mode==Mode.PARALLEL){
-            executors = new HashMap<>();
-            threads  = new HashMap<>();
+            executors = new ConcurrentHashMap<>();
+            threads  = new ConcurrentHashMap<>();
         }
     }    
     

@@ -16,7 +16,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  * Access to EPICS Boot info
  * https://intranet.psi.ch/wiki/bin/viewauth/Controls_IT/EpicsBootInfo
  */
-public class EpicsBootInfoAPI implements ChannelQueryAPI{
+public class EpicsBootInfoAPI implements ChannelQueryAPI, AutoCloseable{
 
     final String url;
     final Client client;
@@ -55,10 +55,11 @@ public class EpicsBootInfoAPI implements ChannelQueryAPI{
         if (limit != null) {
             resource = resource.queryParam("limit", limit);
         }        
-        Response r = resource.request().accept(MediaType.APPLICATION_JSON).get();
-        String json = r.readEntity(String.class);
-        List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
-        return ret;
+        try (Response r = resource.request().accept(MediaType.APPLICATION_JSON).get()){
+            String json = r.readEntity(String.class);
+            List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
+            return ret;
+        }
     }
     
     public List<String> queryNames(String regex, String facility, String match, Integer limit) throws IOException {
@@ -77,4 +78,10 @@ public class EpicsBootInfoAPI implements ChannelQueryAPI{
     public List<String> queryChannels(String text, String backend, int limit) throws IOException {
         return queryNames(text, backend, "substring", limit);
     }
+    
+    
+    @Override
+    public void close() throws Exception {
+        client.close();
+    }    
 }

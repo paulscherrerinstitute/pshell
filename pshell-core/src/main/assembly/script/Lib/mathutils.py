@@ -173,6 +173,7 @@ def integrate(f, range = None, xdata = None, interpolation_type = "linear", inte
         integrator = RombergIntegrator()
     elif integrator_type == "midpoint":
         integrator = MidPointIntegrator()
+    else:
         raise Exception("Invalid integrator type")        
     lower = min(range)
     upper = max(range)

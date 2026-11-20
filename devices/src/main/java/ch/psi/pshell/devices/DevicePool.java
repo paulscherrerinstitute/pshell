@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  * Class that manages the instantiation and disposal of the global device list.
  */
 public class DevicePool extends ObservableBase<DevicePoolListener> implements AutoCloseable {
-    static  DevicePool INSTANCE;    
+    private static volatile DevicePool INSTANCE;
     
     public static DevicePool getInstance(){
         if (INSTANCE == null){
@@ -56,14 +56,18 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     static final ArrayList<DevicePoolListener> staticListeners = new ArrayList<>();
     
     static public void addStaticListener(DevicePoolListener listener){
-        staticListeners.add(listener);
+        synchronized(staticListeners) {
+            staticListeners.add(listener);
+        }
         if (DevicePool.hasInstance()){
             DevicePool.getInstance().addListener(listener);
         }
     }
 
     static public void removeStaticListener(DevicePoolListener listener){
-        staticListeners.remove(listener);
+        synchronized(staticListeners) {
+            staticListeners.remove(listener);
+        }
         if (DevicePool.hasInstance()){
             DevicePool.getInstance().removeListener(listener);
         }
@@ -96,9 +100,11 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
             initializeDevices();
             applyDeviceAttributes();
         }
-               
-        for (DevicePoolListener listener: staticListeners){
-            addListener(listener);
+
+        synchronized(staticListeners) {
+            for (DevicePoolListener listener: staticListeners){
+                addListener(listener);
+            }
         }
         
         for (DevicePoolListener listener : getListeners()) {

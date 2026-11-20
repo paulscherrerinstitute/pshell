@@ -8,7 +8,8 @@ class ScanResult(list):
         
     def __len__(self):
         if 'records' in self.data['return']:
-            return len(self.data['return']['records'])       
+            return len(self.data['return']['records'])
+        return 0
         
     def __repr__(self):
         return str(self)
@@ -208,7 +209,7 @@ class PShellProxy(PShellClient):
         return self._run_scan("cscan", writables, readables, start, end, steps, latency, time, relative, passes, zigzag, **pars)  
     
     def hscan(self, config, writable, readables, start, end, steps, passes=1, zigzag=False, **pars):
-        return self._run_scan("rscan", config, writable, readables, start, end, steps, passes, zigzag, **pars)
+        return self._run_scan("hscan", config, writable, readables, start, end, steps, passes, zigzag, **pars)
     
     def bscan(self, stream, records, timeout = None, passes=1, **pars):
         return self._run_scan("bscan", stream, records, timeout, passes, **pars)

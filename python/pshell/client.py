@@ -539,11 +539,11 @@ class PShellClient:
                     f.write(chunk)
 
         if filename.lower().endswith(".zip") and extract:
-            extract_dir = filename[:-4]  # remove .zip
+            extract_dir = file_path[:-4]  # remove .zip
             os.makedirs(extract_dir, exist_ok=True)
-            with zipfile.ZipFile(filename, "r") as zip_ref:
+            with zipfile.ZipFile(file_path, "r") as zip_ref:
                 zip_ref.extractall(extract_dir)
-            os.remove(filename)
+            os.remove(file_path)
             return extract_dir
         return file_path
 

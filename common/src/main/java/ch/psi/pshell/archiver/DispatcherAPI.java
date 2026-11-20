@@ -34,10 +34,11 @@ public class DispatcherAPI extends DataAPI{
         }
         String json = EncoderJson.encode(data, false);
         WebTarget resource = client.target(url + "/channels/live");
-        Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
-        json = r.readEntity(String.class);
-        List<Map<String, Object>> query = (List) EncoderJson.decode(json, List.class);
-        return query;
+        try (Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json))){
+            json = r.readEntity(String.class);
+            List<Map<String, Object>> query = (List) EncoderJson.decode(json, List.class);
+            return query;
+        }
     }
     
     public List<String> queryNames(String regex, String[] backends, Ordering ordering, Boolean reload) throws IOException {

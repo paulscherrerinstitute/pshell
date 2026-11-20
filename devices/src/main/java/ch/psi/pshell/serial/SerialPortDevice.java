@@ -125,8 +125,8 @@ public class SerialPortDevice extends StreamDevice {
 
     @Override
     protected void doClose() throws IOException {
-        super.doClose();
         closePort();
+        super.doClose();
     }
 
     public static ArrayList<String> getPortList() {
